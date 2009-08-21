@@ -328,6 +328,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
+		SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
 		PostQuitMessage(0);
 		break;
 	default:
@@ -338,7 +339,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 
 LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
-	if (hwnd == g_hHookClientWnd && g_hHookClientWnd != 0)
+	if (hwnd == g_hHookClientWnd && g_hHookClientWnd != 0) 
 	{
 		if (uMsg == WM_CLOSE)
 		{ 
