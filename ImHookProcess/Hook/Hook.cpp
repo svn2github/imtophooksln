@@ -28,23 +28,29 @@ DWORD g_hHookClientProcID = 0;
 #pragma managed(push, off)
 #endif
 //////////////////////////////////////////
+
+#define HOOKED_SETHOOKCLIENT_MSG L"HOOKED_RESETWNDPROC_MSG-49353183-2419-4f6a-AC41-C663EFDCEB1F"
 HMODULE g_hModule = NULL;
 LONG_PTR g_orgWndProc = NULL;
 UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_DOHOOK_CREATEDEVICE = 0;
+UINT HOOKED_SETHOOKCLIENT = 0;
 WCHAR szHWndName[MAX_PATH] = L"ImHighResolution";
 
 BOOL (WINAPI* pShowWindow)(HWND hWnd, int nCmdShow) = ShowWindow;
 BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
-/////////////for hook D3D///////////////////
+/////////////for use D3D Display///////////////////
 IDirect3DTexture9*      g_pRenderTarget = NULL;
 IDirect3DSurface9*      g_pBackupRenderTarget = NULL;
 MS3DPlane* g_pDisplayPlane = NULL;
 
+
+/////////////////////////////////////////////
 bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName);
 bool ReleaseResource();
 bool DetourAllGDI();
-
+bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc);
+bool UnHookWndProc(HWND hwnd);
 ////////////////////////////////////////////
 LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam);
 LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -58,7 +64,15 @@ HDC WINAPI pHookBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 
 BOOL (WINAPI* pRealEndPaint)(HWND hWnd, CONST PAINTSTRUCT *lpPaint) = EndPaint;
 BOOL WINAPI pHookEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
+/*
+ AlphaBlend
 
+
+
+
+
+
+ */
 /////////////////////
 
 
@@ -93,14 +107,12 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-	
 		HOOKED_WNDDESTORY = RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
+		HOOKED_SETHOOKCLIENT = RegisterWindowMessage(HOOKED_SETHOOKCLIENT_MSG);
 		HOOKED_DOHOOK_CREATEDEVICE = RegisterWindowMessage(HOOKED_DOHOOKCREATEDEVICE_MSG);
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{
-
-			
 			DWORD err = GetLastError();
 			g_hHookServerProcID = GetCurrentProcessId();
 			WCHAR str[MAX_PATH] = {0};
@@ -168,11 +180,37 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 #pragma managed(pop)
 #endif
 
+BOOL CALLBACK RepaintFuncCallback(HWND hWnd, LPARAM lparm)
+{
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"@@@@ Repaint Callback Wnd: %Xh", hWnd);
+	OutputDebugStringW(str);
+	RedrawWindow(hWnd, NULL, NULL, RDW_FRAME );
+	
+	return TRUE;
+}
+bool RepaintClientWindow()
+{
+	if (g_hHookClientWnd == NULL)
+	{
+		return false;
+	}
+	RedrawWindow(g_hHookClientWnd, NULL, NULL, RDW_FRAME );
+	EnumChildWindows(g_hHookClientWnd, RepaintFuncCallback, NULL);
+	return true;
+}
+bool _SetHookClient(HWND hClient)
+{
+	UnHookWndProc(g_hHookClientWnd);
+	g_hHookClientWnd = hClient;
+	HookWndProc(g_hHookClientWnd, (LONG)HookWindowProc, g_orgWndProc);
+	RepaintClientWindow();
+	return true;
+}
+
 HOOK_API bool HOOKAPI::SetHookClient(HWND hClient)
 {
-	g_hHookClientWnd = hClient;
-	PostMessageW(hClient, WM_NCPAINT, NULL,NULL);
-	PostMessageW(g_HighWnd, WM_NCPAINT, NULL,NULL);
+	SendMessageW(g_hHookClientWnd, HOOKED_SETHOOKCLIENT, (WPARAM)hClient, NULL);
 	return true;
 }
 HOOK_API bool HOOKAPI::GetHookClient(HWND& clientWnd)
@@ -180,23 +218,39 @@ HOOK_API bool HOOKAPI::GetHookClient(HWND& clientWnd)
 	clientWnd = g_hHookClientWnd;
 	return true;
 }
-
-bool SetMsgHook()
-{	
-	if( g_orgWndProc != NULL && g_hHookClientWnd == NULL)
-		return 0; 
-	OutputDebugStringW(L"@@@@ setMsgHook called!!\n");
-	g_orgWndProc = SetWindowLongPtrW(g_hHookClientWnd, GWLP_WNDPROC, (LONG)HookWindowProc);
-	if (g_orgWndProc != 0)
+bool UnHookWndProc(HWND hwnd)
+{
+	if( g_orgWndProc == NULL && hwnd == NULL)
+		return false; 
+	OutputDebugStringW(L"@@@@ UnHookWndProc called!!\n");
+	LONG_PTR ret = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG)g_orgWndProc);
+	if (ret != NULL)
 	{
-		return 0;
+		return true;
 	}
 	DWORD err = GetLastError();
 	WCHAR str[MAX_PATH];
-	swprintf_s(str,MAX_PATH, L"@@@@ setMsgHook failed!!\n @@@@ Error Code: %d \n @@@@orgWndProc: %d \n", err, g_orgWndProc);
+	swprintf_s(str,MAX_PATH, L"@@@@ UnHookWndProc failed!!\n @@@@ Error Code: %d \n ", err);
 	OutputDebugStringW(str);
 
-	return 1;
+	return false;
+}
+bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc)
+{	
+	if( orgWndProc != NULL && hwnd == NULL)
+		return 0; 
+	OutputDebugStringW(L"@@@@ HookWndProc called!!\n");
+	orgWndProc = SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG)WndProc);
+	if (orgWndProc != 0)
+	{
+		return true;
+	}
+	DWORD err = GetLastError();
+	WCHAR str[MAX_PATH];
+	swprintf_s(str,MAX_PATH, L"@@@@ HookWndProc failed!!\n @@@@ Error Code: %d \n @@@@orgWndProc: %d \n", err, orgWndProc);
+	OutputDebugStringW(str);
+
+	return false;
 }
 
 
@@ -296,6 +350,11 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 			OutputDebugStringW(L"@@@@ WM_HookDESTORY!!\n");
 			SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
 		}
+		else if (uMsg == HOOKED_SETHOOKCLIENT)
+		{
+			OutputDebugStringW(L"@@@@ HOOKED_RESETWNDPROC_MSG!!\n");
+			_SetHookClient((HWND)wParam);
+		}
 	}
 	LRESULT lr = CallWindowProcW((WNDPROC)g_orgWndProc,hwnd, uMsg, wParam, lParam );
 
@@ -323,7 +382,7 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow)
 			WCHAR str[MAX_PATH];
 			swprintf_s(str,MAX_PATH, L"@@@@ g_hHookClientWnd = %Xh \n", hWnd);
 			OutputDebugStringW(str);
-			SetMsgHook();
+			HookWndProc(g_hHookClientWnd, (LONG)HookWindowProc, g_orgWndProc);
 		}
 	}
 	return ret;

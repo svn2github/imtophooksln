@@ -70,6 +70,7 @@ BOOL CImHookProcessDlg::OnInitDialog()
 
 	m_edWndClass.EnableWindow(FALSE);
 	m_edWndName.EnableWindow(FALSE);
+	m_btnFindWindow.EnableWindow(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -119,7 +120,7 @@ bool CImHookProcessDlg::onWindowHooked()
 	
 	m_edWndClass.EnableWindow(TRUE);
 	m_edWndName.EnableWindow(TRUE);
-	
+	m_btnFindWindow.EnableWindow(TRUE);
 	return true;
 }
 int CImHookProcessDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -144,7 +145,7 @@ void CImHookProcessDlg::onUnHook()
 	m_btnCreateProc.EnableWindow(TRUE);
 	m_edProcPath.EnableWindow(TRUE);
 	
-
+	m_btnFindWindow.EnableWindow(FALSE);
 }
 
 LRESULT CImHookProcessDlg::onHookedDestory(WPARAM wParam, LPARAM lParam)
