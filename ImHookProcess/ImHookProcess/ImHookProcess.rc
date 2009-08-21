@@ -64,7 +64,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON                    "res\\ImHookProcess.ico"
+IDRETRY                 ICON                    "res\\ImHookProcess.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -77,9 +77,14 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "ImHookProcess"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT3,37,23,196,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT3,7,23,226,13,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_BUTTON3,240,22,18,14
     PUSHBUTTON      "Detour Create Proc",IDC_BUTTON4,179,41,78,14
+    EDITTEXT        IDC_EDIT1,7,71,70,16,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT2,95,70,74,16,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset Client Window",IDC_BUTTON1,183,71,76,15
+    CTEXT           "Window Name",IDC_STATIC,7,85,69,14
+    CTEXT           "Window Class",IDC_STATIC,92,86,70,13
 END
 
 IDD_MonitorWnd DIALOGEX 0, 0, 460, 272

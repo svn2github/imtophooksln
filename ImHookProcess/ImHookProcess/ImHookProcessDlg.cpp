@@ -13,14 +13,12 @@
 // CImHookProcessDlg dialog
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 
-
-
 CImHookProcessDlg::CImHookProcessDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImHookProcessDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_HookedWnd = NULL;
-	m_pMonitorDlg = NULL;
+	
 	m_pApp = AfxGetApp();
 	
 }
@@ -32,6 +30,9 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_edProcPath);
 	DDX_Control(pDX, IDC_BUTTON3, m_btnBrowse);
 	DDX_Control(pDX, IDC_BUTTON4, m_btnCreateProc);
+	DDX_Control(pDX, IDC_EDIT1, m_edWndName);
+	DDX_Control(pDX, IDC_EDIT2, m_edWndClass);
+	DDX_Control(pDX, IDC_BUTTON1, m_btnFindWindow);
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
@@ -41,9 +42,9 @@ BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	//}}AFX_MSG_MAP
 	ON_WM_CREATE()
 	ON_WM_DESTROY()
-	ON_WM_TIMER()
 	ON_BN_CLICKED(IDC_BUTTON3, &CImHookProcessDlg::onBrowseProcPath)
 	ON_BN_CLICKED(IDC_BUTTON4, &CImHookProcessDlg::onDetourCreateProc)
+	ON_BN_CLICKED(IDC_BUTTON1, &CImHookProcessDlg::onFindWindow)
 END_MESSAGE_MAP()
 
 
@@ -58,10 +59,17 @@ BOOL CImHookProcessDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	CString createProcPath;
+	CString strClassName, strWndName, createProcPath;
 
 	createProcPath = m_pApp->GetProfileString(L"MySetting", L"CreateProcPath",L"");
+	strClassName = m_pApp->GetProfileString(L"MySetting", L"HookedClassName",L"");
+	strWndName= m_pApp->GetProfileString(L"MySetting", L"HookedWndName",L"");
+	m_edWndClass.SetWindowText(strClassName);
+	m_edWndName.SetWindowText(strWndName);
 	m_edProcPath.SetWindowText(createProcPath);
+
+	m_edWndClass.EnableWindow(FALSE);
+	m_edWndName.EnableWindow(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -109,12 +117,9 @@ bool CImHookProcessDlg::onWindowHooked()
 	m_btnBrowse.EnableWindow(FALSE);
 	m_edProcPath.EnableWindow(FALSE);
 	
-	m_pMonitorDlg = new CDialog();
-    
-	m_pMonitorDlg->Create(IDD_MonitorWnd,this);
-	m_pMonitorDlg->ShowWindow(SW_SHOW);
+	m_edWndClass.EnableWindow(TRUE);
+	m_edWndName.EnableWindow(TRUE);
 	
-	SetTimer(DRAWING_TIMER_IDX, 30,0);
 	return true;
 }
 int CImHookProcessDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -127,49 +132,14 @@ int CImHookProcessDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CImHookProcessDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
-	if (m_pMonitorDlg != NULL)
-	{
-		delete m_pMonitorDlg;
-		m_pMonitorDlg = NULL;
-	}
+
 }
 
 
-void CImHookProcessDlg::OnTimer(UINT_PTR nIDEvent)
-{
-	// TODO: 在此加入您的訊息處理常式程式碼和 (或) 呼叫預設值
-
-	CDialog::OnTimer(nIDEvent);
-	try
-	{
-		if (m_HookedWnd == NULL || m_pMonitorDlg == NULL)
-		{
-			return;
-		}
-		//m_HookedWnd = GetDesktopWindow();
-		CDC* hookedDC = m_HookedWnd->GetDCEx(NULL, DCX_WINDOW);
-		CDC* monitorDC = m_pMonitorDlg->GetDC();
-		RECT rectM, rectH;
-		m_pMonitorDlg->GetWindowRect(&rectM);
-		m_HookedWnd->GetWindowRect(&rectH);
-		StretchBlt(monitorDC->GetSafeHdc(), 0, 0, rectM.right-rectM.left, rectM.bottom-rectM.top, 
-			hookedDC->GetSafeHdc(), 0, 0,rectH.right-rectH.left, rectH.bottom-rectH.top, SRCCOPY);
-		return;
-	}
-	catch (CException* e)
-	{
-		return ;
-	}
-}
 
 void CImHookProcessDlg::onUnHook()
 {
 	m_HookedWnd == NULL;
-	if (m_pMonitorDlg != NULL)
-		m_pMonitorDlg->DestroyWindow();
-		delete m_pMonitorDlg;
-		m_pMonitorDlg = NULL;
-	KillTimer(DRAWING_TIMER_IDX);
 	m_btnBrowse.EnableWindow(TRUE);
 	m_btnCreateProc.EnableWindow(TRUE);
 	m_edProcPath.EnableWindow(TRUE);
@@ -241,21 +211,32 @@ void CImHookProcessDlg::onDetourCreateProc()
 	if (hr )
 	{
 		m_pApp->WriteProfileString(L"MySetting",L"CreateProcPath",path);
-		HWND sWnd, cWnd;
-		HOOKAPI::GetHookedWnd(sWnd, cWnd);
-		if (sWnd != this->GetSafeHwnd())
-		{
-			OutputDebugStringW(L"@@@@ UnExpected Error!! Server hWnd didn't match!!");
-			return; 
-		}
+		HWND cWnd;
+		HOOKAPI::GetHookClient(cWnd);
+
 		m_HookedWnd = FromHandle(cWnd);
 		onWindowHooked();
-		//m_btnCreateProc.EnableWindow(FALSE);
-		//m_btnBrowse.EnableWindow(FALSE);
-		//m_edProcPath.EnableWindow(FALSE);
+
 
 		
 	}
 
 }
 
+
+void CImHookProcessDlg::onFindWindow()
+{
+	CString strClassName, strWindowName;
+	m_edWndClass.GetWindowText(strClassName);
+	m_edWndName.GetWindowText(strWindowName);
+	CWnd* hwnd = FindWindow(strClassName, strWindowName);
+	if (hwnd == NULL)
+	{
+		return ;
+	}
+	m_HookedWnd = hwnd;
+	HOOKAPI::SetHookClient(hwnd->GetSafeHwnd());
+
+	m_pApp->WriteProfileString(L"MySetting",L"HookedClassName",strClassName);
+	m_pApp->WriteProfileString(L"MySetting",L"HookedWndName",strWindowName);
+}

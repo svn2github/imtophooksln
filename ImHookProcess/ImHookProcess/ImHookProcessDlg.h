@@ -25,8 +25,6 @@ protected:
 	CWnd* m_HookedWnd;
 
 	CWinApp* m_pApp;
-	CDialog* m_pMonitorDlg;
-
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -46,7 +44,6 @@ public:
 
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void onUnHook();
 	
 	afx_msg void onBrowseProcPath();
@@ -54,4 +51,8 @@ public:
 	CEdit m_edProcPath;
 	CButton m_btnBrowse;
 	CButton m_btnCreateProc;
+	afx_msg void onFindWindow();
+	CEdit m_edWndName;
+	CEdit m_edWndClass;
+	CButton m_btnFindWindow;
 };

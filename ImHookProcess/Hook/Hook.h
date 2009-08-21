@@ -15,6 +15,6 @@
 
 namespace HOOKAPI
 {
-	HOOK_API int SetHookServerAndClient(HWND hServer, HWND hClient);
-	HOOK_API bool GetHookedWnd(HWND& serverWnd, HWND& clientWnd);
+	HOOK_API bool SetHookClient(HWND hClient);
+	HOOK_API bool GetHookClient(HWND& clientWnd);
 }
