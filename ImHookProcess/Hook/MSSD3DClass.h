@@ -3,7 +3,7 @@
 #include <d3dx9.h>
 #include <stack>
 using namespace std;
-class IMS3DObj
+class IMS3DBase
 {
 public:
 	virtual D3DXMATRIX GetTransform() = 0;
@@ -15,7 +15,7 @@ public:
 	virtual BOOL PopMatrix()= 0;
 };
 
-class MS3DObj : public IMS3DObj
+class MS3DObj : public IMS3DBase
 {
 protected:
 	D3DXMATRIX m_matWorld;
@@ -32,7 +32,7 @@ public:
 	virtual BOOL PopMatrix();
 };
 
-class IMeshObj
+class IMeshBase
 {
 public:
 	virtual IDirect3DVertexBuffer9* GetVertexBuffer() = 0;
@@ -43,7 +43,7 @@ public:
 	virtual D3DFORMAT GetIndexFMT() = 0;
 };
 
-class MS3DPlane : public IMeshObj, public MS3DObj
+class MS3DPlane : public IMeshBase, public MS3DObj
 {
 public:
 	struct CUSTOMVERTEX

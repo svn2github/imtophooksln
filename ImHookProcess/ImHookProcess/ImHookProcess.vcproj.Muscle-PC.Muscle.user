@@ -10,7 +10,7 @@
 			>
 			<DebugSettings
 				Command="$(TargetPath)"
-				WorkingDirectory="D:\Project\ImTopHookSln\ImHookProcess\debug"
+				WorkingDirectory="D:\Projects\ImTopHookSln\ImHookProcess\debug"
 				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"

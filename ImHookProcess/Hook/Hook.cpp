@@ -65,14 +65,53 @@ HDC WINAPI pHookBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 BOOL (WINAPI* pRealEndPaint)(HWND hWnd, CONST PAINTSTRUCT *lpPaint) = EndPaint;
 BOOL WINAPI pHookEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint);
 /*
- AlphaBlend
+for bitmap
 
+AlphaBlend
+ExtFloodFill
+FloodFill
+GradientFill
+PlgBlt
+SetDIBColorTable
+SetDIBits
+SetDIBitsToDevice
+SetPixel 
+SetPixelV 
+SetStretchBltMode 
+StretchBlt
+StretchDIBits
+TransparentBlt
 
+//FillShape
+Ellipse
+Chord
+FillRect
+InvertRect
+Pie
+Polygon
+PolyPolygon
+Rectangle
+RoundRect
 
+//Font
+DrawText 
+DrawTextEx 
+PolyTextOut 
+SetTextAlign 
+SetTextCharacterExtra 
+SetTextColor 
+SetTextJustification 
+TabbedTextOut
+TextOut
 
+//Paint
+DrawAnimatedRects	
+DrawCaption
+DrawEdge
+DrawFocusRect
+DrawFrameControl
 
-
- */
+*/
 /////////////////////
 
 
@@ -204,7 +243,7 @@ bool _SetHookClient(HWND hClient)
 	UnHookWndProc(g_hHookClientWnd);
 	g_hHookClientWnd = hClient;
 	HookWndProc(g_hHookClientWnd, (LONG)HookWindowProc, g_orgWndProc);
-	RepaintClientWindow();
+	//RepaintClientWindow();
 	return true;
 }
 
@@ -268,8 +307,8 @@ bool ReleaseResource()
 bool DetourAllGDI()
 {
 	DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
-	DetourFunction((void*&)pRealBeginPaint, pHookBeginPaint, L"GDI::BeginPaint");
-	DetourFunction((void*&)pRealEndPaint, pHookEndPaint, L"GDI::EndPaint");
+	//DetourFunction((void*&)pRealBeginPaint, pHookBeginPaint, L"GDI::BeginPaint");
+	//DetourFunction((void*&)pRealEndPaint, pHookEndPaint, L"GDI::EndPaint");
 	
 	return true;
 }
