@@ -363,6 +363,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
+		OutputDebugStringW(L"HighResolutionWndProc  WM_PAINT!! \n");
 		// TODO: 在此加入任何繪圖程式碼...
 		EndPaint(hWnd, &ps);
 		break;

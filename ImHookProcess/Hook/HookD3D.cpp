@@ -4,7 +4,7 @@
 using namespace HookD3D;
 namespace HookD3D
 {
-	/*
+/*
 bool ReleaseHookD3D()
 {
 
