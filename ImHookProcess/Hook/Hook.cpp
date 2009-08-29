@@ -35,16 +35,14 @@ LONG_PTR g_orgWndProc = NULL;
 UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_DOHOOK_CREATEDEVICE = 0;
 UINT HOOKED_SETHOOKCLIENT = 0;
-WCHAR szHWndName[MAX_PATH] = L"ImHighResolution";
+WCHAR g_szHWndName[MAX_PATH] = L"ImHighResolution";
 
 BOOL (WINAPI* pShowWindow)(HWND hWnd, int nCmdShow) = ShowWindow;
 BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
 /////////////for use D3D Display///////////////////
-IDirect3DTexture9*      g_pRenderTarget = NULL;
-IDirect3DSurface9*      g_pBackupRenderTarget = NULL;
-MS3DPlane* g_pDisplayPlane = NULL;
-
-
+IDirect3D9* g_pD3D = NULL;
+MS3DDisplay* g_pHighDisplay = NULL;
+BOOL CreateHighDisplay(HMODULE hModule);
 /////////////////////////////////////////////
 bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName);
 bool ReleaseResource();
@@ -130,7 +128,7 @@ ATOM RegisterWndClass(HINSTANCE hInstance)
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= NULL;
-	wcex.lpszClassName	= szHWndName;
+	wcex.lpszClassName	= g_szHWndName;
 	wcex.hIconSm		= NULL;
 	ATOM ret = RegisterClassEx(&wcex);
 	return ret;
@@ -157,20 +155,18 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookServer: %d \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
-		
+			CreateHighDisplay(hModule);
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
 		}
 		else if (( GetCurrentProcessId() != g_hHookServerProcID) && g_hHookClientProcID == 0)
 		{
+			
 			g_hHookClientProcID = GetCurrentProcessId();
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookClient: %Xh \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
+			//CreateHighDisplay(hModule);
 
-			RegisterWndClass(hModule);
-			g_HighWnd = CreateWindowW(szHWndName, L"High Resolution",WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_MINIMIZEBOX,
-				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hModule, NULL);
-			ShowWindow(g_HighWnd, TRUE);
 			DetourAllGDI();
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
 			
@@ -194,7 +190,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		{
 			g_hHookServerProcID = 0;
 			g_hHookServerWnd = NULL;
-
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookServer = NULL");
 			OutputDebugStringW(str);
@@ -203,22 +198,49 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		{
 			g_hHookClientProcID = 0;
 			g_hHookClientWnd = NULL;
-
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookClient = NULL");
 			OutputDebugStringW(str);
 		}
-		ReleaseResource();
+		
 		break;
 	}
 	
 	return TRUE;
 }
 
-#ifdef _MANAGED
-#pragma managed(pop)
-#endif
-
+BOOL CreateHighDisplay(HMODULE hModule)
+{
+	OutputDebugStringW(L"@@@@@ CreateHighDisplay called!! \n");
+	if (g_pHighDisplay != NULL)
+	{
+		OutputDebugStringW(L"@@@@@ g_pHighDisplay != NULL, CreateHighDisplay return FALSE \n");
+		return FALSE;
+	}
+	OutputDebugStringW(L"@@@@@before RegisterWndClass!! \n");
+	RegisterWndClass(hModule);
+	g_HighWnd = CreateWindowW(g_szHWndName, L"High Resolution",WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_MINIMIZEBOX,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hModule, NULL);
+	if (g_HighWnd == NULL)
+	{
+		OutputDebugStringW(L"@@@@@ CreateWindow Failed!! in CreateHighDisplay\n");
+	}
+	ShowWindow(g_HighWnd, TRUE);
+	if (g_pD3D == NULL)
+	{
+		if( NULL == ( g_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
+		{
+			OutputDebugStringW(L"@@@@@ Direct3DCreate9 Failed!! in CreateHighDisplay\n");
+			return FALSE;
+		}
+	}
+	OutputDebugStringW(L"@@@@@ g_pHighDisplay before Run!!");
+	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
+	g_pHighDisplay->Run();
+	OutputDebugStringW(L"@@@@@ g_pHighDisplay Running!!");
+	
+	return TRUE;
+}
 BOOL CALLBACK RepaintFuncCallback(HWND hWnd, LPARAM lparm)
 {
 	WCHAR str[MAX_PATH];
@@ -295,18 +317,25 @@ bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc)
 
 bool ReleaseResource()
 {
-	if (g_pBackupRenderTarget != NULL)
+	
+	if (g_pHighDisplay != NULL)
 	{
-		g_pBackupRenderTarget->Release();
-		g_pBackupRenderTarget = NULL;
+		delete g_pHighDisplay;
+		g_pHighDisplay = NULL;
+	}
+	
+	if (g_pD3D != NULL)
+	{
+		
+		g_pD3D->Release();
+		g_pD3D = NULL;
 	}
 	return true;
-
 }
 
 bool DetourAllGDI()
 {
-	DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
+	//DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
 	//DetourFunction((void*&)pRealBeginPaint, pHookBeginPaint, L"GDI::BeginPaint");
 	//DetourFunction((void*&)pRealEndPaint, pHookEndPaint, L"GDI::EndPaint");
 	
@@ -368,9 +397,11 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
-		SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+		//SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+		ReleaseResource();
 		PostQuitMessage(0);
 		break;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -390,6 +421,7 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 		{
 			OutputDebugStringW(L"@@@@ WM_HookDESTORY!!\n");
 			SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+			ReleaseResource();
 		}
 		else if (uMsg == HOOKED_SETHOOKCLIENT)
 		{

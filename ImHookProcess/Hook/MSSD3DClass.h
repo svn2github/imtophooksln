@@ -16,7 +16,7 @@ public:
 	MSDXBase(IDirect3DDevice9* pDevice)
 	{
 		m_pDevice = pDevice;
-		pDevice->AddRef();
+		m_pDevice->AddRef();
 	}
 	virtual ~MSDXBase()
 	{
@@ -147,12 +147,20 @@ public:
 class MSCamera : public MSDXBase, public IMSCamera
 {
 private:
-	D3DXMATRIX m_pBackupMatView;
+	D3DXMATRIX m_BackupMatView;
+	D3DXMATRIX m_BackupMatProj;
 	BOOL init();
 protected:
 	D3DXVECTOR3 m_vEyePt;
 	D3DXVECTOR3 m_vLookatPt;
 	D3DXVECTOR3 m_vUpVec;
+	float m_l ;//		[in] Minimum x-value of view volume. 
+	float m_r ;//		[in] Maximum x-value of view volume. 
+	float m_b ;//		[in] Minimum y-value of view volume. 
+	float m_t ;//   	[in] Maximum y-value of view volume. 
+	float m_zn;//		[in] Minimum z-value of the view volume. 
+	float m_zf;//		[in] Maximum z-value of the view volume. 
+
 public:
 	MSCamera();
 	MSCamera(IDirect3DDevice9* pDevice);
@@ -175,14 +183,14 @@ protected:
 	IDirect3D9* m_pD3D;
 	IDirect3DDevice9* m_pDevice;
 	MS3DPlane* m_pDisplayPlane;
-	IDirect3DBaseTexture9* m_pTexture;
+	LPDIRECT3DTEXTURE9 m_pTexture;
 	MSCamera* m_pCamera;
-
 
 private:
 	HANDLE m_hRenderThread;
 	BOOL InitDevice();
 	static BOOL _Run(void* _THIS);
+	BOOL CreateTexture();
 public:
 	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D);
 	virtual ~MS3DDisplay();
@@ -190,6 +198,7 @@ public:
 	virtual BOOL Stop();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
+
 };
 
 

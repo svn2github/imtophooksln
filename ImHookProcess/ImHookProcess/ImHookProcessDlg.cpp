@@ -158,10 +158,10 @@ LRESULT CImHookProcessDlg::onHookedDestory(WPARAM wParam, LPARAM lParam)
 
 void CImHookProcessDlg::onBrowseProcPath()
 {
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
 	OPENFILENAME openfn;
 	WCHAR cFname[256];
-
-	
 	WCHAR szFilterOpn[]=TEXT("Executable files (*.exe)\0*.exe\0Dynamic Link Libraries (*.dll)\0*.dll\0OLE-ActiveX Controls (*.ocx)\0*.ocx\0Screen Savers (*.scr)\0*.scr\0All files (*.*)\0*.*\0\0");
 	DWORD nFilterIndex=1;
 	cFname[0]=0x00;
@@ -175,12 +175,13 @@ void CImHookProcessDlg::onBrowseProcPath()
 	//openfn.lpstrInitialDir=szCurDir;
 	openfn.Flags=OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
 	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
 	if (!hr)
 	{
 		return ;
 	}
 	m_edProcPath.SetWindowText(openfn.lpstrFile);
-
+	
 }
 
 void CImHookProcessDlg::onDetourCreateProc()
