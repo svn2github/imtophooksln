@@ -55,4 +55,10 @@ public:
 	CEdit m_edWndName;
 	CEdit m_edWndClass;
 	CButton m_btnFindWindow;
+	CStatic m_WarpBox;
+	CButton m_WarpBtnV1;
+	CButton m_WarpBtnV2;
+	CButton m_WarpBtnV3;
+	CButton m_WarpBtnV4;
+	afx_msg void OnBnDropDownbtnv1(NMHDR *pNMHDR, LRESULT *pResult);
 };

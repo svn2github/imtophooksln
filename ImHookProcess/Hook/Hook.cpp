@@ -205,7 +205,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		
 		break;
 	}
-	
 	return TRUE;
 }
 
@@ -373,10 +372,13 @@ bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName)
 
 LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (g_pHighDisplay != NULL)
+	{
+		g_pHighDisplay->WndProc(hWnd, message, wParam, lParam);
+	}
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
 	HDC hdc;
-
 	switch (message)
 	{
 	case WM_COMMAND:
@@ -401,7 +403,9 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		ReleaseResource();
 		PostQuitMessage(0);
 		break;
-
+	case WM_LBUTTONDOWN:
+		OutputDebugStringW(L"@@@@ LButtonDown in HighResolutionWndProc!! \n ");
+		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}

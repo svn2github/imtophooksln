@@ -33,6 +33,7 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT1, m_edWndName);
 	DDX_Control(pDX, IDC_EDIT2, m_edWndClass);
 	DDX_Control(pDX, IDC_BUTTON1, m_btnFindWindow);
+
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
