@@ -61,4 +61,6 @@ public:
 	CButton m_WarpBtnV3;
 	CButton m_WarpBtnV4;
 	afx_msg void OnBnDropDownbtnv1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedCkeditwarp();
+	CButton m_ckEditWarp;
 };

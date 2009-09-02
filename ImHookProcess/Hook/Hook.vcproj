@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\Detours\include; ..\DXUT"
+				AdditionalIncludeDirectories="..\Detours\include;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS; "
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -120,6 +120,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\Detours\include;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -138,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies=" detours.lib detoured.lib  d3dx9.lib d3d9.lib"
+				AdditionalDependencies="..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"

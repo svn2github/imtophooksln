@@ -11,6 +11,7 @@
 #include "MSSD3DClass.h"
 #include <detours.h>
 
+
 #pragma comment(lib, "psapi")
 
 ////////////////////Share Data Segation///////////
@@ -30,16 +31,21 @@ DWORD g_hHookClientProcID = 0;
 //////////////////////////////////////////
 
 #define HOOKED_SETHOOKCLIENT_MSG L"HOOKED_RESETWNDPROC_MSG-49353183-2419-4f6a-AC41-C663EFDCEB1F"
+
 HMODULE g_hModule = NULL;
 LONG_PTR g_orgWndProc = NULL;
 UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_DOHOOK_CREATEDEVICE = 0;
 UINT HOOKED_SETHOOKCLIENT = 0;
+UINT HOOKED_ENABLEEDITWARP = 0;
+
 WCHAR g_szHWndName[MAX_PATH] = L"ImHighResolution";
 
 BOOL (WINAPI* pShowWindow)(HWND hWnd, int nCmdShow) = ShowWindow;
 BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
 /////////////for use D3D Display///////////////////
+
+
 IDirect3D9* g_pD3D = NULL;
 MS3DDisplay* g_pHighDisplay = NULL;
 BOOL CreateHighDisplay(HMODULE hModule);
@@ -147,6 +153,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		HOOKED_WNDDESTORY = RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 		HOOKED_SETHOOKCLIENT = RegisterWindowMessage(HOOKED_SETHOOKCLIENT_MSG);
 		HOOKED_DOHOOK_CREATEDEVICE = RegisterWindowMessage(HOOKED_DOHOOKCREATEDEVICE_MSG);
+		HOOKED_ENABLEEDITWARP = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{
@@ -155,8 +162,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookServer: %d \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
-			CreateHighDisplay(hModule);
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
+
 		}
 		else if (( GetCurrentProcessId() != g_hHookServerProcID) && g_hHookClientProcID == 0)
 		{
@@ -165,7 +172,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookClient: %Xh \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
-			//CreateHighDisplay(hModule);
+			CreateHighDisplay(hModule);
 
 			DetourAllGDI();
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
@@ -235,7 +242,7 @@ BOOL CreateHighDisplay(HMODULE hModule)
 	}
 	OutputDebugStringW(L"@@@@@ g_pHighDisplay before Run!!");
 	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
-	g_pHighDisplay->Run();
+	//g_pHighDisplay->Run();
 	OutputDebugStringW(L"@@@@@ g_pHighDisplay Running!!");
 	
 	return TRUE;
@@ -329,12 +336,13 @@ bool ReleaseResource()
 		g_pD3D->Release();
 		g_pD3D = NULL;
 	}
+
 	return true;
 }
 
 bool DetourAllGDI()
 {
-	//DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
+	DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
 	//DetourFunction((void*&)pRealBeginPaint, pHookBeginPaint, L"GDI::BeginPaint");
 	//DetourFunction((void*&)pRealEndPaint, pHookEndPaint, L"GDI::EndPaint");
 	
@@ -399,7 +407,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
-		//SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+		SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
 		ReleaseResource();
 		PostQuitMessage(0);
 		break;
@@ -416,6 +424,13 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 {
 	if (hwnd == g_hHookClientWnd && g_hHookClientWnd != 0) 
 	{
+		if (uMsg == HOOKED_ENABLEEDITWARP)
+		{
+			if (g_pHighDisplay != NULL)
+			{
+				g_pHighDisplay->SetEditWarpEnable(wParam);
+			}
+		}
 		if (uMsg == WM_CLOSE)
 		{ 
 			OutputDebugStringW(L"@@@@ WM_HookCLOSE!!\n");
@@ -465,19 +480,28 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow)
 	return ret;
 }
 
-BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int cx, int cy, HDC hdcSrc, int x1, int y1, DWORD rop)
+BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc, int x1, int y1, DWORD rop)
 {
 	//OutputDebugStringW(L"@@@@ pHookBitBlt called!!\n");
-	BOOL ret = pRealBitBlt(hdc, x, y, cx, cy, hdcSrc, x1, y1, rop);
-	if (g_HighWnd != NULL && g_hHookClientWnd != NULL)
+	BOOL ret = pRealBitBlt(hdc, x, y, width, height, hdcSrc, x1, y1, rop);
+	if (g_HighWnd != NULL && g_hHookClientWnd != NULL && g_pHighDisplay != NULL)
 	{
 		HWND hwnd = WindowFromDC(hdc);
 
 		HDC clientDC = GetDC(g_hHookClientWnd);
+
+		RECT rect;
+		GetClientRect(hwnd, &rect);
+		//GetWindowRect(hwnd, &rect);
+		int dcW = rect.right - rect.left;
+		int dcH = rect.bottom - rect.top;
+
 		POINT pt;  pt.x = x; pt.y = y;
+		MapWindowPoints(hwnd, g_hHookClientWnd, &pt,1);
 		
-		MapWindowPoints(hwnd,g_hHookClientWnd, &pt,1);
-		StretchBlt(GetDC(g_HighWnd), pt.x*2, pt.y*2, cx*2, cy*2, hdcSrc, x1, y1, cx, cy, rop);
+		g_pHighDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc, x1, y1, rop);
+
+		//StretchBlt(GetDC(g_HighWnd), pt.x*2, pt.y*2, cx*2, cy*2, hdcSrc, x1, y1, cx, cy, rop);
 
 		//WCHAR str[MAX_PATH];
 		//swprintf(str, MAX_PATH,L"@@@@ from (%3d, %3d) to (%3d, %3d) \n", x, y, pt.x, pt.y);

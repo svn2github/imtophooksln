@@ -13,30 +13,32 @@ protected:
 	vector<IEventManager*> m_Children;
 	IEventManager* m_pParent;
 	BOOL m_bMouseOver;
+	BOOL m_bStargDrag;
 	virtual BOOL SetParent(IEventManager* parent);
 	virtual BOOL AddChild(IEventManager* child);
 	virtual BOOL RemoveChild(IEventManager* child);
 public:
-	IEventManager(){ m_pParent = NULL;}
+	IEventManager(){ m_pParent = NULL; m_bStargDrag = FALSE; m_bMouseOver = FALSE;}
 	~IEventManager()
 	{
 		if (m_pParent != NULL)
 			m_pParent->RemoveChild(this);
 	}
-	typedef BOOL (__stdcall* TaskFuncPtr)(void*, WPARAM, LPARAM);
+	typedef BOOL (__stdcall* TaskFuncPtr)(void*, WPARAM, LPARAM, void*);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir) = 0;
 	virtual BOOL PassMouseMessage(UINT message, WPARAM wParam, LPARAM lParam, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir) = 0;
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) = 0;
 	virtual BOOL Bind(WCHAR* msg, TaskFuncPtr pFunc , void* _THIS) = 0;
 	virtual BOOL UnBind(WCHAR* msg, TaskFuncPtr pFunc, void* _THIS) = 0;
-	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam)  = 0;
+	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam, void* pData) = 0;
 };
 
 class MSEventManager : public IEventManager
 {
 protected:
-	struct cmp_wstr 
+	class cmp_wstr 
 	{
+	public:
 		bool operator()(WCHAR const *a, WCHAR const *b) 
 		{
 			return wcscmp(a, b) < 0;
@@ -71,10 +73,8 @@ public:
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual BOOL Bind(WCHAR* msg, TaskFuncPtr pFunc , void* _THIS);
 	virtual BOOL UnBind(WCHAR* msg, TaskFuncPtr pFunc, void* _THIS);
-	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam);
+	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam, void* pData);
 	virtual BOOL PassMouseMessage(UINT message, WPARAM wParam, LPARAM lParam, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir) ;
-
-
 };
 class MSDXBase
 {
@@ -88,7 +88,8 @@ public:
 	MSDXBase(IDirect3DDevice9* pDevice)
 	{
 		m_pDevice = pDevice;
-		m_pDevice->AddRef();
+		if (pDevice != NULL)
+			m_pDevice->AddRef();
 	}
 	virtual ~MSDXBase()
 	{
@@ -143,6 +144,8 @@ public:
 	virtual BOOL ResetTransform();
 	virtual BOOL PushMatrix();
 	virtual BOOL PopMatrix();
+	virtual BOOL SetPosition(D3DXVECTOR3 pos);
+	virtual D3DXVECTOR3 GetPosition();
 };
 
 class IMeshBase
@@ -183,7 +186,8 @@ public:
 	virtual UINT GetPrimitiveNumber();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
-	
+	virtual BOOL GetVertex(UINT idx, CUSTOMVERTEX& vertex);
+	virtual BOOL SetVertex(UINT idx, CUSTOMVERTEX& vertex);
 };
 
 class MS3DPlane : public MSMeshBase, public MS3DObj
@@ -251,31 +255,34 @@ class MS3DButton : public MS3DPlane, public MSEventManager
 public:
 	MS3DButton(IDirect3DDevice9* pDevice, IEventManager* parent): MS3DPlane(pDevice), MSEventManager(parent)
 	{
-		m_bMouseOver = FALSE;
+		
 		Bind(L"WM_LBUTTONDOWN\0", MS3DButton::OnMouseLDown, this);
 		Bind(L"WM_LBUTTONUP\0", MS3DButton::OnMouseLUp, this);
 		Bind(L"WM_MOUSEMOVE\0", MS3DButton::OnMouseMove, this);
 		Bind(L"WM_MOUSEENTER\0", MS3DButton::OnMouseEnter, this);
 		Bind(L"WM_MOUSELEAVE\0", MS3DButton::OnMouseLeave, this);
+		Bind(L"WM_MOUSEDRAGMOVE\0", MS3DButton::OnMouseDragMove, this);
 	};
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
-	static BOOL __stdcall OnMouseLDown(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall OnMouseLUp(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall OnMouseMove(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall OnMouseEnter(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall OnMouseLeave(void* _THIS, WPARAM wParam, LPARAM lParam);
+	static BOOL __stdcall OnMouseLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall OnMouseLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall OnMouseMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall OnMouseEnter(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall OnMouseLeave(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 };
-class MS3DDisplay : public IRenderBase, public MSEventManager
+
+class MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase
 {
 protected:
 	HWND m_hDisplayWnd;
 	IDirect3D9* m_pD3D;
-	IDirect3DDevice9* m_pDevice;
 	MS3DPlane* m_pDisplayPlane;
-	LPDIRECT3DTEXTURE9 m_pTexture;
 	MSCamera* m_pCamera;
-
+	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 	vector<MS3DButton*> m_pWarpButtons;
+	BOOL m_bStartDrag; 
+	CRITICAL_SECTION m_CS;
 private:
 	HANDLE m_hRenderThread;
 	BOOL m_bEditWarp;
@@ -295,11 +302,11 @@ public:
 	virtual BOOL SetEditWarpEnable(BOOL enable);
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
-
+	virtual BOOL DrawBitBlt(HDC hdc, int x, int y, int cx, int cy, int dcW, int dcH, HDC hdcSrc, int x1, int y1, DWORD rop);
 public:
-	static BOOL __stdcall onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam);
-	static BOOL __stdcall onWarpButtonMouseMove(void* _THIS, WPARAM wParam, LPARAM lParam);
+	static BOOL __stdcall onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 
 
 };

@@ -12,6 +12,7 @@
 
 // CImHookProcessDlg dialog
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
+static UINT HOOKED_ENABLEEDITWARP = ::RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
 
 CImHookProcessDlg::CImHookProcessDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImHookProcessDlg::IDD, pParent)
@@ -34,6 +35,7 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT2, m_edWndClass);
 	DDX_Control(pDX, IDC_BUTTON1, m_btnFindWindow);
 
+	DDX_Control(pDX, IDC_CKEDITWARP, m_ckEditWarp);
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
@@ -46,6 +48,7 @@ BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON3, &CImHookProcessDlg::onBrowseProcPath)
 	ON_BN_CLICKED(IDC_BUTTON4, &CImHookProcessDlg::onDetourCreateProc)
 	ON_BN_CLICKED(IDC_BUTTON1, &CImHookProcessDlg::onFindWindow)
+	ON_BN_CLICKED(IDC_CKEDITWARP, &CImHookProcessDlg::OnBnClickedCkeditwarp)
 END_MESSAGE_MAP()
 
 
@@ -242,4 +245,14 @@ void CImHookProcessDlg::onFindWindow()
 
 	m_pApp->WriteProfileString(L"MySetting",L"HookedClassName",strClassName);
 	m_pApp->WriteProfileString(L"MySetting",L"HookedWndName",strWindowName);
+}
+
+void CImHookProcessDlg::OnBnClickedCkeditwarp()
+{
+	if (m_HookedWnd == NULL)
+		return ;
+	int checked = m_ckEditWarp.GetCheck();
+
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITWARP, checked, NULL);
+
 }
