@@ -215,6 +215,31 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	return TRUE;
 }
 
+BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, void* data)
+{
+	if (g_hHookClientWnd == NULL)
+		return FALSE;
+	struct TData
+	{
+		UINT msg;
+		float tU;
+		float tV;
+	};
+	TData* tdata = (TData*)data;
+	RECT wrect;
+	GetClientRect(g_hHookClientWnd, &wrect);
+	unsigned short xPos = (wrect.right - wrect.left) * tdata->tU;
+	unsigned short yPos = (wrect.bottom - wrect.top) * tdata->tV;
+	lparam = (yPos << 16) | xPos ;
+	PostMessage(g_hHookClientWnd, tdata->msg, wparam, lparam);
+	WCHAR str[MAX_PATH];
+	UINT xp = LOWORD(lparam);
+	UINT yp = HIWORD(lparam);
+	swprintf_s(str, MAX_PATH, L"@@@@ PostMessage xPos = %d, yPos = %d \n", xp, yp);
+	OutputDebugStringW(str);
+	return TRUE;
+}
+
 BOOL CreateHighDisplay(HMODULE hModule)
 {
 	OutputDebugStringW(L"@@@@@ CreateHighDisplay called!! \n");
@@ -240,13 +265,15 @@ BOOL CreateHighDisplay(HMODULE hModule)
 			return FALSE;
 		}
 	}
-	OutputDebugStringW(L"@@@@@ g_pHighDisplay before Run!!");
+	
 	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
-	//g_pHighDisplay->Run();
-	OutputDebugStringW(L"@@@@@ g_pHighDisplay Running!!");
+	g_pHighDisplay->Bind(L"WM_ReceiveMouseMessage", (IEventManager::TaskFuncPtr)OnReceiveMouseMessage, NULL);
 	
 	return TRUE;
 }
+
+
+
 BOOL CALLBACK RepaintFuncCallback(HWND hWnd, LPARAM lparm)
 {
 	WCHAR str[MAX_PATH];
@@ -304,6 +331,7 @@ bool UnHookWndProc(HWND hwnd)
 }
 bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc)
 {	
+	
 	if( orgWndProc != NULL && hwnd == NULL)
 		return 0; 
 	OutputDebugStringW(L"@@@@ HookWndProc called!!\n");

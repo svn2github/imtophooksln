@@ -179,6 +179,10 @@ BOOL MSMeshBase::SetVertex(UINT idx, MSMeshBase::CUSTOMVERTEX& vertex)
 	return TRUE;
 }
 
+LPD3DXMESH MSMeshBase::GetMesh()
+{
+	return m_pMesh;
+}
 MS3DPlane::MS3DPlane(IDirect3DDevice9* pDevice) : MSMeshBase(pDevice)
 {
 	InitGeometry();
@@ -321,12 +325,12 @@ D3DXVECTOR3 MSCamera::GetUpVec()
 BOOL MSCamera::CameraOn()
 {
 	D3DXMATRIX matView;
-	D3DXMatrixLookAtLH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
+	matView = GetViewMatrix();
 	m_pDevice->GetTransform(D3DTS_VIEW, &m_BackupMatView);
 	m_pDevice->SetTransform(D3DTS_VIEW, &matView);
-
+	
 	D3DXMATRIXA16 matProj;
-	D3DXMatrixOrthoOffCenterLH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+	matProj = GetProjMatrix();
 	m_pDevice->GetTransform(D3DTS_PROJECTION, &m_BackupMatProj);
 	m_pDevice->SetTransform( D3DTS_PROJECTION, &matProj );
 	return TRUE;
@@ -337,12 +341,29 @@ BOOL MSCamera::CameraOff()
 	m_pDevice->SetTransform(D3DTS_PROJECTION, &m_BackupMatProj);
 	return TRUE;
 }
-BOOL MSCamera::Screen2World(int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
+
+D3DXMATRIX MSCamera::GetViewMatrix()
+{
+	D3DXMATRIX matView;
+	D3DXMatrixLookAtLH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
+	return matView;
+}
+
+D3DXMATRIX MSCamera::GetProjMatrix()
+{
+	D3DVIEWPORT9 viewport;
+	m_pDevice->GetViewport(&viewport);
+
+	D3DXMATRIX matProj;
+	D3DXMatrixOrthoOffCenterLH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+	return matProj;
+}
+BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 {
 	D3DXMATRIX matView, matInvView;
-	D3DXMatrixLookAtLH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
-	D3DXMATRIXA16 matProj, matInvProj;
-	D3DXMatrixOrthoOffCenterLH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+	matView = GetViewMatrix();
+	D3DXMATRIX matProj, matInvProj;
+	matProj = GetProjMatrix();
 
 	D3DXMatrixInverse(&matInvView,NULL, &matView);
 	D3DXMatrixInverse(&matInvProj,NULL, &matProj);
@@ -351,8 +372,11 @@ BOOL MSCamera::Screen2World(int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 	m_pDevice->GetViewport(&viewport);
 	D3DXVECTOR4 screenPt(x, y, 0, 1);
 	D3DXVECTOR4 projPt(0,0,0,1);
-	projPt.x = (screenPt.x/viewport.Width - 0.5) * (m_r - m_l);
-	projPt.y = -(screenPt.y/viewport.Height - 0.5) * (m_t - m_b);
+	RECT wrect;
+	GetClientRect(hwnd, &wrect);
+	projPt.x = (screenPt.x/(wrect.right - wrect.left) - 0.5) * (m_r - m_l);
+	projPt.y = -(screenPt.y/(wrect.bottom - wrect.top) - 0.5) * (m_t - m_b);
+	
 	
 	D3DXVECTOR4 viewPt(0,0,0,0);
 	D3DXVECTOR4 worldPt(0,0,0,0);
@@ -361,8 +385,11 @@ BOOL MSCamera::Screen2World(int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 	
 	vPos = D3DXVECTOR3(worldPt.x, worldPt.y, worldPt.z);
 	D3DXVec3Normalize(&vDir , &(m_vLookatPt - m_vEyePt));
-
-
+	
+	//swprintf_s(str, MAX_PATH, L"@@@@ Screen2World: x = %d, y = %d, \n@@@@ vPos = %.2f, %.2f, %.2f, vDir = %.2f, %.2f, %.2f \n", 
+	//	x, y, vPos.x, vPos.y, vPos.z, vDir.x, vDir.y, vDir.z);
+	//OutputDebugStringW(str);
+    
 	return TRUE;
 }
 
@@ -681,26 +708,83 @@ BOOL MS3DDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	if (m_pDevice == NULL)
 		return FALSE;
 	int xPos, yPos = 0;
-
-	switch (message)
+	WCHAR str[MAX_PATH];
+	
+	if (message == WM_LBUTTONDOWN || message == WM_LBUTTONUP || message == WM_RBUTTONDOWN || 
+		message == WM_RBUTTONUP || message == WM_MOUSEMOVE)
 	{
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-	case WM_MOUSEMOVE:
 		xPos = LOWORD(lParam); 
 		yPos = HIWORD(lParam);
+
 		D3DXVECTOR3 vPos(0,0,0), vDir(0,0,0);
-		if (m_pCamera->Screen2World(xPos,yPos,vPos,vDir))
+		if (m_pCamera->Screen2World(hWnd, xPos, yPos, vPos,vDir))
 		{
 			PassMouseMessage(message, wParam, lParam, vPos, vDir);
+			BOOL bHit = FALSE;
+			float tU, tV = 0;
+			IntersectWithPlane(vPos, vDir, bHit, tU, tV);
+			
+			if (bHit)
+			{
+				WCHAR str[MAX_PATH];
+				swprintf_s(str, MAX_PATH, L"@@@@IntersectWithPlane tU = %f, tV = %f \n",
+					tU, tV);
+				OutputDebugStringW(str);
+				struct TData
+				{
+					UINT msg;
+					float tU;
+					float tV;
+				};
+				TData data;
+				data.msg = message;
+				data.tU = tU;
+				data.tV = tV;
+				Invoke(L"WM_ReceiveMouseMessage", wParam, lParam, (void*)&data );
+			}
 		}
-		break;
+		
 	}
 	Render();
 	return TRUE;
 }
+
+BOOL MS3DDisplay::IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV)
+{
+	bHit = FALSE;
+	DWORD faceIdx = 0;
+	float pU, pV = 0;
+	float dist = 0;
+	DWORD countOfHits = 0;
+
+	LPD3DXBUFFER pBuffer = NULL;
+	HRESULT hr;
+	
+	hr = D3DXIntersect(m_pDisplayPlane->GetMesh(), &vPos, &vDir, &bHit, &faceIdx, &pU, &pV, &dist, &pBuffer,
+		&countOfHits);
+
+
+	if (FAILED(hr))
+	{
+		return FALSE;
+	}
+	if (bHit)
+	{
+		IDirect3DIndexBuffer9* pIndices = m_pDisplayPlane->GetIndexBuffer();
+		UINT* pIndex = NULL;
+		MSMeshBase::CUSTOMVERTEX pVtx[3];
+		pIndices->Lock(0, NULL, (void**)&pIndex, D3DLOCK_READONLY);
+		m_pDisplayPlane->GetVertex(pIndex[faceIdx*3], pVtx[0]);
+		m_pDisplayPlane->GetVertex(pIndex[faceIdx*3+1], pVtx[1]);
+		m_pDisplayPlane->GetVertex(pIndex[faceIdx*3+2], pVtx[2]);
+		pIndices->Unlock();
+		tU = pVtx[0].tu + pU*(pVtx[1].tu - pVtx[0].tu) + pV*(pVtx[2].tu - pVtx[0].tu);
+		tV = pVtx[0].tv + pU*(pVtx[1].tv - pVtx[0].tv) + pV*(pVtx[2].tv - pVtx[0].tv);
+
+	}
+	return TRUE;
+}							 
+							 
 BOOL MS3DDisplay::HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 {
 	return TRUE;
@@ -744,7 +828,8 @@ BOOL MS3DDisplay::onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam
 		int xPos = LOWORD(lParam); 
 		int yPos = HIWORD(lParam);
 		D3DXVECTOR3 pos, dir;
-		((MS3DDisplay*)_THIS)->m_pCamera->Screen2World(xPos, yPos, pos, dir);
+		
+		((MS3DDisplay*)_THIS)->m_pCamera->Screen2World(((MS3DDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, pos, dir);
 		D3DXVECTOR3 prePos = pbutton->GetPosition();
 		D3DXVECTOR3 newPos(pos.x, pos.y, prePos.z);
 		MSMeshBase::CUSTOMVERTEX vertex;
@@ -1015,7 +1100,7 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 		return FALSE;
 	}
 	//EnterCriticalSection(&m_CS);
-	OutputDebugStringW(L"@@@@ DrawBitBlt called!! \n");
+	//OutputDebugStringW(L"@@@@ DrawBitBlt called!! \n");
 	HRESULT hr;
 	IDirect3DSurface9* pSurface = NULL;
 	m_pRenderTarget->GetSurfaceLevel(0, &pSurface);
@@ -1035,9 +1120,10 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	float rX = ((float)desc.Width / dcW);
 	float rY = ((float)desc.Height / dcH);
 
-	WCHAR str[MAX_PATH];
+	/*WCHAR str[MAX_PATH];
 	swprintf_s(str, MAX_PATH, L"@@@@@ dcW = %d, dcH = %d, desc.Width = %d, desc.Height = %d \n", dcW, dcH, desc.Width, desc.Height);
 	OutputDebugStringW(str);
+	*/
 	StretchBlt(textureDC, rX*x, rY*y, rX*width, rY*height, hdcSrc, x1, y1, width, height, rop);
 
 	pSurface->ReleaseDC(textureDC);
@@ -1046,6 +1132,6 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 
 	//LeaveCriticalSection(&m_CS);
 	Render();
-	OutputDebugStringW(L"@@@@ DrawBitBlt leave!! \n");
+	//OutputDebugStringW(L"@@@@ DrawBitBlt leave!! \n");
 	return TRUE;
 }

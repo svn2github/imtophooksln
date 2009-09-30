@@ -188,6 +188,7 @@ public:
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL GetVertex(UINT idx, CUSTOMVERTEX& vertex);
 	virtual BOOL SetVertex(UINT idx, CUSTOMVERTEX& vertex);
+	virtual LPD3DXMESH GetMesh();
 };
 
 class MS3DPlane : public MSMeshBase, public MS3DObj
@@ -213,7 +214,8 @@ public:
 	virtual D3DXVECTOR3 GetUpVec() = 0;
 	virtual BOOL CameraOn() = 0;
 	virtual BOOL CameraOff() = 0;
-
+	virtual D3DXMATRIX GetViewMatrix() = 0;
+	virtual D3DXMATRIX GetProjMatrix() = 0;
 
 };
 
@@ -246,7 +248,9 @@ public:
 	virtual D3DXVECTOR3 GetUpVec();
 	virtual BOOL CameraOn();
 	virtual BOOL CameraOff();
-	virtual BOOL Screen2World(int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
+	virtual D3DXMATRIX GetViewMatrix();
+	virtual D3DXMATRIX GetProjMatrix();
+	virtual BOOL Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 };
 
 class MS3DButton : public MS3DPlane, public MSEventManager
@@ -282,6 +286,7 @@ protected:
 	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 	vector<MS3DButton*> m_pWarpButtons;
 	BOOL m_bStartDrag; 
+	map<HWND, LPDIRECT3DTEXTURE9> m_winTextures;
 	CRITICAL_SECTION m_CS;
 private:
 	HANDLE m_hRenderThread;
@@ -291,7 +296,7 @@ private:
 	BOOL CreateTexture();
 	BOOL CreateWarpButtons();
 	BOOL ClearWarpButtons();
-
+	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
 public:
 	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D);
 	virtual ~MS3DDisplay();
