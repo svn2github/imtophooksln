@@ -13,7 +13,7 @@
 // CImHookProcessDlg dialog
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 static UINT HOOKED_ENABLEEDITWARP = ::RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
-
+static UINT HOOKED_ENABLEEDITTTS = ::RegisterWindowMessage(HOOKED_ENABLEEDITTTS_MSG);
 CImHookProcessDlg::CImHookProcessDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImHookProcessDlg::IDD, pParent)
 {
@@ -36,6 +36,7 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BUTTON1, m_btnFindWindow);
 
 	DDX_Control(pDX, IDC_CKEDITWARP, m_ckEditWarp);
+	DDX_Control(pDX, IDC_CHK_EDITTTS, m_ckEditTTS);
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
@@ -49,6 +50,8 @@ BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON4, &CImHookProcessDlg::onDetourCreateProc)
 	ON_BN_CLICKED(IDC_BUTTON1, &CImHookProcessDlg::onFindWindow)
 	ON_BN_CLICKED(IDC_CKEDITWARP, &CImHookProcessDlg::OnBnClickedCkeditwarp)
+	ON_BN_CLICKED(IDC_CHK_EDITTTS, &CImHookProcessDlg::OnBnClickedChkEdittts)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 
@@ -254,5 +257,24 @@ void CImHookProcessDlg::OnBnClickedCkeditwarp()
 	int checked = m_ckEditWarp.GetCheck();
 
 	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITWARP, checked, NULL);
+	
+}
 
+void CImHookProcessDlg::OnBnClickedChkEdittts()
+{
+	if (m_HookedWnd == NULL)
+		return ;
+	int checked = m_ckEditTTS.GetCheck();
+
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITTTS, checked, NULL);
+}
+
+void CImHookProcessDlg::OnClose()
+{
+	// TODO: Add your message handler code here and/or call default
+	if (m_HookedWnd != NULL)
+	{
+		::PostMessageW(m_HookedWnd->GetSafeHwnd(), WM_CLOSE, NULL, NULL);
+	}
+	CDialog::OnClose();
 }

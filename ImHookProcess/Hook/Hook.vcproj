@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="0"
@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies=" ..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib"
+				AdditionalDependencies=" ..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib cv.lib cxcore.lib"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -97,7 +97,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -139,7 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib"
+				AdditionalDependencies="..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib cv.lib cxcore.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -198,6 +198,10 @@
 			</File>
 			<File
 				RelativePath=".\HookRender.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\fx\ImHookRender.fx"
 				>
 			</File>
 			<File

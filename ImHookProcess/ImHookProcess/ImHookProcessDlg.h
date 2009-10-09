@@ -63,4 +63,7 @@ public:
 	afx_msg void OnBnDropDownbtnv1(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedCkeditwarp();
 	CButton m_ckEditWarp;
+	afx_msg void OnBnClickedChkEdittts();
+	CButton m_ckEditTTS;
+	afx_msg void OnClose();
 };

@@ -38,6 +38,7 @@ UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_DOHOOK_CREATEDEVICE = 0;
 UINT HOOKED_SETHOOKCLIENT = 0;
 UINT HOOKED_ENABLEEDITWARP = 0;
+UINT HOOKED_ENABLEEDITTTS = 0;
 
 WCHAR g_szHWndName[MAX_PATH] = L"ImHighResolution";
 
@@ -154,6 +155,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		HOOKED_SETHOOKCLIENT = RegisterWindowMessage(HOOKED_SETHOOKCLIENT_MSG);
 		HOOKED_DOHOOK_CREATEDEVICE = RegisterWindowMessage(HOOKED_DOHOOKCREATEDEVICE_MSG);
 		HOOKED_ENABLEEDITWARP = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
+		HOOKED_ENABLEEDITTTS = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_MSG);
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{
@@ -173,7 +175,6 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			swprintf_s(str, L"@@@@ HookClient: %Xh \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
 			CreateHighDisplay(hModule);
-
 			DetourAllGDI();
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
 			
@@ -217,7 +218,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 
 BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, void* data)
 {
-	if (g_hHookClientWnd == NULL)
+	if (g_hHookClientWnd == NULL || g_orgWndProc == NULL)
 		return FALSE;
 	struct TData
 	{
@@ -231,12 +232,34 @@ BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, 
 	unsigned short xPos = (wrect.right - wrect.left) * tdata->tU;
 	unsigned short yPos = (wrect.bottom - wrect.top) * tdata->tV;
 	lparam = (yPos << 16) | xPos ;
+
 	PostMessage(g_hHookClientWnd, tdata->msg, wparam, lparam);
-	WCHAR str[MAX_PATH];
-	UINT xp = LOWORD(lparam);
-	UINT yp = HIWORD(lparam);
-	swprintf_s(str, MAX_PATH, L"@@@@ PostMessage xPos = %d, yPos = %d \n", xp, yp);
-	OutputDebugStringW(str);
+	//CallWindowProcW((WNDPROC)g_orgWndProc, g_hHookClientWnd,  tdata->msg, wparam, lparam );
+	if (tdata->msg != WM_MOUSEMOVE)
+	{
+		WCHAR msg[MAX_PATH] = {0};
+		switch (tdata->msg)
+		{
+		
+			case WM_LBUTTONDOWN:
+				swprintf_s(msg, MAX_PATH, L" WM_LBUTTONDOWN");
+				break;
+			case WM_LBUTTONUP:
+				swprintf_s(msg, MAX_PATH, L" WM_LBUTTONUP");
+				break;
+			case WM_RBUTTONDOWN:
+				swprintf_s(msg, MAX_PATH, L" WM_RBUTTONDOWN");
+				break;
+			case WM_RBUTTONUP:
+				swprintf_s(msg, MAX_PATH, L" WM_RBUTTONUP");
+				break;
+		}
+		WCHAR str[MAX_PATH];
+		UINT xp = LOWORD(lparam);
+		UINT yp = HIWORD(lparam);
+		swprintf_s(str, MAX_PATH, L"@@@@ PostMessage xPos = %d, yPos = %d, %s \n", xp, yp, msg);
+		OutputDebugStringW(str);
+	}
 	return TRUE;
 }
 
@@ -250,13 +273,20 @@ BOOL CreateHighDisplay(HMODULE hModule)
 	}
 	OutputDebugStringW(L"@@@@@before RegisterWndClass!! \n");
 	RegisterWndClass(hModule);
-	g_HighWnd = CreateWindowW(g_szHWndName, L"High Resolution",WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_MINIMIZEBOX,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hModule, NULL);
+	g_HighWnd = CreateWindowW( g_szHWndName, L"High Resolution", WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_MINIMIZEBOX | WS_EX_TOPMOST,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT,0, NULL, NULL, hModule, NULL);
+	
 	if (g_HighWnd == NULL)
 	{
-		OutputDebugStringW(L"@@@@@ CreateWindow Failed!! in CreateHighDisplay\n");
+		DWORD err = GetLastError();
+		WCHAR str[MAX_PATH];
+		swprintf_s(str, MAX_PATH, L"@@@@@ CreateWindow Failed!! in CreateHighDisplay, Error code = %h \n", err);
+		OutputDebugStringW(str);
+		
 	}
+
 	ShowWindow(g_HighWnd, TRUE);
+	
 	if (g_pD3D == NULL)
 	{
 		if( NULL == ( g_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
@@ -267,7 +297,7 @@ BOOL CreateHighDisplay(HMODULE hModule)
 	}
 	
 	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
-	g_pHighDisplay->Bind(L"WM_ReceiveMouseMessage", (IEventManager::TaskFuncPtr)OnReceiveMouseMessage, NULL);
+	//g_pHighDisplay->Bind(L"WM_ReceiveMouseMessage", (IEventManager::TaskFuncPtr)OnReceiveMouseMessage, NULL);
 	
 	return TRUE;
 }
@@ -298,6 +328,7 @@ bool _SetHookClient(HWND hClient)
 	UnHookWndProc(g_hHookClientWnd);
 	g_hHookClientWnd = hClient;
 	HookWndProc(g_hHookClientWnd, (LONG)HookWindowProc, g_orgWndProc);
+	
 	//RepaintClientWindow();
 	return true;
 }
@@ -410,7 +441,10 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 {
 	if (g_pHighDisplay != NULL)
 	{
-		g_pHighDisplay->WndProc(hWnd, message, wParam, lParam);
+		if (g_pHighDisplay->WndProc(hWnd, message, wParam, lParam))
+		{
+			return 0;
+		}
 	}
 	int wmId, wmEvent;
 	PAINTSTRUCT ps;
@@ -430,8 +464,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hWnd, &ps);
-		OutputDebugStringW(L"HighResolutionWndProc  WM_PAINT!! \n");
-		// TODO: 在此加入任何繪圖程式碼...
+
 		EndPaint(hWnd, &ps);
 		break;
 	case WM_DESTROY:
@@ -439,9 +472,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		ReleaseResource();
 		PostQuitMessage(0);
 		break;
-	case WM_LBUTTONDOWN:
-		OutputDebugStringW(L"@@@@ LButtonDown in HighResolutionWndProc!! \n ");
-		break;
+
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -457,6 +488,13 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 			if (g_pHighDisplay != NULL)
 			{
 				g_pHighDisplay->SetEditWarpEnable(wParam);
+			}
+		}
+		else if (uMsg == HOOKED_ENABLEEDITTTS)
+		{
+			if (g_pHighDisplay != NULL)
+			{
+				g_pHighDisplay->SetEditTTSEnable(wParam);
 			}
 		}
 		if (uMsg == WM_CLOSE)
@@ -475,9 +513,13 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 			OutputDebugStringW(L"@@@@ HOOKED_RESETWNDPROC_MSG!!\n");
 			_SetHookClient((HWND)wParam);
 		}
+		else if (uMsg == WM_PAINT)
+		{
+			OutputDebugStringW(L"@@@@@ WM_PAINT!!!!\n");
+		}
 	}
-	LRESULT lr = CallWindowProcW((WNDPROC)g_orgWndProc,hwnd, uMsg, wParam, lParam );
-
+	LRESULT lr = 0;
+	lr = CallWindowProcW((WNDPROC)g_orgWndProc,hwnd, uMsg, wParam, lParam );
 	return lr;
 }
 
@@ -503,6 +545,11 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow)
 			swprintf_s(str,MAX_PATH, L"@@@@ g_hHookClientWnd = %Xh \n", hWnd);
 			OutputDebugStringW(str);
 			HookWndProc(g_hHookClientWnd, (LONG)HookWindowProc, g_orgWndProc);
+			if (g_hHookClientWnd)
+			{
+				
+				//EnableWindow(g_hHookClientWnd, FALSE);
+			}
 		}
 	}
 	return ret;
@@ -515,7 +562,7 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 	if (g_HighWnd != NULL && g_hHookClientWnd != NULL && g_pHighDisplay != NULL)
 	{
 		HWND hwnd = WindowFromDC(hdc);
-
+	 
 		HDC clientDC = GetDC(g_hHookClientWnd);
 
 		RECT rect;
@@ -528,13 +575,6 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 		MapWindowPoints(hwnd, g_hHookClientWnd, &pt,1);
 		
 		g_pHighDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc, x1, y1, rop);
-
-		//StretchBlt(GetDC(g_HighWnd), pt.x*2, pt.y*2, cx*2, cy*2, hdcSrc, x1, y1, cx, cy, rop);
-
-		//WCHAR str[MAX_PATH];
-		//swprintf(str, MAX_PATH,L"@@@@ from (%3d, %3d) to (%3d, %3d) \n", x, y, pt.x, pt.y);
-		//OutputDebugStringW(str);
-		//pRealBitBlt(GetDC(g_HighWnd), x, y, cx*2, cy*2, hdcSrc, x1, y1, rop);
 	}
 	return TRUE;
 }

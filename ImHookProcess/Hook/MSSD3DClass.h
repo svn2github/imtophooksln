@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <vector>
 #include <map>
+#include <D3DX9Effect.h>
+
 using namespace std;
 
 class IEventManager
@@ -39,12 +41,12 @@ protected:
 	class cmp_wstr 
 	{
 	public:
-		bool operator()(WCHAR const *a, WCHAR const *b) 
+
+		bool operator()(const WCHAR  *a, const WCHAR *b) const 
 		{
 			return wcscmp(a, b) < 0;
 		}
 	};
-
 
 	struct EventTask
 	{
@@ -283,20 +285,29 @@ protected:
 	IDirect3D9* m_pD3D;
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
+	D3DXMATRIX m_matTTS;
 	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 	vector<MS3DButton*> m_pWarpButtons;
+	vector<MS3DButton*> m_pTTSButtons;
 	BOOL m_bStartDrag; 
 	map<HWND, LPDIRECT3DTEXTURE9> m_winTextures;
 	CRITICAL_SECTION m_CS;
 private:
 	HANDLE m_hRenderThread;
 	BOOL m_bEditWarp;
+	BOOL m_bEditTTS;
+	ID3DXEffect* m_pEffect;
 	BOOL InitDevice();
 	static BOOL _Run(void* _THIS);
 	BOOL CreateTexture();
 	BOOL CreateWarpButtons();
 	BOOL ClearWarpButtons();
+	BOOL CreateTTSButtons();
+	BOOL ClearTTSButtons();
 	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
+	ID3DXEffect* GetEffect();
+	BOOL UpdateTTSByTTSButtons();
+	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);
 public:
 	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D);
 	virtual ~MS3DDisplay();
@@ -304,7 +315,9 @@ public:
 	virtual BOOL Stop();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 	virtual BOOL SetEditWarpEnable(BOOL enable);
+	virtual BOOL SetEditTTSEnable(BOOL enable);
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	virtual BOOL DrawBitBlt(HDC hdc, int x, int y, int cx, int cy, int dcW, int dcH, HDC hdcSrc, int x1, int y1, DWORD rop);
@@ -313,7 +326,9 @@ public:
 	static BOOL __stdcall onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 	static BOOL __stdcall onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 
-
+	static BOOL __stdcall onTTSButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onTTSButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 };
 
 
