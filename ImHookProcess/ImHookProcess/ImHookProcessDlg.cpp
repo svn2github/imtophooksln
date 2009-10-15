@@ -12,8 +12,10 @@
 
 // CImHookProcessDlg dialog
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
-static UINT HOOKED_ENABLEEDITWARP = ::RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
-static UINT HOOKED_ENABLEEDITTTS = ::RegisterWindowMessage(HOOKED_ENABLEEDITTTS_MSG);
+static UINT HOOKED_ENABLEEDITWARP_LOW = ::RegisterWindowMessage(HOOKED_ENABLEEDITWARP_LOW_MSG);
+static UINT HOOKED_ENABLEEDITTTS_LOW = ::RegisterWindowMessage(HOOKED_ENABLEEDITTTS_LOW_MSG);
+static UINT HOOKED_ENABLEEDITWARP_HIGH = ::RegisterWindowMessage(HOOKED_ENABLEEDITWARP_HIGH_MSG);
+static UINT HOOKED_ENABLEEDITTTS_HIGH = ::RegisterWindowMessage(HOOKED_ENABLEEDITTTS_HIGH_MSG);
 CImHookProcessDlg::CImHookProcessDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImHookProcessDlg::IDD, pParent)
 {
@@ -37,6 +39,8 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Control(pDX, IDC_CKEDITWARP, m_ckEditWarp);
 	DDX_Control(pDX, IDC_CHK_EDITTTS, m_ckEditTTS);
+	DDX_Control(pDX, IDC_CHECK1, m_ckEditWarpHigh);
+	DDX_Control(pDX, IDC_CHECK2, m_ckEditTTSHigh);
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
@@ -52,6 +56,8 @@ BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	ON_BN_CLICKED(IDC_CKEDITWARP, &CImHookProcessDlg::OnBnClickedCkeditwarp)
 	ON_BN_CLICKED(IDC_CHK_EDITTTS, &CImHookProcessDlg::OnBnClickedChkEdittts)
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_CHECK1, &CImHookProcessDlg::OnBnClickedCheck1)
+	ON_BN_CLICKED(IDC_CHECK2, &CImHookProcessDlg::OnBnClickedCheck2)
 END_MESSAGE_MAP()
 
 
@@ -216,7 +222,7 @@ void CImHookProcessDlg::onDetourCreateProc()
 	BOOL hr = DetourCreateProcessWithDll(NULL, (LPWSTR)(LPCWSTR)path,
 		NULL, NULL, TRUE, dwFlags, NULL, NULL,
 		&si, &pi, detourDllPath, dllName, NULL);
-	Sleep(1000);
+	Sleep(2500);
 	if (hr )
 	{
 		m_pApp->WriteProfileString(L"MySetting",L"CreateProcPath",path);
@@ -255,8 +261,8 @@ void CImHookProcessDlg::OnBnClickedCkeditwarp()
 	if (m_HookedWnd == NULL)
 		return ;
 	int checked = m_ckEditWarp.GetCheck();
-
-	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITWARP, checked, NULL);
+	OutputDebugStringW(L"@@@@@ Send HOOKED_ENABLEEDITWARP_LOW Message!! \n");
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITWARP_LOW, checked, NULL);
 	
 }
 
@@ -265,8 +271,8 @@ void CImHookProcessDlg::OnBnClickedChkEdittts()
 	if (m_HookedWnd == NULL)
 		return ;
 	int checked = m_ckEditTTS.GetCheck();
-
-	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITTTS, checked, NULL);
+	OutputDebugStringW(L"@@@@@ Send HOOKED_ENABLEEDITTTS_LOW Message!! \n");
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITTTS_LOW, checked, NULL);
 }
 
 void CImHookProcessDlg::OnClose()
@@ -277,4 +283,22 @@ void CImHookProcessDlg::OnClose()
 		::PostMessageW(m_HookedWnd->GetSafeHwnd(), WM_CLOSE, NULL, NULL);
 	}
 	CDialog::OnClose();
+}
+
+void CImHookProcessDlg::OnBnClickedCheck1()
+{
+	if (m_HookedWnd == NULL)
+		return ;
+	int checked = m_ckEditWarpHigh.GetCheck();
+	OutputDebugStringW(L"@@@@@ Send HOOKED_ENABLEEDITWARP_HIGH Message!! \n");
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITWARP_HIGH, checked, NULL);
+}
+
+void CImHookProcessDlg::OnBnClickedCheck2()
+{
+	if (m_HookedWnd == NULL)
+		return ;
+	int checked = m_ckEditTTSHigh.GetCheck();
+	OutputDebugStringW(L"@@@@@ Send HOOKED_ENABLEEDITTTS_HIGH Message!! \n");
+	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITTTS_HIGH, checked, NULL);
 }

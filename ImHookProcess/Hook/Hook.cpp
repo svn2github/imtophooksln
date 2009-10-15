@@ -22,6 +22,8 @@ DWORD g_hHookServerProcID = 0;
 HWND g_hHookClientWnd = NULL;
 DWORD g_hHookClientProcID = 0;
 
+
+
 #pragma data_seg()
 #pragma comment(linker, "/section:.MuscleSeg,rws")
 //////////////////////////////////////////////////
@@ -37,9 +39,12 @@ LONG_PTR g_orgWndProc = NULL;
 UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_DOHOOK_CREATEDEVICE = 0;
 UINT HOOKED_SETHOOKCLIENT = 0;
-UINT HOOKED_ENABLEEDITWARP = 0;
-UINT HOOKED_ENABLEEDITTTS = 0;
+UINT HOOKED_ENABLEEDITWARP_LOW = 0;
+UINT HOOKED_ENABLEEDITTTS_LOW = 0;
+UINT HOOKED_ENABLEEDITWARP_HIGH = 0;
+UINT HOOKED_ENABLEEDITTTS_HIGH = 0;
 
+WCHAR g_szLWndName[MAX_PATH] = L"ImLowResolution";
 WCHAR g_szHWndName[MAX_PATH] = L"ImHighResolution";
 
 BOOL (WINAPI* pShowWindow)(HWND hWnd, int nCmdShow) = ShowWindow;
@@ -48,7 +53,10 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
 
 
 IDirect3D9* g_pD3D = NULL;
+MS3DDisplay* g_pLowDisplay = NULL;
 MS3DDisplay* g_pHighDisplay = NULL;
+
+BOOL CreateLowDisplay(HMODULE hModule);
 BOOL CreateHighDisplay(HMODULE hModule);
 /////////////////////////////////////////////
 bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName);
@@ -58,8 +66,10 @@ bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc);
 bool UnHookWndProc(HWND hwnd);
 ////////////////////////////////////////////
 LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam);
+LRESULT CALLBACK LowResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 ////////////for hook GDI Drawing command/////////////////
+HWND g_LowWnd = NULL;
 HWND g_HighWnd = NULL;
 BOOL (WINAPI* pRealBitBlt)(HDC, int, int, int, int, HDC, int, int, DWORD) = BitBlt;
 BOOL WINAPI pHookBitBlt(HDC, int, int, int, int, HDC, int, int, DWORD);
@@ -120,14 +130,14 @@ DrawFrameControl
 /////////////////////
 
 
-ATOM RegisterWndClass(HINSTANCE hInstance)
+ATOM RegisterLWndClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
 
 	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= HighResolutionWndProc;
+	wcex.lpfnWndProc	= LowResolutionWndProc;
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
 	wcex.hInstance		= hInstance;
@@ -135,9 +145,35 @@ ATOM RegisterWndClass(HINSTANCE hInstance)
 	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
 	wcex.lpszMenuName	= NULL;
-	wcex.lpszClassName	= g_szHWndName;
+	wcex.lpszClassName	= g_szLWndName;
 	wcex.hIconSm		= NULL;
 	ATOM ret = RegisterClassEx(&wcex);
+
+	return ret;
+}
+
+
+ATOM RegisterHWndClass(HINSTANCE hInstance)
+{
+	WNDCLASSEX wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style			= CS_HREDRAW | CS_VREDRAW;
+
+	wcex.cbClsExtra		= 0;
+	wcex.cbWndExtra		= 0;
+	wcex.hInstance		= hInstance;
+	wcex.hIcon			= NULL;
+	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
+	wcex.lpszMenuName	= NULL;
+	wcex.hIconSm		= NULL;
+
+	wcex.lpfnWndProc	= HighResolutionWndProc;
+	wcex.lpszClassName	= g_szHWndName;
+	ATOM ret = RegisterClassEx(&wcex);
+
 	return ret;
 }
 
@@ -154,8 +190,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		HOOKED_WNDDESTORY = RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 		HOOKED_SETHOOKCLIENT = RegisterWindowMessage(HOOKED_SETHOOKCLIENT_MSG);
 		HOOKED_DOHOOK_CREATEDEVICE = RegisterWindowMessage(HOOKED_DOHOOKCREATEDEVICE_MSG);
-		HOOKED_ENABLEEDITWARP = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_MSG);
-		HOOKED_ENABLEEDITTTS = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_MSG);
+		HOOKED_ENABLEEDITWARP_LOW = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_LOW_MSG);
+		HOOKED_ENABLEEDITTTS_LOW = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_LOW_MSG);
+		HOOKED_ENABLEEDITWARP_HIGH = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_HIGH_MSG);
+		HOOKED_ENABLEEDITTTS_HIGH = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_HIGH_MSG);
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{
@@ -174,6 +212,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookClient: %Xh \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
+			CreateLowDisplay(hModule);
 			CreateHighDisplay(hModule);
 			DetourAllGDI();
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
@@ -240,7 +279,6 @@ BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, 
 		WCHAR msg[MAX_PATH] = {0};
 		switch (tdata->msg)
 		{
-		
 			case WM_LBUTTONDOWN:
 				swprintf_s(msg, MAX_PATH, L" WM_LBUTTONDOWN");
 				break;
@@ -263,42 +301,82 @@ BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, 
 	return TRUE;
 }
 
-BOOL CreateHighDisplay(HMODULE hModule)
+BOOL CreateLowDisplay(HMODULE hModule)
 {
-	OutputDebugStringW(L"@@@@@ CreateHighDisplay called!! \n");
-	if (g_pHighDisplay != NULL)
+	OutputDebugStringW(L"@@@@@ CreateLowDisplay called!! \n");
+	if (g_pLowDisplay != NULL)
 	{
-		OutputDebugStringW(L"@@@@@ g_pHighDisplay != NULL, CreateHighDisplay return FALSE \n");
+		OutputDebugStringW(L"@@@@@ g_pLowDisplay != NULL, CreateLowDisplay return FALSE \n");
 		return FALSE;
 	}
 	OutputDebugStringW(L"@@@@@before RegisterWndClass!! \n");
-	RegisterWndClass(hModule);
-	g_HighWnd = CreateWindowW( g_szHWndName, L"High Resolution", WS_OVERLAPPEDWINDOW | WS_SIZEBOX | WS_MINIMIZEBOX | WS_EX_TOPMOST,
+	RegisterLWndClass(hModule);
+	g_LowWnd = CreateWindowExW(NULL, g_szLWndName, L"Low Resolution", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, 0, CW_USEDEFAULT,0, NULL, NULL, hModule, NULL);
 	
-	if (g_HighWnd == NULL)
+	if (g_LowWnd == NULL)
 	{
 		DWORD err = GetLastError();
 		WCHAR str[MAX_PATH];
-		swprintf_s(str, MAX_PATH, L"@@@@@ CreateWindow Failed!! in CreateHighDisplay, Error code = %h \n", err);
+		swprintf_s(str, MAX_PATH, L"@@@@@ CreateWindow Failed!! in CreateLowDisplay, Error code = %h \n", err);
 		OutputDebugStringW(str);
 		
 	}
 
-	ShowWindow(g_HighWnd, TRUE);
+	ShowWindow(g_LowWnd, TRUE);
 	
 	if (g_pD3D == NULL)
 	{
 		if( NULL == ( g_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
 		{
-			OutputDebugStringW(L"@@@@@ Direct3DCreate9 Failed!! in CreateHighDisplay\n");
+			OutputDebugStringW(L"@@@@@ Direct3DCreate9 Failed!! in CreateLowDisplay\n");
 			return FALSE;
 		}
 	}
 	
-	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
-	//g_pHighDisplay->Bind(L"WM_ReceiveMouseMessage", (IEventManager::TaskFuncPtr)OnReceiveMouseMessage, NULL);
+	g_pLowDisplay = new MS3DDisplay(g_LowWnd, g_pD3D);
+	g_pLowDisplay->SetCaptureRegion(0,0,1,1);
 	
+	return TRUE;
+}
+
+
+BOOL CreateHighDisplay(HMODULE hModule)
+{
+	OutputDebugStringW(L"@@@@@ CreateLowDisplay called!! \n");
+	if (g_pHighDisplay != NULL)
+	{
+		OutputDebugStringW(L"@@@@@ g_pLowDisplay != NULL, CreateLowDisplay return FALSE \n");
+		return FALSE;
+	}
+	OutputDebugStringW(L"@@@@@before RegisterWndClass!! \n");
+	RegisterHWndClass(hModule);
+	g_HighWnd = CreateWindowExW(NULL, g_szHWndName, L"High Resolution", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, CW_USEDEFAULT,0, NULL, NULL, hModule, NULL);
+
+	if (g_HighWnd == NULL)
+	{
+		DWORD err = GetLastError();
+		WCHAR str[MAX_PATH];
+		swprintf_s(str, MAX_PATH, L"@@@@@ CreateWindow Failed!! in CreateLowDisplay, Error code = %h \n", err);
+		OutputDebugStringW(str);
+
+	}
+
+	ShowWindow(g_HighWnd, TRUE);
+
+	if (g_pD3D == NULL)
+	{
+		if( NULL == ( g_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
+		{
+			OutputDebugStringW(L"@@@@@ Direct3DCreate9 Failed!! in CreateLowDisplay\n");
+			return FALSE;
+		}
+	}
+
+	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
+	g_pHighDisplay->SetCaptureRegion(0.1,0.1,0.4,0.4);
+
 	return TRUE;
 }
 
@@ -383,10 +461,10 @@ bool HookWndProc(HWND hwnd, LONG WndProc, LONG_PTR& orgWndProc)
 bool ReleaseResource()
 {
 	
-	if (g_pHighDisplay != NULL)
+	if (g_pLowDisplay != NULL)
 	{
-		delete g_pHighDisplay;
-		g_pHighDisplay = NULL;
+		delete g_pLowDisplay;
+		g_pLowDisplay = NULL;
 	}
 	
 	if (g_pD3D != NULL)
@@ -437,11 +515,11 @@ bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName)
 // what distances geometry should be no longer be rendered).
 
 
-LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK LowResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (g_pHighDisplay != NULL)
+	if (g_pLowDisplay != NULL)
 	{
-		if (g_pHighDisplay->WndProc(hWnd, message, wParam, lParam))
+		if (g_pLowDisplay->WndProc(hWnd, message, wParam, lParam))
 		{
 			return 0;
 		}
@@ -469,6 +547,7 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 		break;
 	case WM_DESTROY:
 		SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+		SendMessage(g_HighWnd, HOOKED_WNDDESTORY, 0, 0);
 		ReleaseResource();
 		PostQuitMessage(0);
 		break;
@@ -479,24 +558,88 @@ LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, L
 	return 0;
 }
 
+
+LRESULT CALLBACK HighResolutionWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (g_pHighDisplay != NULL)
+	{
+		if (g_pHighDisplay->WndProc(hWnd, message, wParam, lParam))
+		{
+			return 0;
+		}
+	}
+	int wmId, wmEvent;
+	PAINTSTRUCT ps;
+	HDC hdc;
+	switch (message)
+	{
+	case WM_COMMAND:
+		wmId    = LOWORD(wParam);
+		wmEvent = HIWORD(wParam);
+		// 剖析功能表選取項目:
+		switch (wmId)
+		{
+		default:
+			return DefWindowProc(hWnd, message, wParam, lParam);
+		}
+		break;
+	case WM_PAINT:
+		hdc = BeginPaint(hWnd, &ps);
+
+		EndPaint(hWnd, &ps);
+		break;
+	case WM_DESTROY:
+		SendMessage(g_hHookServerWnd, HOOKED_WNDDESTORY, 0, 0);
+		SendMessage(g_LowWnd, HOOKED_WNDDESTORY, 0, 0);
+		ReleaseResource();
+		PostQuitMessage(0);
+		break;
+
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+
+
 LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lParam)
 {
 	if (hwnd == g_hHookClientWnd && g_hHookClientWnd != 0) 
 	{
-		if (uMsg == HOOKED_ENABLEEDITWARP)
+		if (uMsg == HOOKED_ENABLEEDITWARP_LOW)
+		{
+			if (g_pLowDisplay != NULL)
+			{
+				OutputDebugStringW(L"@@@@@ HOOKED_ENABLEEDITWARP_LOW Received!!!\n");
+				g_pLowDisplay->SetEditWarpEnable(wParam);
+			}
+		}
+		else if (uMsg == HOOKED_ENABLEEDITTTS_LOW)
+		{
+			if (g_pLowDisplay != NULL)
+			{
+				OutputDebugStringW(L"@@@@@ HOOKED_ENABLEEDITTTS_LOW Received!!!\n");
+				g_pLowDisplay->SetEditTTSEnable(wParam);
+			}
+		}
+
+		if (uMsg == HOOKED_ENABLEEDITWARP_HIGH)
 		{
 			if (g_pHighDisplay != NULL)
 			{
+				OutputDebugStringW(L"@@@@@ HOOKED_ENABLEEDITWARP_HIGH Received!!!\n");
 				g_pHighDisplay->SetEditWarpEnable(wParam);
 			}
 		}
-		else if (uMsg == HOOKED_ENABLEEDITTTS)
+		else if (uMsg == HOOKED_ENABLEEDITTTS_HIGH)
 		{
 			if (g_pHighDisplay != NULL)
 			{
+				OutputDebugStringW(L"@@@@@ HOOKED_ENABLEEDITTTS_HIGH Received!!!\n");
 				g_pHighDisplay->SetEditTTSEnable(wParam);
 			}
 		}
+
 		if (uMsg == WM_CLOSE)
 		{ 
 			OutputDebugStringW(L"@@@@ WM_HookCLOSE!!\n");
@@ -557,24 +700,47 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow)
 
 BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc, int x1, int y1, DWORD rop)
 {
-	//OutputDebugStringW(L"@@@@ pHookBitBlt called!!\n");
+	
 	BOOL ret = pRealBitBlt(hdc, x, y, width, height, hdcSrc, x1, y1, rop);
-	if (g_HighWnd != NULL && g_hHookClientWnd != NULL && g_pHighDisplay != NULL)
+	if (g_LowWnd != NULL && g_HighWnd != NULL && g_hHookClientWnd != NULL && g_pLowDisplay != NULL && g_pHighDisplay != NULL)
 	{
 		HWND hwnd = WindowFromDC(hdc);
-	 
-		HDC clientDC = GetDC(g_hHookClientWnd);
-
+		if (hwnd != g_hHookClientWnd)
+		{
+			return ret;
+		}
+		if (x != 0 || y != 0 )
+		{
+			return ret;
+		}
 		RECT rect;
 		GetClientRect(hwnd, &rect);
-		//GetWindowRect(hwnd, &rect);
+
 		int dcW = rect.right - rect.left;
 		int dcH = rect.bottom - rect.top;
-
+		
 		POINT pt;  pt.x = x; pt.y = y;
 		MapWindowPoints(hwnd, g_hHookClientWnd, &pt,1);
 		
-		g_pHighDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc, x1, y1, rop);
+		float low_l, low_t, low_r, low_b;
+		float high_l, high_t, high_r, high_b;
+		
+		g_pLowDisplay->GetCaptureRegion(low_l, low_t, low_r, low_b);
+		g_pHighDisplay->GetCaptureRegion(high_l, high_t, high_r, high_b);
+
+		float tSrcX_L = dcW * low_l;
+		float tSrcY_L = dcH * low_t;
+		float sSrcX_L = low_r - low_l;
+		float sSrcY_L = low_b - low_t;
+
+		float tSrcX_H = dcW * high_l;
+		float tSrcY_H = dcH * high_t;
+		float sSrcX_H = high_r - high_l;
+		float sSrcY_H = high_b - high_t;
+
+		g_pLowDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc, x1 + tSrcX_L, y1 + tSrcY_L, width*sSrcX_L, height*sSrcY_L, rop);
+		g_pHighDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc,x1 + tSrcX_H, y1 + tSrcY_H, width*sSrcX_H, height*sSrcY_H, rop);
+
 	}
 	return TRUE;
 }
@@ -582,13 +748,13 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 HDC WINAPI pHookBeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint)
 {
 	HDC ret = pRealBeginPaint(hWnd, lpPaint);
-	//pRealBeginPaint(g_HighWnd, lpPaint);
+	//pRealBeginPaint(g_LowWnd, lpPaint);
 	return ret;
 }
 
 BOOL WINAPI pHookEndPaint(HWND hWnd, CONST PAINTSTRUCT *lpPaint)
 {
 	BOOL ret = pRealEndPaint(hWnd, lpPaint);
-	//pRealEndPaint(g_HighWnd, lpPaint);
+	//pRealEndPaint(g_LowWnd, lpPaint);
 	return ret;
 }

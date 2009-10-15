@@ -66,4 +66,8 @@ public:
 	afx_msg void OnBnClickedChkEdittts();
 	CButton m_ckEditTTS;
 	afx_msg void OnClose();
+	CButton m_ckEditWarpHigh;
+	CButton m_ckEditTTSHigh;
+	afx_msg void OnBnClickedCheck1();
+	afx_msg void OnBnClickedCheck2();
 };

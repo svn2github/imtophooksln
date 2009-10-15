@@ -406,6 +406,8 @@ MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MS
 	m_bStartDrag = FALSE;
 	m_pRenderTarget = NULL;
 	m_pEffect = NULL;
+	m_captureRect[0] = D3DXVECTOR2(0,0);
+	m_captureRect[1] = D3DXVECTOR2(1,1);
 	D3DXMatrixIdentity(&m_matTTS);
 	InitializeCriticalSection(&m_CS);
 	InitDevice();
@@ -517,7 +519,8 @@ BOOL MS3DDisplay::InitDevice()
 	int screenH = GetDeviceCaps(dc, VERTRES);
 	d3dpp.BackBufferWidth = screenW;
 	d3dpp.BackBufferHeight = screenH;
-	
+
+
 	d3dpp.EnableAutoDepthStencil = TRUE;
 	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
 	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
@@ -923,6 +926,30 @@ BOOL MS3DDisplay::SetEditTTSEnable(BOOL enable)
 	}
 	return TRUE;
 }
+BOOL MS3DDisplay::SetCaptureRegion(float l, float t, float r, float b)
+{
+	if (l < 0 || l > 1 || t < 0 || t > 1 || r <0 || r > 1 || b < 0 || b >1)
+		return FALSE;
+	if (l >= r || t >= b)
+		return FALSE;
+	
+	m_captureRect[0].x = l;
+	m_captureRect[0].y = t;
+	m_captureRect[1].x = r;
+	m_captureRect[1].y = b;
+
+	return TRUE;
+}
+BOOL MS3DDisplay::GetCaptureRegion(float& l, float& t, float& r, float &b)
+{
+	l = m_captureRect[0].x;
+	t = m_captureRect[0].y;
+	r = m_captureRect[1].x;
+	b = m_captureRect[1].y;
+	return TRUE;
+}
+
+
 BOOL MS3DDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	MSEventManager::WndProc( hWnd, message, wParam, lParam);
@@ -1474,7 +1501,7 @@ BOOL MS3DButton::OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void
 	return TRUE;
 }
 
-BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, DWORD rop)
+BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop)
 {
 	//return TRUE;
 	if (m_pRenderTarget == NULL)
@@ -1483,12 +1510,13 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	{
 		return FALSE;
 	}
-	//EnterCriticalSection(&m_CS);
-	//OutputDebugStringW(L"@@@@ DrawBitBlt called!! \n");
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"@@@@@ x = %d, y = %d, width = %d, height = %d\n", x, y, width, height);
+	OutputDebugStringW(str);
+
 	HRESULT hr;
 	IDirect3DSurface9* pSurface = NULL;
 	m_pRenderTarget->GetSurfaceLevel(0, &pSurface);
-	
 	pSurface->UnlockRect();
 
 	HDC textureDC;
@@ -1501,16 +1529,14 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	}
 	D3DSURFACE_DESC desc;
 	pSurface->GetDesc(&desc);
+
+	
 	float rX = ((float)desc.Width / dcW);
 	float rY = ((float)desc.Height / dcH);
 
-	/*
-	WCHAR str[MAX_PATH];
-	swprintf_s(str, MAX_PATH, L"@@@@@ dcW = %d, dcH = %d, desc.Width = %d, desc.Height = %d \n", dcW, dcH, desc.Width, desc.Height);
+	StretchBlt(textureDC, rX*x, rY*y , rX*width, rY*height, hdcSrc, x1, y1, srcW, srcH, rop);
+	swprintf_s(str, MAX_PATH, L"@@@@@rX*width*tSX = %.2f, rY*height*tSY = %.2f\n", rX*width, rY*height);
 	OutputDebugStringW(str);
-	*/
-	StretchBlt(textureDC, rX*x, rY*y, rX*width, rY*height, hdcSrc, x1, y1, width, height, rop);
-
 	pSurface->ReleaseDC(textureDC);
 	pSurface->Release();
 	pSurface = NULL;
