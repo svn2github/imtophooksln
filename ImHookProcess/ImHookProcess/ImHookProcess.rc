@@ -71,7 +71,7 @@ IDRETRY                 ICON                    "res\\ImHookProcess.ico"
 // Dialog
 //
 
-IDD_IMHOOKPROCESS_DIALOG DIALOGEX 0, 0, 313, 133
+IDD_IMHOOKPROCESS_DIALOG DIALOGEX 0, 0, 317, 260
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "ImHookProcess"
@@ -89,6 +89,15 @@ BEGIN
     CONTROL         "Edit TTS Low",IDC_CHK_EDITTTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,97,109,57,10
     CONTROL         "Edit Warp High",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,163,109,63,10
     CONTROL         "Edit TTS High",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,237,108,58,10
+    LTEXT           "----------------------------------------------------------------------------------------------------------------",IDC_STATIC,7,126,303,10
+    CTEXT           "Port:",IDC_STATIC,7,140,27,12
+    EDITTEXT        IDC_EDIT4,33,138,59,12,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Listen",IDC_BUTTON2,134,137,50,14
+    PUSHBUTTON      "Stop",IDC_BUTTON5,213,137,50,14
+    CTEXT           "Receive Data:",IDC_STATIC,7,175,55,13
+    CTEXT           "Status:",IDC_STATIC,7,158,31,11
+    LTEXT           "_____",IDC_STATIC_STATUS,45,159,103,10
+    EDITTEXT        IDC_EDIT_RecData,68,176,232,68,ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL
 END
 
 IDD_MonitorWnd DIALOGEX 0, 0, 460, 272
@@ -149,9 +158,9 @@ BEGIN
     IDD_IMHOOKPROCESS_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 306
+        RIGHTMARGIN, 310
         TOPMARGIN, 7
-        BOTTOMMARGIN, 126
+        BOTTOMMARGIN, 253
     END
 
     IDD_MonitorWnd, DIALOG

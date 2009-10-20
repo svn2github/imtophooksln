@@ -1,0 +1,252 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(950)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\ImSocketClient.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\ImSocketClient.ico"
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_IMSOCKETCLIENT_DIALOG DIALOGEX 0, 0, 320, 200
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "ImSocketClient"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,263,164,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,263,143,50,14
+    LTEXT           "Port:",IDC_STATIC,15,43,17,8
+    EDITTEXT        IDC_EDIT1,42,42,66,15,ES_AUTOHSCROLL | ES_NUMBER
+    PUSHBUTTON      "Connect",IDC_BTN_CONNECT,138,20,50,14
+    PUSHBUTTON      "Disconnect",IDC_BUTTON2,221,20,50,14
+    PUSHBUTTON      "SetTTS_H",IDC_BUTTON3,22,78,50,14
+    RTEXT           "V1:",IDC_STATIC,15,106,22,8
+    RTEXT           "V2:",IDC_STATIC,16,130,22,8
+    RTEXT           "V3:",IDC_STATIC,16,151,22,8
+    RTEXT           "V4:",IDC_STATIC,16,169,22,8
+    PUSHBUTTON      "SetTTS_L",IDC_BUTTON4,157,77,50,14
+    RTEXT           "Status:",IDC_STATIC,7,60,28,11
+    LTEXT           "____",IDC_STATIC_STATUS,40,62,233,11,NOT WS_GROUP
+    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,102,75,8
+    LTEXT           "x",IDC_STATIC,39,100,7,10
+    LTEXT           "y",IDC_STATIC,39,110,7,10
+    CONTROL         "",IDC_SLIDER2,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,114,75,8
+    CONTROL         "",IDC_SLIDER3,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,45,127,75,8
+    LTEXT           "x",IDC_STATIC,39,125,7,10
+    LTEXT           "y",IDC_STATIC,39,135,7,10
+    CONTROL         "",IDC_SLIDER4,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,45,138,75,8
+    CONTROL         "",IDC_SLIDER5,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,147,75,8
+    LTEXT           "x",IDC_STATIC,39,146,7,10
+    LTEXT           "y",IDC_STATIC,39,155,7,10
+    CONTROL         "",IDC_SLIDER6,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,159,75,8
+    CONTROL         "",IDC_SLIDER7,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,169,75,8
+    LTEXT           "x",IDC_STATIC,39,167,7,10
+    LTEXT           "y",IDC_STATIC,39,177,7,10
+    CONTROL         "",IDC_SLIDER8,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,46,181,75,8
+    RTEXT           "V1:",IDC_STATIC,137,104,22,8
+    RTEXT           "V2:",IDC_STATIC,137,128,22,8
+    RTEXT           "V3:",IDC_STATIC,137,149,22,8
+    RTEXT           "V4:",IDC_STATIC,137,168,22,8
+    CONTROL         "",IDC_SLIDER9,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,101,75,8
+    LTEXT           "x",IDC_STATIC,161,99,7,10
+    LTEXT           "y",IDC_STATIC,161,109,7,10
+    CONTROL         "",IDC_SLIDER10,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,112,75,8
+    CONTROL         "",IDC_SLIDER11,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,125,75,8
+    LTEXT           "x",IDC_STATIC,161,124,7,10
+    LTEXT           "y",IDC_STATIC,161,133,7,10
+    CONTROL         "",IDC_SLIDER12,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,136,75,8
+    CONTROL         "",IDC_SLIDER13,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,146,75,8
+    LTEXT           "x",IDC_STATIC,161,144,7,10
+    LTEXT           "y",IDC_STATIC,161,154,7,10
+    CONTROL         "",IDC_SLIDER14,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,157,75,8
+    CONTROL         "",IDC_SLIDER15,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,168,75,8
+    LTEXT           "x",IDC_STATIC,161,165,7,10
+    LTEXT           "y",IDC_STATIC,161,176,7,10
+    CONTROL         "",IDC_SLIDER16,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,167,179,75,8
+    LTEXT           "0",IDC_TXT_HV1X,126,99,18,8
+    LTEXT           "0",IDC_TXT_HV1Y,126,112,21,8
+    LTEXT           "0",IDC_TXT_HV2X,126,125,20,8
+    LTEXT           "0",IDC_TXT_HV2Y,126,136,21,8
+    LTEXT           "0",IDC_TXT_HV3X,126,145,19,8
+    LTEXT           "0",IDC_TXT_HV3Y,126,157,20,8
+    LTEXT           "0",IDC_TXT_HV4X,126,168,20,8
+    LTEXT           "0",IDC_TXT_HV4Y,126,179,20,8
+    LTEXT           "0",IDC_TXT_LV1X,248,98,18,8
+    LTEXT           "0",IDC_TXT_LV1Y,248,111,18,8
+    LTEXT           "0",IDC_TXT_LV2X,248,124,18,8
+    LTEXT           "0",IDC_TXT_LV2Y,248,135,18,8
+    LTEXT           "0",IDC_TXT_LV3X,248,144,18,8
+    LTEXT           "0",IDC_TXT_LV3Y,248,156,18,8
+    LTEXT           "0",IDC_TXT_LV4X,248,167,15,8
+    LTEXT           "0",IDC_TXT_LV4Y,248,178,18,8
+    RTEXT           "IP :",IDC_STATIC,126,44,27,12
+    EDITTEXT        IDC_EDIT2,160,43,118,13,ES_AUTOHSCROLL
+    LTEXT           "Host Port:",IDC_STATIC,7,19,46,8
+    EDITTEXT        IDC_EDIT3,42,16,66,15,ES_AUTOHSCROLL | ES_NUMBER
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "ImSocketClient.exe"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "ImSocketClient.exe"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_IMSOCKETCLIENT_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 192
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\ImSocketClient.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

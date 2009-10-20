@@ -11,7 +11,6 @@
 #include "MSSD3DClass.h"
 #include <detours.h>
 
-
 #pragma comment(lib, "psapi")
 
 ////////////////////Share Data Segation///////////
@@ -22,8 +21,10 @@ DWORD g_hHookServerProcID = 0;
 HWND g_hHookClientWnd = NULL;
 DWORD g_hHookClientProcID = 0;
 
-
-
+D3DXVECTOR2 g_TTSRegion_L[4] = {D3DXVECTOR2(0,0), D3DXVECTOR2(0, 1), 
+						D3DXVECTOR2(1,0), D3DXVECTOR2(1, 1)};
+D3DXVECTOR2 g_TTSRegion_H[4] = {D3DXVECTOR2(0,0), D3DXVECTOR2(0, 1), 
+						D3DXVECTOR2(1,0), D3DXVECTOR2(1, 1)};
 #pragma data_seg()
 #pragma comment(linker, "/section:.MuscleSeg,rws")
 //////////////////////////////////////////////////
@@ -43,12 +44,15 @@ UINT HOOKED_ENABLEEDITWARP_LOW = 0;
 UINT HOOKED_ENABLEEDITTTS_LOW = 0;
 UINT HOOKED_ENABLEEDITWARP_HIGH = 0;
 UINT HOOKED_ENABLEEDITTTS_HIGH = 0;
+UINT HOOKED_SETTTS_LOW = 0;
+UINT HOOKED_SETTTS_HIGH = 0;
 
 WCHAR g_szLWndName[MAX_PATH] = L"ImLowResolution";
 WCHAR g_szHWndName[MAX_PATH] = L"ImHighResolution";
 
 BOOL (WINAPI* pShowWindow)(HWND hWnd, int nCmdShow) = ShowWindow;
 BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
+
 /////////////for use D3D Display///////////////////
 
 
@@ -58,6 +62,7 @@ MS3DDisplay* g_pHighDisplay = NULL;
 
 BOOL CreateLowDisplay(HMODULE hModule);
 BOOL CreateHighDisplay(HMODULE hModule);
+
 /////////////////////////////////////////////
 bool DetourFunction(void*& targetAddress, void* hookAddress, WCHAR* funcName);
 bool ReleaseResource();
@@ -194,6 +199,10 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		HOOKED_ENABLEEDITTTS_LOW = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_LOW_MSG);
 		HOOKED_ENABLEEDITWARP_HIGH = RegisterWindowMessage(HOOKED_ENABLEEDITWARP_HIGH_MSG);
 		HOOKED_ENABLEEDITTTS_HIGH = RegisterWindowMessage(HOOKED_ENABLEEDITTTS_HIGH_MSG);
+
+		HOOKED_SETTTS_LOW = RegisterWindowMessage(HOOKED_SETTTS_LOW_MSG);
+		HOOKED_SETTTS_HIGH = RegisterWindowMessage(HOOKED_SETTTS_HIGH_MSG);
+
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{
@@ -203,7 +212,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			swprintf_s(str, L"@@@@ HookServer: %d \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
 			DetourFunction((void*&)pShowWindow, pHookShowWindow, L"ShowWindow");
-
+			
 		}
 		else if (( GetCurrentProcessId() != g_hHookServerProcID) && g_hHookClientProcID == 0)
 		{
@@ -212,6 +221,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 			WCHAR str[MAX_PATH] = {0};
 			swprintf_s(str, L"@@@@ HookClient: %Xh \n", GetCurrentProcessId());
 			OutputDebugStringW(str);
+			
 			CreateLowDisplay(hModule);
 			CreateHighDisplay(hModule);
 			DetourAllGDI();
@@ -301,6 +311,7 @@ BOOL __stdcall OnReceiveMouseMessage(void* _THIS, WPARAM wparam, LPARAM lparam, 
 	return TRUE;
 }
 
+
 BOOL CreateLowDisplay(HMODULE hModule)
 {
 	OutputDebugStringW(L"@@@@@ CreateLowDisplay called!! \n");
@@ -335,7 +346,7 @@ BOOL CreateLowDisplay(HMODULE hModule)
 	}
 	
 	g_pLowDisplay = new MS3DDisplay(g_LowWnd, g_pD3D);
-	g_pLowDisplay->SetCaptureRegion(0,0,1,1);
+	g_pLowDisplay->SetCaptureRegion(0.0, 0.0, 0.5, 0.7);
 	
 	return TRUE;
 }
@@ -375,7 +386,7 @@ BOOL CreateHighDisplay(HMODULE hModule)
 	}
 
 	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
-	g_pHighDisplay->SetCaptureRegion(0.1,0.1,0.4,0.4);
+	g_pHighDisplay->SetCaptureRegion(0.5,0.0,1.0,1.0);
 
 	return TRUE;
 }
@@ -421,6 +432,51 @@ HOOK_API bool HOOKAPI::GetHookClient(HWND& clientWnd)
 	clientWnd = g_hHookClientWnd;
 	return true;
 }
+
+HOOK_API bool HOOKAPI::SetTTSRegion_Low(float v1_x, float v1_y, float v2_x, float v2_y, 
+							   float v3_x, float v3_y, float v4_x, float v4_y)
+{
+	g_TTSRegion_L[0].x = v1_x; g_TTSRegion_L[0].y = v1_y; 
+	g_TTSRegion_L[1].x = v2_x; g_TTSRegion_L[1].y = v2_y; 
+	g_TTSRegion_L[2].x = v3_x; g_TTSRegion_L[2].y = v3_y; 
+	g_TTSRegion_L[3].x = v4_x; g_TTSRegion_L[3].y = v4_y; 
+	PostMessage(g_hHookClientWnd, HOOKED_SETTTS_LOW, NULL, NULL);
+	return true;
+}
+HOOK_API bool HOOKAPI::GetTTSRegion_Low(float& v1_x, float& v1_y, float& v2_x, float& v2_y, 
+			float& v3_x, float& v3_y, float& v4_x, float& v4_y)
+{
+	v1_x = g_TTSRegion_L[0].x; v1_y = g_TTSRegion_L[0].y; 
+	v2_x = g_TTSRegion_L[1].x; v2_y = g_TTSRegion_L[1].y; 
+	v3_x = g_TTSRegion_L[2].x; v3_y = g_TTSRegion_L[2].y; 
+	v4_x = g_TTSRegion_L[3].x; v4_y = g_TTSRegion_L[3].y; 
+	return true;
+}
+
+HOOK_API bool HOOKAPI::SetTTSRegion_High(float v1_x, float v1_y, float v2_x, float v2_y, 
+							   float v3_x, float v3_y, float v4_x, float v4_y)
+{
+	OutputDebugStringW(L"@@@@ SetTTSRegion_High Called!! \n");
+	g_TTSRegion_H[0].x = v1_x; g_TTSRegion_H[0].y = v1_y; 
+	g_TTSRegion_H[1].x = v2_x; g_TTSRegion_H[1].y = v2_y; 
+	g_TTSRegion_H[2].x = v3_x; g_TTSRegion_H[2].y = v3_y; 
+	g_TTSRegion_H[3].x = v4_x; g_TTSRegion_H[3].y = v4_y; 
+	PostMessage(g_hHookClientWnd, HOOKED_SETTTS_HIGH, NULL, NULL);
+	return true;
+}
+HOOK_API bool HOOKAPI::GetTTSRegion_High(float& v1_x, float& v1_y, float& v2_x, float& v2_y, 
+							   float& v3_x, float& v3_y, float& v4_x, float& v4_y)
+{
+	v1_x = g_TTSRegion_H[0].x; v1_y = g_TTSRegion_H[0].y; 
+	v2_x = g_TTSRegion_H[1].x; v2_y = g_TTSRegion_H[1].y; 
+	v3_x = g_TTSRegion_H[2].x; v3_y = g_TTSRegion_H[2].y; 
+	v4_x = g_TTSRegion_H[3].x; v4_y = g_TTSRegion_H[3].y; 
+	return true;
+}
+
+
+
+
 bool UnHookWndProc(HWND hwnd)
 {
 	if( g_orgWndProc == NULL && hwnd == NULL)
@@ -480,8 +536,6 @@ bool ReleaseResource()
 bool DetourAllGDI()
 {
 	DetourFunction((void*&)pRealBitBlt, pHookBitBlt, L"GDI::BitBlt");
-	//DetourFunction((void*&)pRealBeginPaint, pHookBeginPaint, L"GDI::BeginPaint");
-	//DetourFunction((void*&)pRealEndPaint, pHookEndPaint, L"GDI::EndPaint");
 	
 	return true;
 }
@@ -623,7 +677,7 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 			}
 		}
 
-		if (uMsg == HOOKED_ENABLEEDITWARP_HIGH)
+		else if (uMsg == HOOKED_ENABLEEDITWARP_HIGH)
 		{
 			if (g_pHighDisplay != NULL)
 			{
@@ -639,7 +693,24 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 				g_pHighDisplay->SetEditTTSEnable(wParam);
 			}
 		}
-
+		else if (uMsg == HOOKED_SETTTS_LOW)
+		{
+			if (g_pLowDisplay != NULL)
+			{
+				OutputDebugStringW(L"@@@@@ HOOKED_SETTTS_LOW Received!!!\n");
+				g_pLowDisplay->SetTTS(g_TTSRegion_L[0], g_TTSRegion_L[1], 
+					g_TTSRegion_L[2], g_TTSRegion_L[3]);
+			}
+		}
+		else if (uMsg == HOOKED_SETTTS_HIGH)
+		{
+			if (g_pHighDisplay != NULL)
+			{
+				OutputDebugStringW(L"@@@@@ HOOKED_SETTTS_HIGH Received!!!\n");
+				g_pHighDisplay->SetTTS(g_TTSRegion_H[0], g_TTSRegion_H[1], 
+					g_TTSRegion_H[2], g_TTSRegion_H[3]);
+			}
+		}
 		if (uMsg == WM_CLOSE)
 		{ 
 			OutputDebugStringW(L"@@@@ WM_HookCLOSE!!\n");
@@ -709,16 +780,13 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 		{
 			return ret;
 		}
-		if (x != 0 || y != 0 )
-		{
-			return ret;
-		}
+
 		RECT rect;
 		GetClientRect(hwnd, &rect);
 
 		int dcW = rect.right - rect.left;
 		int dcH = rect.bottom - rect.top;
-		
+
 		POINT pt;  pt.x = x; pt.y = y;
 		MapWindowPoints(hwnd, g_hHookClientWnd, &pt,1);
 		
@@ -727,7 +795,7 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 		
 		g_pLowDisplay->GetCaptureRegion(low_l, low_t, low_r, low_b);
 		g_pHighDisplay->GetCaptureRegion(high_l, high_t, high_r, high_b);
-
+	
 		float tSrcX_L = dcW * low_l;
 		float tSrcY_L = dcH * low_t;
 		float sSrcX_L = low_r - low_l;
@@ -737,9 +805,16 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 		float tSrcY_H = dcH * high_t;
 		float sSrcX_H = high_r - high_l;
 		float sSrcY_H = high_b - high_t;
-
-		g_pLowDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc, x1 + tSrcX_L, y1 + tSrcY_L, width*sSrcX_L, height*sSrcY_L, rop);
-		g_pHighDisplay->DrawBitBlt(hdc, pt.x, pt.y, width, height, dcW, dcH, hdcSrc,x1 + tSrcX_H, y1 + tSrcY_H, width*sSrcX_H, height*sSrcY_H, rop);
+		
+		/*WCHAR str[MAX_PATH];
+		swprintf_s(str,MAX_PATH, L"@@@@ x = %d. y = %d, width = %d, height = %d\n", x, y, width, height);
+		OutputDebugStringW(str);
+		swprintf_s(str,MAX_PATH, L"@@@@ mx = %.2f, my = %.2f, mwidth = %.2f, mheight = %.2f\n", (pt.x - tSrcX_H)*(1.0/sSrcX_H), (pt.y - tSrcY_H)*(1.0/sSrcX_H),
+			width*(1.0/sSrcX_H), height*(1.0/sSrcY_H));
+		OutputDebugStringW(str);
+		*/
+		g_pLowDisplay->DrawBitBlt(hdc, (pt.x - tSrcX_L)*(1.0/sSrcX_L), (pt.y - tSrcY_L)*(1.0/sSrcY_L), width*(1.0/sSrcX_L), height*(1.0/sSrcY_L), dcW, dcH, hdcSrc, x1, y1, width, height, rop);
+		g_pHighDisplay->DrawBitBlt(hdc,(pt.x - tSrcX_H)*(1.0/sSrcX_H), (pt.y - tSrcY_H)*(1.0/sSrcY_H), width*(1.0/sSrcX_H), height*(1.0/sSrcY_H), dcW, dcH, hdcSrc, x1, y1, width, height, rop);
 
 	}
 	return TRUE;

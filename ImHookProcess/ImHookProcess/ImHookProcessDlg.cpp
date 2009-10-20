@@ -5,10 +5,13 @@
 #include "ImHookProcessDlg.h"
 #include "..\\Hook\Hook.h"
 #include <detours.h>
+#include "afxsock.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 #define DRAWING_TIMER_IDX 1
+
+
 
 // CImHookProcessDlg dialog
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
@@ -18,12 +21,11 @@ static UINT HOOKED_ENABLEEDITWARP_HIGH = ::RegisterWindowMessage(HOOKED_ENABLEED
 static UINT HOOKED_ENABLEEDITTTS_HIGH = ::RegisterWindowMessage(HOOKED_ENABLEEDITTTS_HIGH_MSG);
 CImHookProcessDlg::CImHookProcessDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CImHookProcessDlg::IDD, pParent)
+	, m_recData(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_HookedWnd = NULL;
-	
 	m_pApp = AfxGetApp();
-	
 }
 
 void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
@@ -41,10 +43,19 @@ void CImHookProcessDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHK_EDITTTS, m_ckEditTTS);
 	DDX_Control(pDX, IDC_CHECK1, m_ckEditWarpHigh);
 	DDX_Control(pDX, IDC_CHECK2, m_ckEditTTSHigh);
+	DDX_Control(pDX, IDC_BUTTON2, m_btnListen);
+	DDX_Control(pDX, IDC_BUTTON5, m_btnStop);
+	DDX_Control(pDX, IDC_EDIT4, m_edPort);
+	DDX_Control(pDX, IDC_STATIC_STATUS, m_txtStatus);
+	DDX_Control(pDX, IDC_EDIT_RecData, m_edRecData);
+	DDX_Text(pDX, IDC_EDIT_RecData, m_recData);
 }
 
 BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	ON_REGISTERED_MESSAGE(HOOKED_WNDDESTORY, onHookedDestory)
+	ON_REGISTERED_MESSAGE(SOCKET_ACCEPT, CImHookProcessDlg::OnSocketAccept)
+	ON_REGISTERED_MESSAGE(SOCKET_REC, CImHookProcessDlg::OnSocketReceive)
+	ON_REGISTERED_MESSAGE(SOCKET_CLOSE, CImHookProcessDlg::OnSocketClose)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
@@ -58,6 +69,8 @@ BEGIN_MESSAGE_MAP(CImHookProcessDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_CHECK1, &CImHookProcessDlg::OnBnClickedCheck1)
 	ON_BN_CLICKED(IDC_CHECK2, &CImHookProcessDlg::OnBnClickedCheck2)
+	ON_BN_CLICKED(IDC_BUTTON2, &CImHookProcessDlg::OnBtnListenClicked)
+	ON_BN_CLICKED(IDC_BUTTON5, &CImHookProcessDlg::OnBtnStopClicked)
 END_MESSAGE_MAP()
 
 
@@ -73,17 +86,36 @@ BOOL CImHookProcessDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	CString strClassName, strWndName, createProcPath;
-
+	int portNum = m_pApp->GetProfileInt(L"MySetting", L"SocketPort", 2222);
 	createProcPath = m_pApp->GetProfileString(L"MySetting", L"CreateProcPath",L"");
 	strClassName = m_pApp->GetProfileString(L"MySetting", L"HookedClassName",L"");
 	strWndName= m_pApp->GetProfileString(L"MySetting", L"HookedWndName",L"");
+
 	m_edWndClass.SetWindowText(strClassName);
 	m_edWndName.SetWindowText(strWndName);
 	m_edProcPath.SetWindowText(createProcPath);
+	WCHAR strPortNum[MAX_PATH];
+	swprintf_s(strPortNum, MAX_PATH, L"%d", portNum);
+	m_edPort.SetWindowText(strPortNum);
+	WSADATA wsaData;
+
+	int iResult  = 0;
+	iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+	if (iResult != 0) {
+		printf("WSAStartup failed: %d\n", iResult);
+		return 1;
+	}
+
+	m_sListener = NULL;
+	m_sConnected = NULL;
+
+	m_txtStatus.SetWindowText(L"Idle...!!!");
 
 	m_edWndClass.EnableWindow(FALSE);
 	m_edWndName.EnableWindow(FALSE);
 	m_btnFindWindow.EnableWindow(FALSE);
+	m_btnStop.EnableWindow(FALSE);
+	//m_edRecData.EnableWindow(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -146,7 +178,7 @@ int CImHookProcessDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CImHookProcessDlg::OnDestroy()
 {
 	CDialog::OnDestroy();
-
+	WSACleanup();
 }
 
 
@@ -231,9 +263,6 @@ void CImHookProcessDlg::onDetourCreateProc()
 
 		m_HookedWnd = FromHandle(cWnd);
 		onWindowHooked();
-
-
-		
 	}
 
 }
@@ -301,4 +330,140 @@ void CImHookProcessDlg::OnBnClickedCheck2()
 	int checked = m_ckEditTTSHigh.GetCheck();
 	OutputDebugStringW(L"@@@@@ Send HOOKED_ENABLEEDITTTS_HIGH Message!! \n");
 	::PostMessageW(m_HookedWnd->GetSafeHwnd(),HOOKED_ENABLEEDITTTS_HIGH, checked, NULL);
+}
+
+
+void CImHookProcessDlg::OnBtnListenClicked()
+{
+	UpdateData(TRUE);
+	WCHAR strPortNum[MAX_PATH] = {0};
+	int portNum = 0;
+	m_edPort.GetWindowText(strPortNum, MAX_PATH);
+
+	swscanf_s(strPortNum, L"%d", &portNum);
+	if (m_sListener != NULL)
+	{
+		delete m_sListener;
+		m_sListener = NULL;
+	}
+	m_sListener = new ImSocket(this);
+	BOOL ret = m_sListener->Create(portNum); 
+	if(m_sListener->Listen()==FALSE)
+	{
+		DWORD err = GetLastError();
+		WCHAR str[MAX_PATH];
+		swprintf_s(str, MAX_PATH,L"Unable to Listen on that port,please try another port.\n \
+								  Error Code = %d",err);
+		AfxMessageBox(str);
+		m_sListener->Close(); 
+		return;			
+	}
+	m_txtStatus.SetWindowText(L"Listening For Connections!!!");
+	UpdateData(FALSE);
+	m_edPort.EnableWindow(FALSE);
+	m_btnListen.EnableWindow(FALSE);
+	m_btnStop.EnableWindow(TRUE); 
+	m_pApp->WriteProfileInt(L"MySetting",L"SocketPort",portNum);
+}
+LRESULT CImHookProcessDlg::OnSocketReceive(WPARAM wParam, LPARAM lParam)
+{
+	char *pBuf =new char [1025];
+	WCHAR strData[MAX_PATH] = {0};
+	int iLen;
+	iLen=m_sConnected->Receive(pBuf,1024);
+	if(iLen==SOCKET_ERROR)
+	{
+		AfxMessageBox(L"Could not Receieve");
+	}
+	else
+	{
+		pBuf[iLen] = NULL;	
+		UpdateData(FALSE);
+		//m_sConnected.Send(pBuf, iLen);
+		
+		if (iLen == STData::STDataSIZE)
+		{
+			STData recData;
+			recData.FromString(pBuf);
+			if (recData.size != STData.STDataSIZE)
+			{
+				delete pBuf;
+				return E_FAIL;
+			}
+			switch (recData.cmd)
+			{
+			case STData::SETTTS_L:
+				HOOKAPI::SetTTSRegion_Low(recData.v1_x, recData.v1_y, recData.v2_x, recData.v2_y,
+					recData.v3_x, recData.v3_y, recData.v4_x, recData.v4_y);
+				swprintf_s(strData, MAX_PATH, L"SETTTS_L, (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f) \n",
+					recData.v1_x, recData.v1_y, recData.v2_x, recData.v2_y,
+					recData.v3_x, recData.v3_y, recData.v4_x, recData.v4_y);
+				m_recData.Insert(m_recData.GetLength(), strData);
+				UpdateData(FALSE);
+				break;
+			case STData::SETMASK_L:
+				break;
+			case STData::SETTTS_H:
+				UpdateData(TRUE);
+				HOOKAPI::SetTTSRegion_High(recData.v1_x, recData.v1_y, recData.v2_x, recData.v2_y,
+					recData.v3_x, recData.v3_y, recData.v4_x, recData.v4_y);
+				swprintf_s(strData, MAX_PATH, L"SETTTS_H, (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f), (%.1f, %.1f) \n",
+					recData.v1_x, recData.v1_y, recData.v2_x, recData.v2_y,
+					recData.v3_x, recData.v3_y, recData.v4_x, recData.v4_y);
+				m_recData.Insert(m_recData.GetLength(), strData);
+				UpdateData(FALSE);
+				break;
+			case STData::SETMASK_H:
+				break;
+			default:
+				break;
+			}
+		}
+		delete pBuf;
+	}
+	return S_OK;
+}
+
+LRESULT CImHookProcessDlg::OnSocketAccept(WPARAM wParam, LPARAM lParam)
+{
+	CString strIP;
+	UINT port;
+	if (m_sConnected != NULL)
+	{
+		delete m_sConnected;
+		m_sConnected = NULL;	
+	}
+	m_sConnected = new ImSocket(this);
+	if(m_sListener->Accept(*m_sConnected))
+	{
+		m_sConnected->GetSockName(strIP,port);
+		m_txtStatus.SetWindowText(L"Client Connected,IP :"+ strIP);
+		
+		//m_sConnected.Send("Connected To Server", strlen("Connected To Server")); 
+		UpdateData(FALSE);
+	}
+	else
+	{
+		AfxMessageBox(L"Cannot Accept Connection");
+	}
+	return S_OK;
+}
+
+LRESULT CImHookProcessDlg::OnSocketClose(WPARAM wParam, LPARAM lParam)
+{
+	AfxMessageBox(L"Socket Is Closed!!!");
+	OnBtnStopClicked(); 
+	return S_OK;
+}
+void CImHookProcessDlg::OnBtnStopClicked()
+{
+
+	m_sConnected->Close(); 
+	m_sListener->Close(); 
+
+	m_txtStatus.SetWindowText(L"Idle!!");	
+	UpdateData(FALSE);
+	m_edPort.EnableWindow(TRUE);
+	m_btnListen.EnableWindow(TRUE);
+	m_btnStop.EnableWindow(FALSE);
 }

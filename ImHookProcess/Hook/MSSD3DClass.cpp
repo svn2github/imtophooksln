@@ -930,7 +930,7 @@ BOOL MS3DDisplay::SetCaptureRegion(float l, float t, float r, float b)
 {
 	if (l < 0 || l > 1 || t < 0 || t > 1 || r <0 || r > 1 || b < 0 || b >1)
 		return FALSE;
-	if (l >= r || t >= b)
+	if (l > r || t > b)
 		return FALSE;
 	
 	m_captureRect[0].x = l;
@@ -1173,6 +1173,11 @@ BOOL MS3DDisplay::onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam,
 	}
 	return TRUE;
 }
+BOOL MS3DDisplay::SetTTS(const D3DXVECTOR2 v1, const D3DXVECTOR2 v2, const D3DXVECTOR2 v3, const D3DXVECTOR2 v4)
+{
+	m_matTTS = ComputeTTS(v1, v2, v3, v4);
+	return TRUE;
+}
 D3DXMATRIX MS3DDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4)
 {
 	WCHAR str[MAX_PATH];
@@ -1235,9 +1240,6 @@ D3DXMATRIX MS3DDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2,
 	
 	OutputDebugStringW(str);
 	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@");
-
-
-
 	return ret;
 }
 BOOL MS3DDisplay::UpdateTTSByTTSButtons()
@@ -1510,9 +1512,9 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	{
 		return FALSE;
 	}
-	WCHAR str[MAX_PATH];
-	swprintf_s(str, MAX_PATH, L"@@@@@ x = %d, y = %d, width = %d, height = %d\n", x, y, width, height);
-	OutputDebugStringW(str);
+	//WCHAR str[MAX_PATH];
+	//swprintf_s(str, MAX_PATH, L"@@@@@ x = %d, y = %d, width = %d, height = %d\n", x, y, width, height);
+	//OutputDebugStringW(str);
 
 	HRESULT hr;
 	IDirect3DSurface9* pSurface = NULL;
@@ -1530,13 +1532,18 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	D3DSURFACE_DESC desc;
 	pSurface->GetDesc(&desc);
 
-	
 	float rX = ((float)desc.Width / dcW);
 	float rY = ((float)desc.Height / dcH);
-
-	StretchBlt(textureDC, rX*x, rY*y , rX*width, rY*height, hdcSrc, x1, y1, srcW, srcH, rop);
-	swprintf_s(str, MAX_PATH, L"@@@@@rX*width*tSX = %.2f, rY*height*tSY = %.2f\n", rX*width, rY*height);
+	
+	/*
+	swprintf_s(str, MAX_PATH, L"@@@@ rX = %.2f, rY = %.2f, desc.Width = %d, desc.Height = %d, \
+		dcW = %d, dcH = %d\n",
+		rX, rY, desc.Width, desc.Height, dcW, dcH );
 	OutputDebugStringW(str);
+*/
+	StretchBlt(textureDC, rX*x, rY*y, rX*width, rY*height, hdcSrc, x1, y1, srcW, srcH, rop);
+/*	swprintf_s(str, MAX_PATH, L"@@@@@ rX*x = %.2f, rY*y = %.2f, rX*width = %.2f, rY*height = %.2f\n",rX*x, rY*y, rX*width, rY*height);
+	OutputDebugStringW(str);*/
 	pSurface->ReleaseDC(textureDC);
 	pSurface->Release();
 	pSurface = NULL;

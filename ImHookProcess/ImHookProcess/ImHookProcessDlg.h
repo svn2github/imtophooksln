@@ -3,7 +3,7 @@
 
 #pragma once
 #include "afxwin.h"
-
+#include "ImSocket.h"
 
 // CImHookProcessDlg dialog
 class CImHookProcessDlg : public CDialog
@@ -23,7 +23,6 @@ public:
 protected:
 	HICON m_hIcon;
 	CWnd* m_HookedWnd;
-
 	CWinApp* m_pApp;
 
 	// Generated message map functions
@@ -70,4 +69,21 @@ public:
 	CButton m_ckEditTTSHigh;
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnBnClickedCheck2();
+
+public: //for socket
+	ImSocket* m_sListener;
+	ImSocket* m_sConnected;
+	CButton m_btnListen;
+	CButton m_btnStop;
+	CEdit m_edPort;
+	CStatic m_txtStatus;
+	CEdit m_edRecData;
+	afx_msg void OnBtnListenClicked();
+	
+	LRESULT OnSocketReceive(WPARAM wParam, LPARAM lParam);
+	LRESULT OnSocketClose(WPARAM wParam, LPARAM lParam);
+	LRESULT OnSocketAccept(WPARAM wParam, LPARAM lParam);
+
+	afx_msg void OnBtnStopClicked();
+	CString m_recData;
 };

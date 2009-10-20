@@ -321,6 +321,7 @@ public:
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 	virtual BOOL SetEditWarpEnable(BOOL enable);
 	virtual BOOL SetEditTTSEnable(BOOL enable);
+	virtual BOOL SetTTS(const D3DXVECTOR2 v1, const D3DXVECTOR2 v2, const D3DXVECTOR2 v3, const D3DXVECTOR2 v4);
 	virtual BOOL SetCaptureRegion(float l, float t, float r, float b);
 	virtual BOOL GetCaptureRegion(float& l, float& t, float& r, float &b);
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
