@@ -401,6 +401,7 @@ MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MS
 	m_pD3D->AddRef();
 	m_hRenderThread = 0;
 	m_pRenderTarget = NULL;
+	m_pMaskTexture = NULL;
 	m_bEditWarp = FALSE;
 	m_bEditTTS = FALSE;
 	m_bStartDrag = FALSE;
@@ -409,6 +410,7 @@ MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MS
 	m_captureRect[0] = D3DXVECTOR2(0,0);
 	m_captureRect[1] = D3DXVECTOR2(1,1);
 	D3DXMatrixIdentity(&m_matTTS);
+	D3DXMatrixIdentity(&m_matMaskTransform);
 	InitializeCriticalSection(&m_CS);
 	InitDevice();
 	CreateTexture();
@@ -828,7 +830,6 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 		t -= 1;
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
-		pEffect->SetFloat("g_time", t);
 		hr = pEffect->SetMatrix("g_matTexTransform", &m_matTTS);
 		if FAILED(hr)
 		{
@@ -839,6 +840,15 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 		{
 			OutputDebugStringW(L"@@@@ pEffect->SetTexture Failed!!");
 		}
+		D3DXMATRIX invmatMask;
+		D3DXMatrixInverse(&invmatMask, NULL, &m_matMaskTransform);
+		
+		hr = pEffect->SetMatrix("g_invMatMaskTransform", &invmatMask);
+		if (m_pMaskTexture != NULL)
+		{
+			pEffect->SetTexture("g_MaskTexture", m_pMaskTexture);
+		}
+
 		D3DXMATRIX mWorld = m_pDisplayPlane->GetTransform();
 		D3DXMATRIX mProj = m_pCamera->GetProjMatrix();
 		D3DXMATRIX mView = m_pCamera->GetViewMatrix();
@@ -1555,5 +1565,36 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	else
 		Render(this->m_pRenderTarget );
 	
+	return TRUE;
+}
+BOOL MS3DDisplay::LoadMaskTextureFromFile(WCHAR* path)
+{
+	if (m_pMaskTexture != NULL)
+	{
+		m_pMaskTexture->Release();
+		m_pMaskTexture = NULL;
+	}
+	HRESULT hr;
+	hr = D3DXCreateTextureFromFile(m_pDevice, path, &m_pMaskTexture);
+	if (FAILED(hr))
+	{
+		OutputDebugStringW(L"@@@@@ LoadMaskTextureFromFile Failed!!\n");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+BOOL MS3DDisplay::SetMaskPos(float tx, float ty, float sx, float sy)
+{
+	D3DXMATRIX tmp;
+	D3DXMatrixIdentity(&m_matMaskTransform);
+	D3DXMatrixTranslation(&tmp, -0.5, -0.5, 0);
+	m_matMaskTransform = m_matMaskTransform*tmp;
+    D3DXMatrixScaling(&tmp, sx, sy, 1);
+	m_matMaskTransform = m_matMaskTransform*tmp;
+	D3DXMatrixTranslation(&tmp, 0.5, 0.5, 0);
+	m_matMaskTransform = m_matMaskTransform*tmp;
+	D3DXMatrixTranslation(&tmp, tx - 0.5, ty - 0.5, 0);
+	m_matMaskTransform = m_matMaskTransform*tmp;
 	return TRUE;
 }

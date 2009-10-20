@@ -347,7 +347,7 @@ BOOL CreateLowDisplay(HMODULE hModule)
 	
 	g_pLowDisplay = new MS3DDisplay(g_LowWnd, g_pD3D);
 	g_pLowDisplay->SetCaptureRegion(0.0, 0.0, 0.5, 0.7);
-	
+	g_pLowDisplay->LoadMaskTextureFromFile(L"..\\fx\\WhiteMask.png");
 	return TRUE;
 }
 
@@ -387,7 +387,8 @@ BOOL CreateHighDisplay(HMODULE hModule)
 
 	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
 	g_pHighDisplay->SetCaptureRegion(0.5,0.0,1.0,1.0);
-
+	g_pHighDisplay->LoadMaskTextureFromFile(L"..\\fx\\WhiteMask.png");
+	//g_pHighDisplay->SetMaskPos(0.5, 0.2, 0.3, 0.3);
 	return TRUE;
 }
 

@@ -286,9 +286,10 @@ protected:
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
 	D3DXMATRIX m_matTTS;
+	D3DXMATRIX m_matMaskTransform;
 	D3DXVECTOR2 m_captureRect[2];
 
-
+	LPDIRECT3DTEXTURE9 m_pMaskTexture;
 	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 	vector<MS3DButton*> m_pWarpButtons;
 	vector<MS3DButton*> m_pTTSButtons;
@@ -327,6 +328,9 @@ public:
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	virtual BOOL DrawBitBlt(HDC hdc, int x, int y, int cx, int cy, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
+	virtual BOOL LoadMaskTextureFromFile(WCHAR* path);
+	virtual BOOL SetMaskPos(float tx, float ty, float sx, float sy);
+
 public:
 	static BOOL __stdcall onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 	static BOOL __stdcall onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);

@@ -264,7 +264,6 @@ void CImHookProcessDlg::onDetourCreateProc()
 		m_HookedWnd = FromHandle(cWnd);
 		onWindowHooked();
 	}
-
 }
 
 
