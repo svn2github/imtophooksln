@@ -300,6 +300,7 @@ private:
 	HANDLE m_hRenderThread;
 	BOOL m_bEditWarp;
 	BOOL m_bEditTTS;
+	BOOL m_bMaskEnable;
 	ID3DXEffect* m_pEffect;
 	BOOL InitDevice();
 	static BOOL _Run(void* _THIS);

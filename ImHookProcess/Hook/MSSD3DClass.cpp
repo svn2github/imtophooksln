@@ -404,6 +404,7 @@ MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MS
 	m_pMaskTexture = NULL;
 	m_bEditWarp = FALSE;
 	m_bEditTTS = FALSE;
+	m_bMaskEnable = FALSE;
 	m_bStartDrag = FALSE;
 	m_pRenderTarget = NULL;
 	m_pEffect = NULL;
@@ -848,6 +849,8 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 		{
 			pEffect->SetTexture("g_MaskTexture", m_pMaskTexture);
 		}
+		pEffect->SetBool("g_bMaskEnable", m_bMaskEnable);
+
 
 		D3DXMATRIX mWorld = m_pDisplayPlane->GetTransform();
 		D3DXMATRIX mProj = m_pCamera->GetProjMatrix();
