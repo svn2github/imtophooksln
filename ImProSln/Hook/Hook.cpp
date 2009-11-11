@@ -57,8 +57,8 @@ BOOL WINAPI pHookShowWindow(HWND hWnd, int nCmdShow);
 
 
 IDirect3D9* g_pD3D = NULL;
-MS3DDisplay* g_pLowDisplay = NULL;
-MS3DDisplay* g_pHighDisplay = NULL;
+ImTopDisplay* g_pLowDisplay = NULL;
+ImTopDisplay* g_pHighDisplay = NULL;
 
 BOOL CreateLowDisplay(HMODULE hModule);
 BOOL CreateHighDisplay(HMODULE hModule);
@@ -345,7 +345,7 @@ BOOL CreateLowDisplay(HMODULE hModule)
 		}
 	}
 	
-	g_pLowDisplay = new MS3DDisplay(g_LowWnd, g_pD3D);
+	g_pLowDisplay = new ImTopDisplay(g_LowWnd, g_pD3D);
 	g_pLowDisplay->SetCaptureRegion(0.0, 0.0, 0.5, 0.7);
 	g_pLowDisplay->LoadMaskTextureFromFile(L"..\\fx\\WhiteMask.png");
 	return TRUE;
@@ -385,7 +385,7 @@ BOOL CreateHighDisplay(HMODULE hModule)
 		}
 	}
 
-	g_pHighDisplay = new MS3DDisplay(g_HighWnd, g_pD3D);
+	g_pHighDisplay = new ImTopDisplay(g_HighWnd, g_pD3D);
 	g_pHighDisplay->SetCaptureRegion(0.5,0.0,1.0,1.0);
 	g_pHighDisplay->LoadMaskTextureFromFile(L"..\\fx\\WhiteMask.png");
 	//g_pHighDisplay->SetMaskPos(0.5, 0.2, 0.3, 0.3);

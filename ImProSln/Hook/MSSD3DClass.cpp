@@ -1,6 +1,6 @@
 #include "MSSD3DClass.h"
 #include <cv.h>
-
+#include <math.h>
 MS3DObj::MS3DObj()
 {
 	D3DXCreateMatrixStack(0, &m_pMatrixStack);
@@ -401,21 +401,36 @@ MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MS
 	m_pD3D->AddRef();
 	m_hRenderThread = 0;
 	m_pRenderTarget = NULL;
+
+	
+	m_pEffect = NULL;
+
+	//InitializeCriticalSection(&m_CS);
+	InitDevice();
+	CreateTexture();
+	//SetEditWarpEnable(TRUE);
+}
+
+ImTopDisplay::ImTopDisplay(HWND hWnd, IDirect3D9* pD3D) : MS3DDisplay(hWnd, pD3D)
+{
 	m_pMaskTexture = NULL;
 	m_bEditWarp = FALSE;
 	m_bEditTTS = FALSE;
 	m_bMaskEnable = FALSE;
 	m_bStartDrag = FALSE;
-	m_pRenderTarget = NULL;
-	m_pEffect = NULL;
+
 	m_captureRect[0] = D3DXVECTOR2(0,0);
 	m_captureRect[1] = D3DXVECTOR2(1,1);
 	D3DXMatrixIdentity(&m_matTTS);
 	D3DXMatrixIdentity(&m_matMaskTransform);
-	InitializeCriticalSection(&m_CS);
-	InitDevice();
-	CreateTexture();
-	//SetEditWarpEnable(TRUE);
+
+}
+
+ImTubeDisplay::ImTubeDisplay(HWND hWnd, IDirect3D9* pD3D) : ImTopDisplay(hWnd, pD3D)
+{
+	cofA1 = 0.0; cofB1 = 0.0; cofC1 = 0.0; cofD1 = 0.0; cofE1 = 0.0; 
+	cofA2 = 0.0; cofB2 = 0.0; cofC2 = 0.0; cofD2 = 0.0; cofE2 = 1.0; 
+	cofAx = 0.0; cofBx = 0.0; cofCx = 0.0; cofDx = 1.0; cofEx = 0.0; 
 }
 MS3DDisplay::~MS3DDisplay()
 {
@@ -430,8 +445,8 @@ MS3DDisplay::~MS3DDisplay()
 		delete m_pDisplayPlane;
 		m_pDisplayPlane == NULL;
 	}
-	ClearWarpButtons();
-	ClearTTSButtons();
+	
+	
 	if (m_pRenderTarget != NULL)
 	{
 		m_pRenderTarget->Release();
@@ -447,9 +462,16 @@ MS3DDisplay::~MS3DDisplay()
 		m_pD3D->Release();
 		m_pD3D = NULL;
 	}
-	DeleteCriticalSection(&m_CS);
-
-
+	//DeleteCriticalSection(&m_CS);
+}
+ImTopDisplay::~ImTopDisplay()
+{
+	ClearWarpButtons();
+	ClearTTSButtons();
+}
+ImTubeDisplay::~ImTubeDisplay()
+{
+	
 }
 
 BOOL MS3DDisplay::Run()
@@ -579,11 +601,10 @@ BOOL MS3DDisplay::CreateTexture()
 		OutputDebugStringW(L"@@@@@ D3DXCreateTexture Failed in MS3DDisplay::CreateTexture()!! \n");
 		return FALSE;
 	}
-	
-
 	return TRUE;
 }
-BOOL MS3DDisplay::ClearWarpButtons()
+
+BOOL ImTopDisplay::ClearWarpButtons()
 {
 	if (m_pWarpButtons.size() > 0)
 	{
@@ -599,7 +620,7 @@ BOOL MS3DDisplay::ClearWarpButtons()
 	}
 	return TRUE;
 }
-BOOL MS3DDisplay::CreateWarpButtons()
+BOOL ImTopDisplay::CreateWarpButtons()
 {
 	ClearWarpButtons();
 	if (m_pDisplayPlane == NULL)
@@ -613,7 +634,7 @@ BOOL MS3DDisplay::CreateWarpButtons()
 	}
 	HRESULT hr;
 	D3DVERTEXBUFFER_DESC desc;
-	
+
 	hr = pBuffer->GetDesc(&desc);
 	UINT numVertex = desc.Size/sizeof(MSMeshBase::CUSTOMVERTEX);
 	MSMeshBase::CUSTOMVERTEX* pVertices = NULL;
@@ -621,23 +642,23 @@ BOOL MS3DDisplay::CreateWarpButtons()
 	for (int i =0; i < numVertex; i++ )
 	{
 		MS3DButton* btn = new MS3DButton(m_pDevice, this);
-		
+
 		btn->Scale(D3DXVECTOR3(0.05, 0.05, 1));
 		btn->Translate(pVertices[i].position);
 
 		m_pWarpButtons.push_back(btn);
-		
-		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onWarpButtonLDown, this);
-		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onWarpButtonLUp, this);
-		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onWarpButtonDragMove, this);
+
+		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onWarpButtonLDown, this);
+		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onWarpButtonLUp, this);
+		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onWarpButtonDragMove, this);
 	}
 	pBuffer->Unlock();
 	return TRUE;
 }
-BOOL MS3DDisplay::CreateTTSButtons()
+BOOL ImTopDisplay::CreateTTSButtons()
 {
 	ClearTTSButtons();
-	
+
 
 	IDirect3DVertexBuffer9* pBuffer = m_pDisplayPlane->GetVertexBuffer();
 	if (pBuffer == NULL)
@@ -679,7 +700,7 @@ BOOL MS3DDisplay::CreateTTSButtons()
 	D3DXMatrixInverse(&invTTS, NULL, &m_matTTS);
 
 	WCHAR str[MAX_PATH];
-	
+
 	for (int i=0; i< 4; i++)
 	{
 		D3DXVec4Transform(&(initPos[i]), &(initPos[i]), &invTTS);
@@ -699,13 +720,133 @@ BOOL MS3DDisplay::CreateTTSButtons()
 
 		m_pTTSButtons.push_back(btn);
 
-		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onTTSButtonLDown, this);
-		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onTTSButtonLUp, this);
-		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)MS3DDisplay::onTTSButtonDragMove, this);
+		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onTTSButtonLDown, this);
+		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onTTSButtonLUp, this);
+		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)ImTopDisplay::onTTSButtonDragMove, this);
 	}
 	return TRUE;
 }
-BOOL MS3DDisplay::ClearTTSButtons()
+
+BOOL ImTubeDisplay::CreateTTSButtons()
+{
+	ClearTTSButtons();
+	IDirect3DVertexBuffer9* pBuffer = m_pDisplayPlane->GetVertexBuffer();
+	if (pBuffer == NULL)
+	{
+		return FALSE;
+	}
+	D3DXVECTOR2 initPos[15] = { D3DXVECTOR2(0, 0), D3DXVECTOR2(0.25,0),D3DXVECTOR2(0.5,0),D3DXVECTOR2(0.75,0),D3DXVECTOR2(1.0, 0),
+							D3DXVECTOR2(0, 1), D3DXVECTOR2(0.25,1),D3DXVECTOR2(0.5,1),D3DXVECTOR2(0.75,1),D3DXVECTOR2(1.0, 1) ,
+							D3DXVECTOR2(0, 0.5), D3DXVECTOR2(0.25,0.5),D3DXVECTOR2(0.5,0.5),D3DXVECTOR2(0.75,0.5),D3DXVECTOR2(1.0, 0.5) };
+	D3DXVECTOR3 btnPos[15] = {D3DXVECTOR3(0,0,0)};
+	D3DXVECTOR3 cornerPos[4] = { D3DXVECTOR3(0,0,0)};
+
+	HRESULT hr;
+	D3DVERTEXBUFFER_DESC desc;
+	hr = pBuffer->GetDesc(&desc);
+	UINT numVertex = desc.Size/sizeof(MSMeshBase::CUSTOMVERTEX);
+	MSMeshBase::CUSTOMVERTEX* pVertices = NULL;
+	hr = pBuffer->Lock(0,desc.Size, (void**)&pVertices, D3DLOCK_READONLY);
+
+	for (int i =0; i < numVertex; i++ )
+	{
+		if (pVertices[i].tu == 0 && pVertices[i].tv == 0)
+		{
+			cornerPos[0] = pVertices[i].position;
+		}
+		else if (pVertices[i].tu == 0 && pVertices[i].tv == 1)
+		{
+			cornerPos[1] = pVertices[i].position;
+		}
+		else if (pVertices[i].tu == 1 && pVertices[i].tv == 0)
+		{
+			cornerPos[2] = pVertices[i].position;
+		}
+		else if (pVertices[i].tu == 1 && pVertices[i].tv == 1)
+		{
+			cornerPos[3] = pVertices[i].position;
+		}
+	}
+
+	WCHAR str[MAX_PATH];
+	
+	for (int i=0; i< 5; i++)
+	{
+		initPos[i].y = CurveFunc(initPos[i].x, cofA1, cofB1, cofC1, cofD1, cofE1);
+		
+		D3DXVECTOR3 iV1 = (1- initPos[i].x) * cornerPos[0] + initPos[i].x * cornerPos[2];
+		D3DXVECTOR3 iV2 = (1- initPos[i].x) * cornerPos[1] + initPos[i].x * cornerPos[3];
+		btnPos[i] = (1- initPos[i].y) * iV1 + initPos[i].y * iV2; 
+
+		MS3DButton* btn = new MS3DButton(m_pDevice, this);
+		btn->Scale(D3DXVECTOR3(0.05, 0.05, 1));
+		btn->Translate(btnPos[i]);
+
+		m_pTTSButtons.push_back(btn);
+
+		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLDown, this);
+		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLUp, this);
+		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonDragMove, this);
+	}
+
+	for (int i=5; i< 10; i++)
+	{
+		initPos[i].y = CurveFunc(initPos[i].x, cofA2, cofB2, cofC2, cofD2, cofE2);
+
+		D3DXVECTOR3 iV1 = (1- initPos[i].x) * cornerPos[0] + initPos[i].x * cornerPos[2];
+		D3DXVECTOR3 iV2 = (1- initPos[i].x) * cornerPos[1] + initPos[i].x * cornerPos[3];
+		btnPos[i] = (1- initPos[i].y) * iV1 + initPos[i].y * iV2; 
+
+		MS3DButton* btn = new MS3DButton(m_pDevice, this);
+		btn->Scale(D3DXVECTOR3(0.05, 0.05, 1));
+		btn->Translate(btnPos[i]);
+
+		m_pTTSButtons.push_back(btn);
+
+		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLDown, this);
+		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLUp, this);
+		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonDragMove, this);
+	}
+
+	for (int i=10; i< 15; i++)
+	{
+		initPos[i].x = CurveFunc(initPos[i].x, cofAx, cofBx, cofCx, cofDx, cofEx);
+
+		D3DXVECTOR3 iV1 = (1- initPos[i].x) * cornerPos[0] + initPos[i].x * cornerPos[2];
+		D3DXVECTOR3 iV2 = (1- initPos[i].x) * cornerPos[1] + initPos[i].x * cornerPos[3];
+		btnPos[i] = (1- initPos[i].y) * iV1 + initPos[i].y * iV2; 
+
+		MS3DButton* btn = new MS3DButton(m_pDevice, this);
+		btn->Scale(D3DXVECTOR3(0.05, 0.05, 1));
+		btn->Translate(btnPos[i]);
+
+		m_pTTSButtons.push_back(btn);
+
+		btn->Bind(L"WM_LBUTTONDOWN\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLDown, this);
+		btn->Bind(L"WM_LBUTTONUP\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonLUp, this);
+		btn->Bind(L"WM_MOUSEDRAGMOVE\0", (IEventManager::TaskFuncPtr)ImTubeDisplay::onTTSButtonDragMove, this);
+	}
+	return TRUE;
+}
+BOOL ImTopDisplay::ClearTTSButtons()
+{
+	if (m_pTTSButtons.size() > 0)
+	{
+		for (vector<MS3DButton*>::iterator it = m_pTTSButtons.begin(); it!=m_pTTSButtons.end(); ++it)
+		{
+			if ((*it) != NULL)
+			{
+				delete (*it);
+				(*it) = NULL;
+			}
+		}
+		m_pTTSButtons.clear();
+	}
+
+	return TRUE;
+}
+
+BOOL ImTubeDisplay::ClearTTSButtons()
 {
 	if (m_pTTSButtons.size() > 0)
 	{
@@ -724,6 +865,73 @@ BOOL MS3DDisplay::ClearTTSButtons()
 }
 
 BOOL MS3DDisplay::Render()
+{
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+	m_pCamera->CameraOn();
+	HRESULT hr;
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+		if (m_pDisplayPlane != NULL)
+		{	
+			D3DXMATRIX backupMat;
+			hr = m_pDisplayPlane->Render(m_pRenderTarget);
+		}
+		m_pDevice->EndScene();
+	}
+
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+	return TRUE;
+}
+
+BOOL ImTopDisplay::Render()
+{
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+	m_pCamera->CameraOn();
+	HRESULT hr;
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+
+		if (m_pDisplayPlane != NULL)
+		{	
+			D3DXMATRIX backupMat;
+			hr = m_pDisplayPlane->Render(m_pRenderTarget);
+		}
+		if (m_bEditWarp || m_bEditTTS)
+		{
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+			m_pDisplayPlane->Render();
+			if (m_bEditWarp)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pWarpButtons.begin(); it!=m_pWarpButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			if (m_bEditTTS)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pTTSButtons.begin(); it!=m_pTTSButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+		}
+
+		m_pDevice->EndScene();
+	}
+
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+	return TRUE;
+}
+
+
+BOOL ImTubeDisplay::Render()
 {
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
@@ -778,6 +986,68 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture)
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 
+	m_pCamera->CameraOn();
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+		if (m_pDisplayPlane != NULL)
+		{
+			m_pDisplayPlane->Render(pTexture);
+		}
+		m_pDevice->EndScene();
+	}
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+	return TRUE;
+}
+
+BOOL ImTopDisplay::Render(IDirect3DBaseTexture9* pTexture)
+{
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+
+
+	m_pCamera->CameraOn();
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+		if (m_pDisplayPlane != NULL)
+		{
+			m_pDisplayPlane->Render(pTexture);
+		}
+		if (m_bEditWarp || m_bEditTTS)
+		{
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+			m_pDisplayPlane->Render();
+			if (m_bEditWarp)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pWarpButtons.begin(); it!=m_pWarpButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			if (m_bEditTTS)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pTTSButtons.begin(); it!=m_pTTSButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+		}
+		m_pDevice->EndScene();
+	}
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+	return TRUE;
+}
+
+
+BOOL ImTubeDisplay::Render(IDirect3DBaseTexture9* pTexture)
+{
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+
 	
 	m_pCamera->CameraOn();
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
@@ -814,9 +1084,9 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture)
 	m_pCamera->CameraOff();
 	return TRUE;
 }
-BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
+
+BOOL ImTopDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 {
-	
 	if (pEffect == NULL)
 		return FALSE;
 	UINT iPass, cPasses = 0;
@@ -836,6 +1106,119 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 		{
 			OutputDebugStringW(L"@@@@ pEffect->SetMatrix Failed!!");
 		}
+		hr = pEffect->SetTexture("g_Texture", pTexture);
+		if FAILED(hr)
+		{
+			OutputDebugStringW(L"@@@@ pEffect->SetTexture Failed!!");
+		}
+		D3DXMATRIX invmatMask;
+		D3DXMatrixInverse(&invmatMask, NULL, &m_matMaskTransform);
+
+		hr = pEffect->SetMatrix("g_invMatMaskTransform", &invmatMask);
+		if (m_pMaskTexture != NULL)
+		{
+			pEffect->SetTexture("g_MaskTexture", m_pMaskTexture);
+		}
+		pEffect->SetBool("g_bMaskEnable", m_bMaskEnable);
+
+
+		D3DXMATRIX mWorld = m_pDisplayPlane->GetTransform();
+		D3DXMATRIX mProj = m_pCamera->GetProjMatrix();
+		D3DXMATRIX mView = m_pCamera->GetViewMatrix();
+		D3DXMATRIX mWorldViewProjection = mWorld * mView * mProj;
+		hr = pEffect->SetMatrix("WorldViewProj", &mWorldViewProjection);
+
+		if FAILED(hr)
+		{
+			OutputDebugStringW(L"@@@@ pEffect->SetMatrix Failed!!");
+		}
+		hr = pEffect->SetTechnique("technique0");
+
+		if FAILED(hr)
+		{
+			OutputDebugStringW(L"@@@@ pEffect->SetTechnique Failed!!");
+		}
+
+		pEffect->Begin(&cPasses, 0);
+		for (iPass = 0; iPass < cPasses; iPass++)
+		{
+			pEffect->BeginPass(iPass);
+
+			if (m_pDisplayPlane != NULL)
+			{
+				m_pDisplayPlane->Render(pTexture);
+			}
+			pEffect->EndPass();
+		}
+		pEffect->End();
+
+
+		if (m_bEditWarp || m_bEditTTS)
+		{
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+			m_pDisplayPlane->Render();
+			if (m_bEditWarp)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pWarpButtons.begin(); it!=m_pWarpButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			if (m_bEditTTS)
+			{
+				for (vector<MS3DButton*>::iterator it = m_pTTSButtons.begin(); it!=m_pTTSButtons.end(); ++it)
+				{
+					(*it)->Render();
+				}
+			}
+			m_pDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+			m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+		}
+
+		m_pDevice->EndScene();
+	}
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+
+	return TRUE;
+}
+
+BOOL ImTubeDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
+{
+	
+	if (pEffect == NULL)
+		return FALSE;
+	UINT iPass, cPasses = 0;
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+
+	HRESULT hr;
+	m_pCamera->CameraOn();
+	static float t = 0.0;
+	t += 0.01;
+	if (t > 1)
+		t -= 1;
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+		hr = pEffect->SetFloat("g_tCurveCofA", cofA1);
+		hr = pEffect->SetFloat("g_tCurveCofB", cofB1);
+		hr = pEffect->SetFloat("g_tCurveCofC", cofC1);
+		hr = pEffect->SetFloat("g_tCurveCofD", cofD1);
+		hr = pEffect->SetFloat("g_tCurveCofE", cofE1);
+		
+		hr = pEffect->SetFloat("g_bCurveCofA", cofA2);
+		hr = pEffect->SetFloat("g_bCurveCofB", cofB2);
+		hr = pEffect->SetFloat("g_bCurveCofC", cofC2);
+		hr = pEffect->SetFloat("g_bCurveCofD", cofD2);
+		hr = pEffect->SetFloat("g_bCurveCofE", cofE2);
+
+		hr = pEffect->SetFloat("g_xCurveCofA", cofAx);
+		hr = pEffect->SetFloat("g_xCurveCofB", cofBx);
+		hr = pEffect->SetFloat("g_xCurveCofC", cofCx);
+		hr = pEffect->SetFloat("g_xCurveCofD", cofDx);
+		hr = pEffect->SetFloat("g_xCurveCofE", cofEx);
+
 		hr = pEffect->SetTexture("g_Texture", pTexture);
 		if FAILED(hr)
 		{
@@ -913,7 +1296,7 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
 
 	return TRUE;
 }
-BOOL MS3DDisplay::SetEditWarpEnable(BOOL enable)
+BOOL ImTopDisplay::SetEditWarpEnable(BOOL enable)
 {
 	m_bEditWarp = enable;
 	if (enable)
@@ -926,7 +1309,8 @@ BOOL MS3DDisplay::SetEditWarpEnable(BOOL enable)
 	}
 	return TRUE;
 }
-BOOL MS3DDisplay::SetEditTTSEnable(BOOL enable)
+
+BOOL ImTopDisplay::SetEditTTSEnable(BOOL enable)
 {
 	m_bEditTTS = enable;
 	if (enable)
@@ -939,13 +1323,14 @@ BOOL MS3DDisplay::SetEditTTSEnable(BOOL enable)
 	}
 	return TRUE;
 }
-BOOL MS3DDisplay::SetCaptureRegion(float l, float t, float r, float b)
+
+BOOL ImTopDisplay::SetCaptureRegion(float l, float t, float r, float b)
 {
 	if (l < 0 || l > 1 || t < 0 || t > 1 || r <0 || r > 1 || b < 0 || b >1)
 		return FALSE;
 	if (l > r || t > b)
 		return FALSE;
-	
+
 	m_captureRect[0].x = l;
 	m_captureRect[0].y = t;
 	m_captureRect[1].x = r;
@@ -953,7 +1338,8 @@ BOOL MS3DDisplay::SetCaptureRegion(float l, float t, float r, float b)
 
 	return TRUE;
 }
-BOOL MS3DDisplay::GetCaptureRegion(float& l, float& t, float& r, float &b)
+
+BOOL ImTopDisplay::GetCaptureRegion(float& l, float& t, float& r, float &b)
 {
 	l = m_captureRect[0].x;
 	t = m_captureRect[0].y;
@@ -963,7 +1349,64 @@ BOOL MS3DDisplay::GetCaptureRegion(float& l, float& t, float& r, float &b)
 }
 
 
-BOOL MS3DDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+BOOL ImTopDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	MSEventManager::WndProc( hWnd, message, wParam, lParam);
+	if (m_pDevice == NULL)
+		return FALSE;
+	int xPos, yPos = 0;
+	WCHAR str[MAX_PATH];
+	BOOL ret = FALSE;
+
+	if ( message == WM_LBUTTONDOWN || message == WM_LBUTTONUP || message == WM_RBUTTONDOWN || 
+		message == WM_RBUTTONUP || message == WM_MOUSEMOVE)
+	{
+		xPos = LOWORD(lParam); 
+		yPos = HIWORD(lParam);
+
+		D3DXVECTOR3 vPos(0,0,0), vDir(0,0,0);
+
+		if (m_pCamera->Screen2World(hWnd, xPos, yPos, vPos,vDir))
+		{
+			PassMouseMessage(message, wParam, lParam, vPos, vDir);
+			if (!m_bEditWarp)
+			{
+				BOOL bHit = FALSE;
+				float tU, tV = 0;
+				IntersectWithPlane(vPos, vDir, bHit, tU, tV);
+
+				if (bHit)
+				{
+					ret = TRUE;
+					struct TData
+					{
+						UINT msg;
+						float tU;
+						float tV;
+					};
+					TData data;
+					data.msg = message;
+					data.tU = tU;
+					data.tV = tV;
+					Invoke(L"WM_ReceiveMouseMessage", wParam, lParam, (void*)&data );
+				}
+			}
+
+		}
+
+	}
+	else if(message == WM_PAINT)
+	{
+		ID3DXEffect* pEffect = GetEffect();
+		if (pEffect != NULL)
+			Render(this->m_pRenderTarget, pEffect);
+		else
+			Render(this->m_pRenderTarget );
+	}
+	return ret;
+}
+
+BOOL ImTubeDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	MSEventManager::WndProc( hWnd, message, wParam, lParam);
 	if (m_pDevice == NULL)
@@ -1034,7 +1477,6 @@ BOOL MS3DDisplay::IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& b
 	hr = D3DXIntersect(m_pDisplayPlane->GetMesh(), &vPos, &vDir, &bHit, &faceIdx, &pU, &pV, &dist, &pBuffer,
 		&countOfHits);
 
-
 	if (FAILED(hr))
 	{
 		return FALSE;
@@ -1073,36 +1515,59 @@ ID3DXEffect* MS3DDisplay::GetEffect()
 	}
 	return m_pEffect;
 }
+
+ID3DXEffect* ImTubeDisplay::GetEffect()
+{
+	if (m_pEffect == NULL)
+	{
+		DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE ;
+
+		WCHAR str[MAX_PATH] = {0};
+		GetCurrentDirectory(MAX_PATH,str);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\ImHookRenderforTubeWarp.fx", str);
+		HRESULT hr = D3DXCreateEffectFromFileW( m_pDevice, str, NULL, NULL, dwShaderFlags, NULL, &m_pEffect, NULL );
+		if (FAILED(hr))
+		{
+			OutputDebugStringW(L"@@@@ D3DXCreateEffectFromFileW Failed in MS3DDisplay::GetEffect()\n");
+			return NULL;
+		}
+	}
+	return m_pEffect;
+}
+
 BOOL MS3DDisplay::HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 {
 	return TRUE;
 }
 
-BOOL MS3DDisplay::onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+BOOL ImTopDisplay::onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	OutputDebugStringW(L"@@@@ onWarpButtonLDown \n");
-	((MS3DDisplay*)_THIS)->m_bStartDrag = TRUE;
-	
+	((ImTopDisplay*)_THIS)->m_bStartDrag = TRUE;
+
 	return TRUE;
 }
 
-BOOL MS3DDisplay::onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+BOOL ImTopDisplay::onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	OutputDebugStringW(L"@@@@ onWarpButtonLUp \n");
-	((MS3DDisplay*)_THIS)->m_bStartDrag = FALSE;
+	((ImTopDisplay*)_THIS)->m_bStartDrag = FALSE;
 	return TRUE;
 }
-BOOL MS3DDisplay::onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+
+
+
+BOOL ImTopDisplay::onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	//OutputDebugStringW(L"@@@@ onWarpButtonDragMove \n");
-	
-	if (((MS3DDisplay*)_THIS)->m_bStartDrag)
+
+	if (((ImTopDisplay*)_THIS)->m_bStartDrag)
 	{
 		MS3DButton* pbutton =((MS3DButton*)((MSEventManager*)pData));
 		int index = -1;
-		for (int i =0; i < ((MS3DDisplay*)_THIS)->m_pWarpButtons.size(); i++)
+		for (int i =0; i < ((ImTopDisplay*)_THIS)->m_pWarpButtons.size(); i++)
 		{
-			if (pbutton == ((MS3DDisplay*)_THIS)->m_pWarpButtons.at(i))
+			if (pbutton == ((ImTopDisplay*)_THIS)->m_pWarpButtons.at(i))
 			{
 				index = i;
 				break;
@@ -1112,50 +1577,65 @@ BOOL MS3DDisplay::onWarpButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam
 		{
 			return FALSE;
 		}
-		
+
 		int xPos = LOWORD(lParam); 
 		int yPos = HIWORD(lParam);
 		D3DXVECTOR3 pos, dir;
-		
-		((MS3DDisplay*)_THIS)->m_pCamera->Screen2World(((MS3DDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, pos, dir);
+
+		((ImTopDisplay*)_THIS)->m_pCamera->Screen2World(((ImTopDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, pos, dir);
 		D3DXVECTOR3 prePos = pbutton->GetPosition();
 		D3DXVECTOR3 newPos(pos.x, pos.y, prePos.z);
 		MSMeshBase::CUSTOMVERTEX vertex;
-		((MS3DDisplay*)_THIS)->m_pDisplayPlane->GetVertex(index, vertex);
+		((ImTopDisplay*)_THIS)->m_pDisplayPlane->GetVertex(index, vertex);
 		vertex.position.x = newPos.x;
 		vertex.position.y = newPos.y;
-		((MS3DDisplay*)_THIS)->m_pDisplayPlane->SetVertex(index, vertex);
+		((ImTopDisplay*)_THIS)->m_pDisplayPlane->SetVertex(index, vertex);
 		pbutton->SetPosition(newPos);
 	}
 	return TRUE;
 }
 
-
-BOOL MS3DDisplay::onTTSButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+BOOL ImTopDisplay::onTTSButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	OutputDebugStringW(L"@@@@ onTTSButtonLDown \n");
-	((MS3DDisplay*)_THIS)->m_bStartDrag = TRUE;
+	((ImTopDisplay*)_THIS)->m_bStartDrag = TRUE;
 
 	return TRUE;
 }
 
-BOOL MS3DDisplay::onTTSButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+BOOL ImTubeDisplay::onTTSButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+{
+	OutputDebugStringW(L"@@@@ onTTSButtonLDown \n");
+	((ImTubeDisplay*)_THIS)->m_bStartDrag = TRUE;
+
+	return TRUE;
+}
+
+BOOL ImTopDisplay::onTTSButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	OutputDebugStringW(L"@@@@ onTTSButtonLUp \n");
-	((MS3DDisplay*)_THIS)->m_bStartDrag = FALSE;
+	((ImTopDisplay*)_THIS)->m_bStartDrag = FALSE;
 	return TRUE;
 }
-BOOL MS3DDisplay::onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+
+BOOL ImTubeDisplay::onTTSButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+{
+	OutputDebugStringW(L"@@@@ onTTSButtonLUp \n");
+	((ImTubeDisplay*)_THIS)->m_bStartDrag = FALSE;
+	return TRUE;
+}
+
+BOOL ImTopDisplay::onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
 {
 	//OutputDebugStringW(L"@@@@ onTTSButtonDragMove \n");
 
-	if (((MS3DDisplay*)_THIS)->m_bStartDrag)
+	if (((ImTopDisplay*)_THIS)->m_bStartDrag)
 	{
 		MS3DButton* pbutton =((MS3DButton*)((MSEventManager*)pData));
 		int index = -1;
-		for (int i =0; i < ((MS3DDisplay*)_THIS)->m_pTTSButtons.size(); i++)
+		for (int i =0; i < ((ImTopDisplay*)_THIS)->m_pTTSButtons.size(); i++)
 		{
-			if (pbutton == ((MS3DDisplay*)_THIS)->m_pTTSButtons.at(i))
+			if (pbutton == ((ImTopDisplay*)_THIS)->m_pTTSButtons.at(i))
 			{
 				index = i;
 				break;
@@ -1170,28 +1650,71 @@ BOOL MS3DDisplay::onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam,
 
 		D3DXVECTOR3 vPos, vDir;
 
-		((MS3DDisplay*)_THIS)->m_pCamera->Screen2World(((MS3DDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, vPos, vDir);
+		((ImTopDisplay*)_THIS)->m_pCamera->Screen2World(((ImTopDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, vPos, vDir);
 
 		D3DXVECTOR3 prePos = pbutton->GetPosition();
 		D3DXVECTOR3 newPos(vPos.x, vPos.y, prePos.z);
 
 		BOOL bHit = FALSE;
 		float tU, tV = 0;
-		((MS3DDisplay*)_THIS)->IntersectWithPlane(vPos, vDir, bHit, tU, tV);
+		((ImTopDisplay*)_THIS)->IntersectWithPlane(vPos, vDir, bHit, tU, tV);
 		if (bHit)
 		{
 			pbutton->SetPosition(newPos);
-			((MS3DDisplay*)_THIS)->UpdateTTSByTTSButtons();
+			((ImTopDisplay*)_THIS)->UpdateTTSByTTSButtons();
 		}
 	}
 	return TRUE;
 }
-BOOL MS3DDisplay::SetTTS(const D3DXVECTOR2 v1, const D3DXVECTOR2 v2, const D3DXVECTOR2 v3, const D3DXVECTOR2 v4)
+
+BOOL ImTubeDisplay::onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData)
+{
+	//OutputDebugStringW(L"@@@@ onTTSButtonDragMove \n");
+
+	if (((ImTubeDisplay*)_THIS)->m_bStartDrag)
+	{
+		MS3DButton* pbutton =((MS3DButton*)((MSEventManager*)pData));
+		int index = -1;
+		for (int i =0; i < ((ImTubeDisplay*)_THIS)->m_pTTSButtons.size(); i++)
+		{
+			if (pbutton == ((ImTubeDisplay*)_THIS)->m_pTTSButtons.at(i))
+			{
+				index = i;
+				break;
+			}
+		}
+		if (index == -1)
+		{
+			return FALSE;
+		}
+		int xPos = LOWORD(lParam); 
+		int yPos = HIWORD(lParam);
+
+		D3DXVECTOR3 vPos, vDir;
+
+		((ImTubeDisplay*)_THIS)->m_pCamera->Screen2World(((ImTubeDisplay*)_THIS)->m_hDisplayWnd, xPos, yPos, vPos, vDir);
+
+		D3DXVECTOR3 prePos = pbutton->GetPosition();
+		D3DXVECTOR3 newPos(vPos.x, vPos.y, prePos.z);
+
+		BOOL bHit = FALSE;
+		float tU, tV = 0;
+		((ImTubeDisplay*)_THIS)->IntersectWithPlane(vPos, vDir, bHit, tU, tV);
+		if (bHit)
+		{
+			pbutton->SetPosition(newPos);
+			((ImTubeDisplay*)_THIS)->UpdateTTSByTTSButtons();
+		}
+	}
+	return TRUE;
+}
+BOOL ImTopDisplay::SetTTS(const D3DXVECTOR2 v1, const D3DXVECTOR2 v2, const D3DXVECTOR2 v3, const D3DXVECTOR2 v4)
 {
 	m_matTTS = ComputeTTS(v1, v2, v3, v4);
 	return TRUE;
 }
-D3DXMATRIX MS3DDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4)
+
+D3DXMATRIX ImTopDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4)
 {
 	WCHAR str[MAX_PATH];
 	D3DXMATRIX ret;
@@ -1199,29 +1722,29 @@ D3DXMATRIX MS3DDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2,
 	CvMat cvPt;
 	CvMat dstPt;
 	swprintf_s(str, MAX_PATH, L"@@@@ v1 = (%.2f, %.2f), v2 = (%.2f, %.2f), v3 = (%.2f, %.2f), v4 = (%.2f, %.2f) \n"
-			, v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, v4.x, v4.y);
+		, v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, v4.x, v4.y);
 	OutputDebugStringW(str);
 	float t[] = {0,0,
-				 0,1,
-				 1,0,
-				 1,1};
+		0,1,
+		1,0,
+		1,1};
 	float d[] = {v1.x, v1.y,
-				v2.x, v2.y,
-				v3.x, v3.y,
-				v4.x, v4.y};
+		v2.x, v2.y,
+		v3.x, v3.y,
+		v4.x, v4.y};
 	float s[] = {0,0,0,
-				 0,0,0,
-	             0,0,0};
+		0,0,0,
+		0,0,0};
 
 	cvPt = cvMat( 4, 2, CV_32F, &t);
 	dstPt = cvMat(4, 2, CV_32F, &d);
 	CvMat mat = cvMat(3,3, CV_32F, &s);
 	cvFindHomography(&dstPt, &cvPt, &mat);
-	
+
 	ret._11 = mat.data.fl[0*3 + 0];
 	ret._21 = mat.data.fl[0*3 + 1];
 	ret._31 = mat.data.fl[0*3 + 2];
-	
+
 	ret._12 = mat.data.fl[1*3 + 0];
 	ret._22 = mat.data.fl[1*3 + 1];
 	ret._32 = mat.data.fl[1*3 + 2];
@@ -1246,16 +1769,55 @@ D3DXMATRIX MS3DDisplay::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2,
 			testout[i].x, testout[i].y);
 		OutputDebugStringW(str);
 	}
-
-	swprintf_s(str, MAX_PATH, L"@@@@ %.2f, %.2f, %.2f, %.2f \n@@@@ %.2f, %.2f, %.2f, %.2f \n@@@@ %.2f, %.2f, %.2f, %.2f \n@@@@ %.2f, %.2f, %.2f, %.2f \n",
-				ret._11,ret._12,ret._13, ret._14, ret._21, ret._22, ret._23, ret._24, ret._31, ret._32, ret._33, ret._34, 
-				ret._41, ret._42, ret._43, ret._44);
-	
-	OutputDebugStringW(str);
-	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@");
 	return ret;
 }
-BOOL MS3DDisplay::UpdateTTSByTTSButtons()
+
+float ImTubeDisplay::CurveFunc(float Xin, float cofA, float cofB, float cofC, 
+						float cofD, float cofE)
+{
+	return cofA*Xin*Xin*Xin*Xin + cofB*Xin*Xin*Xin + cofC*Xin*Xin + 
+		cofD*Xin + cofE;
+}
+void ImTubeDisplay::SolveCurve(D3DXVECTOR2 v1, D3DXVECTOR2 v2,D3DXVECTOR2 v3,D3DXVECTOR2 v4, D3DXVECTOR2 v5,
+							   float& cofA, float& cofB, float& cofC, float& cofD, float& cofE) 
+{
+	
+	CvMat* matA = cvCreateMat(5, 5, CV_32FC1);
+	CvMat* matX = cvCreateMat(5, 1, CV_32FC1);
+	CvMat* matB = cvCreateMat(5, 1, CV_32FC1);
+	D3DXVECTOR2 pt[5] = {v1, v2, v3, v4, v5};
+	for (int row = 0 ; row < 5; row++)
+	{
+		matB->data.fl[row] = pt[row].y;
+		matX->data.fl[row] = 0;
+		for (int col = 0; col < 5; col ++)
+		{
+			matA->data.fl[row*5 + col] = pow(pt[row].x, 5-col-1);
+		}
+	}
+	if (cvSolve(matA, matB, matX, CV_LU))
+	{
+		cofA = matX->data.fl[0];
+		cofB = matX->data.fl[1];
+		cofC = matX->data.fl[2];
+		cofD = matX->data.fl[3];
+		cofE = matX->data.fl[4];
+	}
+	cvReleaseMat(&matA);
+	cvReleaseMat(&matB);
+	cvReleaseMat(&matX);
+	return;
+}
+BOOL ImTubeDisplay::ComputeTTSCurve(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4, const D3DXVECTOR2& v5,
+		float& cofA,float& cofB, float& cofC, float& cofD, float& cofE)
+{
+	
+	SolveCurve(v1,v2,v3,v4,v5, cofA, cofB, cofC, cofD, cofE);
+	
+	return TRUE;
+}
+
+BOOL ImTopDisplay::UpdateTTSByTTSButtons()
 {
 	if (m_pTTSButtons.size() != 4)
 		return FALSE;
@@ -1275,6 +1837,39 @@ BOOL MS3DDisplay::UpdateTTSByTTSButtons()
 		pt[i] = D3DXVECTOR2(tU, tV);
 	}
 	m_matTTS =  ComputeTTS(pt[0], pt[1],pt[2], pt[3]);
+	return TRUE;
+}
+
+BOOL ImTubeDisplay::UpdateTTSByTTSButtons()
+{
+	if (m_pTTSButtons.size() != 15)
+		return FALSE;
+	D3DXVECTOR2 pt[15] = {D3DXVECTOR2(0,0)};
+	float tmp[5] = { 0, 0.25, 0.5, 0.75, 1}; 
+	for (int i =0; i < m_pTTSButtons.size(); i++)
+	{
+		MS3DButton* pbutton = m_pTTSButtons.at(i);
+		D3DXVECTOR3 pos = pbutton->GetPosition();
+		D3DXVECTOR3 dir = pos - m_pCamera->GetEyePos();
+		BOOL bHit = FALSE;
+		float tU, tV = 0;
+		IntersectWithPlane(pos, dir, bHit, tU, tV);
+		if (!bHit)
+		{
+			return FALSE;
+		}
+		pt[i] = D3DXVECTOR2(tU, tV);
+		if (i >= 10)
+		{
+			pt[i] = D3DXVECTOR2( pt[i].x, tmp[i-10]);
+		}
+	}
+	WCHAR str[MAX_PATH];
+	ComputeTTSCurve(pt[0], pt[1], pt[2], pt[3], pt[4], cofA1, cofB1, cofC1, cofD1, cofE1);
+	ComputeTTSCurve(pt[5], pt[6], pt[7], pt[8], pt[9], cofA2, cofB2, cofC2, cofD2, cofE2);
+	
+	ComputeTTSCurve(pt[10], pt[11], pt[12], pt[13], pt[14], cofAx, cofBx, cofCx, cofDx, cofEx);
+
 	return TRUE;
 }
 
@@ -1516,7 +2111,8 @@ BOOL MS3DButton::OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void
 	return TRUE;
 }
 
-BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop)
+
+BOOL ImTopDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop)
 {
 	//return TRUE;
 	if (m_pRenderTarget == NULL)
@@ -1570,7 +2166,9 @@ BOOL MS3DDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int d
 	
 	return TRUE;
 }
-BOOL MS3DDisplay::LoadMaskTextureFromFile(WCHAR* path)
+
+
+BOOL ImTopDisplay::LoadMaskTextureFromFile(WCHAR* path)
 {
 	if (m_pMaskTexture != NULL)
 	{
@@ -1587,13 +2185,14 @@ BOOL MS3DDisplay::LoadMaskTextureFromFile(WCHAR* path)
 
 	return TRUE;
 }
-BOOL MS3DDisplay::SetMaskPos(float tx, float ty, float sx, float sy)
+
+BOOL ImTopDisplay::SetMaskPos(float tx, float ty, float sx, float sy)
 {
 	D3DXMATRIX tmp;
 	D3DXMatrixIdentity(&m_matMaskTransform);
 	D3DXMatrixTranslation(&tmp, -0.5, -0.5, 0);
 	m_matMaskTransform = m_matMaskTransform*tmp;
-    D3DXMatrixScaling(&tmp, sx, sy, 1);
+	D3DXMatrixScaling(&tmp, sx, sy, 1);
 	m_matMaskTransform = m_matMaskTransform*tmp;
 	D3DXMatrixTranslation(&tmp, 0.5, 0.5, 0);
 	m_matMaskTransform = m_matMaskTransform*tmp;
