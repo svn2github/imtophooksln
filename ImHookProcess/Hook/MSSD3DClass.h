@@ -261,7 +261,7 @@ class MS3DButton : public MS3DPlane, public MSEventManager
 public:
 	MS3DButton(IDirect3DDevice9* pDevice, IEventManager* parent): MS3DPlane(pDevice), MSEventManager(parent)
 	{
-		
+
 		Bind(L"WM_LBUTTONDOWN\0", MS3DButton::OnMouseLDown, this);
 		Bind(L"WM_LBUTTONUP\0", MS3DButton::OnMouseLUp, this);
 		Bind(L"WM_MOUSEMOVE\0", MS3DButton::OnMouseMove, this);
@@ -285,34 +285,18 @@ protected:
 	IDirect3D9* m_pD3D;
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
-	D3DXMATRIX m_matTTS;
-	D3DXMATRIX m_matMaskTransform;
-	D3DXVECTOR2 m_captureRect[2];
-
-	LPDIRECT3DTEXTURE9 m_pMaskTexture;
+	ID3DXEffect* m_pEffect;
 	LPDIRECT3DTEXTURE9 m_pRenderTarget;
-	vector<MS3DButton*> m_pWarpButtons;
-	vector<MS3DButton*> m_pTTSButtons;
-	BOOL m_bStartDrag; 
-	map<HWND, LPDIRECT3DTEXTURE9> m_winTextures;
-	CRITICAL_SECTION m_CS;
+	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
+	virtual ID3DXEffect* GetEffect();
+
 private:
 	HANDLE m_hRenderThread;
-	BOOL m_bEditWarp;
-	BOOL m_bEditTTS;
-	BOOL m_bMaskEnable;
-	ID3DXEffect* m_pEffect;
+
 	BOOL InitDevice();
 	static BOOL _Run(void* _THIS);
 	BOOL CreateTexture();
-	BOOL CreateWarpButtons();
-	BOOL ClearWarpButtons();
-	BOOL CreateTTSButtons();
-	BOOL ClearTTSButtons();
-	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
-	ID3DXEffect* GetEffect();
-	BOOL UpdateTTSByTTSButtons();
-	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);
+
 public:
 	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D);
 	virtual ~MS3DDisplay();
@@ -320,18 +304,51 @@ public:
 	virtual BOOL Stop();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
-	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)=0;
+	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
+
+};
+
+
+class ImTopDisplay : public MS3DDisplay
+{
+protected:
+	D3DXMATRIX m_matMaskTransform;
+	D3DXVECTOR2 m_captureRect[2];
+	LPDIRECT3DTEXTURE9 m_pMaskTexture;
+	D3DXMATRIX m_matTTS;
+
+	vector<MS3DButton*> m_pWarpButtons;
+	vector<MS3DButton*> m_pTTSButtons;
+	BOOL m_bStartDrag; 
+
+	BOOL m_bEditWarp;
+	BOOL m_bEditTTS;
+	BOOL m_bMaskEnable;
+	virtual BOOL CreateWarpButtons();
+	virtual BOOL ClearWarpButtons();
+	virtual BOOL CreateTTSButtons();
+	virtual BOOL ClearTTSButtons();
+	virtual BOOL UpdateTTSByTTSButtons();
+private:
+
+	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);
+public:
+	ImTopDisplay(HWND hWnd, IDirect3D9* pD3D);
+	virtual ~ImTopDisplay();
 	virtual BOOL SetEditWarpEnable(BOOL enable);
 	virtual BOOL SetEditTTSEnable(BOOL enable);
 	virtual BOOL SetTTS(const D3DXVECTOR2 v1, const D3DXVECTOR2 v2, const D3DXVECTOR2 v3, const D3DXVECTOR2 v4);
 	virtual BOOL SetCaptureRegion(float l, float t, float r, float b);
 	virtual BOOL GetCaptureRegion(float& l, float& t, float& r, float &b);
 	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	virtual BOOL DrawBitBlt(HDC hdc, int x, int y, int cx, int cy, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
 	virtual BOOL LoadMaskTextureFromFile(WCHAR* path);
 	virtual BOOL SetMaskPos(float tx, float ty, float sx, float sy);
 
+	virtual BOOL Render();
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 public:
 	static BOOL __stdcall onWarpButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 	static BOOL __stdcall onWarpButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
@@ -343,6 +360,52 @@ public:
 };
 
 
+
+
+
+class ImTubeDisplay : public ImTopDisplay
+{
+	struct FAN
+	{
+		D3DXVECTOR2 center;
+		D3DXVECTOR2 point[5];
+		float r;
+		float distance;
+		int parallel; // 0 == 平行 1 == 上半圓 -1 == 下半圓
+		float start;
+		float eqA,eqB,eqC,eqD,eqE,eqF; // 紀錄二次曲線的參數
+	};
+
+protected:
+	float cofA1, cofB1, cofC1, cofD1, cofE1, cofA2, cofB2, cofC2, cofD2, cofE2;
+	float cofAx, cofBx, cofCx, cofDx, cofEx; 
+	virtual ID3DXEffect* GetEffect();
+private:
+	BOOL CreateTTSButtons();
+	BOOL ClearTTSButtons();
+	BOOL UpdateTTSByTTSButtons();
+	BOOL ComputeTTSCurve(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4, const D3DXVECTOR2& v5,
+		float& cofA,float& cofB, float& cofC, float& cofD, float& cofE);
+	//void Cal_Center(struct FAN *a); 
+	void SolveCurve(D3DXVECTOR2 v1, D3DXVECTOR2 v2,D3DXVECTOR2 v3,D3DXVECTOR2 v4, D3DXVECTOR2 v5,
+		float& cofA, float& cofB, float& cofC, float& cofD, float& cofE);
+	float CurveFunc(float Xin, float cofA, float cofB, float cofC, 
+		float cofD, float cofE);
+public:
+	ImTubeDisplay(HWND hWnd, IDirect3D9* pD3D);
+	virtual ~ImTubeDisplay();
+
+	virtual BOOL WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	virtual BOOL Render();
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
+public:
+
+	static BOOL __stdcall onTTSButtonLDown(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onTTSButtonLUp(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+	static BOOL __stdcall onTTSButtonDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
+};
 
 
 
