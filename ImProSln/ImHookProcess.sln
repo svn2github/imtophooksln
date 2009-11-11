@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImHookProcess", "ImHookProcess\ImHookProcess.vcproj", "{76E8D027-F0E1-4AE7-BCEC-2D6C46EB1648}"
+	ProjectSection(ProjectDependencies) = postProject
+		{06D141C0-B76A-4DD7-A046-79C274DA121A} = {06D141C0-B76A-4DD7-A046-79C274DA121A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hook", "Hook\Hook.vcproj", "{06D141C0-B76A-4DD7-A046-79C274DA121A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImSocketClient", "ImSocketClient\ImSocketClient.vcproj", "{351745B8-08FF-49EC-9932-8B6A9886B41A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{76E8D027-F0E1-4AE7-BCEC-2D6C46EB1648}.Debug|Win32.ActiveCfg = Debug|Win32
+		{76E8D027-F0E1-4AE7-BCEC-2D6C46EB1648}.Debug|Win32.Build.0 = Debug|Win32
+		{76E8D027-F0E1-4AE7-BCEC-2D6C46EB1648}.Release|Win32.ActiveCfg = Release|Win32
+		{76E8D027-F0E1-4AE7-BCEC-2D6C46EB1648}.Release|Win32.Build.0 = Release|Win32
+		{06D141C0-B76A-4DD7-A046-79C274DA121A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06D141C0-B76A-4DD7-A046-79C274DA121A}.Debug|Win32.Build.0 = Debug|Win32
+		{06D141C0-B76A-4DD7-A046-79C274DA121A}.Release|Win32.ActiveCfg = Release|Win32
+		{06D141C0-B76A-4DD7-A046-79C274DA121A}.Release|Win32.Build.0 = Release|Win32
+		{351745B8-08FF-49EC-9932-8B6A9886B41A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{351745B8-08FF-49EC-9932-8B6A9886B41A}.Debug|Win32.Build.0 = Debug|Win32
+		{351745B8-08FF-49EC-9932-8B6A9886B41A}.Release|Win32.ActiveCfg = Release|Win32
+		{351745B8-08FF-49EC-9932-8B6A9886B41A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
