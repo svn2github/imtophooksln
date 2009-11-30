@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\Detours\include;"
+				AdditionalIncludeDirectories="..\Detours\include; ..\OpenCV\cv\include ; ..\OpenCV\cxcore\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS; "
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,9 +63,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies=" ..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib cv.lib cxcore.lib"
+				AdditionalDependencies=" ..\detours\lib\detours.lib  ..\detours\lib\detoured.lib   d3dx9.lib d3d9.lib cv.lib cxcore.lib"
 				OutputFile="$(OutDir)\$(ProjectName).dll"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -120,7 +121,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\Detours\include;"
+				AdditionalIncludeDirectories="..\Detours\include; ..\OpenCV\cv\include ; ..\OpenCV\cxcore\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS"
 				RuntimeLibrary="2"
 				UsePrecompiledHeader="2"
@@ -139,8 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="..\detours\lib\detours.lib  ..\detours\lib\detoured.lib ..\DXUT\DXUT.lib  d3dx9.lib d3d9.lib cv.lib cxcore.lib"
+				AdditionalDependencies="..\detours\lib\detours.lib  ..\detours\lib\detoured.lib   d3dx9.lib d3d9.lib cv.lib cxcore.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

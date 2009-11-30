@@ -1,5 +1,5 @@
 #include "MSSD3DClass.h"
-#include <cv.h>
+#include "cv.h"
 #include <math.h>
 MS3DObj::MS3DObj()
 {
