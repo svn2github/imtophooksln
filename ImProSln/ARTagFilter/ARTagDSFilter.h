@@ -11,16 +11,30 @@ DEFINE_GUID(CLSID_ARTagDSFilter,
 DEFINE_GUID(IID_IARTagDSFilter, 
 			0xe47942df, 0xb438, 0x4d85, 0xa9, 0xec, 0x7b, 0x56, 0x55, 0xe6, 0x8d, 0xfd);
 
+DEFINE_GUID(IID_IARTagProperty, 
+			0xfcddbd27, 0x1734, 0x46d3, 0x88, 0xe7, 0x5e, 0x3a, 0xb6, 0x56, 0x21, 0x2c);
+
+
+// {3333AFC9-B73B-440b-85FF-3656E4457958}
+DEFINE_GUID(CLSID_ARTagProperty, 
+			0x3333afc9, 0xb73b, 0x440b, 0x85, 0xff, 0x36, 0x56, 0xe4, 0x45, 0x79, 0x58);
+
 MIDL_INTERFACE("E47942DF-B438-4d85-A9EC-7B5655E68DFD")
 IARTagFilter: public IUnknown
 {
 public:
 
 };
+MIDL_INTERFACE("FCDDBD27-1734-46d3-88E7-5E3AB656212C")
+IARTagProperty : public IUnknown
+{
+public:
 
+};
 
 class ARTagDSFilter :
-	public CTransformFilter, public IARTagFilter
+	public CTransformFilter, public IARTagFilter, public IARTagProperty, 
+	public ISpecifyPropertyPages
 	
 {
 public:
@@ -38,6 +52,8 @@ public:
 	HRESULT          Transform( IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT          DecideBufferSize(IMemAllocator *pAllocator, ALLOCATOR_PROPERTIES *pProp);
 	HRESULT          GetMediaType(int iPosition, CMediaType *pMediaType);
+	//implement DShow Property Page
+	STDMETHODIMP     GetPages(CAUUID *pPages);
 
 protected:
 	CMediaType       m_InputMT;
@@ -54,5 +70,23 @@ protected:
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();
+};
+
+class ARTagPropertyPage : public CBasePropertyPage
+{
+protected:
+	IARTagProperty *m_pARProperty;    // Pointer to the filter's custom interface.
+
+public:
+	ARTagPropertyPage(IUnknown *pUnk);
+	~ARTagPropertyPage();
+
+
+	//override CBasePropertyPage Method
+	virtual HRESULT OnConnect(IUnknown *pUnk);
+	virtual HRESULT OnDisconnect(void);
+
+	//
+	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 };
 #endif

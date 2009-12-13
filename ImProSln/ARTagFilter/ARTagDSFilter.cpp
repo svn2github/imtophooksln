@@ -1,8 +1,13 @@
 
 #include "StdAfx.h"
 #include "ARTagDSFilter.h"
+
 #include <initguid.h>
 #include "wxdebug.h"
+#include <wtypes.h>
+#include <ocidl.h>
+#include "resource.h"
+
 
 
 //For DLL Register
@@ -91,7 +96,14 @@ CFactoryTemplate g_Templates[] =
 			ARTagDSFilter::CreateInstance,
 			NULL,
 			NULL
+	},
+	{ 
+		L"ARTag Props",
+			&CLSID_ARTagProperty,
+			ARTagPropertyPage::CreateInstance, 
+			NULL, NULL
 	}
+
 };
 
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);  
@@ -108,8 +120,6 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 {
 	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
-
-
 
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
@@ -158,7 +168,23 @@ HRESULT ARTagDSFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	{
 		return GetInterface(static_cast<IARTagFilter*>(this), ppv);
 	}
-	return CBaseFilter::NonDelegatingQueryInterface(iid,ppv);
+	
+	if (iid == IID_ISpecifyPropertyPages)
+	{
+		return GetInterface(
+				static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+
+	if (iid == IID_IARTagProperty)
+	{
+		return GetInterface(
+			static_cast<IARTagProperty*>(this),	ppv);
+	}
+	else
+	{
+		// Call the parent class.
+		return CBaseFilter::NonDelegatingQueryInterface(iid, ppv);
+	}
 }
 
 HRESULT ARTagDSFilter::CheckInputType( const CMediaType * pmt )
@@ -258,8 +284,8 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERT
 			return E_FAIL;
 	}
 	return NOERROR;
-
 }
+
 HRESULT ARTagDSFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
 {
 	if (iPosition < 0) {
@@ -300,4 +326,64 @@ bool ARTagDSFilter::IsAcceptedType(const CMediaType *pmt)
 		}
 	}
 	return false;
+}
+
+HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
+{
+	pPages->cElems = 1;
+	pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID));
+	if (pPages->pElems == NULL) 
+	{
+		return E_OUTOFMEMORY;
+	}
+	pPages->pElems[0] = CLSID_ARTagProperty;
+	return S_OK;
+}
+
+
+ARTagPropertyPage::ARTagPropertyPage(IUnknown *pUnk) : 
+CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_PROPPAGE, IDS_ARTag_PROPPAGE_TITLE),
+m_pARProperty(0)
+{
+
+}
+
+ARTagPropertyPage::~ARTagPropertyPage()
+{
+
+}
+
+HRESULT ARTagPropertyPage::OnConnect(IUnknown *pUnk)
+{
+	if (pUnk == NULL)
+	{
+		return E_POINTER;
+	}
+	ASSERT(m_pARProperty == NULL);
+	return pUnk->QueryInterface(IID_IARTagProperty, 
+		reinterpret_cast<void**>(&m_pARProperty));
+}
+
+HRESULT ARTagPropertyPage::OnDisconnect(void)
+{
+	if (m_pARProperty)
+	{
+		m_pARProperty->Release();
+		m_pARProperty = NULL;
+	}
+	return S_OK;
+}
+
+CUnknown *WINAPI ARTagPropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
+{
+	ASSERT(phr);
+	// assuming we don't want to modify the data
+	ARTagPropertyPage *pNewObject = new ARTagPropertyPage(punk);
+
+	if(pNewObject == NULL) {
+		if (phr)
+			*phr = E_OUTOFMEMORY;
+	}
+
+	return pNewObject;
 }

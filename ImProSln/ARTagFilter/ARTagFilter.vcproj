@@ -44,8 +44,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses; ..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include ; ..\OpenCV\cxcore\include"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -67,9 +67,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd.lib  winmm.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib"
+				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin"
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
