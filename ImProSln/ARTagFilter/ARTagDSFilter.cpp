@@ -1,13 +1,12 @@
 
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "ARTagDSFilter.h"
-
 #include <initguid.h>
 #include "wxdebug.h"
 #include <wtypes.h>
 #include <ocidl.h>
 #include "resource.h"
-
+#include "ARToolKitPlus/TrackerMultiMarkerImpl.h"
 
 
 //For DLL Register
@@ -125,27 +124,16 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 : CTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
 { 
 	/* Initialize any private variables here. */
-	m_rgSubTypes[0] = MEDIASUBTYPE_YV12;
-	m_rgSubTypes[1] = MEDIASUBTYPE_YUY2;
-	m_rgSubTypes[2] = MEDIASUBTYPE_RGB24;
-	m_rgSubTypes[3] = MEDIASUBTYPE_RGB32;
-	m_rgSubTypes[4] = MEDIASUBTYPE_ARGB32;
+	m_ARTracker = NULL;
 
-	m_rgFourCC[0]   = '21VY'; // FCC("YV12");
-	m_rgFourCC[1]   = '2YUY'; // FCC("YUY2");
-	m_rgFourCC[2]   = BI_RGB;
-	m_rgFourCC[3]   = BI_BITFIELDS;
-	m_rgFourCC[4]   = BI_BITFIELDS;
-
-	m_rgBitCnt[0]   = 12;
-	m_rgBitCnt[1]   = 16;
-	m_rgBitCnt[2]   = 24;
-	m_rgBitCnt[3]   = 32;
-	m_rgBitCnt[4]   = 32;
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
-
+	if (m_ARTracker != NULL)
+	{
+		delete m_ARTracker;
+		m_ARTracker = NULL;
+	}
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
@@ -237,6 +225,27 @@ HRESULT ARTagDSFilter::CheckTransform(const CMediaType *pmtIn, const CMediaType 
 }
 HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin)
 {
+	if (direction == PINDIR_INPUT)
+	{
+		if (m_ARTracker != NULL)
+		{
+			delete m_ARTracker;
+			m_ARTracker = NULL;
+		}
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		
+		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 16>(bitHeader.biWidth, bitHeader.biHeight);
+		GUID guidSubType = *m_InputMT.Subtype();
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
+		}
+		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
+		}
+	}
 	return S_OK;
 }
 HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
@@ -311,18 +320,16 @@ bool ARTagDSFilter::IsAcceptedType(const CMediaType *pmt)
 {
 	GUID guidSubType = *pmt->Subtype();
 
-	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) {
-		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_YUY2)){
+	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
+	{
+		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
 			return true;
-		}else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24)){
+		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) ||
+			IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
 			return true;
-		}else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) ||
-			IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32)){
-				return true;
-		}else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_YV12)){
-			return true;
-		}else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_Y41P)){
-			return false;
 		}
 	}
 	return false;
@@ -339,6 +346,110 @@ HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 	pPages->pElems[0] = CLSID_ARTagProperty;
 	return S_OK;
 }
+
+
+bool ARTagDSFilter::setCamera(int xsize, int ysize, double** mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip);
+}
+bool ARTagDSFilter::setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->setMarkInfo(marker, numMarker);
+}
+bool ARTagDSFilter::setBorderWidth(double borderWidth)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	m_ARTracker->setBorderWidth(borderWidth);
+	return true;
+}
+double ARTagDSFilter::getBorderWidth()
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getBorderWidth();
+}
+bool ARTagDSFilter::setThreshold(int t)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	m_ARTracker->setThreshold(t);
+	return true;
+}
+int ARTagDSFilter::getThreshold()
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getThreshold();
+}
+bool ARTagDSFilter::setUndistortionMode(int mode)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	m_ARTracker->setUndistortionMode((ARToolKitPlus::UNDIST_MODE)mode);
+	return true;
+}
+int ARTagDSFilter::getUndistortionMode()
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getUndistortionMode();
+}
+bool ARTagDSFilter::setMarkerMode(int mode)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	m_ARTracker->setMarkerMode((ARToolKitPlus::MARKER_MODE)mode);
+	return true;
+}
+int ARTagDSFilter::getMarkerMode()
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getMarkerMode();
+}
+bool ARTagDSFilter::setPoseEstimator(int rpp)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	m_ARTracker->setPoseEstimator((ARToolKitPlus::POSE_ESTIMATOR)rpp);
+	return true;
+}
+int ARTagDSFilter::getPosEstimator()
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getPoseEstimator();
+}
+
 
 
 ARTagPropertyPage::ARTagPropertyPage(IUnknown *pUnk) : 
@@ -386,4 +497,28 @@ CUnknown *WINAPI ARTagPropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 	}
 
 	return pNewObject;
+}
+void ARTagPropertyPage::SetDirty()
+{
+	m_bDirty = TRUE;
+	if (m_pPageSite)
+	{
+		m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	}
+}
+
+BOOL ARTagPropertyPage::OnReceiveMessage(HWND hwnd,
+								 UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	return CBasePropertyPage::OnReceiveMessage(hwnd,uMsg,wParam,lParam);
+}
+
+HRESULT ARTagPropertyPage::OnActivate(void)
+{
+	EnableWindow(this->m_Dlg, TRUE);
+	return S_OK;
+}
+HRESULT ARTagPropertyPage::OnApplyChanges(void)
+{
+	return S_OK;
 }

@@ -34,31 +34,30 @@
 //
 
 // CARTagFilterApp
-/*
-BEGIN_MESSAGE_MAP(CARTagFilterApp, CWinApp)
-END_MESSAGE_MAP()
-
-
-// CARTagFilterApp construction
-
-CARTagFilterApp::CARTagFilterApp()
-{
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
-}
-
-
-// The one and only CARTagFilterApp object
-
-CARTagFilterApp theApp;
-
-
-// CARTagFilterApp initialization
-
-BOOL CARTagFilterApp::InitInstance()
-{
-	CWinApp::InitInstance();
-
-	return TRUE;
-}
-*/
+//
+//BEGIN_MESSAGE_MAP(CARTagFilterApp, CWinApp)
+//END_MESSAGE_MAP()
+//
+//
+//// CARTagFilterApp construction
+//
+//CARTagFilterApp::CARTagFilterApp()
+//{
+//	// TODO: add construction code here,
+//	// Place all significant initialization in InitInstance
+//}
+//
+//
+//// The one and only CARTagFilterApp object
+//
+//CARTagFilterApp theApp;
+//
+//
+//// CARTagFilterApp initialization
+//
+//BOOL CARTagFilterApp::InitInstance()
+//{
+//	CWinApp::InitInstance();
+//
+//	return TRUE;
+//}

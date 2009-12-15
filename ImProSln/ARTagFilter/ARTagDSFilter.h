@@ -5,6 +5,8 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
+#include "ARToolKitPlus/arMulti.h"
+#include "ARToolKitPlus/TrackerMultiMarker.h"
 DEFINE_GUID(CLSID_ARTagDSFilter, 
 			0x889c4fa1, 0xfb51, 0x4118, 0x80, 0xb8, 0xc0, 0x3f, 0x51, 0x4a, 0xab, 0x3);
 
@@ -29,7 +31,19 @@ MIDL_INTERFACE("FCDDBD27-1734-46d3-88E7-5E3AB656212C")
 IARTagProperty : public IUnknown
 {
 public:
+	bool setCamera(int xsize, int ysize, double** mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
+	bool setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker);
 
+	bool setBorderWidth(double borderWidth);
+	double getBorderWidth();
+	bool setThreshold(int t);
+	int getThreshold();
+	bool setUndistortionMode(int mode);
+	int getUndistortionMode();
+	bool setMarkerMode(int mode);
+	int getMarkerMode();
+	bool setPoseEstimator(int rpp);
+    int getPosEstimator();
 };
 
 class ARTagDSFilter :
@@ -54,14 +68,26 @@ public:
 	HRESULT          GetMediaType(int iPosition, CMediaType *pMediaType);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
+	//implement IARTagProperty
+	bool setCamera(int xsize, int ysize, double** mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
+	bool setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker);
+
+	bool setBorderWidth(double borderWidth);
+	double getBorderWidth();
+	bool setThreshold(int t);
+	int getThreshold();
+	bool setUndistortionMode(int mode);
+	int getUndistortionMode();
+	bool setMarkerMode(int mode);
+	int getMarkerMode();
+	bool setPoseEstimator(int rpp);
+	int getPosEstimator();
 
 protected:
 	CMediaType       m_InputMT;
 	CMediaType       m_OutputMT;
 	
-	GUID             m_rgSubTypes[6];
-	DWORD            m_rgFourCC[6];
-	WORD             m_rgBitCnt[6];
+	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;
 
 	bool             IsAcceptedType(const CMediaType *pMT);
 
@@ -76,7 +102,8 @@ class ARTagPropertyPage : public CBasePropertyPage
 {
 protected:
 	IARTagProperty *m_pARProperty;    // Pointer to the filter's custom interface.
-
+	BOOL m_bDirty;
+	void SetDirty();
 public:
 	ARTagPropertyPage(IUnknown *pUnk);
 	~ARTagPropertyPage();
@@ -85,6 +112,10 @@ public:
 	//override CBasePropertyPage Method
 	virtual HRESULT OnConnect(IUnknown *pUnk);
 	virtual HRESULT OnDisconnect(void);
+	virtual BOOL OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	virtual HRESULT OnActivate(void);
+	virtual HRESULT OnApplyChanges(void);
+	
 
 	//
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);

@@ -65,6 +65,14 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// HTML
+//
+
+IDR_HTML_ARTAGPROPERTYDIALOG HTML                    "ARTagPropertyDialog.htm"
+IDR_HTML_ARTAGPROPERTYDLG HTML                    "ARTagPropertyDlg.htm"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -134,7 +142,20 @@ IDD_ARTag_PROPPAGE DIALOGEX 0, 0, 235, 156
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "TODO: layout property page",IDC_STATIC,73,74,90,8
+    EDITTEXT        IDC_XSIZE,42,18,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "XSize:",IDC_STATIC,22,22,20,8
+    RTEXT           "YSize:",IDC_STATIC,96,22,20,8
+    EDITTEXT        IDC_YSIZE,116,18,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Camera Setting:",IDC_STATIC,6,6,66,11
+    RTEXT           "nNearClip:",IDC_STATIC,6,35,36,11
+    EDITTEXT        IDC_nNearClip,42,35,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "nFarClip:",IDC_STATIC,80,35,36,11
+    EDITTEXT        IDC_nFarClip,116,35,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "dist_factor:",IDC_STATIC,4,51,38,8
+    EDITTEXT        IDC_DISTFACTOR1,42,51,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR4,154,51,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR2,80,51,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR3,116,51,30,12,ES_AUTOHSCROLL
 END
 
 
@@ -148,10 +169,22 @@ GUIDELINES DESIGNINFO
 BEGIN
     IDD_ARTag_PROPPAGE, DIALOG
     BEGIN
-        LEFTMARGIN, 7
+        LEFTMARGIN, 6
         RIGHTMARGIN, 228
-        TOPMARGIN, 7
+        VERTGUIDE, 42
+        VERTGUIDE, 72
+        VERTGUIDE, 80
+        VERTGUIDE, 116
+        VERTGUIDE, 124
+        VERTGUIDE, 148
+        VERTGUIDE, 154
+        VERTGUIDE, 174
+        TOPMARGIN, 6
         BOTTOMMARGIN, 149
+        HORZGUIDE, 17
+        HORZGUIDE, 30
+        HORZGUIDE, 35
+        HORZGUIDE, 51
     END
 END
 #endif    // APSTUDIO_INVOKED
