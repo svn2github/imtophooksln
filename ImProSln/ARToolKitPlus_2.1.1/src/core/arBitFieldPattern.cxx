@@ -434,7 +434,10 @@ AR_TEMPL_TRACKER::bitfield_check_simple( ARUint8 *data, int *code, int *dir, ARF
 	{
 		assert(false);
 	}
-	
+	if (*code >= 480)
+	{
+		int test = 0;
+	}
 	return 0;
 }
 

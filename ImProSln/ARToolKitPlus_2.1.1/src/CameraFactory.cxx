@@ -57,5 +57,33 @@ createCamera(const char* filename)
 
 	return(NULL);
 }
+Camera* CameraFactory::createCamera(int xsize, int ysize, double* mat, double* dist_factor)
+{
+	CameraImpl *c_ptr = new CameraImpl();
+	c_ptr->xsize = xsize;
+	c_ptr->ysize = ysize;
+	if (mat == NULL)
+	{
+		return NULL;
+	}
+	for(int i=0; i<3; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			c_ptr->mat[i][j] = (ARFloat) mat[4*i + j];
+		}
+	}
+	if (dist_factor == NULL)
+	{
+		return NULL;
+	}
+	for (int i = 0; i < 4; i++)
+	{
+		if (dist_factor[i] == NULL)
+			return NULL;
+		c_ptr->dist_factor[i] = dist_factor[i];
+	}
+	return c_ptr;
+}
 
 }  // namespace ARToolKitPlus

@@ -7,125 +7,17 @@
 #include <ocidl.h>
 #include "resource.h"
 #include "ARToolKitPlus/TrackerMultiMarkerImpl.h"
-
-
-//For DLL Register
-static WCHAR g_wszName[] = L"ARTagFilter";
-const AMOVIESETUP_PIN psudARTagFilterPins[] =
-{ { L"Input"            // strName
-, FALSE               // bRendered
-, FALSE               // bOutput
-, FALSE               // bZero
-, FALSE               // bMany
-, &CLSID_NULL         // clsConnectsToFilter
-, L""                 // strConnectsToPin
-, 0                   // nTypes
-, NULL                // lpTypes
-}
-, { L"Output"           // strName
-, FALSE               // bRendered
-, TRUE                // bOutput
-, FALSE               // bZero
-, FALSE               // bMany
-, &CLSID_NULL         // clsConnectsToFilter
-, L""                 // strConnectsToPin
-, 0                   // nTypes
-, NULL                // lpTypes
-}
-};
-
-const REGFILTER2 sudARTagFilter =
-{ 	1,                // Version number.
-MERIT_DO_NOT_USE, // Merit.
-2,                // Number of pins.
- psudARTagFilterPins };         // lpPin
-
-STDAPI DllRegisterServer(void)
-{
-	HRESULT hr = AMovieDllRegisterServer2(TRUE);
-	if (FAILED(hr))
-	{
-		return hr;
-	}
-	IFilterMapper2 *pFM2 = NULL;
-	hr = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
-		IID_IFilterMapper2, (void **)&pFM2);
-	if (SUCCEEDED(hr))
-	{
-		hr = pFM2->RegisterFilter(
-			CLSID_ARTagDSFilter,              // Filter CLSID. 
-			g_wszName,                       // Filter name.
-			NULL ,                            // Device moniker. 
-			&CLSID_LegacyAmFilterCategory,  // Video compressor category.
-			g_wszName,                       // Instance data.
-			&sudARTagFilter                   // Filter information.
-			);
-		pFM2->Release();
-	}
-	return hr;
-}
-
-STDAPI DllUnregisterServer()
-{
-	HRESULT hr = AMovieDllRegisterServer2(FALSE);
-	if (FAILED(hr))
-	{
-		return hr;
-	}
-	IFilterMapper2 *pFM2 = NULL;
-	hr = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
-		IID_IFilterMapper2, (void **)&pFM2);
-	if (SUCCEEDED(hr))
-	{
-		hr = pFM2->UnregisterFilter(&CLSID_VideoCompressorCategory, 
-			g_wszName, CLSID_ARTagDSFilter);
-		pFM2->Release();
-	}
-	return hr;
-}
-
-
-
-
-CFactoryTemplate g_Templates[] = 
-{
-	{ 
-		g_wszName,
-			&CLSID_ARTagDSFilter,
-			ARTagDSFilter::CreateInstance,
-			NULL,
-			NULL
-	},
-	{ 
-		L"ARTag Props",
-			&CLSID_ARTagProperty,
-			ARTagPropertyPage::CreateInstance, 
-			NULL, NULL
-	}
-
-};
-
-int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);  
-
-
-//
-// DllEntryPoint
-//
-extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
-
-BOOL APIENTRY DllMain(HANDLE hModule, 
-					  DWORD  dwReason, 
-					  LPVOID lpReserved)
-{
-	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
-}
-
+#include "ARTagFilter.h"
+#include "cv.h"
+#include "highgui.h"
+using namespace ARToolKitPlus;
+extern CARTagFilterApp theApp;
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
 { 
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
-
+	m_pCallback = NULL;
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
@@ -163,11 +55,6 @@ HRESULT ARTagDSFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 				static_cast<ISpecifyPropertyPages*>(this),	ppv);
 	}
 
-	if (iid == IID_IARTagProperty)
-	{
-		return GetInterface(
-			static_cast<IARTagProperty*>(this),	ppv);
-	}
 	else
 	{
 		// Call the parent class.
@@ -240,11 +127,56 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
+			
 		}
 		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
 		}
+		CString strDistFactor = theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
+		double distfactor[4] = {0};
+		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
+
+		CString strMat = theApp.GetProfileString(L"Camera Setting", L"mat", 
+			L"406.04    0.0      154.0    0.0 \
+              0.0       404.38   115.0    0.0 \
+			  0.0       0.0      1.0      0.0 \
+			  0.0       0.0      0.0      1.0 ");
+		double mat[16] = {0};
+		swscanf_s(strMat,L"%lf %lf %lf %lf \
+			%lf %lf %lf %lf \
+			%lf %lf %lf %lf \
+			%lf %lf %lf %lf",
+			&(mat[0]), &(mat[1]), &(mat[2]), &(mat[3]), 
+			&(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
+			&(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
+			&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
+		m_ARTracker->setCamera(bitHeader.biWidth, bitHeader.biHeight, mat, distfactor, 1.0, 1000);
+
+
+		m_ARTracker->setBorderWidth(0.125f);
+		m_ARTracker->setThreshold(100);
+		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
+		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
+		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[20];
+		//malloc((void*)pMarkers, sizeof(ARMultiEachMarkerInfoT)*20); 
+		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*20);
+
+		for (int i = 0; i < 4; i++)
+		{
+			for ( int j = 0; j < 5; j++ )
+			{
+				int idx = i*5 + j;
+				pMarkers[idx].patt_id = 480 + idx;
+				pMarkers[idx].visible = 1;
+				pMarkers[idx].width = 40;
+				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = -100.0 + 50*j;
+				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 75 - 50*i;
+				pMarkers[idx].trans[2][0] = 0.0; pMarkers[idx].trans[2][1] = 0.0; pMarkers[idx].trans[2][2] = 1.0; pMarkers[idx].trans[0][3] = 0;
+		
+			}
+		}
+		m_ARTracker->setMarkInfo(pMarkers, 20);
 	}
 	return S_OK;
 }
@@ -263,8 +195,42 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	hr = pOut->GetPointer(&pOutData);
 	if (FAILED(hr))
 		return hr;
-	long test = pIn->GetSize();
 	memcpy(pOutData, pInData, pIn->GetSize());
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	IplImage* img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
+	img->imageData = (char*)pInData;
+	cvFlip(img, NULL, 0);
+	
+	
+	
+	if (m_ARTracker != NULL)
+	{
+		int numDetected = m_ARTracker->calc(pInData);
+		if (numDetected > 0)
+		{
+			const ARFloat* mat = m_ARTracker->getModelViewMatrix();
+			
+			if (mat)
+			{
+				if (m_pCallback)
+				{
+					m_pCallback(mat);
+				}
+				WCHAR str[MAX_PATH];
+				swprintf_s(str, MAX_PATH, L"@@@@ GetModelView : \n@@@@ %.2f  %.2f  %.2f  %.2f \n\
+										   @@@@ %.2f  %.2f  %.2f  %.2f\n\
+										   @@@@ %.2f  %.2f  %.2f  %.2f\n\
+										   @@@@ %.2f  %.2f  %.2f  %.2f\n", 
+										   mat[0], mat[1],mat[2],mat[3],
+										   mat[4],mat[5],mat[6],mat[7],
+										   mat[8],mat[9],mat[10],mat[11],
+										   mat[12],mat[13],mat[14],mat[15]);
+				OutputDebugStringW(str);
+			}
+		}
+		
+	}
 	return S_OK;
 }
 
@@ -348,13 +314,33 @@ HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 }
 
 
-bool ARTagDSFilter::setCamera(int xsize, int ysize, double** mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
+bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
 {
 	if (m_ARTracker == NULL)
 	{
 		return false;
 	}
 	return m_ARTracker->setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip);
+}
+
+bool ARTagDSFilter::getCamera(int& xsize, int &ysize, double* mat, double* dist_factor)
+{
+	ARToolKitPlus::Camera* cam = m_ARTracker->getCamera();
+	xsize = cam->xsize;   ysize = cam->ysize;
+	for (int i =0; i<3; i++)
+	{
+		for (int j =0; j<4; j++)
+		{
+			mat[4*i + j] = cam->mat[i][j];
+		}
+	}
+	mat[3*4 + 0] = 0; mat[3*4 + 1] = 0; mat[3*4 + 2] = 0; mat[3*4 + 3] = 1;
+	for (int i =0; i< 4; i++)
+	{
+		dist_factor[i] = cam->dist_factor[i];
+	}
+	
+	return true;
 }
 bool ARTagDSFilter::setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker)
 {
@@ -449,76 +435,17 @@ int ARTagDSFilter::getPosEstimator()
 	}
 	return m_ARTracker->getPoseEstimator();
 }
-
-
-
-ARTagPropertyPage::ARTagPropertyPage(IUnknown *pUnk) : 
-CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_PROPPAGE, IDS_ARTag_PROPPAGE_TITLE),
-m_pARProperty(0)
+bool ARTagDSFilter::IsReady()
 {
-
-}
-
-ARTagPropertyPage::~ARTagPropertyPage()
-{
-
-}
-
-HRESULT ARTagPropertyPage::OnConnect(IUnknown *pUnk)
-{
-	if (pUnk == NULL)
+	if (m_ARTracker == NULL)
 	{
-		return E_POINTER;
+		return false;
 	}
-	ASSERT(m_pARProperty == NULL);
-	return pUnk->QueryInterface(IID_IARTagProperty, 
-		reinterpret_cast<void**>(&m_pARProperty));
+	return true;
 }
 
-HRESULT ARTagPropertyPage::OnDisconnect(void)
+BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc)
 {
-	if (m_pARProperty)
-	{
-		m_pARProperty->Release();
-		m_pARProperty = NULL;
-	}
-	return S_OK;
-}
-
-CUnknown *WINAPI ARTagPropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
-{
-	ASSERT(phr);
-	// assuming we don't want to modify the data
-	ARTagPropertyPage *pNewObject = new ARTagPropertyPage(punk);
-
-	if(pNewObject == NULL) {
-		if (phr)
-			*phr = E_OUTOFMEMORY;
-	}
-
-	return pNewObject;
-}
-void ARTagPropertyPage::SetDirty()
-{
-	m_bDirty = TRUE;
-	if (m_pPageSite)
-	{
-		m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
-	}
-}
-
-BOOL ARTagPropertyPage::OnReceiveMessage(HWND hwnd,
-								 UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	return CBasePropertyPage::OnReceiveMessage(hwnd,uMsg,wParam,lParam);
-}
-
-HRESULT ARTagPropertyPage::OnActivate(void)
-{
-	EnableWindow(this->m_Dlg, TRUE);
-	return S_OK;
-}
-HRESULT ARTagPropertyPage::OnApplyChanges(void)
-{
-	return S_OK;
+	m_pCallback = pfunc;
+	return TRUE;
 }

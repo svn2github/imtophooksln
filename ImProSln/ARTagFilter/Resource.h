@@ -14,6 +14,23 @@
 #define IDC_DISTFACTOR4                 2008
 #define IDC_DISTFACTOR2                 2009
 #define IDC_DISTFACTOR3                 2010
+#define IDC_Mat00                       2013
+#define IDC_Mat01                       2014
+#define IDC_Mat02                       2015
+#define IDC_Mat03                       2016
+#define IDC_Mat10                       2017
+#define IDC_Mat11                       2018
+#define IDC_Mat12                       2019
+#define IDC_Mat7                        2020
+#define IDC_Mat13                       2020
+#define IDC_Mat30                       2021
+#define IDC_Mat31                       2022
+#define IDC_Mat32                       2023
+#define IDC_Mat33                       2024
+#define IDC_Mat20                       2025
+#define IDC_Mat21                       2026
+#define IDC_Mat22                       2027
+#define IDC_Mat23                       2028
 
 // Next default values for new objects
 // 
@@ -21,7 +38,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        2001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         2012
-#define _APS_NEXT_SYMED_VALUE           2007
+#define _APS_NEXT_CONTROL_VALUE         2014
+#define _APS_NEXT_SYMED_VALUE           2015
 #endif
 #endif

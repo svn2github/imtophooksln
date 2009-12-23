@@ -48,7 +48,9 @@
 
 
 #ifdef _ARTKP_IS_WINDOWS_
+#  ifndef _AFXDLL
 #  include <windows.h>
+#  endif
 #endif
 
 

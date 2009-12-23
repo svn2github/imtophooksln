@@ -82,6 +82,11 @@ public:
 	virtual bool init(const char* nCamParamFile, const char* nMultiFile, ARFloat nNearClip, ARFloat nFarClip,
 			  ARToolKitPlus::Logger* nLogger=NULL);
 
+	virtual bool init(int xsize, int ysize, double* mat, double * dist_factor, 
+		ARFloat nNearClip, ARFloat nFarClip, ARMultiEachMarkerInfoT *marker, 
+		int numMarkero);
+
+	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker);
 	/// calculates the transformation matrix
 	/**
 	 *	pass the image as RGBX (32-bits) in 320x240 pixels.
@@ -138,11 +143,19 @@ public:
 	ARMultiMarkerInfoT *arMultiReadConfigFile(const char *filename)  {  return AR_TEMPL_TRACKER::arMultiReadConfigFile(filename);  }
 	void activateBinaryMarker(int nThreshold)  {  AR_TEMPL_TRACKER::activateBinaryMarker(nThreshold);  }
 	void setMarkerMode(MARKER_MODE nMarkerMode)  {  AR_TEMPL_TRACKER::setMarkerMode(nMarkerMode);  }
+	int getMarkerMode(){  return AR_TEMPL_TRACKER::getMarkerMode();  }
+	
 	void activateVignettingCompensation(bool nEnable, int nCorners=0, int nLeftRight=0, int nTopBottom=0)  {  AR_TEMPL_TRACKER::activateVignettingCompensation(nEnable, nCorners, nLeftRight, nTopBottom);  }
 	void changeCameraSize(int nWidth, int nHeight)  {  AR_TEMPL_TRACKER::changeCameraSize(nWidth, nHeight);  }
 	void setUndistortionMode(UNDIST_MODE nMode)  {  AR_TEMPL_TRACKER::setUndistortionMode(nMode);  }
+	int getUndistortionMode()  {  return AR_TEMPL_TRACKER::getUndistortionMode();  }
+
+
 	bool setPoseEstimator(POSE_ESTIMATOR nMethod) {  return AR_TEMPL_TRACKER::setPoseEstimator(nMethod);  }
+	int getPoseEstimator() {  return AR_TEMPL_TRACKER::getPoseEstimator();  }
+
 	void setBorderWidth(ARFloat nFraction)  {  AR_TEMPL_TRACKER::setBorderWidth(nFraction);  }
+	ARFloat getBorderWidth() {	return AR_TEMPL_TRACKER::getBorderWidth();};
 	void setThreshold(int nValue)  {  AR_TEMPL_TRACKER::setThreshold(nValue);  }
 	int getThreshold() const  {  return AR_TEMPL_TRACKER::getThreshold();  }
 	void activateAutoThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateAutoThreshold(nEnable);  }
@@ -159,6 +172,7 @@ public:
 	Camera* getCamera()  {  return AR_TEMPL_TRACKER::getCamera();  }
 	void setCamera(Camera* nCamera)  {  AR_TEMPL_TRACKER::setCamera(nCamera);  }
 	void setCamera(Camera* nCamera, ARFloat nNearClip, ARFloat nFarClip)  {  AR_TEMPL_TRACKER::setCamera(nCamera, nNearClip, nFarClip);  }
+	bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip) { return AR_TEMPL_TRACKER::setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip);};
 	ARFloat calcOpenGLMatrixFromMarker(ARMarkerInfo* nMarkerInfo, ARFloat nPatternCenter[2], ARFloat nPatternSize, ARFloat *nOpenGLMatrix)  {  return AR_TEMPL_TRACKER::calcOpenGLMatrixFromMarker(nMarkerInfo, nPatternCenter, nPatternSize, nOpenGLMatrix);  }
 	ARFloat executeSingleMarkerPoseEstimator(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4])  {  return AR_TEMPL_TRACKER::executeSingleMarkerPoseEstimator(marker_info, center, width, conv);  }
 	ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config)  {  return AR_TEMPL_TRACKER::executeMultiMarkerPoseEstimator(marker_info, marker_num, config);  }

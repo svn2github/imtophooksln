@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="0"
+			UseOfMFC="2"
 			CharacterSet="1"
 			>
 			<Tool
@@ -44,8 +44,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses; ..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include ; ..\OpenCV\cxcore\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses; ..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include ; ..\OpenCV\cxcore\include; ..\OpenCV\otherlibs\highgui"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_USE_DOUBLE_"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -67,7 +67,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib"
+				AdditionalOptions="/Entry:FilterDllMain"
+				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin; $(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32;"
 				ModuleDefinitionFile=".\ARTagFilter.def"
@@ -127,6 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\DSLib\include\BaseClasses;..\ARToolKitPlus_2.1.1\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -148,6 +150,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/ENTRY:FilterDllMain&#x0D;&#x0A;"
 				AdditionalDependencies="strmbase.lib "
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../DSLib/lib"
@@ -202,6 +205,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ARTagProp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagReg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -236,6 +247,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ARTagProp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagReg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -263,12 +282,34 @@
 			</File>
 		</Filter>
 		<File
-
+			RelativePath=".\ARTagPropertyDialog.htm"
+			DeploymentContent="true"
+			>
+		</File>
+		<File
+			RelativePath=".\ARTagPropertyDlg.htm"
+			DeploymentContent="true"
+			>
+		</File>
+		<File
+			RelativePath=".\htm00001.htm"
+			DeploymentContent="true"
+			>
+		</File>
+		<File
+			RelativePath=".\html_art.htm"
+			DeploymentContent="true"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 	</Files>
 	<Globals>
-
+		<Global
+			Name="RESOURCE_FILE"
+			Value="ARTagFilter.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

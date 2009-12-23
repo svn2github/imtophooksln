@@ -36,7 +36,7 @@
  * $Id: TrackerMultiMarkerImpl.cxx 164 2006-05-02 11:29:10Z daniel $
  * @file
  * ======================================================================== */
-
+#include "ARToolKitPlus/TrackerMultiMarkerImpl.h"
 
 #ifndef __ARTOOLKITPLUS_TRACKERMULTIMARKERIMPL_HEADERFILE__
 #error ARToolKitPlus/TrackerMultiMarkerImpl.cxx should not be compiled directly, but only if included from ARToolKitPlus/TrackerMultiMarkerImpl.h
@@ -61,6 +61,9 @@ ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 	config = 0;
 
 	this->thresh = 150;
+
+	if(this->marker_infoTWO==NULL)
+		this->marker_infoTWO = artkp_Alloc<ARMarkerInfo2>(AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS);
 }
 
 
@@ -99,13 +102,80 @@ ARMM_TEMPL_TRACKER::init(const char* nCamParamFile, const char* nMultiFile, ARFl
     return true;
 }
 
+ARMM_TEMPL_FUNC bool
+ARMM_TEMPL_TRACKER::init(int xsize, int ysize, double* mat, double * dist_factor, 
+						 ARFloat nNearClip, ARFloat nFarClip, ARMultiEachMarkerInfoT *marker, int numMarker)
+{
+	// init some "static" from TrackerMultiMarker
+	//
+	if(this->marker_infoTWO==NULL)
+		this->marker_infoTWO = artkp_Alloc<ARMarkerInfo2>(AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS);
 
+	if (!this->setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip))
+	{
+		return false;
+	}
+
+	if(config)
+		arMultiFreeConfig(config);
+	setMarkInfo(marker, numMarker);
+
+	return true;
+}
+ARMM_TEMPL_FUNC bool 
+ARMM_TEMPL_TRACKER::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
+{
+	if(config)
+		arMultiFreeConfig(config);
+	config = new ARMultiMarkerInfoT();
+	config->marker_num = numMarker;
+	for (int i = 0; i < 3; i++)
+	{
+		for (int j =0; j< 4; j++)
+		{
+			config->trans[i][j] = 0;
+			config->transR[i][j] = 0;
+		}
+	}
+	config->prevF = 0;
+	config->marker = marker;
+	ARFloat wpos3d[4][2];
+	for( int i = 0; i < numMarker; i++ ) 
+	{
+		wpos3d[0][0] = marker[i].center[0] - marker[i].width*0.5f;
+		wpos3d[0][1] = marker[i].center[1] + marker[i].width*0.5f;
+		wpos3d[1][0] = marker[i].center[0] + marker[i].width*0.5f;
+		wpos3d[1][1] = marker[i].center[1] + marker[i].width*0.5f;
+		wpos3d[2][0] = marker[i].center[0] + marker[i].width*0.5f;
+		wpos3d[2][1] = marker[i].center[1] - marker[i].width*0.5f;
+		wpos3d[3][0] = marker[i].center[0] - marker[i].width*0.5f;
+		wpos3d[3][1] = marker[i].center[1] - marker[i].width*0.5f;
+		for( int j = 0; j < 4; j++ ) {
+			marker[i].pos3d[j][0] = marker[i].trans[0][0] * wpos3d[j][0]
+			+ marker[i].trans[0][1] * wpos3d[j][1]
+			+ marker[i].trans[0][3];
+			marker[i].pos3d[j][1] = marker[i].trans[1][0] * wpos3d[j][0]
+			+ marker[i].trans[1][1] * wpos3d[j][1]
+			+ marker[i].trans[1][3];
+			marker[i].pos3d[j][2] = marker[i].trans[2][0] * wpos3d[j][0]
+			+ marker[i].trans[2][1] * wpos3d[j][1]
+			+ marker[i].trans[2][3];
+		}
+	}
+	return true;
+}
+	
 ARMM_TEMPL_FUNC int
 ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
 {
+	if (this->config == NULL)
+	{
+		return 0;
+	}
 	numDetected = 0;
 	int				tmpNumDetected;
     ARMarkerInfo    *tmp_markers;
+
 
 	if(useDetectLite)
 	{

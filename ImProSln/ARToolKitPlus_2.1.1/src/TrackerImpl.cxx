@@ -347,7 +347,25 @@ AR_TEMPL_TRACKER::setCamera(Camera* nCamera, ARFloat nNearClip, ARFloat nFarClip
 	convertProjectionMatrixToOpenGLStyle(&gCparam, nNearClip,nFarClip, gl_cpara);
 }
 
+AR_TEMPL_FUNC bool
+AR_TEMPL_TRACKER::setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
+{
+	CameraFactory cf;
+	Camera* c_ptr = cf.createCamera(xsize,ysize, mat, dist_factor);
+	if(c_ptr == NULL)
+	{
+		if(logger)
+			logger->artLog("ARToolKitPlus: Camera parameter load error!\n");
+		return false;
+	}
 
+	if(arCamera)
+		delete arCamera;
+	arCamera = NULL;
+
+	setCamera(c_ptr, nNearClip,nFarClip);
+	return true;
+}
 AR_TEMPL_FUNC ARFloat
 AR_TEMPL_TRACKER::calcOpenGLMatrixFromMarker(ARMarkerInfo* nMarkerInfo, ARFloat nPatternCenter[2], ARFloat nPatternSize, ARFloat *nOpenGLMatrix)
 {
@@ -502,41 +520,24 @@ AR_TEMPL_TRACKER::setUndistortionMode(UNDIST_MODE nMode)
 	}
 }
 
+AR_TEMPL_FUNC int
+AR_TEMPL_TRACKER::getUndistortionMode()
+{
+	return undistMode;
+}
 
 AR_TEMPL_FUNC bool
 AR_TEMPL_TRACKER::setPoseEstimator(POSE_ESTIMATOR nMode)
 {
 	poseEstimator = nMode;
-/*	switch(poseEstimator)
-	{
-	case POSE_ESTIMATOR_ORIGINAL:
-		poseEstimator_func = &AR_TEMPL_TRACKER::arGetTransMat;
-		multiPoseEstimator_func = &AR_TEMPL_TRACKER::arMultiGetTransMat;		// will use arGetTransMat internally
-		return true;
-
-	case POSE_ESTIMATOR_ORIGINAL_CONT:
-		poseEstimator_func = &AR_TEMPL_TRACKER::arGetTransMatCont2;
-		multiPoseEstimator_func = &AR_TEMPL_TRACKER::arMultiGetTransMat;		// will use arGetTransMatCont2 internally
-		return true;
-
-	case POSE_ESTIMATOR_RPP:
-		if(rppSupportAvailabe())
-		{
-			poseEstimator_func = &AR_TEMPL_TRACKER::rppGetTransMat;
-			multiPoseEstimator_func = &AR_TEMPL_TRACKER::rppMultiGetTransMat;
-			return true;
-		}
-
-		if(logger)
-			logger->artLog("ARToolKitPlus: Failed to set RPP pose estimator - RPP disabled during build\n");
-		return false;
-	}
-
-	return false;*/
-
 	return true;
 }
 
+AR_TEMPL_FUNC int
+AR_TEMPL_TRACKER::getPoseEstimator()
+{
+	return poseEstimator;
+}
 
 AR_TEMPL_FUNC ARFloat
 AR_TEMPL_TRACKER::executeSingleMarkerPoseEstimator(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4])
@@ -605,7 +606,17 @@ AR_TEMPL_TRACKER::setMarkerMode(MARKER_MODE nMarkerMode)
 	markerMode = nMarkerMode;
 }
 
+AR_TEMPL_FUNC int
+AR_TEMPL_TRACKER::getMarkerMode()
+{
+	return markerMode;
+}
 
+AR_TEMPL_FUNC bool 
+AR_TEMPL_TRACKER::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
+{
+	return false;
+}
 static void
 convertPixel16To24(unsigned short nPixel, unsigned char& nRed, unsigned char& nGreen, unsigned char& nBlue)
 {

@@ -49,6 +49,7 @@ class CameraFactory
 {
 	public:
 		Camera *createCamera(const char* filename);
+		Camera* createCamera(int xsize, int ysize, double* mat, double* dist_factor);
 };
 
 }  // namespace ARToolKitPlus

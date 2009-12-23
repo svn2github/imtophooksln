@@ -158,7 +158,7 @@ public:
 	 *  In order to use id-based markers, the marker size has to be 6x6, 12x12 or 18x18.
 	 */
 	virtual void setMarkerMode(MARKER_MODE nMarkerMode) = 0;
-
+	virtual int getMarkerMode() = 0;
 
 	/// activates the complensation of brightness falloff in the corners of the camera image
 	/**
@@ -185,14 +185,14 @@ public:
 	 * artoolkit's standard undistortion method is used.
 	 */
 	virtual void setUndistortionMode(UNDIST_MODE nMode) = 0;
-
+	virtual int getUndistortionMode() = 0;
 	/// Changes the Pose Estimation Algorithm
 	/**
 	* POSE_ESTIMATOR_ORIGINAL (default): arGetTransMat()
 	* POSE_ESTIMATOR_RPP: "Robust Pose Estimation from a Planar Target"
 	*/
 	virtual bool setPoseEstimator(POSE_ESTIMATOR nMethod) = 0;
-
+	virtual int getPoseEstimator() = 0;
 	/// Sets a new relative border width. ARToolKit's default value is 0.25
 	/**
 	 * Take caution that the markers need of course really have thiner borders.
@@ -201,7 +201,7 @@ public:
 	 * needs to be updated too.
 	 */
 	virtual void setBorderWidth(ARFloat nFraction) = 0;
-
+	virtual ARFloat getBorderWidth() = 0;
 
 	/// Sets the threshold value that is used for black/white conversion
 	virtual void setThreshold(int nValue) = 0;
@@ -279,8 +279,9 @@ public:
 
 	/// Sets a new camera including specifying new near and far clip values
 	virtual void setCamera(Camera* nCamera, ARFloat nNearClip, ARFloat nFarClip) = 0;
+	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip) = 0;
 
-
+	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker) = 0;
 	/// Calculates the OpenGL transformation matrix for a specific marker info
 	virtual ARFloat calcOpenGLMatrixFromMarker(ARMarkerInfo* nMarkerInfo, ARFloat nPatternCenter[2], ARFloat nPatternSize, ARFloat *nOpenGLMatrix) = 0;
 
