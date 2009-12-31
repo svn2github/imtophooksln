@@ -9,10 +9,12 @@
 
 #include "resource.h"		// main symbols
 
-
+#include <d3d9.h>
 // CARTagFilterApp
 // See ARTagFilter.cpp for the implementation of this class
 //
+
+HMODULE GetModule();
 
 class CARTagFilterApp : public CWinApp
 {

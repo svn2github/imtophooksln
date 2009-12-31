@@ -33,7 +33,40 @@
 //		details.
 //
 
- //CARTagFilterApp
+HMODULE			 g_hModule = 0;
+WCHAR			 g_szWndName[MAX_PATH] = L"ARTag D3DWnd";
+
+extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
+extern "C" BOOL WINAPI _DllMainCRTStartup(HINSTANCE, ULONG, LPVOID);
+
+BOOL APIENTRY FilterDllMain(HMODULE hModule, 
+							DWORD  dwReason, 
+							LPVOID lpReserved)
+{
+	
+	switch (dwReason)
+	{
+	case DLL_PROCESS_ATTACH:
+		g_hModule = hModule;
+		
+		break;
+	case DLL_THREAD_DETACH:
+		break;
+	case DLL_PROCESS_DETACH:
+		
+		break;
+	}
+
+	_DllMainCRTStartup((HINSTANCE)hModule, dwReason, lpReserved);
+	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
+}
+
+
+HMODULE GetModule()
+{
+	return g_hModule;
+}
+
 
 BEGIN_MESSAGE_MAP(CARTagFilterApp, CWinApp)
 END_MESSAGE_MAP()
@@ -57,5 +90,7 @@ CARTagFilterApp theApp;
 BOOL CARTagFilterApp::InitInstance()
 {
 	CWinApp::InitInstance();
+	
 	return TRUE;
 }
+

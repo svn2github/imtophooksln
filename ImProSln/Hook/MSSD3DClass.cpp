@@ -16,8 +16,16 @@ MS3DObj::~MS3DObj()
 }
 D3DXMATRIX MS3DObj::GetTransform()
 {
+	D3DXMATRIX matTest = *m_pMatrixStack->GetTop();
 	return *m_pMatrixStack->GetTop();
 }
+
+HRESULT MS3DObj::SetTransform(const D3DXMATRIX* mat)
+{
+	return m_pMatrixStack->LoadMatrix(mat);
+}
+
+
 BOOL MS3DObj::Translate(D3DXVECTOR3& t)
 {
 	m_pMatrixStack->Translate(t.x, t.y, t.z);
@@ -140,7 +148,7 @@ BOOL MSMeshBase::Render(IDirect3DBaseTexture9* pTexture)
 }
 BOOL MSMeshBase::Render()
 {
-	if (m_pDevice == NULL) 
+	if (m_pDevice == NULL || m_pMesh == NULL) 
 		return FALSE;
 	HRESULT hr;
 	hr = m_pDevice->SetTextureStageState(0, D3DTSS_CONSTANT, m_color );
@@ -249,9 +257,11 @@ BOOL MS3DPlane::InitGeometry()
 
 BOOL MS3DPlane::Render()
 {
+	HRESULT hr;
 	D3DXMATRIX preMatWorld;
+	
 	m_pDevice->GetTransform(D3DTS_WORLD, &preMatWorld);
-	m_pDevice->SetTransform(D3DTS_WORLD, &this->GetTransform());
+	hr = m_pDevice->SetTransform(D3DTS_WORLD, &this->GetTransform() );
 	MSMeshBase::Render();
 	m_pDevice->SetTransform(D3DTS_WORLD, &preMatWorld);
 	return TRUE;
@@ -288,9 +298,15 @@ BOOL MSCamera::init()
 	m_r = 1;//		[in] Maximum x-value of view volume. 
 	m_b = -1;//		[in] Minimum y-value of view volume. 
 	m_t = 1;//   	[in] Maximum y-value of view volume. 
-	m_zn = 0.01;//		[in] Minimum z-value of the view volume. 
-	m_zf = 10;//		[in] Maximum z-value of the view volume. 
 
+	m_fovy = D3DX_PI/2;
+	m_aspect = 4.0/3.0;
+
+	m_zn = 1;//		[in] Minimum z-value of the view volume. 
+	m_zf = 1000;//		[in] Maximum z-value of the view volume. 
+
+	m_projType = Ortho;
+	m_coordType = LEFTHAND;
 	return TRUE;
 }
 BOOL MSCamera::SetEyePos(D3DXVECTOR3& vEyePt)
@@ -345,18 +361,49 @@ BOOL MSCamera::CameraOff()
 D3DXMATRIX MSCamera::GetViewMatrix()
 {
 	D3DXMATRIX matView;
-	D3DXMatrixLookAtLH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
+	if (m_coordType == LEFTHAND)
+		D3DXMatrixLookAtLH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
+	else
+		D3DXMatrixLookAtRH( &matView, &m_vEyePt, &m_vLookatPt, &m_vUpVec );
 	return matView;
 }
 
 D3DXMATRIX MSCamera::GetProjMatrix()
 {
-	D3DVIEWPORT9 viewport;
-	m_pDevice->GetViewport(&viewport);
-
 	D3DXMATRIX matProj;
-	D3DXMatrixOrthoOffCenterLH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+	if (m_projType == Ortho)
+	{
+		if (m_coordType == LEFTHAND)
+			D3DXMatrixOrthoOffCenterLH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+		else
+			D3DXMatrixOrthoOffCenterRH( &matProj, m_l, m_r, m_b, m_t, m_zn, m_zf );
+	}
+	else
+	{
+		if (m_coordType == LEFTHAND)
+			D3DXMatrixPerspectiveFovLH( &matProj, m_fovy, m_aspect, m_zn, m_zf );
+		else
+			D3DXMatrixPerspectiveFovRH( &matProj, m_fovy, m_aspect, m_zn, m_zf );
+	}
 	return matProj;
+}
+BOOL MSCamera::SetProjType(ProjType t)
+{
+	m_projType = t;
+	return TRUE;
+}
+BOOL MSCamera::SetCoordType(CoordType t)
+{
+	m_coordType = t;
+	return TRUE;
+}
+BOOL MSCamera::SetOrthoPara(float l, float t, float r, float b)
+{
+	m_l = l;
+	m_t = t;
+	m_r = r;
+	m_b = b;
+	return TRUE;
 }
 BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 {
@@ -394,20 +441,20 @@ BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECT
 }
 
 
-MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D) : MSEventManager(NULL), MSDXBase(NULL)
+MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0) : MSEventManager(NULL), MSDXBase(NULL)
 {
 	m_hDisplayWnd = hWnd;
 	m_pD3D = pD3D;
 	m_pD3D->AddRef();
 	m_hRenderThread = 0;
-	m_pRenderTarget = NULL;
+	
 
 	
 	m_pEffect = NULL;
 
 	//InitializeCriticalSection(&m_CS);
-	InitDevice();
-	CreateTexture();
+	InitDevice(rtWidth, rtHeight);
+	CreateTexture(rtWidth, rtHeight);
 	//SetEditWarpEnable(TRUE);
 }
 
@@ -446,12 +493,6 @@ MS3DDisplay::~MS3DDisplay()
 		m_pDisplayPlane == NULL;
 	}
 	
-	
-	if (m_pRenderTarget != NULL)
-	{
-		m_pRenderTarget->Release();
-		m_pRenderTarget = NULL;
-	}
 	if (m_pCamera != NULL)
 	{
 		delete m_pCamera;
@@ -525,26 +566,33 @@ BOOL MS3DDisplay::Stop()
 	return TRUE;
 }
 
-
-BOOL MS3DDisplay::InitDevice()
+BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 {
 	if (m_pD3D == NULL)
 	{
 		return FALSE;
-	}
+}
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
-	D3DPRESENT_PARAMETERS d3dpp; 
+	D3DPRESENT_PARAMETERS d3dpp;
 	ZeroMemory( &d3dpp, sizeof(d3dpp) );
 	d3dpp.Windowed = TRUE;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-	HDC dc = GetDC(m_hDisplayWnd);
-	int screenW = GetDeviceCaps(dc, HORZRES);
-	int screenH = GetDeviceCaps(dc, VERTRES);
+	int screenW, screenH;
+	if (rtWidth == 0 || rtHeight == 0)
+	{
+		HDC dc = GetDC(m_hDisplayWnd);
+		screenW = GetDeviceCaps(dc, HORZRES);
+		screenH = GetDeviceCaps(dc, VERTRES);
+	}
+	else
+	{
+		screenW = rtWidth;
+		screenH = rtHeight;
+	}
 	d3dpp.BackBufferWidth = screenW;
 	d3dpp.BackBufferHeight = screenH;
-
 
 	d3dpp.EnableAutoDepthStencil = TRUE;
 	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
@@ -564,7 +612,6 @@ BOOL MS3DDisplay::InitDevice()
 	m_pDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
 	m_pDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
 
-
 	m_pDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
 	m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
 	m_pDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
@@ -577,24 +624,31 @@ BOOL MS3DDisplay::InitDevice()
 	return TRUE;
 }
 
-BOOL MS3DDisplay::CreateTexture()
+BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 {
 	if (m_hDisplayWnd == NULL || m_pDevice == NULL)
 	{
 		return FALSE;
 	}
-	if (m_pRenderTarget != NULL)
+	if (m_pTexture != NULL)
 	{
-		m_pRenderTarget->Release();
-		m_pRenderTarget = NULL;
+		m_pTexture->Release();
+		m_pTexture = NULL;
 	}
 	HRESULT hr;
 	HDC dc = GetDC(m_hDisplayWnd);
 	int screenW = GetDeviceCaps(dc, HORZRES);
 	int screenH = GetDeviceCaps(dc, VERTRES);
-
-	hr = D3DXCreateTexture(m_pDevice, screenW, screenH, 0, D3DUSAGE_DYNAMIC,
-		D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pRenderTarget);
+	if (rtWidth == 0 || rtHeight == 0)
+	{
+		hr = D3DXCreateTexture(m_pDevice, screenW, screenH, 0, D3DUSAGE_DYNAMIC,
+		D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pTexture);
+	}
+	else
+	{
+		hr = D3DXCreateTexture(m_pDevice, rtWidth, rtHeight, 0, D3DUSAGE_DYNAMIC,
+			D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pTexture);
+	}
 	
 	if (FAILED(hr))
 	{
@@ -875,7 +929,7 @@ BOOL MS3DDisplay::Render()
 		if (m_pDisplayPlane != NULL)
 		{	
 			D3DXMATRIX backupMat;
-			hr = m_pDisplayPlane->Render(m_pRenderTarget);
+			hr = m_pDisplayPlane->Render(m_pTexture);
 		}
 		m_pDevice->EndScene();
 	}
@@ -897,7 +951,7 @@ BOOL ImTopDisplay::Render()
 		if (m_pDisplayPlane != NULL)
 		{	
 			D3DXMATRIX backupMat;
-			hr = m_pDisplayPlane->Render(m_pRenderTarget);
+			hr = m_pDisplayPlane->Render(m_pTexture);
 		}
 		if (m_bEditWarp || m_bEditTTS)
 		{
@@ -948,7 +1002,7 @@ BOOL ImTubeDisplay::Render()
 			//	D3DTTFF_COUNT3 | D3DTTFF_PROJECTED );
 			//hr = m_pDevice->GetTransform(D3DTS_TEXTURE0, &backupMat);
 			//hr = m_pDevice->SetTransform(D3DTS_TEXTURE0, &m_matTTS);
-			hr = m_pDisplayPlane->Render(m_pRenderTarget);
+			hr = m_pDisplayPlane->Render(m_pTexture);
 
 		}
 		if (m_bEditWarp || m_bEditTTS)
@@ -1399,9 +1453,9 @@ BOOL ImTopDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 	{
 		ID3DXEffect* pEffect = GetEffect();
 		if (pEffect != NULL)
-			Render(this->m_pRenderTarget, pEffect);
+			Render(this->m_pTexture, pEffect);
 		else
-			Render(this->m_pRenderTarget );
+			Render(this->m_pTexture );
 	}
 	return ret;
 }
@@ -1456,9 +1510,9 @@ BOOL ImTubeDisplay::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		ID3DXEffect* pEffect = GetEffect();
 		if (pEffect != NULL)
-			Render(this->m_pRenderTarget, pEffect);
+			Render(this->m_pTexture, pEffect);
 		else
-			Render(this->m_pRenderTarget );
+			Render(this->m_pTexture );
 	}
 	return ret;
 }
@@ -2115,7 +2169,7 @@ BOOL MS3DButton::OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void
 BOOL ImTopDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop)
 {
 	//return TRUE;
-	if (m_pRenderTarget == NULL)
+	if (m_pTexture == NULL)
 		return FALSE;
 	if (dcW <= 0 || dcH <= 0 )
 	{
@@ -2127,7 +2181,7 @@ BOOL ImTopDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int 
 
 	HRESULT hr;
 	IDirect3DSurface9* pSurface = NULL;
-	m_pRenderTarget->GetSurfaceLevel(0, &pSurface);
+	m_pTexture->GetSurfaceLevel(0, &pSurface);
 	pSurface->UnlockRect();
 
 	HDC textureDC;
@@ -2160,9 +2214,9 @@ BOOL ImTopDisplay::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int 
 	ID3DXEffect* pEffect = GetEffect();
 	
 	if (pEffect != NULL)
-		Render(this->m_pRenderTarget, pEffect);
+		Render(this->m_pTexture, pEffect);
 	else
-		Render(this->m_pRenderTarget );
+		Render(this->m_pTexture );
 	
 	return TRUE;
 }

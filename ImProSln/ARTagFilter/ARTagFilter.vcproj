@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses; ..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include ; ..\OpenCV\cxcore\include; ..\OpenCV\otherlibs\highgui"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui;D:\Projects\ImProSln\Hook"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_USE_DOUBLE_"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib d3dx9.lib d3d9.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin; $(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32;"
 				ModuleDefinitionFile=".\ARTagFilter.def"
@@ -128,8 +128,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\DSLib\include\BaseClasses;..\ARToolKitPlus_2.1.1\include"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui;D:\Projects\ImProSln\Hook"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_USE_DOUBLE_"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -151,9 +151,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/ENTRY:FilterDllMain&#x0D;&#x0A;"
-				AdditionalDependencies="strmbase.lib "
+				AdditionalDependencies="strmbase.lib winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib d3dx9.lib d3d9.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib"
+				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin; $(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32;"
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -193,6 +193,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ARTagD3DDisplay.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ARTagDSFilter.cpp"
 				>
 			</File>
@@ -211,6 +215,26 @@
 			<File
 				RelativePath=".\ARTagReg.cpp"
 				>
+			</File>
+			<File
+				RelativePath="..\Hook\MSSD3DClass.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
@@ -239,6 +263,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\ARTagD3DDisplay.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ARTagDSFilter.h"
 				>
 			</File>
@@ -252,6 +280,10 @@
 			</File>
 			<File
 				RelativePath=".\ARTagReg.h"
+				>
+			</File>
+			<File
+				RelativePath="..\Hook\MSSD3DClass.h"
 				>
 			</File>
 			<File

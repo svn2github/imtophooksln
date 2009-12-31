@@ -7,7 +7,7 @@
 #include "combase.h"
 #include "ARToolKitPlus/arMulti.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
-
+#include "ARTagD3DDisplay.h"
 DEFINE_GUID(CLSID_ARTagDSFilter, 
 			0x889c4fa1, 0xfb51, 0x4118, 0x80, 0xb8, 0xc0, 0x3f, 0x51, 0x4a, 0xab, 0x3);
 
@@ -23,7 +23,7 @@ MIDL_INTERFACE("E47942DF-B438-4d85-A9EC-7B5655E68DFD")
 IARTagFilter: public IUnknown
 {
 public:
-	typedef BOOL (__stdcall* CallbackFuncPtr)(const double* mat);
+	typedef BOOL (__stdcall* CallbackFuncPtr)(const double* matView, const double* matProj);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc);
 
 	virtual bool IsReady();
@@ -47,9 +47,7 @@ class ARTagDSFilter :
 	public CTransformFilter, public IARTagFilter,
 	public ISpecifyPropertyPages
 {
-private:
-	HWND m_d3dWnd;
-	
+
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 
@@ -94,9 +92,22 @@ protected:
 	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;
 
 	bool             IsAcceptedType(const CMediaType *pMT);
+	//for D3DDevice
+	
+	HWND			 m_hWndD3D ;
+	IDirect3D9*      m_pD3D ;
+	ARTagD3DDisplay* m_pD3DDisplay;
 
+	LPDIRECT3DTEXTURE9 m_pOutTexture;
+	LPDIRECT3DTEXTURE9 m_pInTexture;
 
-
+	HWND GetD3DWnd();
+	IDirect3D9* GetD3D();
+	HRESULT initD3D(UINT rtWidth = 0, UINT rtHeight = 0);
+	BOOL ReleaseD3D();
+	static LRESULT CALLBACK D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static ATOM RegisterWndClass(HINSTANCE hInstance);
+	
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();

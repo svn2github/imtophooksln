@@ -140,6 +140,7 @@ public:
 	MS3DObj();
 	virtual ~MS3DObj();
 	virtual D3DXMATRIX GetTransform();
+	virtual HRESULT SetTransform(const D3DXMATRIX* mat);
 	virtual BOOL Translate(D3DXVECTOR3& t);
 	virtual BOOL RotateAxis(CONST D3DXVECTOR3 * pV, FLOAT angle);
 	virtual BOOL Scale(D3DXVECTOR3& s);
@@ -220,24 +221,71 @@ public:
 	virtual D3DXMATRIX GetProjMatrix() = 0;
 
 };
+class MSTextureBase
+{
+protected:
+	LPDIRECT3DTEXTURE9 m_pTexture;
+public:
+	MSTextureBase()
+	{
+		m_pTexture = NULL;
+	}
+	~MSTextureBase()
+	{
+		if (m_pTexture != NULL)
+		{
+			m_pTexture->Release();
+			m_pTexture = NULL;
+		}
+	}
+	LPDIRECT3DTEXTURE9 GetTexture()
+	{
+		return m_pTexture;
+	}
+	BOOL SetTexture(LPDIRECT3DTEXTURE9 pTexture)
+	{
+		m_pTexture = pTexture;
+		return TRUE;
+	}
+};
+
 
 class MSCamera : public MSDXBase, public IMSCamera
 {
+public:
+	enum ProjType
+	{
+		Ortho,
+		Persp
+	};
+	enum CoordType
+	{
+		LEFTHAND,
+		RIGHTHAND
+	};
 private:
 	D3DXMATRIX m_BackupMatView;
 	D3DXMATRIX m_BackupMatProj;
 	BOOL init();
-protected:
-	D3DXVECTOR3 m_vEyePt;
-	D3DXVECTOR3 m_vLookatPt;
-	D3DXVECTOR3 m_vUpVec;
+private:
+	//for Ortho
 	float m_l ;//		[in] Minimum x-value of view volume. 
 	float m_r ;//		[in] Maximum x-value of view volume. 
 	float m_b ;//		[in] Minimum y-value of view volume. 
 	float m_t ;//   	[in] Maximum y-value of view volume. 
+	//
+	float m_fovy;
+	float m_aspect;
+	ProjType m_projType;
+	CoordType m_coordType;
+	
+protected:
+	D3DXVECTOR3 m_vEyePt;
+	D3DXVECTOR3 m_vLookatPt;
+	D3DXVECTOR3 m_vUpVec;
 	float m_zn;//		[in] Minimum z-value of the view volume. 
 	float m_zf;//		[in] Maximum z-value of the view volume. 
-
+	
 public:
 	MSCamera();
 	MSCamera(IDirect3DDevice9* pDevice);
@@ -252,6 +300,10 @@ public:
 	virtual BOOL CameraOff();
 	virtual D3DXMATRIX GetViewMatrix();
 	virtual D3DXMATRIX GetProjMatrix();
+	virtual BOOL SetProjType(ProjType t);
+	virtual BOOL SetCoordType(CoordType t);
+	virtual BOOL SetOrthoPara(float l, float t, float r, float b);
+
 	virtual BOOL Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 };
 
@@ -278,7 +330,7 @@ public:
 	static BOOL __stdcall OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 };
 
-class MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase
+class MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase, public MSTextureBase
 {
 protected:
 	HWND m_hDisplayWnd;
@@ -286,19 +338,18 @@ protected:
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
 	ID3DXEffect* m_pEffect;
-	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
 	virtual ID3DXEffect* GetEffect();
 
 private:
 	HANDLE m_hRenderThread;
 
-	BOOL InitDevice();
+	BOOL InitDevice(UINT rtWidth = 0, UINT rtHeight = 0);
 	static BOOL _Run(void* _THIS);
-	BOOL CreateTexture();
+	BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 
 public:
-	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D);
+	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
 	virtual ~MS3DDisplay();
 	virtual BOOL Run();
 	virtual BOOL Stop();

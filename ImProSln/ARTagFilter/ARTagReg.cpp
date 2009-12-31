@@ -112,14 +112,5 @@ int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
 //
 // DllEntryPoint
 //
-extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
-extern "C" BOOL WINAPI _DllMainCRTStartup(HINSTANCE, ULONG, LPVOID);
 
-BOOL APIENTRY FilterDllMain(HANDLE hModule, 
-							DWORD  dwReason, 
-							LPVOID lpReserved)
-{
-	_DllMainCRTStartup((HINSTANCE)hModule, dwReason, lpReserved);
-	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
-}
 
