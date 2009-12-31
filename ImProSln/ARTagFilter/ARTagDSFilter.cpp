@@ -223,7 +223,8 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	HRESULT hr = S_OK;
 	BYTE* pInData = NULL;
 	BYTE* pOutData = NULL;
-	
+	int numDetected = 0;
+	ARMarkerInfo* markinfos = NULL;
 	if (pIn->GetSize() < pOut->GetSize())
 	{
 		return S_FALSE;
@@ -241,19 +242,13 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	IplImage* img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
 	img->imageData = (char*)pInData;
 	cvFlip(img, NULL, 0);
-	D3DXMATRIX* d3dmatView = NULL;
-	D3DXMATRIX* d3dmatProj = NULL;
 	if (m_ARTracker != NULL)
 	{
-		int numDetected = m_ARTracker->calc(pInData);
+		numDetected = m_ARTracker->calc(pInData);
 		
 		if (numDetected > 0)
 		{
 			const ARMultiMarkerInfoT* multiMarker = m_ARTracker->getMultiMarkerConfig();
-			/*if (multiMarker != NULL)
-			{
-				m_pD3DDisplay->SetMarkers(multiMarker);
-			}*/
 
 			int* detectedIDs = NULL;
 			m_ARTracker->getDetectedMarkers(detectedIDs);
@@ -261,122 +256,55 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			{
 				return S_FALSE;
 			}
-			m_pD3DDisplay->SetDetectedMarkerIDs(numDetected, detectedIDs);			
-			const ARFloat* matView = m_ARTracker->getModelViewMatrix();
-			const ARFloat* matProj = m_ARTracker->getProjectionMatrix();
-			
-			if (matView != NULL && matProj != NULL)
+			markinfos = new ARMarkerInfo[numDetected];
+			for (int k = 0; k< numDetected; k++)
 			{
-				if (m_pCallback)
-				{
-					m_pCallback(matView, matProj);
-				}
-				d3dmatView = new D3DXMATRIX(matView[0], matView[4],matView[8],matView[3],
-											matView[1], matView[5],matView[9],matView[7],
-											matView[2],matView[6],matView[10],matView[11],
-											matView[12],matView[13],matView[14],matView[15]);
-				//float zFar = 1000;
-				//float zNear = 1.0;
-				//float tmp = zFar / (zFar - zNear);
-				d3dmatProj = new D3DXMATRIX(matProj[0], matProj[1], matProj[2], matProj[3],
-											matProj[4], matProj[5], matProj[6], matProj[7],
-											matProj[8], matProj[9], matProj[10] ,matProj[11],
-											matProj[12],matProj[13],matProj[14],matProj[15]);
-				//d3dmatProj->m[3][2] *= 0.5;
-				//d3dmatProj->m[2][2] = 1000.0/(1000.0 - 1.0);
+				const ARMarkerInfo markinfo = m_ARTracker->getDetectedMarker(k);
+				markinfos[k] = markinfo;
+			}
+			const double* matARView = m_ARTracker->getModelViewMatrix();
+			const double* matARProj = m_ARTracker->getProjectionMatrix();
+			if (m_pCallback != NULL)
+			{
+				m_pCallback(numDetected, markinfos, matARView, matARProj);
 			}
 		}	
 	}
-	if (d3dmatProj != NULL && d3dmatView != NULL)
+
+	LPDIRECT3DSURFACE9 pInSurface = NULL;
+	D3DSURFACE_DESC surInDesc;
+	m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+	pInSurface->GetDesc(&surInDesc);
+
+	GUID guidSubType = *m_InputMT.Subtype();
+	RECT rect;
+	rect.left = 0;
+	rect.right = bitHeader.biWidth;
+	rect.top = 0;
+	rect.bottom = bitHeader.biHeight;
+	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 	{
-		LPDIRECT3DSURFACE9 pInSurface = NULL;
-		D3DSURFACE_DESC surInDesc;
-		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
-		pInSurface->GetDesc(&surInDesc);
-
-		GUID guidSubType = *m_InputMT.Subtype();
-		RECT rect;
-		rect.left = 0;
-		rect.right = bitHeader.biWidth;
-		rect.top = 0;
-		rect.bottom = bitHeader.biHeight;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
-		}
-		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
-		}
-		else
-		{
-			hr = E_FAIL;
-		}
-		if (FAILED(hr))
-		{
-			return S_FALSE;
-		}
-
-		m_pD3DDisplay->SetARViewMatrix(d3dmatView);
-		m_pD3DDisplay->SetARProjMatrix(d3dmatProj);
-		m_pD3DDisplay->SetTexture(m_pInTexture);
-
-		//m_pD3DDisplay->Render();
-		
-		int numDetected = m_ARTracker->getNumDetectedMarkers();
-		ARMarkerInfo* markinfos = new ARMarkerInfo[numDetected];
-		for (int k = 0; k< numDetected; k++)
-		{
-			const ARMarkerInfo markinfo = m_ARTracker->getDetectedMarker(k);
-			markinfos[k] = markinfo;
-		}
-		m_pD3DDisplay->Render(markinfos, numDetected);
-		delete[] markinfos;
-		
+		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
+	}
+	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+	{
+		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
 	}
 	else
 	{
-		LPDIRECT3DSURFACE9 pInSurface = NULL;
-		D3DSURFACE_DESC surInDesc;
-		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
-		pInSurface->GetDesc(&surInDesc);
-
-		GUID guidSubType = *m_InputMT.Subtype();
-		RECT rect;
-		rect.left = 0;
-		rect.right = bitHeader.biWidth;
-		rect.top = 0;
-		rect.bottom = bitHeader.biHeight;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
-		}
-		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
-		}
-		else
-		{
-			hr = E_FAIL;
-		}
-		if (FAILED(hr))
-		{
-			return S_FALSE;
-		}
-		m_pD3DDisplay->SetTexture(m_pInTexture);
-		m_pD3DDisplay->Render(NULL, 0);
-
+		hr = E_FAIL;
 	}
-	if (d3dmatView != NULL)
+	if (FAILED(hr))
 	{
-		delete d3dmatView;
-		d3dmatView = NULL;
+		return S_FALSE;
 	}
-	if (d3dmatProj != NULL)
-	{
-		delete d3dmatProj;
-		d3dmatProj = NULL;
-	}
+
+	m_pD3DDisplay->SetTexture(m_pInTexture);
+
+
+	m_pD3DDisplay->Render(markinfos, numDetected);
+	
+	
 	//copy render target to outData
 	IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
 
@@ -392,29 +320,36 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	{
 		GUID guidSubType = *m_InputMT.Subtype();
 		int channel = 4;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			channel = 3;
-		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			channel = 4;
-		}
+
 		D3DLOCKED_RECT rect;
 		pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
 		int height = surOutDesc.Height;
 		int width = surOutDesc.Width;
-		for(int y = 0; y < height; y++ )
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
-			for (int x = 0; x< width; x++)
+			channel = 3;
+			for(int y = 0; y < height; y++ )
 			{
-				pOutData[(height - y - 1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
-				pOutData[(height - y - 1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
-				pOutData[(height - y - 1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+				for (int x = 0; x< width; x++)
+				{
+					pOutData[(height - y - 1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
+					pOutData[(height - y - 1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
+					pOutData[(height - y - 1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+				}
 			}
+			
 		}
-		//memcpy(pOutData, rect.pBits, pOut->GetSize());
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			channel = 4;
+			memcpy(pOutData, rect.pBits, pOut->GetSize());
+		}
 		pOutSurface->UnlockRect();
+	}
+	if (markinfos != NULL)
+	{
+		delete[] markinfos;
+		markinfos = NULL;
 	}
 	if (pOutSurface != NULL)
 	{
@@ -509,7 +444,7 @@ HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 }
 
 
-bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
+bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip)
 {
 	if (m_ARTracker == NULL)
 	{

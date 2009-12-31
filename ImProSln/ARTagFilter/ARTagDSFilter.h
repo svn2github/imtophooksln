@@ -5,7 +5,6 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
-#include "ARToolKitPlus/arMulti.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "ARTagD3DDisplay.h"
 DEFINE_GUID(CLSID_ARTagDSFilter, 
@@ -23,11 +22,11 @@ MIDL_INTERFACE("E47942DF-B438-4d85-A9EC-7B5655E68DFD")
 IARTagFilter: public IUnknown
 {
 public:
-	typedef BOOL (__stdcall* CallbackFuncPtr)(const double* matView, const double* matProj);
+	typedef BOOL (__stdcall* CallbackFuncPtr)(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc);
 
 	virtual bool IsReady();
-	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
+	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip);
 	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);
 	virtual bool setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker);
 
