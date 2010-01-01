@@ -3,22 +3,32 @@
 #include "ARTagProp.h"
 #include "resource.h"
 #include "ARTagFilter.h"
+#include <windowsx.h>
+
+#define SLIDER_GetRangeMin(hWndTrack) SendMessage(hWndTrack, TBM_GETRANGEMIN,0,0)
+#define SLIDER_GetRangeMax(hWndTrack) SendMessage(hWndTrack, TBM_GETRANGEMAX,0,0)
+ 
+#define SLIDER_GetPos(hWndTrack)  SendMessage(hWndTrack, TBM_GETPOS, 0, 0)
+#define SLIDER_SetPos(hWndTrack, pos)  SendMessage(hWndTrack, TBM_SETPOS, (WPARAM) TRUE,(LPARAM) pos)
+#define SLIDER_SetRange(hWndTrack, iMin, iMax)  SendMessage(hWndTrack, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(iMin, iMax))   
+
+
+
 extern CARTagFilterApp theApp;
-ARTagPropertyPage::ARTagPropertyPage(IUnknown *pUnk) : 
-CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_PROPPAGE, IDS_ARTag_PROPPAGE_TITLE),
+ARTagCameraSettingPage::ARTagCameraSettingPage(IUnknown *pUnk) : 
+CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_CAMSETTING_PAGE, IDS_ARTag_PROPPAGE_TITLE),
 m_pARProperty(0)
 {
 	m_hWndXSize = 0;
 	m_hWndYSize = 0;
-	
 }
 
-ARTagPropertyPage::~ARTagPropertyPage()
+ARTagCameraSettingPage::~ARTagCameraSettingPage()
 {
 
 }
 
-HRESULT ARTagPropertyPage::OnConnect(IUnknown *pUnk)
+HRESULT ARTagCameraSettingPage::OnConnect(IUnknown *pUnk)
 {
 	if (pUnk == NULL)
 	{
@@ -33,7 +43,7 @@ HRESULT ARTagPropertyPage::OnConnect(IUnknown *pUnk)
 	return S_OK;
 }
 
-HRESULT ARTagPropertyPage::OnDisconnect(void)
+HRESULT ARTagCameraSettingPage::OnDisconnect(void)
 {
 	if (m_pARProperty)
 	{
@@ -43,11 +53,11 @@ HRESULT ARTagPropertyPage::OnDisconnect(void)
 	return S_OK;
 }
 
-CUnknown *WINAPI ARTagPropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
+CUnknown *WINAPI ARTagCameraSettingPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
 	ASSERT(phr);
 	// assuming we don't want to modify the data
-	ARTagPropertyPage *pNewObject = new ARTagPropertyPage(punk);
+	ARTagCameraSettingPage *pNewObject = new ARTagCameraSettingPage(punk);
 
 	if(pNewObject == NULL) {
 		if (phr)
@@ -56,18 +66,17 @@ CUnknown *WINAPI ARTagPropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 
 	return pNewObject;
 }
-void ARTagPropertyPage::SetDirty()
+void ARTagCameraSettingPage::SetDirty()
 {
 	m_bDirty = TRUE;
 	HRESULT hr = S_OK;
 
 	if (m_pPageSite) {
 		hr = m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
-		int test = 0;
 	}
 
 }
-HRESULT ARTagPropertyPage::ApplyCameraSetting()
+HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 {
 	if (m_pARProperty == NULL )
 	{
@@ -119,7 +128,7 @@ HRESULT ARTagPropertyPage::ApplyCameraSetting()
 						mat[12], mat[13], mat[14],  mat[15]);
 	theApp.WriteProfileString(L"Camera Setting", L"mat", tmpStr);
 }
-BOOL ARTagPropertyPage::OnReceiveMessage(HWND hwnd,
+BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 										 UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	WCHAR str[MAX_PATH] = {0};
@@ -130,8 +139,8 @@ BOOL ARTagPropertyPage::OnReceiveMessage(HWND hwnd,
 			DWORD cmd2 = HIWORD(wParam);
 			
 			bool dirty = false;
-			swprintf_s(str, MAX_PATH, L"@@@@ cmd1 = %d, cmd2 = %d \n", cmd, cmd2);
-			OutputDebugStringW(str);
+			//swprintf_s(str, MAX_PATH, L"@@@@ cmd1 = %d, cmd2 = %d \n", cmd, cmd2);
+			//OutputDebugStringW(str);
 			if ((cmd2 == EN_CHANGE) && (cmd == IDC_DISTFACTOR1 || cmd == IDC_DISTFACTOR2 || cmd == IDC_DISTFACTOR3 || cmd == IDC_DISTFACTOR4 ||
 				cmd == IDC_XSIZE || cmd == IDC_YSIZE || 
 				cmd == IDC_Mat00 || cmd == IDC_Mat01 || cmd == IDC_Mat02 || cmd == IDC_Mat03 || 
@@ -148,7 +157,7 @@ BOOL ARTagPropertyPage::OnReceiveMessage(HWND hwnd,
 	return __super::OnReceiveMessage(hwnd,uMsg,wParam,lParam);
 }
 
-HRESULT ARTagPropertyPage::OnActivate(void)
+HRESULT ARTagCameraSettingPage::OnActivate(void)
 {
 	if (m_pARProperty == NULL || m_pARProperty->IsReady() == false)
 	{
@@ -206,7 +215,7 @@ HRESULT ARTagPropertyPage::OnActivate(void)
 
 	return NOERROR;
 }
-HRESULT ARTagPropertyPage::OnApplyChanges(void)
+HRESULT ARTagCameraSettingPage::OnApplyChanges(void)
 {
     HRESULT hr = ApplyCameraSetting();
 
@@ -215,5 +224,233 @@ HRESULT ARTagPropertyPage::OnApplyChanges(void)
 		return E_FAIL;
 	}
 	return S_OK;
+}
+
+
+
+
+
+ARTagGeneralPage::ARTagGeneralPage(IUnknown *pUnk) : 
+CBasePropertyPage(NAME("ARTag GeneralPage"), pUnk, IDD_ARTag_GeneralSettingPage, IDS_ARTag_GENERALPAGE),
+m_pARProperty(0)
+{
+	m_cbPoseEstimator = 0;
+	m_cbMarkerMode = 0;
+	m_cbUnDistortMode = 0;
+	m_ckDrawTag = 0;
+	m_slrThreshold = 0;
+	m_slrBorderW = 0;
+	m_txtThreshold = 0;
+	m_txtBorderW = 0;
+}
+
+ARTagGeneralPage::~ARTagGeneralPage()
+{
+
+}
+
+
+HRESULT ARTagGeneralPage::OnConnect(IUnknown *pUnk)
+{
+	if (pUnk == NULL)
+	{
+		return E_POINTER;
+	}
+	if (m_pARProperty == NULL)
+	{
+		pUnk->QueryInterface(IID_IARTagDSFilter, 
+			reinterpret_cast<void**>(&m_pARProperty));
+		return S_OK;
+	}
+	return S_OK;
+}
+
+HRESULT ARTagGeneralPage::OnDisconnect(void)
+{
+	if (m_pARProperty)
+	{
+		m_pARProperty->Release();
+		m_pARProperty = NULL;
+	}
+	return S_OK;
+}
+
+CUnknown *WINAPI ARTagGeneralPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
+{
+	ASSERT(phr);
+	// assuming we don't want to modify the data
+	ARTagGeneralPage *pNewObject = new ARTagGeneralPage(punk);
+
+	if(pNewObject == NULL) {
+		if (phr)
+			*phr = E_OUTOFMEMORY;
+	}
+
+	return pNewObject;
+}
+bool ARTagGeneralPage::GetSetting()
+{
+	if (m_pARProperty == NULL)
+	{
+		return false;
+	}
+	bool bDrawTag = m_pARProperty->getbDrawTag();
+	Button_SetCheck(m_ckDrawTag, bDrawTag);
+	int poseEstimator = m_pARProperty->getPoseEstimator();
+	ComboBox_SetCurSel(m_cbPoseEstimator, poseEstimator);
+	int markermode = m_pARProperty->getMarkerMode();
+	ComboBox_SetCurSel(m_cbMarkerMode, markermode);
+	int undistortMode = m_pARProperty->getUndistortionMode();
+	ComboBox_SetCurSel(m_cbUnDistortMode, undistortMode);
+	int threshold = m_pARProperty->getThreshold();
+	SLIDER_SetPos(m_slrThreshold, threshold);
+	float borderW = m_pARProperty->getBorderWidth();
+	int borderWValue = (int)(borderW*m_BorderWScale);
+	SLIDER_SetPos(m_slrBorderW, borderWValue);
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"%d", threshold);
+	SetWindowText(m_txtThreshold, str);
+
+	swprintf_s(str, MAX_PATH, L"%.3f", SLIDER_GetPos(m_slrBorderW)/(float)m_BorderWScale);
+	SetWindowText(m_txtBorderW, str);
+}
+bool ARTagGeneralPage::ApplySetting()
+{
+	if (m_pARProperty == NULL)
+	{
+		return false;
+	}
+	bool bDrawTag = Button_GetCheck(m_ckDrawTag);
+	m_pARProperty->setbDrawTag(bDrawTag);
+
+	int poseEstimator = ComboBox_GetCurSel(m_cbPoseEstimator);
+	m_pARProperty->setPoseEstimator(poseEstimator);
+	
+	int markermode = ComboBox_GetCurSel(m_cbMarkerMode);
+	m_pARProperty->setMarkerMode(markermode);
+	
+	int undistortMode = ComboBox_GetCurSel(m_cbUnDistortMode);
+	m_pARProperty->setUndistortionMode(undistortMode);
+
+	int threshold = SLIDER_GetPos(m_slrThreshold);
+	m_pARProperty->setThreshold(threshold);
+	
+	int borderWValue = SLIDER_GetPos(m_slrBorderW);
+	float borderW = borderWValue / (float)m_BorderWScale;
+	m_pARProperty->setBorderWidth(borderW);
+
+	return true;
+}
+bool ARTagGeneralPage::updateSliderTxt()
+{
+	int threshold = SLIDER_GetPos(m_slrThreshold);
+
+	int borderWValue = SLIDER_GetPos(m_slrBorderW);
+	float borderW = borderWValue / (float)m_BorderWScale;
+
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"%d", threshold);
+	SetWindowText(m_txtThreshold, str);
+
+	swprintf_s(str, MAX_PATH, L"%.3f", borderW);
+	SetWindowText(m_txtBorderW, str);
+	return true;
+}
+
+void ARTagGeneralPage::SetDirty()
+{
+	m_bDirty = TRUE;
+	HRESULT hr = S_OK;
+
+	if (m_pPageSite) {
+		hr = m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	}
+
+}
+
+BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
+											  UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	WCHAR str[MAX_PATH] = {0};
+	int cmd = 0;
+	swprintf_s(str, MAX_PATH, L"@@@@@ uMsg = %d \n", uMsg);
+	OutputDebugString(str);
+	switch (uMsg) {
+	case WM_COMMAND:
+		cmd = HIWORD(wParam);
+		swprintf_s(str, MAX_PATH, L"@@@@@ cmd = %d \n", cmd);
+		OutputDebugString(str);
+		if (cmd == CBN_SELCHANGE || BM_SETCHECK) {
+			SetDirty();
+			
+		}
+		break;
+	case WM_HSCROLL:
+		updateSliderTxt();
+		int threshold = SLIDER_GetPos(m_slrThreshold);
+		m_pARProperty->setThreshold(threshold);
+
+		int borderWValue = SLIDER_GetPos(m_slrBorderW);
+		float borderW = borderWValue / (float)m_BorderWScale;
+		m_pARProperty->setBorderWidth(borderW);
+		break;
+	}
+	return __super::OnReceiveMessage(hwnd,uMsg,wParam,lParam);
+}
+
+
+HRESULT ARTagGeneralPage::OnActivate(void)
+{
+	if (m_pARProperty == NULL || m_pARProperty->IsReady() == false)
+	{
+		::EnableWindow(this->m_Dlg, FALSE);
+		return S_OK;
+	}
+	::EnableWindow(this->m_Dlg, TRUE);
+
+	if (m_pARProperty == NULL || m_pARProperty->IsReady() == false)
+	{
+		::EnableWindow(this->m_Dlg, FALSE);
+		return S_OK;
+	}
+	::EnableWindow(this->m_Dlg, TRUE);
+	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
+	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);
+	m_cbMarkerMode = GetDlgItem(m_Dlg, IDC_COMBO_MarkerMode);
+	m_cbUnDistortMode = GetDlgItem(m_Dlg, IDC_COMBO_UndistortMode);
+	m_slrBorderW = GetDlgItem(m_Dlg, IDC_SLIDER_BorderW);
+	m_slrThreshold = GetDlgItem(m_Dlg, IDC_SLIDER_Threshold);
+    m_txtBorderW = GetDlgItem(m_Dlg, IDC_txtBorderW);
+	m_txtThreshold = GetDlgItem(m_Dlg, IDC_txtThreshold);
+	ComboBox_AddString(m_cbPoseEstimator, L"Normal");
+	ComboBox_AddString(m_cbPoseEstimator, L"Cont");
+	ComboBox_AddString(m_cbPoseEstimator, L"RPP");
+	//ComboBox_SetCurSel(m_cbPoseEstimator,2);
+	
+	ComboBox_AddString(m_cbMarkerMode, L"MARKER_TEMPLATE");
+	ComboBox_AddString(m_cbMarkerMode, L"MARKER_ID_SIMPLE");
+	ComboBox_AddString(m_cbMarkerMode, L"MARKER_ID_BCH");
+	//ComboBox_SetCurSel(m_cbMarkerMode,1);
+
+	ComboBox_AddString(m_cbUnDistortMode, L"UNDIST_NONE");
+	ComboBox_AddString(m_cbUnDistortMode, L"UNDIST_STD");
+	ComboBox_AddString(m_cbUnDistortMode, L"UNDIST_LUT");
+	//ComboBox_SetCurSel(m_cbUnDistortMode,2);
+	
+	SLIDER_SetRange(m_slrThreshold, 0, 255);
+	SLIDER_SetRange(m_slrBorderW, 0, m_BorderWScale);
+	GetSetting();
+	return NOERROR;
+}
+HRESULT ARTagGeneralPage::OnApplyChanges(void)
+{
+	if (ApplySetting())
+	{
+		return S_OK;
+	}
+	else
+	{
+		return S_FALSE;
+	}
 }
 

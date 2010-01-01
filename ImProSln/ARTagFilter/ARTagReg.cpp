@@ -98,12 +98,17 @@ CFactoryTemplate g_Templates[] =
 			NULL
 	},
 	{ 
-		L"ARTag Props",
-			&CLSID_ARTagProperty,
-			ARTagPropertyPage::CreateInstance, 
+		L"ARTag Camera Page",
+			&CLSID_ARTagCameraProperty,
+			ARTagCameraSettingPage::CreateInstance, 
 			NULL, NULL
-		}
-
+	},
+	{ 
+			L"ARTag General Page",
+				&CLSID_ARTagProperty,
+				ARTagGeneralPage::CreateInstance, 
+				NULL, NULL
+	}
 };
 
 int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);  

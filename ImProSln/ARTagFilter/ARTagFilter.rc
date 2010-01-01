@@ -81,6 +81,7 @@ IDR_HTML_ARTAGPROPERTYDLG HTML                    "ARTagPropertyDlg.htm"
 STRINGTABLE 
 BEGIN
     IDS_ARTag_PROPPAGE_TITLE "ARTag - Camera Setting"
+    IDS_ARTag_GENERALPAGE_TITLE "ARTag - General Setting"
 END
 
 #endif    // Chinese (Taiwan) resources
@@ -140,7 +141,7 @@ END
 // Dialog
 //
 
-IDD_ARTag_PROPPAGE DIALOGEX 0, 0, 235, 156
+IDD_ARTag_CAMSETTING_PAGE DIALOGEX 0, 0, 235, 156
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
@@ -173,6 +174,25 @@ BEGIN
     EDITTEXT        IDC_Mat23,154,94,26,12,ES_AUTOHSCROLL
 END
 
+IDD_ARTag_GeneralSettingPage DIALOGEX 0, 0, 236, 158
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    CONTROL         "Draw Tag",IDC_CHK_DRAWTAG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,64,47,10
+    COMBOBOX        IDC_COMBO_PoseEstimator,66,23,66,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Pose Estimator:",IDC_STATIC,11,26,51,8
+    COMBOBOX        IDC_COMBO_MarkerMode,66,44,66,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Marker Mode:",IDC_STATIC,17,44,45,8
+    COMBOBOX        IDC_COMBO_UndistortMode,66,64,66,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "UnDistort Mode:",IDC_STATIC,9,64,53,8
+    CONTROL         "",IDC_SLIDER_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,95,154,13
+    RTEXT           "Threshold:",IDC_STATIC,23,96,39,10
+    CTEXT           "static",IDC_txtThreshold,132,109,23,10
+    CONTROL         "",IDC_SLIDER_BorderW,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,122,154,13
+    LTEXT           "Border Width:",IDC_STATIC,16,123,46,8
+    LTEXT           "Static",IDC_txtBorderW,132,137,19,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -182,7 +202,7 @@ END
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO 
 BEGIN
-    IDD_ARTag_PROPPAGE, DIALOG
+    IDD_ARTag_CAMSETTING_PAGE, DIALOG
     BEGIN
         LEFTMARGIN, 6
         RIGHTMARGIN, 228
@@ -205,6 +225,18 @@ BEGIN
         HORZGUIDE, 94
         HORZGUIDE, 104
         HORZGUIDE, 109
+    END
+
+    IDD_ARTag_GeneralSettingPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 229
+        VERTGUIDE, 62
+        VERTGUIDE, 66
+        VERTGUIDE, 132
+        VERTGUIDE, 156
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 151
     END
 END
 #endif    // APSTUDIO_INVOKED

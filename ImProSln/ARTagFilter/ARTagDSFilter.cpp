@@ -24,6 +24,8 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_pD3DDisplay = NULL;
 	m_pOutTexture = NULL;
 	m_pInTexture = NULL;
+	m_bDrawTag = true;
+
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
@@ -216,10 +218,6 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 }
 HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
-	/*if (!IsWindowVisible(m_hWndD3D))
-	{
-		ShowWindow(m_hWndD3D, TRUE);
-	}*/
 	HRESULT hr = S_OK;
 	BYTE* pInData = NULL;
 	BYTE* pOutData = NULL;
@@ -248,14 +246,6 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		
 		if (numDetected > 0)
 		{
-			const ARMultiMarkerInfoT* multiMarker = m_ARTracker->getMultiMarkerConfig();
-
-			int* detectedIDs = NULL;
-			m_ARTracker->getDetectedMarkers(detectedIDs);
-			if (detectedIDs == NULL)
-			{
-				return S_FALSE;
-			}
 			markinfos = new ARMarkerInfo[numDetected];
 			for (int k = 0; k< numDetected; k++)
 			{
@@ -270,97 +260,105 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			}
 		}	
 	}
-
-	LPDIRECT3DSURFACE9 pInSurface = NULL;
-	D3DSURFACE_DESC surInDesc;
-	m_pInTexture->GetSurfaceLevel(0, &pInSurface);
-	pInSurface->GetDesc(&surInDesc);
-
-	GUID guidSubType = *m_InputMT.Subtype();
-	RECT rect;
-	rect.left = 0;
-	rect.right = bitHeader.biWidth;
-	rect.top = 0;
-	rect.bottom = bitHeader.biHeight;
-	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+	if (m_bDrawTag)
 	{
-		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
-	}
-	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-	{
-		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
+		LPDIRECT3DSURFACE9 pInSurface = NULL;
+		D3DSURFACE_DESC surInDesc;
+		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+		pInSurface->GetDesc(&surInDesc);
+
+		GUID guidSubType = *m_InputMT.Subtype();
+		RECT rect;
+		rect.left = 0;
+		rect.right = bitHeader.biWidth;
+		rect.top = 0;
+		rect.bottom = bitHeader.biHeight;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
+		}
+		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
+		}
+		else
+		{
+			hr = E_FAIL;
+		}
+		if (FAILED(hr))
+		{
+			return S_FALSE;
+		}
+
+		m_pD3DDisplay->SetTexture(m_pInTexture);
+
+
+		m_pD3DDisplay->Render(markinfos, numDetected);
+		
+		
+		//copy render target to outData
+		IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
+
+		LPDIRECT3DSURFACE9 pOutSurface = NULL;
+		LPDIRECT3DSURFACE9 pRenderTarget = NULL;
+		D3DSURFACE_DESC surRenderDesc, surOutDesc;
+		m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
+		hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pRenderTarget );
+		pRenderTarget->GetDesc(&surRenderDesc);
+		pOutSurface->GetDesc(&surOutDesc);
+		hr = pDevice->GetRenderTargetData(pRenderTarget, pOutSurface);
+		if (SUCCEEDED(hr))
+		{
+			GUID guidSubType = *m_InputMT.Subtype();
+			int channel = 4;
+
+			D3DLOCKED_RECT rect;
+			pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+			int height = surOutDesc.Height;
+			int width = surOutDesc.Width;
+			if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+			{
+				channel = 3;
+				for(int y = 0; y < height; y++ )
+				{
+					for (int x = 0; x< width; x++)
+					{
+						pOutData[(height - y - 1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
+						pOutData[(height - y - 1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
+						pOutData[(height - y - 1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+					}
+				}
+				
+			}
+			else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+			{
+				channel = 4;
+				memcpy(pOutData, rect.pBits, pOut->GetSize());
+			}
+			pOutSurface->UnlockRect();
+		}
+		if (pOutSurface != NULL)
+		{
+			pOutSurface->Release();
+			pOutSurface = NULL;
+		}
+		if (pRenderTarget != NULL)
+		{
+			pRenderTarget->Release();
+			pRenderTarget = NULL;
+		}
 	}
 	else
 	{
-		hr = E_FAIL;
-	}
-	if (FAILED(hr))
-	{
-		return S_FALSE;
-	}
-
-	m_pD3DDisplay->SetTexture(m_pInTexture);
-
-
-	m_pD3DDisplay->Render(markinfos, numDetected);
-	
-	
-	//copy render target to outData
-	IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
-
-	LPDIRECT3DSURFACE9 pOutSurface = NULL;
-	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
-	D3DSURFACE_DESC surRenderDesc, surOutDesc;
-	m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
-	hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pRenderTarget );
-	pRenderTarget->GetDesc(&surRenderDesc);
-	pOutSurface->GetDesc(&surOutDesc);
-	hr = pDevice->GetRenderTargetData(pRenderTarget, pOutSurface);
-	if (SUCCEEDED(hr))
-	{
-		GUID guidSubType = *m_InputMT.Subtype();
-		int channel = 4;
-
-		D3DLOCKED_RECT rect;
-		pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
-		int height = surOutDesc.Height;
-		int width = surOutDesc.Width;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			channel = 3;
-			for(int y = 0; y < height; y++ )
-			{
-				for (int x = 0; x< width; x++)
-				{
-					pOutData[(height - y - 1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
-					pOutData[(height - y - 1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
-					pOutData[(height - y - 1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
-				}
-			}
-			
-		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			channel = 4;
-			memcpy(pOutData, rect.pBits, pOut->GetSize());
-		}
-		pOutSurface->UnlockRect();
+		cvFlip(img, NULL, 0);
+		memcpy(pOutData, pInData, pIn->GetSize());
 	}
 	if (markinfos != NULL)
 	{
 		delete[] markinfos;
 		markinfos = NULL;
 	}
-	if (pOutSurface != NULL)
-	{
-		pOutSurface->Release();
-		pOutSurface = NULL;
-	}
-	if (pRenderTarget != NULL)
-	{
-		pRenderTarget->Release();
-		pRenderTarget = NULL;
-	}
+
 	return S_OK;
 }
 
@@ -433,13 +431,15 @@ bool ARTagDSFilter::IsAcceptedType(const CMediaType *pmt)
 
 HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 {
-	pPages->cElems = 1;
-	pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID));
+	pPages->cElems = 2;
+	pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID)*2);
 	if (pPages->pElems == NULL) 
 	{
 		return E_OUTOFMEMORY;
 	}
 	pPages->pElems[0] = CLSID_ARTagProperty;
+	pPages->pElems[1] = CLSID_ARTagCameraProperty;
+
 	return S_OK;
 }
 
@@ -561,7 +561,7 @@ bool ARTagDSFilter::setPoseEstimator(int rpp)
 	m_ARTracker->setPoseEstimator((ARToolKitPlus::POSE_ESTIMATOR)rpp);
 	return true;
 }
-int ARTagDSFilter::getPosEstimator()
+int ARTagDSFilter::getPoseEstimator()
 {
 	if (m_ARTracker == NULL)
 	{
@@ -569,6 +569,15 @@ int ARTagDSFilter::getPosEstimator()
 	}
 	return m_ARTracker->getPoseEstimator();
 }
+bool ARTagDSFilter::getbDrawTag()
+{
+	return m_bDrawTag;
+}
+bool ARTagDSFilter::setbDrawTag(bool v)
+{
+	m_bDrawTag = v; return true;
+}
+
 bool ARTagDSFilter::IsReady()
 {
 	if (m_ARTracker == NULL)
