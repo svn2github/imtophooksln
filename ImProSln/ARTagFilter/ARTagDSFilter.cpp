@@ -87,8 +87,6 @@ HRESULT ARTagDSFilter::CheckInputType( const CMediaType * pmt )
 	return E_FAIL;
 }
 
-
-
 HRESULT ARTagDSFilter::CheckTransform(const CMediaType *pmtIn, const CMediaType *pmtOut)
 {
 	if(!IsAcceptedType(pmtIn))
@@ -191,7 +189,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 		m_ARTracker->setCamera(bitHeader.biWidth, bitHeader.biHeight, mat, distfactor, 1, 1000);
 		m_ARTracker->setBorderWidth(0.125f);
 		m_ARTracker->setThreshold(100);
-		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_LUT);
+		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
 		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[20];
 		//malloc((void*)pMarkers, sizeof(ARMultiEachMarkerInfoT)*20); 

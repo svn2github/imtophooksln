@@ -9,6 +9,8 @@
 #include <string.h>
 #include <d3dx9.h>
 #include "MSSD3DClass.h"
+#include "ImTopDisplay.h"
+#include "ImTubeDisplay.h"
 #include <detours.h>
 
 #pragma comment(lib, "psapi")

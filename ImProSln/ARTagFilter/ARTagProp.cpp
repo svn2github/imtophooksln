@@ -5,15 +5,6 @@
 #include "ARTagFilter.h"
 #include <windowsx.h>
 
-#define SLIDER_GetRangeMin(hWndTrack) SendMessage(hWndTrack, TBM_GETRANGEMIN,0,0)
-#define SLIDER_GetRangeMax(hWndTrack) SendMessage(hWndTrack, TBM_GETRANGEMAX,0,0)
- 
-#define SLIDER_GetPos(hWndTrack)  SendMessage(hWndTrack, TBM_GETPOS, 0, 0)
-#define SLIDER_SetPos(hWndTrack, pos)  SendMessage(hWndTrack, TBM_SETPOS, (WPARAM) TRUE,(LPARAM) pos)
-#define SLIDER_SetRange(hWndTrack, iMin, iMax)  SendMessage(hWndTrack, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(iMin, iMax))   
-
-
-
 extern CARTagFilterApp theApp;
 ARTagCameraSettingPage::ARTagCameraSettingPage(IUnknown *pUnk) : 
 CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_CAMSETTING_PAGE, IDS_ARTag_PROPPAGE_TITLE),
@@ -231,7 +222,7 @@ HRESULT ARTagCameraSettingPage::OnApplyChanges(void)
 
 
 ARTagGeneralPage::ARTagGeneralPage(IUnknown *pUnk) : 
-CBasePropertyPage(NAME("ARTag GeneralPage"), pUnk, IDD_ARTag_GeneralSettingPage, IDS_ARTag_GENERALPAGE),
+CBasePropertyPage(NAME("ARTag GeneralPage"), pUnk, IDD_ARTag_GeneralSettingPage, IDS_ARTag_GENERALPAGE_TITLE),
 m_pARProperty(0)
 {
 	m_cbPoseEstimator = 0;
@@ -246,7 +237,11 @@ m_pARProperty(0)
 
 ARTagGeneralPage::~ARTagGeneralPage()
 {
-
+	if (m_pARProperty != NULL)
+	{
+		m_pARProperty->Release();
+		m_pARProperty = NULL;
+	}
 }
 
 
@@ -373,13 +368,13 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 {
 	WCHAR str[MAX_PATH] = {0};
 	int cmd = 0;
-	swprintf_s(str, MAX_PATH, L"@@@@@ uMsg = %d \n", uMsg);
-	OutputDebugString(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@@ uMsg = %d \n", uMsg);
+	//OutputDebugString(str);
 	switch (uMsg) {
 	case WM_COMMAND:
 		cmd = HIWORD(wParam);
-		swprintf_s(str, MAX_PATH, L"@@@@@ cmd = %d \n", cmd);
-		OutputDebugString(str);
+		//swprintf_s(str, MAX_PATH, L"@@@@@ cmd = %d \n", cmd);
+		//OutputDebugString(str);
 		if (cmd == CBN_SELCHANGE || BM_SETCHECK) {
 			SetDirty();
 			
@@ -408,12 +403,6 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	}
 	::EnableWindow(this->m_Dlg, TRUE);
 
-	if (m_pARProperty == NULL || m_pARProperty->IsReady() == false)
-	{
-		::EnableWindow(this->m_Dlg, FALSE);
-		return S_OK;
-	}
-	::EnableWindow(this->m_Dlg, TRUE);
 	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
 	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);
 	m_cbMarkerMode = GetDlgItem(m_Dlg, IDC_COMBO_MarkerMode);

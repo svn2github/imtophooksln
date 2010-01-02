@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\Detours\include; ..\OpenCV\cv\include ; ..\OpenCV\cxcore\include"
+				AdditionalIncludeDirectories="..\Detours\include; ..\OpenCV\cv\include ; ..\OpenCV\cxcore\include;..\MyLib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;HOOK_EXPORTS; "
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -207,26 +207,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MSSD3DClass.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -265,10 +245,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MSSD3DClass.h"
-				>
-			</File>
-			<File
 				RelativePath=".\resource.h"
 				>
 			</File>
@@ -288,6 +264,58 @@
 			</File>
 			<File
 				RelativePath=".\icon1.ico"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="MyLib"
+			>
+			<File
+				RelativePath="..\MyLib\ImTopDisplay.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\ImTopDisplay.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\ImTubeDisplay.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\ImTubeDisplay.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\MSSD3DClass.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\MSSD3DClass.h"
 				>
 			</File>
 		</Filter>

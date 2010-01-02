@@ -5,7 +5,7 @@
 #include <initguid.h>
 #include "combase.h"
 #include "ARTagDSFilter.h"
-
+#include "DSMacro.h"
 
 class ARTagCameraSettingPage : public CBasePropertyPage
 {

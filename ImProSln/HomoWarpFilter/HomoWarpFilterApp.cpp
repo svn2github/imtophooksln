@@ -1,8 +1,8 @@
-// ARTagFilter.cpp : Defines the initialization routines for the DLL.
+// HomoWarpFilter.cpp : Defines the initialization routines for the DLL.
 //
 
 #include "stdafx.h"
-#include "ARTagFilter.h"
+#include "HomoWarpFilterApp.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,26 +33,31 @@
 //		details.
 //
 
+
 HMODULE			 g_hModule = 0;
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
 extern "C" BOOL WINAPI _DllMainCRTStartup(HINSTANCE, ULONG, LPVOID);
 
+HMODULE GetModule()
+{
+	return g_hModule;
+}
+
 BOOL APIENTRY FilterDllMain(HMODULE hModule, 
 							DWORD  dwReason, 
 							LPVOID lpReserved)
 {
-	
+
 	switch (dwReason)
 	{
 	case DLL_PROCESS_ATTACH:
 		g_hModule = hModule;
-		
 		break;
 	case DLL_THREAD_DETACH:
 		break;
 	case DLL_PROCESS_DETACH:
-		
+
 		break;
 	}
 
@@ -61,35 +66,34 @@ BOOL APIENTRY FilterDllMain(HMODULE hModule,
 }
 
 
-HMODULE GetModule()
-{
-	return g_hModule;
-}
 
 
-BEGIN_MESSAGE_MAP(CARTagFilterApp, CWinApp)
+
+// CHomoWarpFilterApp
+
+BEGIN_MESSAGE_MAP(CHomoWarpFilterApp, CWinApp)
 END_MESSAGE_MAP()
 
 
-// CARTagFilterApp construction
+// CHomoWarpFilterApp construction
 
-CARTagFilterApp::CARTagFilterApp()
+CHomoWarpFilterApp::CHomoWarpFilterApp()
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 }
 
 
-// The one and only CARTagFilterApp object
+// The one and only CHomoWarpFilterApp object
 
-CARTagFilterApp theApp;
+CHomoWarpFilterApp theApp;
 
-// CARTagFilterApp initialization
 
-BOOL CARTagFilterApp::InitInstance()
+// CHomoWarpFilterApp initialization
+
+BOOL CHomoWarpFilterApp::InitInstance()
 {
 	CWinApp::InitInstance();
-	
+
 	return TRUE;
 }
-
