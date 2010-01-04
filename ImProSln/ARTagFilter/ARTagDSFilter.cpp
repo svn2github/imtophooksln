@@ -11,10 +11,11 @@
 #include "cv.h"
 #include "highgui.h"
 #include "ARTagD3DDisplay.h"
+#include "ARTagProp.h"
 using namespace ARToolKitPlus;
 extern CARTagFilterApp theApp;
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
+: CMuxTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
 { 
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
@@ -71,57 +72,164 @@ HRESULT ARTagDSFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	}
 }
 
-HRESULT ARTagDSFilter::CheckInputType( const CMediaType * pmt )
+HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	HRESULT hr;
+	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
+	{
+		AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
+		if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+			return S_OK;
+		}
+		ASSERT(pSample);
+		IMediaSample * pOutSample;
+		// If no output to deliver to then no point sending us data
+		ASSERT (m_pOutputPins.size() != NULL);
+		HRESULT hr;
+		// Set up the output sample
+		hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
+
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		// Start timing the transform (if PERF is defined)
+		MSR_START(m_idTransform);
+
+		hr = Transform(pSample, pOutSample);
+
+		// Stop the clock and log it (if PERF is defined)
+		MSR_STOP(m_idTransform);
+
+		if (FAILED(hr)) {
+			DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
+		} else {
+			// the Transform() function can return S_FALSE to indicate that the
+			// sample should not be delivered; we only deliver the sample if it's
+			// really S_OK (same as NOERROR, of course.)
+			if (hr == NOERROR) {
+				hr = m_pOutputPins[0]->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+				m_bSampleSkipped = FALSE;	// last thing no longer dropped
+			} else {
+				// S_FALSE returned from Transform is a PRIVATE agreement
+				// We should return NOERROR from Receive() in this cause because returning S_FALSE
+				// from Receive() means that this is the end of the stream and no more data should
+				// be sent.
+				if (S_FALSE == hr) {
+
+					//  Release the sample before calling notify to avoid
+					//  deadlocks if the sample holds a lock on the system
+					//  such as DirectDraw buffers do
+					pOutSample->Release();
+					m_bSampleSkipped = TRUE;
+					if (!m_bQualityChanged) {
+						NotifyEvent(EC_QUALITY_CHANGE,0,0);
+						m_bQualityChanged = TRUE;
+					}
+					return NOERROR;
+				}
+			}
+		}
+
+		// release the output buffer. If the connected pin still needs it,
+		// it will have addrefed it itself.
+		pOutSample->Release();
+	}
+	return S_OK;
+}
+HRESULT ARTagDSFilter::CreatePins()
+{
+	HRESULT hr = S_OK;
+	if (m_pInputPins.size() < 1 && m_pOutputPins.size() < 2) {
+		for (int c = 0; c< m_pInputPins.size(); c++)
+		{
+			delete m_pInputPins[c];
+			m_pInputPins[c] = NULL;
+		}
+		m_pInputPins.clear();
+		for (int c = 0; c< m_pOutputPins.size(); c++)
+		{
+			delete m_pOutputPins[c];
+			m_pOutputPins[c] = NULL;
+		}
+		m_pOutputPins.clear();
+
+		CMuxTransformInputPin* pInput = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"input");      // Pin name
+		//  Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pInput == NULL) {
+			return NULL;
+		}
+
+		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("CMuxTransform output pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"output");      // Pin name
+		//  Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pOutput0 == NULL) {
+			delete pInput;
+			pInput = NULL;
+			return NULL;
+		}
+
+		CMuxTransformOutputPin* pOutput1 = new CMuxTransformOutputPin(NAME("CMuxTransform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"AR Result");   // Pin name
+		// Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pOutput1 == NULL) {
+			delete pInput;
+			pInput = NULL;
+			delete pOutput0;
+			pOutput0 = NULL;
+			return NULL;
+		}
+
+		m_pInputPins.push_back(pInput);
+		m_pOutputPins.push_back(pOutput0);
+		m_pOutputPins.push_back(pOutput1);
+	}
+	return S_OK;
+}
+HRESULT ARTagDSFilter::CheckInputType( const CMediaType * pmt, const IPin* pPin)
 {
 	CheckPointer(pmt, E_POINTER);
 	if (*pmt->FormatType() != FORMAT_VideoInfo) {
 		return E_INVALIDARG;
 	}
-
 	// Can we transform this type
 	if(IsAcceptedType(pmt)){
-		m_InputMT = *pmt;
 		return NOERROR;
 	}
-
 	return E_FAIL;
 }
 
-HRESULT ARTagDSFilter::CheckTransform(const CMediaType *pmtIn, const CMediaType *pmtOut)
+HRESULT ARTagDSFilter::CheckOutputType(const CMediaType* pmt, const IPin* pPin)
 {
-	if(!IsAcceptedType(pmtIn))
-		return E_FAIL;
-
-	if(!IsAcceptedType(pmtOut))
-		return E_FAIL;
-
-	VIDEOINFOHEADER *pviIn = (VIDEOINFOHEADER *) pmtIn->pbFormat;
-	VIDEOINFOHEADER *pviOut = (VIDEOINFOHEADER *) pmtOut->pbFormat;
-	BITMAPINFOHEADER bitHeaderIn = pviIn->bmiHeader;
-	BITMAPINFOHEADER bitHeaderOut = pviOut->bmiHeader;
-
-	ASSERT(pmtIn->formattype == FORMAT_VideoInfo);
-	BITMAPINFOHEADER *pBmiOut = HEADER(pmtOut->pbFormat);
-	BITMAPINFOHEADER *pBmiIn = HEADER(pmtIn->pbFormat);
-	if ((pBmiOut->biPlanes != 1) ||
-		(pBmiOut->biWidth != pBmiIn->biWidth) ||
-		(pBmiOut->biHeight != pBmiIn->biHeight) ||
-		(pBmiOut->biBitCount != pBmiIn->biBitCount))
+	if (m_pOutputPins.size() >= 0 && m_pOutputPins[0] == pPin)
 	{
-		return VFW_E_TYPE_NOT_ACCEPTED;
+		CheckPointer(pmt, E_POINTER);
+		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+			return E_INVALIDARG;
+		}
+		// Can we transform this type
+		if(IsAcceptedType(pmt)){
+			return NOERROR;
+		}
 	}
-
-	
-	m_InputMT  = *pmtIn;
-	m_OutputMT = *pmtOut;
-
-	return NOERROR;
+	return E_FAIL;
 }
-HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin)
+
+HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
 	HRESULT hr = S_OK;
 	
-	if (direction == PINDIR_INPUT)
+	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && pMyPin == m_pInputPins[0])
 	{
 		if (m_ARTracker != NULL)
 		{
@@ -138,31 +246,26 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 			m_pOutTexture->Release();
 			m_pOutTexture = NULL;
 		}
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
+		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		
 		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 16>(bitHeader.biWidth, bitHeader.biHeight);
-		GUID guidSubType = *m_InputMT.Subtype();
+		GUID guidSubType = *inputMT.Subtype();
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
-			hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
-			//D3DSURFACE_DESC desc;
-			//m_pOutTexture->GetLevelDesc(0, &desc);
-			
-			hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
+
 		}
 		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
-			hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
-			hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
 		}
+		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
+			0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
+		hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
+			0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
 		CString strDistFactor = L"159.0 139.0 -84.9 0.97932";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
 		double distfactor[4] = {0};
 		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
@@ -217,6 +320,18 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
+	if (m_pD3DDisplay != NULL)
+	{
+		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		return DoTransform(pIn, pOut, &inputMT);
+	}
+	return S_OK;
+}
+
+HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType)
+{
+
+	HRESULT hr = S_OK;
 	BYTE* pInData = NULL;
 	BYTE* pOutData = NULL;
 	int numDetected = 0;
@@ -231,8 +346,9 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	hr = pOut->GetPointer(&pOutData);
 	if (FAILED(hr))
 		return hr;
-	GUID guidSubType = *m_InputMT.Subtype();
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
+	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+	GUID guidSubType = *inputMT.Subtype();
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 	IplImage* img = NULL;
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
@@ -243,13 +359,13 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	{
 		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
 	}
-	
+
 	img->imageData = (char*)pInData;
 	cvFlip(img, NULL, 0);
 	if (m_ARTracker != NULL)
 	{
 		numDetected = m_ARTracker->calc(pInData);
-		
+
 		if (numDetected > 0)
 		{
 			markinfos = new ARMarkerInfo[numDetected];
@@ -262,7 +378,7 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			const double* matARProj = m_ARTracker->getProjectionMatrix();
 			if (m_pCallback != NULL)
 			{
-				m_pCallback(numDetected, markinfos, matARView, matARProj);
+				m_pCallback(numDetected, (const MyARMarkerInfo*)markinfos, matARView, matARProj);
 			}
 		}	
 	}
@@ -297,11 +413,9 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		}
 
 		m_pD3DDisplay->SetTexture(m_pInTexture);
+		((ARTagD3DDisplay*)m_pD3DDisplay)->Render((ARToolKitPlus::ARMarkerInfo*)markinfos, numDetected);
 
 
-		m_pD3DDisplay->Render(markinfos, numDetected);
-		
-		
 		//copy render target to outData
 		IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
 
@@ -315,7 +429,7 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		hr = pDevice->GetRenderTargetData(pRenderTarget, pOutSurface);
 		if (SUCCEEDED(hr))
 		{
-			GUID guidSubType = *m_InputMT.Subtype();
+			GUID guidSubType = *inputMT.Subtype();
 			int channel = 4;
 
 			D3DLOCKED_RECT rect;
@@ -353,60 +467,71 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		cvFlip(img, NULL, 0);
 		memcpy(pOutData, pInData, pIn->GetSize());
 	}
+	if (img != NULL)
+	{
+		cvReleaseImageHeader(&img);
+		img = NULL;
+	}
 	if (markinfos != NULL)
 	{
 		delete[] markinfos;
 		markinfos = NULL;
 	}
-
 	return S_OK;
 }
 
-HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pProp)
+
+HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPin, ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr = NOERROR;
-
-	pProp->cBuffers = 1;
-	pProp->cbBuffer = m_OutputMT.GetSampleSize();
-	//ASSERT(pProperties->cbBuffer);
-
-	// Ask the allocator to reserve us some sample memory, NOTE the function
-	// can succeed (that is return NOERROR) but still not have allocated the
-	// memory that we requested, so we must check we got whatever we wanted
-
-	ALLOCATOR_PROPERTIES Actual;
-	hr = pAlloc->SetProperties(pProp,&Actual);
-	if (FAILED(hr)) {
-		return hr;
+	if (m_pInputPins.size() <= 0)
+	{
+		return S_FALSE;
 	}
+	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
 
-	ASSERT( Actual.cBuffers == 1 );
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
+	{
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
-	if (pProp->cBuffers > Actual.cBuffers ||
-		pProp->cbBuffer > Actual.cbBuffer) {
-			return E_FAIL;
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = inputMT.GetSampleSize();
+
+
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
 	}
 	return NOERROR;
 }
 
-HRESULT ARTagDSFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
+HRESULT ARTagDSFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
 	if (iPosition < 0) {
 		return E_INVALIDARG;
 	}
-	// Do we have more items to offer
-
 	if (iPosition >= 1) { // WATCH OUT !!
 		return VFW_S_NO_MORE_ITEMS;
 	}
-    
-	*pMediaType = m_InputMT;
-	/*pMediaType->subtype = MEDIASUBTYPE_ARGB32;
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pMediaType->pbFormat;
-	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-	bitHeader.biBitCount = 32;
-	*/
-	return S_OK;
+	if (m_pInputPins.size() <= 0)
+	{
+		return VFW_S_NO_MORE_ITEMS;
+	}
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
+	{
+		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		*pMediaType = inputMT;
+		return S_OK;
+	}
+	return VFW_S_NO_MORE_ITEMS;
 }
 
 
@@ -476,13 +601,13 @@ bool ARTagDSFilter::getCamera(int& xsize, int &ysize, double* mat, double* dist_
 	
 	return true;
 }
-bool ARTagDSFilter::setMarkInfo(ARToolKitPlus::ARMultiEachMarkerInfoT *marker, int numMarker)
+bool ARTagDSFilter::setMarkInfo(MyARMultiEachMarkerInfoT *marker, int numMarker)
 {
 	if (m_ARTracker == NULL)
 	{
 		return false;
 	}
-	return m_ARTracker->setMarkInfo(marker, numMarker);
+	return m_ARTracker->setMarkInfo((ARToolKitPlus::ARMultiEachMarkerInfoT*) marker, numMarker);
 }
 bool ARTagDSFilter::setBorderWidth(double borderWidth)
 {
@@ -592,113 +717,7 @@ BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc)
 	m_pCallback = pfunc;
 	return TRUE;
 }
-
-
-LRESULT ARTagDSFilter::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+MS3DDisplay* ARTagDSFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	switch (message)
-	{
-
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-	return 0;
-}
-
-ATOM ARTagDSFilter::RegisterWndClass(HINSTANCE hInstance)
-{
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc	= D3DWndProc;
-	wcex.cbClsExtra		= 0;
-	wcex.cbWndExtra		= 0;
-	wcex.hInstance		= hInstance;
-	wcex.hIcon			= NULL;
-	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName	= NULL;
-	wcex.lpszClassName	= L"ARTag D3DWnd";
-	wcex.hIconSm		= NULL;
-	ATOM ret = RegisterClassEx(&wcex);
-
-	return ret;
-}
-
-HRESULT ARTagDSFilter::initD3D(UINT rtWidth, UINT rtHeight)
-{
-	RegisterWndClass(GetModule());
-	if (rtWidth != 0 && rtHeight != 0)
-	{
-		if (m_hWndD3D == 0)
-		{
-			m_hWndD3D = CreateWindowExW(NULL, L"ARTag D3DWnd", L"ARTag D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT, 0, rtWidth, rtHeight, NULL, NULL, GetModule(), NULL);
-		}
-	}
-	else
-	{
-		if (m_hWndD3D == 0)
-		{
-			m_hWndD3D = CreateWindowExW(NULL, L"ARTag D3DWnd", L"ARTag D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
-		}
-	}
-	if (m_hWndD3D == NULL)
-	{
-		DWORD err = GetLastError();
-		WCHAR str[MAX_PATH];
-		swprintf_s(str, MAX_PATH, L"@@@@@ CreateWindow Failed!! in CreateLowDisplay, Error code = %h \n", err);
-		OutputDebugStringW(str);
-
-	}
-	ShowWindow(m_hWndD3D, FALSE);
-
-	if (m_pD3D == NULL)
-	{
-		if( NULL == ( m_pD3D = Direct3DCreate9( D3D_SDK_VERSION ) ) )
-		{
-			OutputDebugStringW(L"@@@@@ Direct3DCreate9 Failed!! in CreateLowDisplay\n");
-			return FALSE;
-		}
-	}
-	if (m_pD3DDisplay != NULL)
-	{
-		delete m_pD3DDisplay;
-		m_pD3DDisplay = NULL;
-	}
-	m_pD3DDisplay = new ARTagD3DDisplay(m_hWndD3D, m_pD3D, rtWidth, rtHeight);
-	return S_OK;
-}
-
-
-HWND ARTagDSFilter::GetD3DWnd()
-{
-	return m_hWndD3D;
-}
-IDirect3D9* ARTagDSFilter::GetD3D()
-{
-	return m_pD3D;
-}
-
-BOOL ARTagDSFilter::ReleaseD3D()
-{
-	if (m_pD3D != NULL)
-	{
-		m_pD3D->Release();
-		m_pD3D = NULL;
-	}
-	if (m_hWndD3D != 0)
-	{
-		::CloseWindow(m_hWndD3D);
-		m_hWndD3D = 0;
-	}
-	if (m_pD3DDisplay != NULL)
-	{
-		delete m_pD3DDisplay;
-		m_pD3DDisplay = NULL;
-	}
-	return TRUE;
+	return new ARTagD3DDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
 }

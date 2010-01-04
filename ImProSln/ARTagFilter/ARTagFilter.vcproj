@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib d3dx9.lib d3d9.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin; $(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32;"
+				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)\OpenCV\lib&quot;;&quot;$(SolutionDir)\OpenCV\bin&quot;;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin"
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -263,6 +263,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\IARTagFilter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Resource.h"
 				>
 			</File>
@@ -292,6 +296,22 @@
 		<Filter
 			Name="MyLib"
 			>
+			<File
+				RelativePath="..\MyLib\D3DTransformFilterBase.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\D3DTransformFilterBase.h"
+				>
+			</File>
 			<File
 				RelativePath="..\MyLib\DSMacro.h"
 				>

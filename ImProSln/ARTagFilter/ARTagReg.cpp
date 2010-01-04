@@ -7,7 +7,7 @@
 
 static WCHAR g_wszName[] = L"ARTagFilter";
 const AMOVIESETUP_PIN psudARTagFilterPins[] =
-{ { L"Input"            // strName
+{ { L"input"            // strName
 , FALSE               // bRendered
 , FALSE               // bOutput
 , FALSE               // bZero
@@ -17,7 +17,17 @@ const AMOVIESETUP_PIN psudARTagFilterPins[] =
 , 0                   // nTypes
 , NULL                // lpTypes
 }
-, { L"Output"           // strName
+, { L"output"           // strName
+, FALSE               // bRendered
+, TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"AR Result"           // strName
 , FALSE               // bRendered
 , TRUE                // bOutput
 , FALSE               // bZero

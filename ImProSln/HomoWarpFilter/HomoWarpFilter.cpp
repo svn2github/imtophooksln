@@ -123,7 +123,7 @@ HRESULT HomoWarpFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 HRESULT HomoWarpFilter::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 2) {
+	if (m_pInputPins.size() < 2 || m_pOutputPins.size() < 1) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
