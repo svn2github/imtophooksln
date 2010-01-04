@@ -148,20 +148,20 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePi
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
 			hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
+				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
 			//D3DSURFACE_DESC desc;
 			//m_pOutTexture->GetLevelDesc(0, &desc);
 			
 			hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
+				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
 		}
 		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
 			hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
+				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
 			hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-				0,  D3DUSAGE_DYNAMIC, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
+				0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
 		}
 		CString strDistFactor = L"159.0 139.0 -84.9 0.97932";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
 		double distfactor[4] = {0};
@@ -231,11 +231,19 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	hr = pOut->GetPointer(&pOutData);
 	if (FAILED(hr))
 		return hr;
-	
+	GUID guidSubType = *m_InputMT.Subtype();
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
 	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-
-	IplImage* img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
+	IplImage* img = NULL;
+	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+	{
+		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
+	}
+	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))
+	{
+		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
+	}
+	
 	img->imageData = (char*)pInData;
 	cvFlip(img, NULL, 0);
 	if (m_ARTracker != NULL)
@@ -265,7 +273,7 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
 		pInSurface->GetDesc(&surInDesc);
 
-		GUID guidSubType = *m_InputMT.Subtype();
+
 		RECT rect;
 		rect.left = 0;
 		rect.right = bitHeader.biWidth;
@@ -275,7 +283,7 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
 		}
-		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))
 		{
 			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
 		}
@@ -317,21 +325,15 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 			{
 				channel = 3;
-				for(int y = 0; y < height; y++ )
-				{
-					for (int x = 0; x< width; x++)
-					{
-						pOutData[(height - y - 1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
-						pOutData[(height - y - 1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
-						pOutData[(height - y - 1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
-					}
-				}
-				
 			}
-			else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+			for(int y = 0; y < height; y++ )
 			{
-				channel = 4;
-				memcpy(pOutData, rect.pBits, pOut->GetSize());
+				for (int x = 0; x< width; x++)
+				{
+					pOutData[(height -y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
+					pOutData[(height -y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
+					pOutData[(height -y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+				}
 			}
 			pOutSurface->UnlockRect();
 		}
