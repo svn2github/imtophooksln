@@ -20,6 +20,8 @@ texture g_Texture : DIFFUSE <
 >;
 
 sampler2D g_Sampler = sampler_state {
+    MinFilter = Linear;
+    MagFilter = Linear;
     Texture = <g_Texture>;
 }; 
 

@@ -134,7 +134,7 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 	{
 		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
 	}
-	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) )
 	{
 		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
 	}
