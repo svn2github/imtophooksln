@@ -4,7 +4,17 @@
 
 static WCHAR g_wszName[] = L"HomoWarp Filter";
 const AMOVIESETUP_PIN psudHomoWarpFilterPins[] =
-{ { L"Input"            // strName
+{ { L"input"            // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"config"            // strName
 , FALSE               // bRendered
 , FALSE               // bOutput
 , FALSE               // bZero
@@ -14,7 +24,7 @@ const AMOVIESETUP_PIN psudHomoWarpFilterPins[] =
 , 0                   // nTypes
 , NULL                // lpTypes
 }
-, { L"Output"           // strName
+, { L"output"           // strName
 , FALSE               // bRendered
 , TRUE                // bOutput
 , FALSE               // bZero

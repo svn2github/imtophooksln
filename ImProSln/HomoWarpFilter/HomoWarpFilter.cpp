@@ -4,7 +4,7 @@
 #include "HomoWarpFilterApp.h"
 #include "cv.h"
 HomoWarpFilter::HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CTransformFilter(NAME("HomoWarp Filter"), 0, CLSID_HomoWarpFilter)
+: CMuxTransformFilter(NAME("HomoWarp Filter"), 0, CLSID_HomoWarpFilter)
 { 
 	D3DXMatrixIdentity(&m_matTTS);
 }
@@ -44,51 +44,180 @@ HRESULT HomoWarpFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	}
 }
 
-HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt )
+HRESULT HomoWarpFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin)
 {
-	CheckPointer(pmt, E_POINTER);
-	if (*pmt->FormatType() != FORMAT_VideoInfo) {
-		return E_INVALIDARG;
+	if (m_pOutputPins.size() < 1)
+	{
+		return S_FALSE;
+	}
+	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
+	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+		return S_OK;
+	}
+	ASSERT(pSample);
+	IMediaSample * pOutSample;
+	// If no output to deliver to then no point sending us data
+	ASSERT (m_pOutputPins.size() != NULL);
+	HRESULT hr;
+	// Set up the output sample
+	hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
+
+	if (FAILED(hr)) {
+		return hr;
 	}
 
-	// Can we transform this type
-	if(IsAcceptedType(pmt)){
-		m_InputMT = *pmt;
-		return NOERROR;
+	// Start timing the transform (if PERF is defined)
+	MSR_START(m_idTransform);
+
+	hr = Transform(pSample, pOutSample);
+
+	// Stop the clock and log it (if PERF is defined)
+	MSR_STOP(m_idTransform);
+
+	if (FAILED(hr)) {
+		DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
+	} else {
+		// the Transform() function can return S_FALSE to indicate that the
+		// sample should not be delivered; we only deliver the sample if it's
+		// really S_OK (same as NOERROR, of course.)
+		if (hr == NOERROR) {
+			hr = m_pOutputPins[0]->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			m_bSampleSkipped = FALSE;	// last thing no longer dropped
+		} else {
+			// S_FALSE returned from Transform is a PRIVATE agreement
+			// We should return NOERROR from Receive() in this cause because returning S_FALSE
+			// from Receive() means that this is the end of the stream and no more data should
+			// be sent.
+			if (S_FALSE == hr) {
+
+				//  Release the sample before calling notify to avoid
+				//  deadlocks if the sample holds a lock on the system
+				//  such as DirectDraw buffers do
+				pOutSample->Release();
+				m_bSampleSkipped = TRUE;
+				if (!m_bQualityChanged) {
+					NotifyEvent(EC_QUALITY_CHANGE,0,0);
+					m_bQualityChanged = TRUE;
+				}
+				return NOERROR;
+			}
+		}
+	}
+
+	// release the output buffer. If the connected pin still needs it,
+	// it will have addrefed it itself.
+	pOutSample->Release();
+	return S_OK;
+}
+HRESULT HomoWarpFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	HRESULT hr;
+	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
+	{
+		return ReceiveInput0(pSample, pReceivePin);
+	}
+	return S_OK;
+
+
+}
+HRESULT HomoWarpFilter::CreatePins()
+{
+	HRESULT hr = S_OK;
+	if (m_pInputPins.size() < 2) {
+		for (int c = 0; c< m_pInputPins.size(); c++)
+		{
+			delete m_pInputPins[c];
+			m_pInputPins[c] = NULL;
+		}
+		m_pInputPins.clear();
+		for (int c = 0; c< m_pOutputPins.size(); c++)
+		{
+			delete m_pOutputPins[c];
+			m_pOutputPins[c] = NULL;
+		}
+		m_pOutputPins.clear();
+
+		CMuxTransformInputPin* pInput0 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"input");      // Pin name
+		//  Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pInput0 == NULL) {
+			return NULL;
+		}
+
+		CMuxTransformInputPin* pInput1 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"config");      // Pin name
+		//  Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pInput1 == NULL) {
+			delete pInput0;
+			pInput0 = NULL;
+			return NULL;
+		}
+
+		CMuxTransformOutputPin* pOutput = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"output");   // Pin name
+		// Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pOutput == NULL) {
+			delete pInput0;
+			pInput0 = NULL;
+			delete pInput1;
+			pInput1 = NULL;
+			return NULL;
+		}
+
+		m_pInputPins.push_back(pInput0);
+		m_pInputPins.push_back(pInput1);
+		m_pOutputPins.push_back(pOutput);
+	}
+	return S_OK;
+}
+
+HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
+{
+	if (m_pInputPins.size() >= 0 && m_pInputPins[0] == pPin)
+	{
+		CheckPointer(pmt, E_POINTER);
+		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+			return E_INVALIDARG;
+		}
+
+		// Can we transform this type
+		if(IsAcceptedType(pmt)){
+			return NOERROR;
+		}
 	}
 	return E_FAIL;
 }
-HRESULT HomoWarpFilter::CheckTransform(const CMediaType *pmtIn, const CMediaType *pmtOut)
+
+HRESULT HomoWarpFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if(!IsAcceptedType(pmtIn))
-		return E_FAIL;
-
-	if(!IsAcceptedType(pmtOut))
-		return E_FAIL;
-
-	VIDEOINFOHEADER *pviIn = (VIDEOINFOHEADER *) pmtIn->pbFormat;
-	VIDEOINFOHEADER *pviOut = (VIDEOINFOHEADER *) pmtOut->pbFormat;
-	BITMAPINFOHEADER bitHeaderIn = pviIn->bmiHeader;
-	BITMAPINFOHEADER bitHeaderOut = pviOut->bmiHeader;
-
-	ASSERT(pmtIn->formattype == FORMAT_VideoInfo);
-	BITMAPINFOHEADER *pBmiOut = HEADER(pmtOut->pbFormat);
-	BITMAPINFOHEADER *pBmiIn = HEADER(pmtIn->pbFormat);
-	if ((pBmiOut->biPlanes != 1) ||
-		(pBmiOut->biWidth != pBmiIn->biWidth) ||
-		(pBmiOut->biHeight != pBmiIn->biHeight) ||
-		(pBmiOut->biBitCount != pBmiIn->biBitCount))
+	if (m_pOutputPins.size() >= 0 && m_pOutputPins[0] == pPin)
 	{
-		return VFW_E_TYPE_NOT_ACCEPTED;
+		CheckPointer(pmt, E_POINTER);
+		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+			return E_INVALIDARG;
+		}
+
+		// Can we transform this type
+		if(IsAcceptedType(pmt)){
+			return NOERROR;
+		}
 	}
-	m_InputMT  = *pmtIn;
-	m_OutputMT = *pmtOut;
-	return NOERROR;
+	return E_FAIL;
 }
-HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceivePin)
+
+HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
 	HRESULT hr = S_OK;
-	if (direction == PINDIR_INPUT)
+	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
 		if (m_pInTexture != NULL)
 		{
@@ -100,7 +229,8 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, IPin *pReceiveP
 			m_pOutTexture->Release();
 			m_pOutTexture = NULL;
 		}
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_InputMT.pbFormat;
+		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->GetCurMediaType();
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
 	
@@ -112,36 +242,51 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	HRESULT hr = S_OK;
 	if (m_pD3DDisplay != NULL)
 	{
+		if (m_pInputPins.size() <= 0 )
+		{
+			return S_FALSE;
+		}
 		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS);
-		DoTransform(pIn, pOut, &m_InputMT);
+		DoTransform(pIn, pOut, &(m_pInputPins[0]->GetCurMediaType()));
 	}
 	return S_OK;
 }
 
 
-HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pProp)
+HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin, ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr = NOERROR;
-
-	pProp->cBuffers = 1;
-	pProp->cbBuffer = m_OutputMT.GetSampleSize();
-
-
-	ALLOCATOR_PROPERTIES Actual;
-	hr = pAlloc->SetProperties(pProp,&Actual);
-	if (FAILED(hr)) {
-		return hr;
+	if (m_pInputPins.size() <= 0)
+	{
+		return S_FALSE;
 	}
-	ASSERT( Actual.cBuffers == 1 );
-	if (pProp->cBuffers > Actual.cBuffers ||
-		pProp->cbBuffer > Actual.cbBuffer) {
-			return E_FAIL;
+	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+	
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
+	{
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = inputMT.GetSampleSize();
+
+
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
 	}
 	return NOERROR;
 }
 
 
-HRESULT HomoWarpFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
+HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
 	if (iPosition < 0) {
 		return E_INVALIDARG;
@@ -149,9 +294,17 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, CMediaType *pMediaType)
 	if (iPosition >= 1) { // WATCH OUT !!
 		return VFW_S_NO_MORE_ITEMS;
 	}
-	*pMediaType = m_InputMT;
-
-	return S_OK;
+	if (m_pInputPins.size() <= 0)
+	{
+		return VFW_S_NO_MORE_ITEMS;
+	}
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
+	{
+		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		*pMediaType = inputMT;
+		return S_OK;
+	}
+	return VFW_S_NO_MORE_ITEMS;
 }
 
 

@@ -30,42 +30,43 @@ public:
 		__inout HRESULT * phr,
 		__in_opt LPCWSTR pName);
 #endif
+	virtual ~CMuxTransformInputPin();
 
-	STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
+	virtual STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
 	{
 		return AMGetWideString(m_pName, Id);
 	}
 
 	// Grab and release extra interfaces if required
 
-	HRESULT CheckConnect(IPin *pPin);
-	HRESULT BreakConnect();
-	HRESULT CompleteConnect(IPin *pReceivePin);
+	virtual HRESULT CheckConnect(IPin *pPin);
+	virtual HRESULT BreakConnect();
+	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 
 	// check that we can support this output type
-	HRESULT CheckMediaType(const CMediaType* mtIn);
+	virtual HRESULT CheckMediaType(const CMediaType* mtIn);
 
 	// set the connection media type
-	HRESULT SetMediaType(const CMediaType* mt);
-
+	virtual HRESULT SetMediaType(const CMediaType* mt);
+	virtual CMediaType GetCurMediaType();
 	// --- IMemInputPin -----
 
 	// here's the next block of data from the stream.
 	// AddRef it yourself if you need to hold it beyond the end
 	// of this call.
-	STDMETHODIMP Receive(IMediaSample * pSample);
+	virtual STDMETHODIMP Receive(IMediaSample * pSample);
 
 	// provide EndOfStream that passes straight downstream
 	// (there is no queued data)
-	STDMETHODIMP EndOfStream(void);
+	virtual STDMETHODIMP EndOfStream(void);
 
 	// passes it to CTransformFilter::BeginFlush
-	STDMETHODIMP BeginFlush(void);
+	virtual STDMETHODIMP BeginFlush(void);
 
 	// passes it to CTransformFilter::EndFlush
-	STDMETHODIMP EndFlush(void);
+	virtual STDMETHODIMP EndFlush(void);
 
-	STDMETHODIMP NewSegment(
+	virtual STDMETHODIMP NewSegment(
 		REFERENCE_TIME tStart,
 		REFERENCE_TIME tStop,
 		double dRate);
@@ -75,7 +76,7 @@ public:
 
 	// Media type
 public:
-	CMediaType& CurrentMediaType() { return m_mt; };
+	virtual CMediaType& CurrentMediaType() { return m_mt; };
 };
 class CMuxTransformOutputPin : public CBaseOutputPin
 {
@@ -101,48 +102,48 @@ public:
 		__inout HRESULT * phr,
 		__in_opt LPCWSTR pName);
 #endif
-	~CMuxTransformOutputPin();
+	virtual ~CMuxTransformOutputPin();
 
 	// override to expose IMediaPosition
-	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
+	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
 
 	// --- CBaseOutputPin ------------
 
-	STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
+	virtual STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
 	{
 		return AMGetWideString(m_pName, Id);
 	}
 
 	// Grab and release extra interfaces if required
 
-	HRESULT CheckConnect(IPin *pPin);
-	HRESULT BreakConnect();
-	HRESULT CompleteConnect(IPin *pReceivePin);
+	virtual HRESULT CheckConnect(IPin *pPin);
+	virtual HRESULT BreakConnect();
+	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 
 	// check that we can support this output type
-	HRESULT CheckMediaType(const CMediaType* mtOut);
+	virtual HRESULT CheckMediaType(const CMediaType* mtOut);
 
 	// set the connection media type
-	HRESULT SetMediaType(const CMediaType *pmt);
-
+	virtual HRESULT SetMediaType(const CMediaType *pmt);
+	virtual CMediaType GetCurMediaType();
 	// called from CBaseOutputPin during connection to ask for
 	// the count and size of buffers we need.
-	HRESULT DecideBufferSize(
+	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAlloc,
 		__inout ALLOCATOR_PROPERTIES *pProp);
 
 	// returns the preferred formats for a pin
-	HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType);
+	virtual HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType);
 
 	// inherited from IQualityControl via CBasePin
-	STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
+	virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 
 	// Media type
 public:
-	CMediaType& CurrentMediaType() { return m_mt; };
+	virtual CMediaType& CurrentMediaType() { return m_mt; };
 
 };
-class CMuxTransformFilter : CBaseFilter
+class CMuxTransformFilter : public CBaseFilter
 {
 public:
 	virtual int GetPinCount();
@@ -156,15 +157,15 @@ public:
 #ifdef UNICODE
 	CMuxTransformFilter(__in_opt LPCSTR , __inout_opt LPUNKNOWN, REFCLSID clsid);
 #endif
-	~CMuxTransformFilter();
+	virtual ~CMuxTransformFilter();
 	// These must be supplied in a derived class
-	virtual HRESULT Receive(IMediaSample *pSample, IPin* pReceivePin) = 0;
-	virtual HRESULT CheckInputType(const CMediaType* mtIn, IPin* pPin) PURE;
-	virtual HRESULT CheckOutputType(const CMediaType* mtOut, IPin* pPin) PURE;
+	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin) = 0;
+	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin) PURE;
+	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin) PURE;
 	virtual HRESULT DecideBufferSize(
-		IMemAllocator * pAllocator, IPin* pOutPin,
+		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop) PURE;
-	virtual HRESULT GetMediaType(int iPosition, IPin* pOutPin, __inout CMediaType *pMediaType) PURE;
+	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) PURE;
 	// =================================================================
 	// ----- Optional Override Methods           -----------------------
 	// =================================================================
@@ -177,17 +178,17 @@ public:
 	virtual HRESULT AlterQuality(Quality q);
 
 	// override this to know when the media type is actually set
-	virtual HRESULT SetMediaType(PIN_DIRECTION direction, IPin* pPin, const CMediaType *pmt);
+	virtual HRESULT SetMediaType(PIN_DIRECTION direction, const IPin* pPin, const CMediaType *pmt);
 
 	// chance to grab extra interfaces on connection
-	virtual HRESULT CheckConnect(PIN_DIRECTION dir, IPin* pMyPin,IPin *pOtherPin);
-	virtual HRESULT BreakConnect(PIN_DIRECTION dir, IPin* pPin);
-	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, IPin* pMyPin, IPin* pOtherPin);
+	virtual HRESULT CheckConnect(PIN_DIRECTION dir, const IPin* pMyPin, const IPin* pOtherPin);
+	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
+	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 
 
 
 	// Standard setup for output sample
-	virtual HRESULT InitializeOutputSample(IMediaSample *pSample, IPin* pInputPin, IPin* pOutputPin, __deref_out IMediaSample **ppOutSample);
+	virtual HRESULT InitializeOutputSample(IMediaSample *pSample, const IPin* pInputPin, const IPin* pOutputPin, __deref_out IMediaSample **ppOutSample);
 
 	// if you override Receive, you may need to override these three too
 	virtual HRESULT EndOfStream(void);

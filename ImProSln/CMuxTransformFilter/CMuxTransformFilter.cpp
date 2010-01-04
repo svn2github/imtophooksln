@@ -24,13 +24,13 @@ CMuxTransformFilter::~CMuxTransformFilter()
 {
 	for (int i =0; i < m_pInputPins.size(); i++)
 	{
-		m_pInputPins.at(i)->Release();
+		delete m_pInputPins.at(i);
 		m_pInputPins.at(i) = NULL;
 	}
-	m_pOutputPins.clear();
+	m_pInputPins.clear();
 	for (int i =0; i < m_pOutputPins.size(); i++)
 	{
-		m_pOutputPins[i]->Release();
+		delete m_pOutputPins[i];
 		m_pOutputPins[i] = NULL;
 	}
 	m_pOutputPins.clear();
@@ -38,6 +38,11 @@ CMuxTransformFilter::~CMuxTransformFilter()
 
 int CMuxTransformFilter::GetPinCount()
 {
+	HRESULT hr = CreatePins();
+	if (FAILED(hr))
+	{
+		return 0;
+	}
 	return m_pInputPins.size() + m_pOutputPins.size();
 }
 CBasePin* CMuxTransformFilter::GetPin(int n)
@@ -64,38 +69,31 @@ HRESULT CMuxTransformFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
 {
 	CheckPointer(ppPin,E_POINTER);
 	ValidateReadWritePtr(ppPin,sizeof(IPin *));
-	if (wcsstr(Id, L"In") != NULL)
-	{
-		int idx = -1;
-		swscanf(Id, L"In %d", &idx);
-		if (idx >= 0 && idx < m_pInputPins.size())
-		{
-			*ppPin = m_pInputPins[idx];
-		}
-	}
-	else if (wcsstr(Id, L"Out") != NULL)
-	{
-		int idx = -1;
-		swscanf(Id, L"In %d", &idx);
-		if (idx >= 0 && idx < m_pOutputPins.size())
-		{
-			*ppPin = m_pOutputPins[idx];
-		}
-	}
-	else
-	{
-		*ppPin = NULL;
-		return VFW_E_NOT_FOUND;
-	}
-
 	HRESULT hr = NOERROR;
-	//  AddRef() returned pointer - but GetPin could fail if memory is low.
-	if (*ppPin) {
-		(*ppPin)->AddRef();
-	} else {
-		hr = E_OUTOFMEMORY;  // probably.  There's no pin anyway.
+	for (int i =0; i < m_pInputPins.size(); i++)
+	{
+		if (wcscmp(m_pInputPins[i]->m_pName, Id) == 0)
+		{
+			*ppPin = m_pInputPins[i];
+			if (*ppPin) {
+				(*ppPin)->AddRef();
+			}
+			return hr;
+		}
 	}
-	return hr;
+	for (int i =0; i < m_pOutputPins.size(); i++)
+	{
+		if (wcscmp(m_pOutputPins[i]->m_pName, Id) == 0)
+		{
+			*ppPin = m_pOutputPins[i];
+			if (*ppPin) {
+				(*ppPin)->AddRef();
+			}
+			return hr;
+		}
+	}
+	*ppPin = NULL;
+	return VFW_E_NOT_FOUND;
 }
 
 // override state changes to allow derived transform filter
@@ -289,7 +287,7 @@ HRESULT CMuxTransformFilter::NewSegment(
 }
 
 
-HRESULT CMuxTransformFilter::SetMediaType(PIN_DIRECTION direction,IPin* pPin, const CMediaType *pmt)
+HRESULT CMuxTransformFilter::SetMediaType(PIN_DIRECTION direction,const IPin* pPin, const CMediaType *pmt)
 {
 	UNREFERENCED_PARAMETER(direction);
 	UNREFERENCED_PARAMETER(pmt);
@@ -298,7 +296,7 @@ HRESULT CMuxTransformFilter::SetMediaType(PIN_DIRECTION direction,IPin* pPin, co
 }
 
 
-HRESULT CMuxTransformFilter::CheckConnect(PIN_DIRECTION dir, IPin* pMyPin, IPin *pOtherPin)
+HRESULT CMuxTransformFilter::CheckConnect(PIN_DIRECTION dir, const IPin* pMyPin, const IPin* pOtherPin)
 {
 	UNREFERENCED_PARAMETER(dir);
 	UNREFERENCED_PARAMETER(pOtherPin);
@@ -307,7 +305,7 @@ HRESULT CMuxTransformFilter::CheckConnect(PIN_DIRECTION dir, IPin* pMyPin, IPin 
 }
 
 
-HRESULT CMuxTransformFilter::BreakConnect(PIN_DIRECTION dir, IPin* pPin)
+HRESULT CMuxTransformFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
 	UNREFERENCED_PARAMETER(dir);
 	UNREFERENCED_PARAMETER(pPin);
@@ -317,7 +315,7 @@ HRESULT CMuxTransformFilter::BreakConnect(PIN_DIRECTION dir, IPin* pPin)
 
 // Let derived classes know about connection completion
 
-HRESULT CMuxTransformFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pMyPin, IPin *pOtherPin)
+HRESULT CMuxTransformFilter::CompleteConnect(PIN_DIRECTION dir, const IPin* pMyPin, const IPin* pOtherPin)
 {
 	UNREFERENCED_PARAMETER(dir);
 	UNREFERENCED_PARAMETER(pMyPin);
@@ -327,11 +325,11 @@ HRESULT CMuxTransformFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pMyPin, IP
 
 
 // Set up our output sample
-HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, IPin* pInputPin, IPin* pOutputPin, __deref_out IMediaSample **ppOutSample )
+HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const IPin* pInputPin, const IPin* pOutputPin, __deref_out IMediaSample **ppOutSample )
 {
 	IMediaSample *pOutSample;
 	CMuxTransformInputPin* pInPin = (CMuxTransformInputPin*) pInputPin;
-	CMuxTransformOutputPin* pOutPin = (CMuxTransformOutputPin*) pOutPin;
+	CMuxTransformOutputPin* pOutPin = (CMuxTransformOutputPin*) pOutputPin;
 	// default - times are the same
 
 	AM_SAMPLE2_PROPERTIES * const pProps = pInPin->SampleProps();
@@ -414,7 +412,6 @@ CMuxTransformInputPin::CMuxTransformInputPin(
 									   : CBaseInputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pName)
 {
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformInputPin::CMuxTransformInputPin")));
-	AMGetWideString(pName, &m_pName);
 	m_pTransformFilter = pTransformFilter;
 }
 
@@ -428,8 +425,10 @@ CMuxTransformInputPin::CMuxTransformInputPin(
 									   : CBaseInputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pName)
 {
 	DbgLog((LOG_TRACE,2,TEXT("CTransformInputPin::CTransformInputPin")));
-	AMGetWideString(pName, &m_pName);
 	m_pTransformFilter = pTransformFilter;
+}
+CMuxTransformInputPin::~CMuxTransformInputPin()
+{
 }
 #endif
 
@@ -499,6 +498,10 @@ CMuxTransformInputPin::SetMediaType(const CMediaType* mtIn)
 	return m_pTransformFilter->SetMediaType(PINDIR_INPUT, this, mtIn);
 }
 
+CMediaType CMuxTransformInputPin::GetCurMediaType()
+{
+	return m_mt;
+}
 HRESULT CMuxTransformInputPin::CheckStreaming()
 {
 	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
@@ -624,7 +627,6 @@ CMuxTransformOutputPin::CMuxTransformOutputPin(
 	m_pPosition(NULL)
 {
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
-	AMGetWideString(pPinName, &m_pName);
 	m_pTransformFilter = pTransformFilter;
 }
 
@@ -638,7 +640,6 @@ CMuxTransformOutputPin::CMuxTransformOutputPin(
 	m_pPosition(NULL)
 {
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
-	AMGetWideString(pPinName, &m_pName);
 	m_pTransformFilter = pTransformFilter;
 
 }
@@ -649,8 +650,11 @@ CMuxTransformOutputPin::CMuxTransformOutputPin(
 CMuxTransformOutputPin::~CMuxTransformOutputPin()
 {
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::~CMuxTransformOutputPin")));
-
-	if (m_pPosition) m_pPosition->Release();
+	if (m_pPosition) 
+	{
+		m_pPosition->Release();
+	}
+	
 }
 
 
@@ -738,7 +742,7 @@ CMuxTransformOutputPin::CheckMediaType(const CMediaType* pmtOut)
 {
 	// must have selected input first
 	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
-	if ((m_pTransformFilter->IsAnyOutPinConnect() == FALSE)) {
+	if ((m_pTransformFilter->IsAnyInputPinConnect() == FALSE)) {
 		return E_INVALIDARG;
 	}
 	return m_pTransformFilter->CheckOutputType(pmtOut, this);
@@ -762,7 +766,10 @@ CMuxTransformOutputPin::SetMediaType(const CMediaType* pmtOut)
 	return m_pTransformFilter->SetMediaType(PINDIR_OUTPUT, this, pmtOut);
 }
 
-
+CMediaType CMuxTransformOutputPin::GetCurMediaType()
+{
+	return m_mt;
+}
 // pass the buffer size decision through to the main transform class
 
 HRESULT
