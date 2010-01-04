@@ -79,7 +79,66 @@ public:
 class CMuxTransformOutputPin : public CBaseOutputPin
 {
 	friend class CMuxTransformFilter;
+
+protected:
+	CMuxTransformFilter *m_pTransformFilter;
+
 public:
+
+	// implement IMediaPosition by passing upstream
+	IUnknown * m_pPosition;
+
+	CMuxTransformOutputPin(
+		__in_opt LPCTSTR pObjectName,
+		__inout CMuxTransformFilter *pTransformFilter,
+		__inout HRESULT * phr,
+		__in_opt LPCWSTR pName);
+#ifdef UNICODE
+	CMuxTransformOutputPin(
+		__in_opt LPCSTR pObjectName,
+		__inout CMuxTransformFilter *pTransformFilter,
+		__inout HRESULT * phr,
+		__in_opt LPCWSTR pName);
+#endif
+	~CMuxTransformOutputPin();
+
+	// override to expose IMediaPosition
+	STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
+
+	// --- CBaseOutputPin ------------
+
+	STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
+	{
+		return AMGetWideString(m_pName, Id);
+	}
+
+	// Grab and release extra interfaces if required
+
+	HRESULT CheckConnect(IPin *pPin);
+	HRESULT BreakConnect();
+	HRESULT CompleteConnect(IPin *pReceivePin);
+
+	// check that we can support this output type
+	HRESULT CheckMediaType(const CMediaType* mtOut);
+
+	// set the connection media type
+	HRESULT SetMediaType(const CMediaType *pmt);
+
+	// called from CBaseOutputPin during connection to ask for
+	// the count and size of buffers we need.
+	HRESULT DecideBufferSize(
+		IMemAllocator * pAlloc,
+		__inout ALLOCATOR_PROPERTIES *pProp);
+
+	// returns the preferred formats for a pin
+	HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType);
+
+	// inherited from IQualityControl via CBasePin
+	STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
+
+	// Media type
+public:
+	CMediaType& CurrentMediaType() { return m_mt; };
 
 };
 class CMuxTransformFilter : CBaseFilter
@@ -100,6 +159,7 @@ public:
 	// These must be supplied in a derived class
 	virtual HRESULT Receive(IMediaSample *pSample, IPin* pReceivePin) = 0;
 	virtual HRESULT CheckInputType(const CMediaType* mtIn, IPin* pPin) PURE;
+	virtual HRESULT CheckOutputType(const CMediaType* mtOut, IPin* pPin) PURE;
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop) PURE;

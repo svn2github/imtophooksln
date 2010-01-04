@@ -603,7 +603,7 @@ CMuxTransformInputPin::Receive(IMediaSample * pSample)
 }
 
 // override to pass downstream
-STDMETHODIMP
+STDMETHODIMP 
 CMuxTransformInputPin::NewSegment(
 							   REFERENCE_TIME tStart,
 							   REFERENCE_TIME tStop,
@@ -614,4 +614,216 @@ CMuxTransformInputPin::NewSegment(
 	return m_pTransformFilter->NewSegment(tStart, tStop, dRate);
 }
 
+
+CMuxTransformOutputPin::CMuxTransformOutputPin(
+	__in_opt LPCTSTR pObjectName,
+	__inout CMuxTransformFilter *pTransformFilter,
+	__inout HRESULT * phr,
+	__in_opt LPCWSTR pPinName)
+	: CBaseOutputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pPinName),
+	m_pPosition(NULL)
+{
+	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
+	AMGetWideString(pPinName, &m_pName);
+	m_pTransformFilter = pTransformFilter;
+}
+
+#ifdef UNICODE
+CMuxTransformOutputPin::CMuxTransformOutputPin(
+	__in_opt LPCSTR pObjectName,
+	__inout CMuxTransformFilter *pTransformFilter,
+	__inout HRESULT * phr,
+	__in_opt LPCWSTR pPinName)
+	: CBaseOutputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pPinName),
+	m_pPosition(NULL)
+{
+	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
+	AMGetWideString(pPinName, &m_pName);
+	m_pTransformFilter = pTransformFilter;
+
+}
+#endif
+
+// destructor
+
+CMuxTransformOutputPin::~CMuxTransformOutputPin()
+{
+	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::~CMuxTransformOutputPin")));
+
+	if (m_pPosition) m_pPosition->Release();
+}
+
+
+// overriden to expose IMediaPosition and IMediaSeeking control interfaces
+
+STDMETHODIMP
+CMuxTransformOutputPin::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
+{
+	CheckPointer(ppv,E_POINTER);
+	ValidateReadWritePtr(ppv,sizeof(PVOID));
+	*ppv = NULL;
+
+	if (riid == IID_IMediaPosition || riid == IID_IMediaSeeking) {
+		// we should have an input pin by now
+
+		ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+
+		if (m_pPosition == NULL) {
+
+			HRESULT hr = CreatePosPassThru(
+				GetOwner(),
+				FALSE,
+				(IPin *)m_pTransformFilter->m_pInputPins[0],
+				&m_pPosition);
+			if (FAILED(hr)) {
+				return hr;
+			}
+		}
+		return m_pPosition->QueryInterface(riid, ppv);
+	} else {
+		return CBaseOutputPin::NonDelegatingQueryInterface(riid, ppv);
+	}
+}
+
+
+// provides derived filter a chance to grab extra interfaces
+
+HRESULT
+CMuxTransformOutputPin::CheckConnect(IPin *pPin)
+{
+	// we should have an input connection first
+
+	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+	if ((m_pTransformFilter->IsAnyInputPinConnect() == FALSE)) {
+		return E_UNEXPECTED;
+	}
+
+	HRESULT hr = m_pTransformFilter->CheckConnect(PINDIR_OUTPUT,this, pPin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return CBaseOutputPin::CheckConnect(pPin);
+}
+
+
+// provides derived filter a chance to release it's extra interfaces
+
+HRESULT
+CMuxTransformOutputPin::BreakConnect()
+{
+	//  Can't disconnect unless stopped
+	ASSERT(IsStopped());
+	m_pTransformFilter->BreakConnect(PINDIR_OUTPUT, this);
+	return CBaseOutputPin::BreakConnect();
+}
+
+
+// Let derived class know when the output pin is connected
+
+HRESULT
+CMuxTransformOutputPin::CompleteConnect(IPin *pReceivePin)
+{
+	HRESULT hr = m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return CBaseOutputPin::CompleteConnect(pReceivePin);
+}
+
+
+// check a given transform - must have selected input type first
+
+HRESULT
+CMuxTransformOutputPin::CheckMediaType(const CMediaType* pmtOut)
+{
+	// must have selected input first
+	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+	if ((m_pTransformFilter->IsAnyOutPinConnect() == FALSE)) {
+		return E_INVALIDARG;
+	}
+	return m_pTransformFilter->CheckOutputType(pmtOut, this);
+}
+
+
+// called after we have agreed a media type to actually set it in which case
+// we run the CheckTransform function to get the output format type again
+
+HRESULT
+CMuxTransformOutputPin::SetMediaType(const CMediaType* pmtOut)
+{
+	HRESULT hr = NOERROR;
+	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+
+	// Set the base class media type (should always succeed)
+	hr = CBasePin::SetMediaType(pmtOut);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return m_pTransformFilter->SetMediaType(PINDIR_OUTPUT, this, pmtOut);
+}
+
+
+// pass the buffer size decision through to the main transform class
+
+HRESULT
+CMuxTransformOutputPin::DecideBufferSize(
+									  IMemAllocator * pAllocator,
+									  __inout ALLOCATOR_PROPERTIES* pProp)
+{
+	return m_pTransformFilter->DecideBufferSize(pAllocator, this, pProp);
+}
+
+
+
+// return a specific media type indexed by iPosition
+
+HRESULT
+CMuxTransformOutputPin::GetMediaType(
+								  int iPosition,
+								  __inout CMediaType *pMediaType)
+{
+	ASSERT(m_pTransformFilter->m_pInputPins.size() != NULL);
+
+	//  We don't have any media types if our input is not connected
+
+	if (m_pTransformFilter->IsAnyInputPinConnect()) {
+		return m_pTransformFilter->GetMediaType(iPosition,this, pMediaType);
+	} else {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+}
+
+
+// Override this if you can do something constructive to act on the
+// quality message.  Consider passing it upstream as well
+
+// Pass the quality mesage on upstream.
+
+STDMETHODIMP
+CMuxTransformOutputPin::Notify(IBaseFilter * pSender, Quality q)
+{
+	UNREFERENCED_PARAMETER(pSender);
+	ValidateReadPtr(pSender,sizeof(IBaseFilter));
+
+	// First see if we want to handle this ourselves
+	HRESULT hr = m_pTransformFilter->AlterQuality(q);
+	if (hr!=S_FALSE) {
+		return hr;        // either S_OK or a failure
+	}
+
+	// S_FALSE means we pass the message on.
+	// Find the quality sink for our input pin and send it there
+
+	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+	HRESULT errorHr = S_OK;
+	for (int i =0; i < m_pTransformFilter->m_pInputPins.size(); i++)
+	{
+		hr = m_pTransformFilter->m_pInputPins[i]->PassNotify(q);
+		if (FAILED(hr))
+		{
+			errorHr = hr;
+		}
+	}
+	return errorHr;
+} // Notify
 

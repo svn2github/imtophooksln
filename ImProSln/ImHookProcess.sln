@@ -14,9 +14,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARToolKitPlus", "ARToolKitP
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARTagFilter", "ARTagFilter\ARTagFilter.vcproj", "{C9B3398F-FE16-4E2E-85D4-FD189A55B74A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARTagMFCFilter", "ARTagMFCFilter\ARTagMFCFilter.vcproj", "{09C219A3-07E3-49DF-87C9-117C0C706965}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ImProClientMFCApp", "ImProClientMFCApp\ImProClientMFCApp.vcproj", "{A0E42261-1BEE-4D23-9179-C69372A7124A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HomoWarpFilter", "HomoWarpFilter\HomoWarpFilter.vcproj", "{49856162-3C85-453E-ADA8-2D9B4549EE01}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CMuxTransformFilter", "CMuxTransformFilter\CMuxTransformFilter.vcproj", "{973EA635-6747-4048-998D-491F65CB89ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,14 +46,18 @@ Global
 		{C9B3398F-FE16-4E2E-85D4-FD189A55B74A}.Debug|Win32.Build.0 = Debug|Win32
 		{C9B3398F-FE16-4E2E-85D4-FD189A55B74A}.Release|Win32.ActiveCfg = Release|Win32
 		{C9B3398F-FE16-4E2E-85D4-FD189A55B74A}.Release|Win32.Build.0 = Release|Win32
-		{09C219A3-07E3-49DF-87C9-117C0C706965}.Debug|Win32.ActiveCfg = Debug|Win32
-		{09C219A3-07E3-49DF-87C9-117C0C706965}.Debug|Win32.Build.0 = Debug|Win32
-		{09C219A3-07E3-49DF-87C9-117C0C706965}.Release|Win32.ActiveCfg = Release|Win32
-		{09C219A3-07E3-49DF-87C9-117C0C706965}.Release|Win32.Build.0 = Release|Win32
 		{A0E42261-1BEE-4D23-9179-C69372A7124A}.Debug|Win32.ActiveCfg = Debug|Win32
 		{A0E42261-1BEE-4D23-9179-C69372A7124A}.Debug|Win32.Build.0 = Debug|Win32
 		{A0E42261-1BEE-4D23-9179-C69372A7124A}.Release|Win32.ActiveCfg = Release|Win32
 		{A0E42261-1BEE-4D23-9179-C69372A7124A}.Release|Win32.Build.0 = Release|Win32
+		{49856162-3C85-453E-ADA8-2D9B4549EE01}.Debug|Win32.ActiveCfg = Debug|Win32
+		{49856162-3C85-453E-ADA8-2D9B4549EE01}.Debug|Win32.Build.0 = Debug|Win32
+		{49856162-3C85-453E-ADA8-2D9B4549EE01}.Release|Win32.ActiveCfg = Release|Win32
+		{49856162-3C85-453E-ADA8-2D9B4549EE01}.Release|Win32.Build.0 = Release|Win32
+		{973EA635-6747-4048-998D-491F65CB89ED}.Debug|Win32.ActiveCfg = Debug|Win32
+		{973EA635-6747-4048-998D-491F65CB89ED}.Debug|Win32.Build.0 = Debug|Win32
+		{973EA635-6747-4048-998D-491F65CB89ED}.Release|Win32.ActiveCfg = Release|Win32
+		{973EA635-6747-4048-998D-491F65CB89ED}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
