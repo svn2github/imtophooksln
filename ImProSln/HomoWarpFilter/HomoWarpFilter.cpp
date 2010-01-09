@@ -242,12 +242,12 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	HRESULT hr = S_OK;
 	if (m_pD3DDisplay != NULL)
 	{
-		if (m_pInputPins.size() <= 0 )
+		if (m_pInputPins.size() <= 0 || m_pOutputPins.size() <= 0)
 		{
 			return S_FALSE;
 		}
 		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS);
-		DoTransform(pIn, pOut, &(m_pInputPins[0]->GetCurMediaType()));
+		DoTransform(pIn, pOut, &m_pInputPins[0]->GetCurMediaType(), &m_pOutputPins[0]->GetCurMediaType());
 	}
 	return S_OK;
 }

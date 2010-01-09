@@ -69,7 +69,7 @@ protected:
 	bool             IsAcceptedType(const CMediaType *pMT);
 	//for Override D3DTransformFilterBase
 	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
-	virtual HRESULT DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType);
+	virtual HRESULT DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType);
 	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);

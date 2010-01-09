@@ -11,8 +11,8 @@
 #define IDC_SLIDER_LBx                  7004
 #define IDC_SLIDER_LBy                  7005
 #define IDC_SLIDER_RBx                  7006
-#define IDC_SLIDER8                     7007
 #define IDC_SLIDER_RBy                  7007
+#define IDD_MFCBASEPROPERTYDLG          7008
 #define IDC_txtLT                       7009
 #define IDC_txtLB                       7010
 #define IDC_txtRT                       7012
@@ -25,6 +25,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        7001
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         7010
-#define _APS_NEXT_SYMED_VALUE           7000
+#define _APS_NEXT_SYMED_VALUE           7009
 #endif
 #endif

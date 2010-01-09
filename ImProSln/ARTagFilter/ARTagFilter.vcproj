@@ -297,6 +297,10 @@
 			Name="MyLib"
 			>
 			<File
+				RelativePath="..\MyLib\CMuxTransformFilter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\MyLib\D3DTransformFilterBase.cpp"
 				>
 				<FileConfiguration
