@@ -14,6 +14,7 @@ CMuxTransformFilter::CMuxTransformFilter(__in_opt LPCSTR pName,
 CBaseFilter(pName,pUnk,&m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE),
 m_bSampleSkipped(FALSE)
 {
+
 #ifdef PERF
 	RegisterPerfId();
 #endif //  PERF

@@ -174,7 +174,7 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	}
 	return hr;
 }
-HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = FALSE)
+HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = false)
 {
 	if (pOut == NULL)
 	{

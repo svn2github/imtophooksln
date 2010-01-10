@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -44,11 +44,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui; "
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui.lib cv.lib cxcore.lib CMuxTransformFilter.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui.lib cv.lib cxcore.lib CMuxTransformFilter_mfcstatic.lib CMFCBasePropertyPage_mfcstatic.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\HomoWarpFilter.def"
@@ -179,6 +179,88 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Debug_MFCStatic|Win32"
+			OutputDirectory="$(SolutionDir)\bin"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="1"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="_DEBUG"
+				MkTypLibCompatible="false"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui; "
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="1033"
+				AdditionalIncludeDirectories="$(IntDir)"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="/Entry:FilterDllMain "
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui.lib cv.lib cxcore.lib CMuxTransformFilter_mfcstatic.lib CMFCBasePropertyPage_mfcstatic.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib;..\MyLib\bin"
+				ModuleDefinitionFile=".\HomoWarpFilter.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -213,6 +295,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HomoWarpMFCPropertyPage.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -225,6 +311,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_MFCStatic|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -256,6 +350,10 @@
 			</File>
 			<File
 				RelativePath=".\HomoWarpFilterReg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HomoWarpMFCPropertyPage.h"
 				>
 			</File>
 			<File
@@ -303,6 +401,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_MFCStatic|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\D3DTransformFilterBase.h"
@@ -313,6 +419,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug_MFCStatic|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -335,5 +449,9 @@
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="HomoWarpFilter.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

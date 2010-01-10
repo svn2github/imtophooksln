@@ -108,7 +108,7 @@ CFactoryTemplate g_Templates[] =
 	{
 		L"HomoWarp Property Page",
 			&CLSID_HomoWarpFilterPropertyPage,
-			HomoWarpPropertyPage::CreateInstance,
+			CHomoWarpMFCPropertyPage::CreateInstance,
 			NULL,
 			NULL
 	}
