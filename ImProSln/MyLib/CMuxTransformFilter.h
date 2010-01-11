@@ -141,7 +141,7 @@ public:
 	// Media type
 public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
-
+	virtual IMemAllocator* GetAllocator() {return m_pAllocator;};
 };
 class CMuxTransformFilter : public CBaseFilter
 {

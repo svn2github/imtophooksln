@@ -24,7 +24,7 @@
 			OutputDirectory="$(SolutionDir)\DSLib\lib"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
-			UseOfMFC="1"
+			UseOfMFC="0"
 			CharacterSet="1"
 			>
 			<Tool

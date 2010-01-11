@@ -16,6 +16,16 @@ const AMOVIESETUP_PIN psudARTagFilterPins[] =
 , L""                 // strConnectsToPin
 , 0                   // nTypes
 , NULL                // lpTypes
+},
+{ L"AR config"            // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
 }
 , { L"output"           // strName
 , FALSE               // bRendered

@@ -50,9 +50,10 @@ BOOL APIENTRY FilterDllMain(HMODULE hModule,
 		
 		break;
 	case DLL_THREAD_DETACH:
+
 		break;
 	case DLL_PROCESS_DETACH:
-		
+
 		break;
 	}
 

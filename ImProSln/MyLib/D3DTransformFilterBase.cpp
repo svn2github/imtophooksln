@@ -15,7 +15,7 @@ D3DTransformFilterBase::~D3DTransformFilterBase()
 		delete m_pD3DDisplay;
 		m_pD3DDisplay = NULL;
 	}
-	if (m_pInTexture != NULL)
+	/*if (m_pInTexture != NULL)
 	{
 		m_pInTexture->Release();
 		m_pInTexture = NULL;
@@ -24,7 +24,7 @@ D3DTransformFilterBase::~D3DTransformFilterBase()
 	{
 		m_pOutTexture->Release();
 		m_pOutTexture = NULL;
-	}
+	}*/
 }
 
 HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight)

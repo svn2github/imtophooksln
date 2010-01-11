@@ -258,7 +258,3 @@ int CHomoWarpMFCPropertyPage::GetTitileResourceID()
 { 
 	return IDS_HomoWarpPropertyDlg_Title;
 }
-void CHomoWarpMFCPropertyPage::OnBnClickedButton2()
-{
-	int test = 0;
-}

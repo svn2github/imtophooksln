@@ -54,5 +54,5 @@ public:
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
 	virtual int GetTitileResourceID();
-	afx_msg void OnBnClickedButton2();
+	
 };

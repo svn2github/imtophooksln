@@ -3,6 +3,7 @@
 #include "HomoWarpFilterProp.h"
 #include "HomoWarpFilterApp.h"
 #include "cv.h"
+#include "MyMediaSample.h"
 HomoWarpFilter::HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("HomoWarp Filter"), 0, CLSID_HomoWarpFilter)
 { 
@@ -182,17 +183,24 @@ HRESULT HomoWarpFilter::CreatePins()
 
 HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if (m_pInputPins.size() >= 0 && m_pInputPins[0] == pPin)
+	CheckPointer(pmt, E_POINTER);
+	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
 	{
-		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 			return E_INVALIDARG;
 		}
-
 		// Can we transform this type
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
 		}
+	}
+	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
+	{
+		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_WarpConfig))
+		{
+			return E_INVALIDARG;
+		}
+		return NOERROR;
 	}
 	return E_FAIL;
 }

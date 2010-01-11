@@ -12,6 +12,7 @@
 #include "highgui.h"
 #include "ARTagD3DDisplay.h"
 #include "ARTagProp.h"
+#include "MyMediaSample.h"
 using namespace ARToolKitPlus;
 extern CARTagFilterApp theApp;
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
@@ -35,7 +36,6 @@ ARTagDSFilter::~ARTagDSFilter()
 		delete m_ARTracker;
 		m_ARTracker = NULL;
 	}
-	ReleaseD3D();
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
@@ -140,7 +140,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 HRESULT ARTagDSFilter::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 1 && m_pOutputPins.size() < 2) {
+	if (m_pInputPins.size() < 2 && m_pOutputPins.size() < 2) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -154,43 +154,32 @@ HRESULT ARTagDSFilter::CreatePins()
 		}
 		m_pOutputPins.clear();
 
-		CMuxTransformInputPin* pInput = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+		CMuxTransformInputPin* pInput0 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
 			this,              // Owner filter
 			&hr,               // Result code
 			L"input");      // Pin name
 		//  Can't fail
-		ASSERT(SUCCEEDED(hr));
-		if (pInput == NULL) {
-			return NULL;
-		}
+
+		CMuxTransformInputPin* pInput1 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"AR config");      // Pin name
+		//  Can't fail
 
 		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("CMuxTransform output pin"),
 			this,              // Owner filter
 			&hr,               // Result code
 			L"output");      // Pin name
 		//  Can't fail
-		ASSERT(SUCCEEDED(hr));
-		if (pOutput0 == NULL) {
-			delete pInput;
-			pInput = NULL;
-			return NULL;
-		}
 
 		CMuxTransformOutputPin* pOutput1 = new CMuxTransformOutputPin(NAME("CMuxTransform output pin"),
 			this,            // Owner filter
 			&hr,             // Result code
 			L"AR Result");   // Pin name
 		// Can't fail
-		ASSERT(SUCCEEDED(hr));
-		if (pOutput1 == NULL) {
-			delete pInput;
-			pInput = NULL;
-			delete pOutput0;
-			pOutput0 = NULL;
-			return NULL;
-		}
 
-		m_pInputPins.push_back(pInput);
+		m_pInputPins.push_back(pInput0);
+		m_pInputPins.push_back(pInput1);
 		m_pOutputPins.push_back(pOutput0);
 		m_pOutputPins.push_back(pOutput1);
 	}
@@ -199,21 +188,28 @@ HRESULT ARTagDSFilter::CreatePins()
 HRESULT ARTagDSFilter::CheckInputType( const CMediaType * pmt, const IPin* pPin)
 {
 	CheckPointer(pmt, E_POINTER);
-	if (*pmt->FormatType() != FORMAT_VideoInfo) {
+	if ( m_pInputPins.size() >= 1 && pPin == m_pInputPins[0])
+	{
+		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 		return E_INVALIDARG;
+		}
+		// Can we transform this type
+		if(IsAcceptedType(pmt)){
+			return NOERROR;
+		}
 	}
-	// Can we transform this type
-	if(IsAcceptedType(pmt)){
-		return NOERROR;
+	else if (m_pInputPins.size() >= 2 && pPin == m_pInputPins[1])
+	{
+		return E_NOTIMPL;
 	}
-	return E_FAIL;
+	return E_INVALIDARG;
 }
 
 HRESULT ARTagDSFilter::CheckOutputType(const CMediaType* pmt, const IPin* pPin)
 {
+	CheckPointer(pmt, E_POINTER);
 	if (m_pOutputPins.size() >= 0 && m_pOutputPins[0] == pPin)
 	{
-		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 			return E_INVALIDARG;
 		}
@@ -221,6 +217,14 @@ HRESULT ARTagDSFilter::CheckOutputType(const CMediaType* pmt, const IPin* pPin)
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
 		}
+	}
+	else if (m_pOutputPins.size() >= 1 && m_pOutputPins[1] == pPin)
+	{
+		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ARResult)) {
+			return E_INVALIDARG;
+		}
+		// Can we transform this type
+		return S_OK;
 	}
 	return E_FAIL;
 }
@@ -371,17 +375,41 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const 
 		if (numDetected > 0)
 		{
 			markinfos = new ARMarkerInfo[numDetected];
-			for (int k = 0; k< numDetected; k++)
+			for (int k = 0; k < numDetected; k++)
 			{
 				const ARMarkerInfo markinfo = m_ARTracker->getDetectedMarker(k);
 				markinfos[k] = markinfo;
 			}
 			const double* matARView = m_ARTracker->getModelViewMatrix();
 			const double* matARProj = m_ARTracker->getProjectionMatrix();
+			const ARMultiMarkerInfoT* markerConfig = m_ARTracker->getMultiMarkerConfig();
+			
 			if (m_pCallback != NULL)
 			{
-				m_pCallback(numDetected, (const MyARMarkerInfo*)markinfos, matARView, matARProj);
+				m_pCallback(numDetected, markinfos, matARView, matARProj);
 			}
+			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
+			{
+				ARTagResultData* pARTagResult = new ARTagResultData(markerConfig, numDetected, markinfos, 
+					matARView, matARProj);
+				IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
+				IMediaSample* pSample = NULL;
+				pAllocator->GetBuffer(&pSample, NULL, NULL, 0);
+				
+				m_pOutputPins[1]->Deliver(pSample);
+				if (pSample != NULL)
+				{
+					pSample->Release();
+					pSample = NULL;
+				}
+				if (pARTagResult != NULL)
+				{
+					delete pARTagResult;
+					pARTagResult = NULL;
+				}
+			}
+
+
 		}	
 	}
 	if (m_bDrawTag)
@@ -391,6 +419,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const 
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
 		CopyRenderTarget2OutputTexture();
 		CopyOutputTexture2OutputData(pOut, pOutType, true);
+		cvFlip(img, NULL, 0);
 	}
 	else
 	{
@@ -440,6 +469,18 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 				return E_FAIL;
 		}
 	}
+	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = sizeof(ARTagResultData);
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+	}
 	return NOERROR;
 }
 
@@ -459,6 +500,15 @@ HRESULT ARTagDSFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 	{
 		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
 		*pMediaType = inputMT;
+		return S_OK;
+	}
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		CMediaType myMediaType;
+		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetSubtype(&GUID_ARResult);
+		myMediaType.SetSampleSize(sizeof(ARTagResultData));
+		*pMediaType = myMediaType;
 		return S_OK;
 	}
 	return VFW_S_NO_MORE_ITEMS;
@@ -531,7 +581,7 @@ bool ARTagDSFilter::getCamera(int& xsize, int &ysize, double* mat, double* dist_
 	
 	return true;
 }
-bool ARTagDSFilter::setMarkInfo(MyARMultiEachMarkerInfoT *marker, int numMarker)
+bool ARTagDSFilter::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 {
 	if (m_ARTracker == NULL)
 	{

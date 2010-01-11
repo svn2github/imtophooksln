@@ -454,6 +454,22 @@
 				RelativePath="..\MyLib\MSSD3DClass.h"
 				>
 			</File>
+			<File
+				RelativePath="..\MyLib\MyMediaSample.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\MyMediaSample.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\fx\HomoWarp.fx"

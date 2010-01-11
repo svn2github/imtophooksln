@@ -41,7 +41,7 @@ public:
 	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
 
 	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);
-	virtual bool setMarkInfo(MyARMultiEachMarkerInfoT *marker, int numMarker);
+	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker);
 
 	virtual bool setBorderWidth(double borderWidth);
 	virtual double getBorderWidth();

@@ -698,10 +698,10 @@ CMuxTransformOutputPin::CheckConnect(IPin *pPin)
 {
 	// we should have an input connection first
 
-	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+	/*ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
 	if ((m_pTransformFilter->IsAnyInputPinConnect() == FALSE)) {
 		return E_UNEXPECTED;
-	}
+	}*/
 
 	HRESULT hr = m_pTransformFilter->CheckConnect(PINDIR_OUTPUT,this, pPin);
 	if (FAILED(hr)) {
@@ -742,10 +742,10 @@ HRESULT
 CMuxTransformOutputPin::CheckMediaType(const CMediaType* pmtOut)
 {
 	// must have selected input first
-	ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
+	/*ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
 	if ((m_pTransformFilter->IsAnyInputPinConnect() == FALSE)) {
 		return E_INVALIDARG;
-	}
+	}*/
 	return m_pTransformFilter->CheckOutputType(pmtOut, this);
 }
 
@@ -790,15 +790,15 @@ CMuxTransformOutputPin::GetMediaType(
 								  int iPosition,
 								  __inout CMediaType *pMediaType)
 {
-	ASSERT(m_pTransformFilter->m_pInputPins.size() != NULL);
+	//ASSERT(m_pTransformFilter->m_pInputPins.size() != 0);
 
 	//  We don't have any media types if our input is not connected
 
-	if (m_pTransformFilter->IsAnyInputPinConnect()) {
-		return m_pTransformFilter->GetMediaType(iPosition,this, pMediaType);
-	} else {
+	//if (m_pTransformFilter->IsAnyInputPinConnect()) {
+	return m_pTransformFilter->GetMediaType(iPosition,this, pMediaType);
+	/*} else {
 		return VFW_S_NO_MORE_ITEMS;
-	}
+	}*/
 }
 
 
