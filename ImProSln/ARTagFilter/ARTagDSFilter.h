@@ -9,6 +9,7 @@
 #include "ARTagD3DDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
+
 DEFINE_GUID(CLSID_ARTagDSFilter, 
 			0x889c4fa1, 0xfb51, 0x4118, 0x80, 0xb8, 0xc0, 0x3f, 0x51, 0x4a, 0xab, 0x3);
 
@@ -69,8 +70,8 @@ protected:
 	bool             IsAcceptedType(const CMediaType *pMT);
 	//for Override D3DTransformFilterBase
 	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
-	virtual HRESULT DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType);
-	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
+	virtual HRESULT DoTransform(IMediaSample *pIn, const CMediaType* pInType);
+	virtual HRESULT Transform( IMediaSample *pIn);
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();

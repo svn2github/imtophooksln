@@ -269,7 +269,10 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 		return S_FALSE;
 	}
 	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
-	
+	if (inputMT == NULL)
+	{
+		return S_FALSE;
+	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;

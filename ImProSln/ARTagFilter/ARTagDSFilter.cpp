@@ -82,21 +82,15 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 			return S_OK;
 		}
 		ASSERT(pSample);
-		IMediaSample * pOutSample;
 		// If no output to deliver to then no point sending us data
-		ASSERT (m_pOutputPins.size() != NULL);
+		ASSERT (m_pOutputPins.size() != 0);
 		HRESULT hr;
 		// Set up the output sample
-		hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
-
-		if (FAILED(hr)) {
-			return hr;
-		}
 
 		// Start timing the transform (if PERF is defined)
 		MSR_START(m_idTransform);
 
-		hr = Transform(pSample, pOutSample);
+		hr = Transform(pSample);
 
 		// Stop the clock and log it (if PERF is defined)
 		MSR_STOP(m_idTransform);
@@ -108,7 +102,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 			// sample should not be delivered; we only deliver the sample if it's
 			// really S_OK (same as NOERROR, of course.)
 			if (hr == NOERROR) {
-				hr = m_pOutputPins[0]->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+				hr = m_pOutputPins[0]->Deliver(pSample);
 				m_bSampleSkipped = FALSE;	// last thing no longer dropped
 			} else {
 				// S_FALSE returned from Transform is a PRIVATE agreement
@@ -120,7 +114,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 					//  Release the sample before calling notify to avoid
 					//  deadlocks if the sample holds a lock on the system
 					//  such as DirectDraw buffers do
-					pOutSample->Release();
+
 					m_bSampleSkipped = TRUE;
 					if (!m_bQualityChanged) {
 						NotifyEvent(EC_QUALITY_CHANGE,0,0);
@@ -133,7 +127,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 
 		// release the output buffer. If the connected pin still needs it,
 		// it will have addrefed it itself.
-		pOutSample->Release();
+	
 	}
 	return S_OK;
 }
@@ -299,7 +293,6 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
 		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[20];
-		//malloc((void*)pMarkers, sizeof(ARMultiEachMarkerInfoT)*20); 
 		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*20);
 
 		for (int i = 0; i < 4; i++)
@@ -321,37 +314,32 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 	}
 	return S_OK;
 }
-HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
+HRESULT ARTagDSFilter::Transform( IMediaSample *pIn)
 {
 	HRESULT hr = S_OK;
 	if (m_pD3DDisplay != NULL)
 	{
 		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
-		CMediaType outputMT = m_pOutputPins[0]->GetCurMediaType();
-		return DoTransform(pIn, pOut, &inputMT, &outputMT);
+		
+		return DoTransform(pIn, &inputMT);
 	}
 	return S_OK;
 }
 
 
-HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType)
+HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType )
 {
 
 	HRESULT hr = S_OK;
 	BYTE* pInData = NULL;
-	BYTE* pOutData = NULL;
+	
 	int numDetected = 0;
 	ARMarkerInfo* markinfos = NULL;
-	if (pIn->GetSize() < pOut->GetSize())
-	{
-		return S_FALSE;
-	}
+
 	hr = pIn->GetPointer(&pInData);
 	if (FAILED(hr))
 		return hr;
-	hr = pOut->GetPointer(&pOutData);
-	if (FAILED(hr))
-		return hr;
+
 
 	GUID guidSubType = *pInType->Subtype();
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pInType->pbFormat;
@@ -418,13 +406,13 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const 
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
 		CopyRenderTarget2OutputTexture();
-		CopyOutputTexture2OutputData(pOut, pOutType, true);
-		cvFlip(img, NULL, 0);
+	
+		CopyOutputTexture2OutputData(pIn, pInType, true);
 	}
 	else
 	{
 		cvFlip(img, NULL, 0);
-		memcpy(pOutData, pInData, pIn->GetSize());
+		
 	}
 	if (img != NULL)
 	{
@@ -456,7 +444,6 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = inputMT.GetSampleSize();
-
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
