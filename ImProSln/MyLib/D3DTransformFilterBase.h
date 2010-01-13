@@ -19,6 +19,7 @@ protected:
 	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight) = 0;
 
 	virtual HRESULT initD3D(UINT rtWidth = 0, UINT rtHeight = 0);
+	virtual HRESULT ReleaseD3D();
 
 public:
 	D3DTransformFilterBase();

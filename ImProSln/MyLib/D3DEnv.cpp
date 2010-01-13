@@ -1,12 +1,25 @@
 #include "D3DEnv.h"
+#include <algorithm>
 extern HMODULE GetModule();
+vector<D3DEnv*> D3DEnv::m_pAllInstances;
+
 D3DEnv::D3DEnv()
 {
 	m_hWndD3D = NULL;
 	m_pD3D = NULL;
+	m_pAllInstances.push_back(this);
 }
 
 D3DEnv::~D3DEnv()
+{
+	ReleaseD3D();
+	vector<D3DEnv*>::iterator thisIter = find(m_pAllInstances.begin(), m_pAllInstances.end(), this);
+	if (thisIter != m_pAllInstances.end())
+	{
+		m_pAllInstances.erase(thisIter);
+	}
+}
+HRESULT D3DEnv::ReleaseD3D()
 {
 	if (m_pD3D != NULL)
 	{
@@ -18,8 +31,8 @@ D3DEnv::~D3DEnv()
 		::CloseWindow(m_hWndD3D);
 		m_hWndD3D = 0;
 	}
+	return S_OK;
 }
-
 
 HWND D3DEnv::GetD3DWnd()
 {
@@ -76,9 +89,19 @@ HRESULT D3DEnv::initD3D(UINT winW = 0, UINT winH = 0)
 
 LRESULT D3DEnv::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	int i = 0;
 	switch (message)
 	{
-
+	case WM_CLOSE:
+		for (i = 0; i < m_pAllInstances.size(); i++)
+		{
+			if (m_pAllInstances.at(i) != NULL)
+			{
+				m_pAllInstances.at(i)->ReleaseD3D();
+			}
+		}
+		
+		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}

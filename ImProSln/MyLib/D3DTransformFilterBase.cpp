@@ -10,12 +10,17 @@ D3DTransformFilterBase::D3DTransformFilterBase()
 
 D3DTransformFilterBase::~D3DTransformFilterBase()
 {
+	ReleaseD3D();
+}
+
+HRESULT D3DTransformFilterBase::ReleaseD3D()
+{
 	if (m_pD3DDisplay != NULL)
 	{
 		delete m_pD3DDisplay;
 		m_pD3DDisplay = NULL;
 	}
-	/*if (m_pInTexture != NULL)
+	if (m_pInTexture != NULL)
 	{
 		m_pInTexture->Release();
 		m_pInTexture = NULL;
@@ -24,9 +29,10 @@ D3DTransformFilterBase::~D3DTransformFilterBase()
 	{
 		m_pOutTexture->Release();
 		m_pOutTexture = NULL;
-	}*/
+	}
+	__super::ReleaseD3D();
+	return S_OK;
 }
-
 HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight)
 {
 	HRESULT hr;
@@ -162,6 +168,7 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	}
 	else
 	{
+		
 		for(int y = 0; y < height; y++ )
 		{
 			for (int x = 0; x< width; x++)
@@ -171,6 +178,7 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 				pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
 			}
 		}
+		
 	}
 	pOutSurface->UnlockRect();
 	if (pOutSurface != NULL)

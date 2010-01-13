@@ -269,7 +269,7 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 		return S_FALSE;
 	}
 	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
-	if (inputMT == NULL)
+	if (inputMT.Type() == NULL)
 	{
 		return S_FALSE;
 	}
