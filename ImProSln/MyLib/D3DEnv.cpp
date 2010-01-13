@@ -92,16 +92,6 @@ LRESULT D3DEnv::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 	int i = 0;
 	switch (message)
 	{
-	case WM_CLOSE:
-		for (i = 0; i < m_pAllInstances.size(); i++)
-		{
-			if (m_pAllInstances.at(i) != NULL)
-			{
-				m_pAllInstances.at(i)->ReleaseD3D();
-			}
-		}
-		
-		break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
