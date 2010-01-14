@@ -54,6 +54,7 @@
 #endif
 
 // may be changed to double, float is particularly useful for PDA's
+#define _USE_DOUBLE_
 #ifdef _USE_DOUBLE_
 	typedef double ARFloat;
 #else

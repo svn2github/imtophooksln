@@ -1,5 +1,5 @@
 #include "D3DTransformFilterBase.h"
-
+#include "cv.h"
 D3DTransformFilterBase::D3DTransformFilterBase()
 {
 
@@ -77,7 +77,7 @@ HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputTexture()
 	}
 	return S_OK;
 }
-HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInMediaType )
+HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInMediaType, bool bFlipY = false )
 {
 	if (pIn == NULL || pInMediaType == NULL)
 	{
@@ -108,12 +108,25 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	rect.right = bitHeader.biWidth;
 	rect.top = 0;
 	rect.bottom = bitHeader.biHeight;
+	IplImage* pImg = NULL;
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 	{
+		if (bFlipY)
+		{
+			pImg = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
+			pImg->imageData = (char*)pInData;
+			cvFlip(pImg, NULL, 0);
+		}
 		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_DEFAULT, NULL);
 	}
 	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) )
 	{
+		if (bFlipY)
+		{
+			pImg = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
+			pImg->imageData = (char*)pInData;
+			cvFlip(pImg, NULL, 0);
+		}
 		hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_DEFAULT, NULL);
 	}
 	else
@@ -124,6 +137,10 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	{
 		pInSurface->Release();
 		pInSurface = NULL;
+	}
+	if (pImg != NULL)
+	{
+		cvReleaseImageHeader(&pImg);
 	}
 	return hr;
 }
@@ -189,12 +206,12 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 }
 
 HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType)
-{
-	CopyInputImage2InputTexture(pIn, pInType);
+{	
+	CopyInputImage2InputTexture(pIn, pInType, true);
 	m_pD3DDisplay->SetTexture(m_pInTexture);
 	m_pD3DDisplay->Render();
 	CopyRenderTarget2OutputTexture();
-	CopyOutputTexture2OutputData(pOut, pOutType);
+	CopyOutputTexture2OutputData(pOut, pOutType, true);
 
 	return S_OK;
 }

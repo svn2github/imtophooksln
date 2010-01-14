@@ -13,7 +13,7 @@ protected:
 	LPDIRECT3DTEXTURE9 m_pInTexture;
 	virtual HRESULT CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY);
 	virtual HRESULT CopyRenderTarget2OutputTexture();
-	virtual HRESULT CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInType);
+	virtual HRESULT CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInType, bool bFlipY);
 	virtual HRESULT DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType);
 	virtual HRESULT CreateInOutTextures(UINT w, UINT h);
 	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight) = 0;

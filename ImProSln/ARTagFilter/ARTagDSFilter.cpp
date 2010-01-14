@@ -260,10 +260,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
 		}
-		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-			0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM , &m_pOutTexture);
-		hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), bitHeader.biWidth, bitHeader.biHeight, 
-			0,  D3DUSAGE_DYNAMIC, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &m_pInTexture);
+		CreateInOutTextures(bitHeader.biWidth, bitHeader.biHeight);
 		CString strDistFactor = L"159.0 139.0 -84.9 0.97932";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
 		double distfactor[4] = {0};
 		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
@@ -292,24 +289,24 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		m_ARTracker->setThreshold(100);
 		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
-		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[20];
-		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*20);
+		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[4];
+		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*4);
 
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 2; i++)
 		{
-			for ( int j = 0; j < 5; j++ )
+			for ( int j = 0; j < 2; j++ )
 			{
-				int idx = i*5 + j;
-				pMarkers[idx].patt_id = 480 + idx;
+				int idx = i*2 + j;
+				pMarkers[idx].patt_id = idx;
 				pMarkers[idx].visible = 1;
-				pMarkers[idx].width = 40;
-				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = -100.0 + 50*j;
-				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 75 - 50*i;
+				pMarkers[idx].width = 10.0/24.0;
+				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/24.0)*(2*j+1);
+				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/24.0)*(2*i+1);
 				pMarkers[idx].trans[2][0] = 0.0; pMarkers[idx].trans[2][1] = 0.0; pMarkers[idx].trans[2][2] = 1.0; pMarkers[idx].trans[2][3] = 0;
 		
 			}
 		}
-		m_ARTracker->setMarkInfo(pMarkers, 20);
+		m_ARTracker->setMarkInfo(pMarkers, 4);
 		
 	}
 	return S_OK;
@@ -368,8 +365,8 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 				const ARMarkerInfo markinfo = m_ARTracker->getDetectedMarker(k);
 				markinfos[k] = markinfo;
 			}
-			const double* matARView = m_ARTracker->getModelViewMatrix();
-			const double* matARProj = m_ARTracker->getProjectionMatrix();
+			const ARFloat* matARView = m_ARTracker->getModelViewMatrix();
+			const ARFloat* matARProj = m_ARTracker->getProjectionMatrix();
 			const ARMultiMarkerInfoT* markerConfig = m_ARTracker->getMultiMarkerConfig();
 			
 			if (m_pCallback != NULL)
@@ -380,10 +377,18 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 			{
 				ARTagResultData* pARTagResult = new ARTagResultData(markerConfig, numDetected, markinfos, 
 					matARView, matARProj);
+				pARTagResult->m_screenW = bitHeader.biWidth;
+				pARTagResult->m_screenH = bitHeader.biHeight;
+
 				IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
-				IMediaSample* pSample = NULL;
-				pAllocator->GetBuffer(&pSample, NULL, NULL, 0);
+				CMediaSample* pSample = NULL;
 				
+				pAllocator->GetBuffer((IMediaSample**)&pSample, NULL, NULL, 0);
+				pSample->SetPointer((BYTE*)pARTagResult, sizeof(ARTagResultData));
+				ARTagResultData* test = NULL;
+				pSample->GetPointer((BYTE**)&test);
+				
+
 				m_pOutputPins[1]->Deliver(pSample);
 				if (pSample != NULL)
 				{
@@ -402,11 +407,10 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 	}
 	if (m_bDrawTag)
 	{
-		CopyInputImage2InputTexture(pIn, pInType);
+		CopyInputImage2InputTexture(pIn, pInType, false);
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
 		CopyRenderTarget2OutputTexture();
-	
 		CopyOutputTexture2OutputData(pIn, pInType, true);
 	}
 	else
@@ -536,7 +540,7 @@ HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 }
 
 
-bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip)
+bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
 {
 	if (m_ARTracker == NULL)
 	{

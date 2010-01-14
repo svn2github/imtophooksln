@@ -2,6 +2,8 @@
 #include "AR2WarpController.h"
 #include "AR2WarpControllerProp.h"
 #include "MyMediaSample.h"
+#include <d3dx9math.h>
+#include "cv.h"
 AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
 { 
@@ -46,6 +48,171 @@ HRESULT AR2WarpController::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 
 HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
+	if (m_pOutputPins.size() <= 0 )
+	{
+		return S_FALSE;
+	}
+	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin)
+	{
+		CMediaSample* pCSample = (CMediaSample*)pSample;
+		ARTagResultData* pARResult = NULL;
+		pCSample->GetPointer((BYTE**)&pARResult);
+		if (pARResult == NULL)
+		{
+			return S_FALSE;
+		}
+		if (pARResult->m_nDetected <= 0)
+		{
+			return S_FALSE;
+		}
+
+	    CMuxTransformInputPin* pin = (CMuxTransformInputPin*)pReceivePin;
+	
+		float w = pARResult->m_screenW;
+		float h = pARResult->m_screenH;
+
+		WCHAR str[MAX_PATH];
+
+		float s[] = {0,0,0,
+			0,0,0,
+			0,0,0};
+		CvMat mat = cvMat(3,3, CV_32F, &s);
+		float* t = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
+		float* d = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
+
+		memset(t,0,4*2*pARResult->m_nDetected*sizeof(float));
+		memset(d,0,4*2*pARResult->m_nDetected*sizeof(float));
+
+		for (int i =0; i< pARResult->m_nDetected; i++)
+		{
+			ARMultiEachMarkerInfoT* pcfgMarker = NULL;
+			for (int j =0; j< pARResult->m_pMarkerConfig->marker_num; j++)
+			{
+				if (pARResult->m_pMarkerConfig->marker[j].patt_id == pARResult->m_pDetectedMarks[i].id)
+				{
+					pcfgMarker = &(pARResult->m_pMarkerConfig->marker[j]);
+					break;
+				}	
+			}
+			if (pcfgMarker == NULL)
+			{
+				free(t);
+				free(d);
+				return S_FALSE;
+			}
+			
+			const ARFloat* v1 = NULL;
+			const ARFloat* v2 = NULL;
+			const ARFloat* v3 = NULL;
+			const ARFloat* v4 = NULL;
+			swprintf_s(str, MAX_PATH, L"@@@@ patt_id = %d, dir = %d \n",
+				pARResult->m_pDetectedMarks[i].id, pARResult->m_pDetectedMarks[i].dir);
+			OutputDebugStringW(str);
+
+			
+			switch (pARResult->m_pDetectedMarks[i].dir)
+			{
+			case 0:
+				v1 = pARResult->m_pDetectedMarks[i].vertex[0];
+				v2 = pARResult->m_pDetectedMarks[i].vertex[1];
+				v3 = pARResult->m_pDetectedMarks[i].vertex[2];
+				v4 = pARResult->m_pDetectedMarks[i].vertex[3];
+				break;
+			case 1:
+				v1 = pARResult->m_pDetectedMarks[i].vertex[3];
+				v2 = pARResult->m_pDetectedMarks[i].vertex[0];
+				v3 = pARResult->m_pDetectedMarks[i].vertex[1];
+				v4 = pARResult->m_pDetectedMarks[i].vertex[2];
+				break;
+			case 2:
+				v1 = pARResult->m_pDetectedMarks[i].vertex[2];
+				v2 = pARResult->m_pDetectedMarks[i].vertex[3];
+				v3 = pARResult->m_pDetectedMarks[i].vertex[0];
+				v4 = pARResult->m_pDetectedMarks[i].vertex[1];
+				break;
+			case 3:
+				v1 = pARResult->m_pDetectedMarks[i].vertex[1];
+				v2 = pARResult->m_pDetectedMarks[i].vertex[2];
+				v3 = pARResult->m_pDetectedMarks[i].vertex[3];
+				v4 = pARResult->m_pDetectedMarks[i].vertex[0];
+				break;
+			default:
+				free(t);
+				free(d);
+				return S_FALSE;
+				break;
+			}
+			D3DXMATRIX matTran;
+			D3DXMATRIX matW2VS;
+			D3DXMatrixScaling(&matW2VS, 1.0, -1.0, 1.0);
+			D3DXMatrixIdentity(&matTran);
+			for (int row=0; row < 3; row++)
+			{
+				for (int col =0; col < 4; col++)
+				{
+					matTran.m[col][row] = pcfgMarker->trans[row][col];
+				}
+			}
+			
+			matTran *= matW2VS;
+			D3DXVECTOR3 ov1(0,0,0), ov2(pcfgMarker->width,0,0), ov3(pcfgMarker->width, -pcfgMarker->width,0), ov4(0, -pcfgMarker->width, 0);
+			D3DXVec3TransformCoord(&ov1, &ov1, &matTran);
+			D3DXVec3TransformCoord(&ov2, &ov2, &matTran);
+			D3DXVec3TransformCoord(&ov3, &ov3, &matTran);
+			D3DXVec3TransformCoord(&ov4, &ov4, &matTran);
+
+			t[4*2*i + 0] = ov1.x;  t[4*2*i + 1] = ov1.y;
+			t[4*2*i + 2] = ov2.x;  t[4*2*i + 3] = ov2.y;
+			t[4*2*i + 4] = ov3.x;  t[4*2*i + 5] = ov3.y;
+			t[4*2*i + 6] = ov4.x;  t[4*2*i + 7] = ov4.y;
+
+			d[4*2*i + 0] = v1[0]/w;  d[4*2*i + 1] = v1[1]/h;
+			d[4*2*i + 2] = v2[0]/w;  d[4*2*i + 3] = v2[1]/h;
+			d[4*2*i + 4] = v3[0]/w;  d[4*2*i + 5] = v3[1]/h;
+			d[4*2*i + 6] = v4[0]/w;  d[4*2*i + 7] = v4[1]/h;
+		}
+		CvMat cvPt;
+		CvMat dstPt;
+
+		cvPt = cvMat(pARResult->m_nDetected*4, 2, CV_32F, t);
+		dstPt = cvMat(pARResult->m_nDetected*4, 2, CV_32F, d);
+		cvFindHomography(&dstPt, &cvPt, &mat);
+
+		D3DXMATRIX matHomo;
+		D3DXMatrixIdentity(&matHomo);
+		matHomo._11 = mat.data.fl[0*3 + 0];
+		matHomo._21 = mat.data.fl[0*3 + 1];
+		matHomo._31 = mat.data.fl[0*3 + 2];
+
+		matHomo._12 = mat.data.fl[1*3 + 0];
+		matHomo._22 = mat.data.fl[1*3 + 1];
+		matHomo._32 = mat.data.fl[1*3 + 2];
+
+		matHomo._13 = mat.data.fl[2*3 + 0];
+		matHomo._23 = mat.data.fl[2*3 + 1];
+		matHomo._33 = mat.data.fl[2*3 + 2];
+
+		WarpConfigData sendData; 
+		for (int row =0; row < 4; row++)
+			for (int col =0; col < 4; col++)
+				sendData.warpMat[row][col] = matHomo.m[row][col];
+		
+		IMemAllocator* pAllocator = m_pOutputPins[0]->GetAllocator();
+		CMediaSample* pSendSample = NULL;
+
+		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
+		m_pOutputPins[0]->Deliver(pSendSample);
+		if (pSendSample != NULL)
+		{
+			pSendSample->Release();
+			pSendSample = NULL;
+		}
+		
+		free(t);
+		free(d);
+
+	}
 	return S_OK;
 }
 HRESULT AR2WarpController::CreatePins()

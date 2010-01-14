@@ -110,12 +110,56 @@ HRESULT HomoWarpFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 	pOutSample->Release();
 	return S_OK;
 }
+
+HRESULT HomoWarpFilter::ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	WarpConfigData* pWarpData = NULL;
+	pSample->GetPointer((BYTE**)&pWarpData);
+	D3DXMATRIX mat;
+	for (int row = 0 ; row < 4; row++)
+		for (int col =0; col < 4; col++)
+			mat.m[row][col] =  pWarpData->warpMat[row][col];
+	/*
+	D3DXVECTOR4 v0(0,0,1,1), v1(0,1,1,1), v2(1,1,1,1), v3(1,0,1,1);
+	D3DXMATRIX invMat;
+	D3DXMatrixInverse(&invMat, NULL, &mat);
+	D3DXVec4Transform(&v0, &v0, &invMat);
+	D3DXVec4Transform(&v1, &v1, &invMat);
+	D3DXVec4Transform(&v2, &v2, &invMat);
+	D3DXVec4Transform(&v3, &v3, &invMat);
+	v0 /= v0.z;
+	v1 /= v1.z;
+	v2 /= v2.z;
+	v3 /= v3.z;
+
+	WCHAR str[MAX_PATH];
+
+	swprintf_s(str, MAX_PATH, L"@@@@  v0(0, 0) -> (%.2f, %.2f) \n", v0.x, v0.y);
+	OutputDebugStringW(str);
+
+	swprintf_s(str, MAX_PATH, L"@@@@  v1(0, 1) -> (%.2f, %.2f) \n", v1.x, v1.y);
+	OutputDebugStringW(str);
+
+	swprintf_s(str, MAX_PATH, L"@@@@  v2(1, 1) -> (%.2f, %.2f) \n", v2.x, v2.y);
+	OutputDebugStringW(str);
+
+	swprintf_s(str, MAX_PATH, L"@@@@  v3(1, 0) -> (%.2f, %.2f) \n", v3.x, v3.y);
+	OutputDebugStringW(str);
+*/
+	this->SetWarpMatrix(mat);
+	
+	return S_OK;
+}
 HRESULT HomoWarpFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
 	HRESULT hr;
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
 		return ReceiveInput0(pSample, pReceivePin);
+	}
+	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
+	{
+		return ReceiveInput1(pSample, pReceivePin);
 	}
 	return S_OK;
 
@@ -419,5 +463,11 @@ HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float&
 	LBx = v2.x; LBy = v2.y;
 	RBx = v4.x; RBy = v4.y;
 	RTx = v3.x; RTy = v3.y;
+	return S_OK;
+}
+
+HRESULT HomoWarpFilter::SetWarpMatrix(const D3DXMATRIX& mat)
+{
+	m_matTTS = mat;
 	return S_OK;
 }
