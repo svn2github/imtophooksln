@@ -289,24 +289,24 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		m_ARTracker->setThreshold(100);
 		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
-		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[4];
-		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*4);
+		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[16];
+		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*16);
 
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 4; i++)
 		{
-			for ( int j = 0; j < 2; j++ )
+			for ( int j = 0; j < 4; j++ )
 			{
-				int idx = i*2 + j;
+				int idx = i*4 + j;
 				pMarkers[idx].patt_id = idx;
 				pMarkers[idx].visible = 1;
-				pMarkers[idx].width = 10.0/24.0;
-				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/24.0)*(2*j+1);
-				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/24.0)*(2*i+1);
+				pMarkers[idx].width = 10.0/48.0;
+				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/48.0)*(2*j+1);
+				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/48.0)*(2*i+1);
 				pMarkers[idx].trans[2][0] = 0.0; pMarkers[idx].trans[2][1] = 0.0; pMarkers[idx].trans[2][2] = 1.0; pMarkers[idx].trans[2][3] = 0;
 		
 			}
 		}
-		m_ARTracker->setMarkInfo(pMarkers, 4);
+		m_ARTracker->setMarkInfo(pMarkers, 16);
 		
 	}
 	return S_OK;
