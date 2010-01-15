@@ -238,7 +238,15 @@ public:
 	/// Returns the current threshold value.
 	virtual int getThreshold() const  {  return thresh;  }
 
-
+	virtual bool setConfThreshold(float nValue) { 
+		if (nValue >= 0 && nValue <= 1)
+		{
+			conf_threshold = nValue;
+			return true;
+		}
+		return false;
+	}
+	virtual float getConfThreshold() { return conf_threshold;};
 	/// Turns automatic threshold calculation on/off
 	virtual void activateAutoThreshold(bool nEnable)  {  autoThreshold.enable = nEnable;  }
 
@@ -553,8 +561,9 @@ protected:
     int						arGetContour_wx[AR_CHAIN_MAX];
     int						arGetContour_wy[AR_CHAIN_MAX];
 
-
+	
 	// arGetCode.cpp
+	float  conf_threshold; 
 	int    pattern_num;
 	int    patf[MAX_LOAD_PATTERNS];
 	int    pat[MAX_LOAD_PATTERNS][4][PATTERN_HEIGHT*PATTERN_WIDTH*3];

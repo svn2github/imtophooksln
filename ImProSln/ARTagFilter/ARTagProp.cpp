@@ -233,6 +233,8 @@ m_pARProperty(0)
 	m_slrBorderW = 0;
 	m_txtThreshold = 0;
 	m_txtBorderW = 0;
+	m_txtConfThreshold = 0;
+	m_slrConfThreshold = 0;
 }
 
 ARTagGeneralPage::~ARTagGeneralPage()
@@ -299,6 +301,9 @@ bool ARTagGeneralPage::GetSetting()
 	ComboBox_SetCurSel(m_cbUnDistortMode, undistortMode);
 	int threshold = m_pARProperty->getThreshold();
 	SLIDER_SetPos(m_slrThreshold, threshold);
+	float confThread = m_pARProperty->getConfThreshold();
+	int confThreadValue = confThread*m_ConfScale;
+	SLIDER_SetPos(m_slrConfThreshold, confThreadValue);
 	float borderW = m_pARProperty->getBorderWidth();
 	int borderWValue = (int)(borderW*m_BorderWScale);
 	SLIDER_SetPos(m_slrBorderW, borderWValue);
@@ -308,6 +313,9 @@ bool ARTagGeneralPage::GetSetting()
 
 	swprintf_s(str, MAX_PATH, L"%.3f", SLIDER_GetPos(m_slrBorderW)/(float)m_BorderWScale);
 	SetWindowText(m_txtBorderW, str);
+
+	swprintf_s(str, MAX_PATH, L"%.2f", confThread);
+	SetWindowText(m_txtConfThreshold, str);
 }
 bool ARTagGeneralPage::ApplySetting()
 {
@@ -330,6 +338,10 @@ bool ARTagGeneralPage::ApplySetting()
 	int threshold = SLIDER_GetPos(m_slrThreshold);
 	m_pARProperty->setThreshold(threshold);
 	
+	float confThreshold = SLIDER_GetPos(m_slrConfThreshold);
+	int confThresholdValue = confThreshold * m_ConfScale;
+	m_pARProperty->setConfThreshold(confThresholdValue);
+	
 	int borderWValue = SLIDER_GetPos(m_slrBorderW);
 	float borderW = borderWValue / (float)m_BorderWScale;
 	m_pARProperty->setBorderWidth(borderW);
@@ -343,12 +355,18 @@ bool ARTagGeneralPage::updateSliderTxt()
 	int borderWValue = SLIDER_GetPos(m_slrBorderW);
 	float borderW = borderWValue / (float)m_BorderWScale;
 
+	int confThresholdValue = SLIDER_GetPos(m_slrConfThreshold);
+	float confThreshold = confThresholdValue / (float)m_ConfScale;
+
 	WCHAR str[MAX_PATH] = {0};
 	swprintf_s(str, MAX_PATH, L"%d", threshold);
 	SetWindowText(m_txtThreshold, str);
 
 	swprintf_s(str, MAX_PATH, L"%.3f", borderW);
 	SetWindowText(m_txtBorderW, str);
+
+	swprintf_s(str, MAX_PATH, L"%.2f", confThreshold);
+	SetWindowText(m_txtConfThreshold, str);
 	return true;
 }
 
@@ -388,6 +406,10 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 		int borderWValue = SLIDER_GetPos(m_slrBorderW);
 		float borderW = borderWValue / (float)m_BorderWScale;
 		m_pARProperty->setBorderWidth(borderW);
+
+		int confThresholdValue = SLIDER_GetPos(m_slrConfThreshold);
+		float confThreshold = confThresholdValue / (float)m_ConfScale;
+		m_pARProperty->setBorderWidth(confThreshold);
 		break;
 	}
 	return __super::OnReceiveMessage(hwnd,uMsg,wParam,lParam);
@@ -411,6 +433,9 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	m_slrThreshold = GetDlgItem(m_Dlg, IDC_SLIDER_Threshold);
     m_txtBorderW = GetDlgItem(m_Dlg, IDC_txtBorderW);
 	m_txtThreshold = GetDlgItem(m_Dlg, IDC_txtThreshold);
+	m_txtConfThreshold = GetDlgItem(m_Dlg, IDC_txtConfThreshold);;
+	m_slrConfThreshold = GetDlgItem(m_Dlg, IDC_SLIDER_ConfThreshold);
+
 	ComboBox_AddString(m_cbPoseEstimator, L"Normal");
 	ComboBox_AddString(m_cbPoseEstimator, L"Cont");
 	ComboBox_AddString(m_cbPoseEstimator, L"RPP");
@@ -425,7 +450,7 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	ComboBox_AddString(m_cbUnDistortMode, L"UNDIST_STD");
 	ComboBox_AddString(m_cbUnDistortMode, L"UNDIST_LUT");
 	//ComboBox_SetCurSel(m_cbUnDistortMode,2);
-	
+	SLIDER_SetRange(m_slrConfThreshold, 0, m_ConfScale);
 	SLIDER_SetRange(m_slrThreshold, 0, 255);
 	SLIDER_SetRange(m_slrBorderW, 0, m_BorderWScale);
 	GetSetting();

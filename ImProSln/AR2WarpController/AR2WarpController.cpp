@@ -101,46 +101,78 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 				return S_FALSE;
 			}
 			
-			const ARFloat* v1 = NULL;
-			const ARFloat* v2 = NULL;
-			const ARFloat* v3 = NULL;
-			const ARFloat* v4 = NULL;
+			const ARFloat* arV[4]= {NULL};
+
 			swprintf_s(str, MAX_PATH, L"@@@@ patt_id = %d, dir = %d \n",
 				pARResult->m_pDetectedMarks[i].id, pARResult->m_pDetectedMarks[i].dir);
 			OutputDebugStringW(str);
-
+			
 			
 			switch (pARResult->m_pDetectedMarks[i].dir)
 			{
 			case 0:
-				v1 = pARResult->m_pDetectedMarks[i].vertex[0];
-				v2 = pARResult->m_pDetectedMarks[i].vertex[1];
-				v3 = pARResult->m_pDetectedMarks[i].vertex[2];
-				v4 = pARResult->m_pDetectedMarks[i].vertex[3];
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
 				break;
 			case 1:
-				v1 = pARResult->m_pDetectedMarks[i].vertex[3];
-				v2 = pARResult->m_pDetectedMarks[i].vertex[0];
-				v3 = pARResult->m_pDetectedMarks[i].vertex[1];
-				v4 = pARResult->m_pDetectedMarks[i].vertex[2];
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
 				break;
 			case 2:
-				v1 = pARResult->m_pDetectedMarks[i].vertex[2];
-				v2 = pARResult->m_pDetectedMarks[i].vertex[3];
-				v3 = pARResult->m_pDetectedMarks[i].vertex[0];
-				v4 = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[2];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[3];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[1];
 				break;
 			case 3:
-				v1 = pARResult->m_pDetectedMarks[i].vertex[1];
-				v2 = pARResult->m_pDetectedMarks[i].vertex[2];
-				v3 = pARResult->m_pDetectedMarks[i].vertex[3];
-				v4 = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[2];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[3];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[0];
 				break;
 			default:
 				free(t);
 				free(d);
 				return S_FALSE;
 				break;
+			}
+
+			D3DXVECTOR2 v[4] = {D3DXVECTOR2(0,0)};
+			D3DXVECTOR2 center;
+			const ARFloat* vLT = NULL, *vRT = NULL, *vRB = NULL, *vLB = NULL;
+			v[0].x = arV[0][0]; v[0].y = arV[0][1];
+			v[1].x = arV[1][0]; v[1].y = arV[1][1];
+			v[2].x = arV[2][0]; v[2].y = arV[2][1];
+			v[3].x = arV[3][0]; v[3].y = arV[3][1];
+			center = (v[0] + v[1] + v[2] + v[3]) / 4.0;
+			for (int i =0 ; i< 4; i++)
+			{
+				D3DXVECTOR2 dv;
+				dv = v[i] - center;
+				if (dv.x <0 && dv.y < 0)
+				{
+					vLT = arV[i];
+				}
+				else if (dv.x >= 0 && dv.y < 0)
+				{
+					vRT = arV[i];
+				}
+				else if (dv.x >= 0 && dv.y >= 0)
+				{
+					vRB = arV[i];
+				}
+				else
+				{
+					vLB = arV[i];
+				}
+			}
+			if ( vLT != arV[0] || vRT != arV[1] || vRB != arV[2] || vLB != arV[3])
+			{
+				int test = 0;
 			}
 			D3DXMATRIX matTran;
 			D3DXMATRIX matW2VS;
@@ -166,10 +198,10 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			t[4*2*i + 4] = ov3.x;  t[4*2*i + 5] = ov3.y;
 			t[4*2*i + 6] = ov4.x;  t[4*2*i + 7] = ov4.y;
 
-			d[4*2*i + 0] = v1[0]/w;  d[4*2*i + 1] = v1[1]/h;
-			d[4*2*i + 2] = v2[0]/w;  d[4*2*i + 3] = v2[1]/h;
-			d[4*2*i + 4] = v3[0]/w;  d[4*2*i + 5] = v3[1]/h;
-			d[4*2*i + 6] = v4[0]/w;  d[4*2*i + 7] = v4[1]/h;
+			d[4*2*i + 0] = arV[0][0]/w;  d[4*2*i + 1] = arV[0][1]/h;
+			d[4*2*i + 2] = arV[1][0]/w;  d[4*2*i + 3] = arV[1][1]/h;
+			d[4*2*i + 4] = arV[2][0]/w;  d[4*2*i + 5] = arV[2][1]/h;
+			d[4*2*i + 6] = arV[3][0]/w;  d[4*2*i + 7] = arV[3][1]/h;
 		}
 		CvMat cvPt;
 		CvMat dstPt;

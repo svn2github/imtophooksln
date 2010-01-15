@@ -261,12 +261,12 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
 		}
 		CreateInOutTextures(bitHeader.biWidth, bitHeader.biHeight);
-		CString strDistFactor = L"159.0 139.0 -84.9 0.97932";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
+		CString strDistFactor = L"0.245073 -0.759911 0.001721 0.008927";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
 		double distfactor[4] = {0};
 		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
 
-		CString strMat = L"406.04    0.0      154.0    0.0 \
-						  0.0       404.38   115.0    0.0 \
+		CString strMat = L"680.20544     0.0      315.158539    0.0 \
+						  0.0       679.564148   253.423645    0.0 \
 						  0.0       0.0      1.0      0.0 \
 						  0.0       0.0      0.0      1.0 ";
 		/*theApp.GetProfileString(L"Camera Setting", L"mat", 
@@ -614,6 +614,24 @@ int ARTagDSFilter::getThreshold()
 	}
 	return m_ARTracker->getThreshold();
 }
+
+bool ARTagDSFilter::setConfThreshold(float v)
+{
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->setConfThreshold(v);
+}
+float ARTagDSFilter::getConfThreshold()
+{
+	if (m_ARTracker == NULL)
+	{
+		return 0;
+	}
+	return m_ARTracker->getConfThreshold();
+}
+
 bool ARTagDSFilter::setUndistortionMode(int mode)
 {
 	if (m_ARTracker == NULL)

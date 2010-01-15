@@ -158,7 +158,7 @@ checkPatternBitSimple(IDPATTERN nPattern, int nBit, int& nValue)
 
 
 static void
-checkPatternSimple(IDPATTERN nPattern, int& nID, float& nProp)
+checkPatternSimple(IDPATTERN nPattern, int& nID, float& nProp, float nPropThres = 0.9)
 {
 	nProp = 0.0f;
 	nID = 0;
@@ -175,7 +175,7 @@ checkPatternSimple(IDPATTERN nPattern, int& nID, float& nProp)
 
 	nProp /= (float)idBits;
 
-	if(nProp<0.9f)
+	if(nProp < nPropThres)
 		nProp = 0.0f;
 }
 
@@ -375,7 +375,7 @@ AR_TEMPL_TRACKER::bitfield_check_simple( ARUint8 *data, int *code, int *dir, ARF
 	// now we do a thresholding and create the IDPATTERN bitfield
 	//
 	IDPATTERN pat=0, one=1;
-
+	
 	for(i=0; i<pattBits; i++)
 		if(patimg[pattBits-1-i]>thresh)
 			pat |= one<<i;
@@ -389,19 +389,19 @@ AR_TEMPL_TRACKER::bitfield_check_simple( ARUint8 *data, int *code, int *dir, ARF
 	float		prop0=0.0f,prop90=0.0f,prop180=0.0f,prop270=0.0f;
 
 	pat0 = pat;
-	checkPatternSimple(pat0, id0, prop0);
+	checkPatternSimple(pat0, id0, prop0, conf_threshold);
 
 	pat90 = pat0;
 	rotate90CW(pat90);
-	checkPatternSimple(pat90, id90, prop90);
+	checkPatternSimple(pat90, id90, prop90, conf_threshold);
 
 	pat180 = pat90;
 	rotate90CW(pat180);
-	checkPatternSimple(pat180, id180, prop180);
+	checkPatternSimple(pat180, id180, prop180, conf_threshold);
 
 	pat270 = pat180;
 	rotate90CW(pat270);
-	checkPatternSimple(pat270, id270, prop270);
+	checkPatternSimple(pat270, id270, prop270, conf_threshold);
 
 	if(prop0>=prop90 && prop0>=prop180 && prop0>=prop270)		// is prop0 maximum?
 	{
@@ -434,10 +434,7 @@ AR_TEMPL_TRACKER::bitfield_check_simple( ARUint8 *data, int *code, int *dir, ARF
 	{
 		assert(false);
 	}
-	if (*code >= 480)
-	{
-		int test = 0;
-	}
+	
 	return 0;
 }
 

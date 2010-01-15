@@ -255,7 +255,7 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
 */
 
     for( i = 0; i < wmarker_num; i++ )
-        if( wmarker_info[i].cf < 0.5 )
+        if( wmarker_info[i].cf < conf_threshold )
 			wmarker_info[i].id = -1;
 
 

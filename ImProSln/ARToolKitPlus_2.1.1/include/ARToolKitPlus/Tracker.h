@@ -206,11 +206,11 @@ public:
 	/// Sets the threshold value that is used for black/white conversion
 	virtual void setThreshold(int nValue) = 0;
 
-
 	/// Returns the current threshold value.
 	virtual int getThreshold() const = 0;
 
-
+	virtual bool setConfThreshold(float nValue) = 0;
+	virtual float getConfThreshold() = 0;
 	/// Enables or disables automatic threshold calculation
 	virtual void activateAutoThreshold(bool nEnable) = 0;
 

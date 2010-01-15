@@ -39,7 +39,10 @@
 #define IDC_Mat31                       2022
 #define IDC_txtBorderW                  2022
 #define IDC_Mat32                       2023
+#define IDC_SLIDER_ConfThreshold        2023
 #define IDC_Mat33                       2024
+#define IDC_txtThreshold2               2024
+#define IDC_txtConfThreshold            2024
 #define IDC_Mat20                       2025
 #define IDC_Mat21                       2026
 #define IDC_Mat22                       2027

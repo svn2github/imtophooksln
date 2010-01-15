@@ -54,7 +54,12 @@ protected:
 	HWND m_slrBorderW;
 	HWND m_txtThreshold;;
 	HWND m_txtBorderW;
+
+	HWND m_txtConfThreshold;
+	HWND m_slrConfThreshold;
+
 	static const int m_BorderWScale = 1000;
+	static const int m_ConfScale = 100;
 	void SetDirty();
 	bool GetSetting();
 	bool ApplySetting();

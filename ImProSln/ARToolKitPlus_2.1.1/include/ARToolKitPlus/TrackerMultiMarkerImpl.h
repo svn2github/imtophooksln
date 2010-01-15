@@ -158,6 +158,10 @@ public:
 	ARFloat getBorderWidth() {	return AR_TEMPL_TRACKER::getBorderWidth();};
 	void setThreshold(int nValue)  {  AR_TEMPL_TRACKER::setThreshold(nValue);  }
 	int getThreshold() const  {  return AR_TEMPL_TRACKER::getThreshold();  }
+	
+	bool setConfThreshold(float nValue) {  return AR_TEMPL_TRACKER::setConfThreshold(nValue);}
+	float getConfThreshold() { return AR_TEMPL_TRACKER::getConfThreshold();}
+
 	void activateAutoThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateAutoThreshold(nEnable);  }
 	bool isAutoThresholdActivated() const  {  return AR_TEMPL_TRACKER::isAutoThresholdActivated();  }
 	void setNumAutoThresholdRetries(int nNumRetries)  {  AR_TEMPL_TRACKER::setNumAutoThresholdRetries(nNumRetries);  }

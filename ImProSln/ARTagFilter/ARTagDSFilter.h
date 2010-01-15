@@ -48,6 +48,9 @@ public:
 	virtual double getBorderWidth();
 	virtual bool setThreshold(int t);
 	virtual int getThreshold();
+	virtual bool setConfThreshold(float v);
+	virtual float getConfThreshold();
+
 	virtual bool setUndistortionMode(int mode);
 	virtual int getUndistortionMode();
 	virtual bool setMarkerMode(int mode);
