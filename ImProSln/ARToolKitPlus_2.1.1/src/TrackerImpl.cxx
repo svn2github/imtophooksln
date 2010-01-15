@@ -69,7 +69,7 @@ AR_TEMPL_TRACKER::TrackerImpl()
 
 	// set default value to RGB888
 	//
-	conf_threshold = 0.5;
+	conf_threshold = 0.2;
 	pixelFormat = PIXEL_FORMAT_RGB;
 	pixelSize = 3;
 
