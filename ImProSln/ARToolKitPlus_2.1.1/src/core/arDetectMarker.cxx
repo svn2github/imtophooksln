@@ -253,11 +253,11 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
     wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
     if( wmarker_info == 0 ) return -1;
 */
-
+	
     for( i = 0; i < wmarker_num; i++ )
-        if( wmarker_info[i].cf < conf_threshold )
+        if( wmarker_info[i].cf < 0.5 )
 			wmarker_info[i].id = -1;
-
+	
 
     *marker_num  = wmarker_num;
     *marker_info = wmarker_info;

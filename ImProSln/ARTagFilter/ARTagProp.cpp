@@ -409,7 +409,7 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 
 		int confThresholdValue = SLIDER_GetPos(m_slrConfThreshold);
 		float confThreshold = confThresholdValue / (float)m_ConfScale;
-		m_pARProperty->setBorderWidth(confThreshold);
+		m_pARProperty->setConfThreshold(confThreshold);
 		break;
 	}
 	return __super::OnReceiveMessage(hwnd,uMsg,wParam,lParam);

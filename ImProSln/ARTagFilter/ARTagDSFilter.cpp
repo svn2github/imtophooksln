@@ -249,7 +249,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		
-		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,6, 1, 16>(bitHeader.biWidth, bitHeader.biHeight);
+		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 16>(bitHeader.biWidth, bitHeader.biHeight);
 		GUID guidSubType = *inputMT.Subtype();
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
@@ -285,7 +285,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
 		
 		m_ARTracker->setCamera(bitHeader.biWidth, bitHeader.biHeight, mat, distfactor, 1, 1000);
-		m_ARTracker->setBorderWidth(0.125f);
+		m_ARTracker->setBorderWidth(0.2f);
 		m_ARTracker->setThreshold(100);
 		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);

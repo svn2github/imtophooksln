@@ -44,8 +44,8 @@
 #include <ARToolKitPlus/Tracker.h>
 #include <ARToolKitPlus/ar.h>
 #include <ARToolKitPlus/matrix.h>
-
-
+#include "cv.h"
+#include <d3dx9math.h>
 namespace ARToolKitPlus {
 	
 
@@ -218,273 +218,131 @@ AR_TEMPL_FUNC int
 AR_TEMPL_TRACKER::arGetPatt(ARUint8 *image, int *x_coord, int *y_coord, int *vertex,
 						    ARUint8 ext_pat[PATTERN_HEIGHT][PATTERN_WIDTH][3])
 {
-    ARUint32  ext_pat2[PATTERN_HEIGHT][PATTERN_WIDTH][3];
-    ARFloat    world[4][2];
-    ARFloat    local[4][2];
-    ARFloat    para[3][3];
-    ARFloat    d, xw, yw;
-    int       xc, yc;
-    int       xdiv, ydiv;
-    int       xdiv2, ydiv2;
-    int       lx1, lx2, ly1, ly2;
-    int       i, j;
-	ARUint8		col8;
-    // int       k1, k2, k3; // unreferenced
-
+   
+	ARUint8		col8;  	
 	unsigned short* image16 = (unsigned short*)image;
-
-    world[0][0] = 100.0;
-    world[0][1] = 100.0;
-    world[1][0] = 100.0 + 10.0;
-    world[1][1] = 100.0;
-    world[2][0] = 100.0 + 10.0;
-    world[2][1] = 100.0 + 10.0;
-    world[3][0] = 100.0;
-    world[3][1] = 100.0 + 10.0;
-    for( i = 0; i < 4; i++ ) {
+    ARFloat    local[4][2];
+    for( int i = 0; i < 4; i++ ) {
         local[i][0] = (ARFloat)x_coord[vertex[i]];
         local[i][1] = (ARFloat)y_coord[vertex[i]];
     }
-    get_cpara( world, local, para );
+	float fromPt[] = { 1, 1,
+				   0, 1,
+				   0, 0,
+				   1, 0};
+		
+	float toPt[] = {	local[0][0], local[0][1],
+		local[1][0], local[1][1],
+		local[2][0], local[2][1],
+		local[3][0], local[3][1]
+	};
+	float s[] = {0,0,0,
+				0,0,0,
+				0,0,0};
+	
 
-    lx1 = (int)((local[0][0] - local[1][0])*(local[0][0] - local[1][0])
-              + (local[0][1] - local[1][1])*(local[0][1] - local[1][1]));
-    lx2 = (int)((local[2][0] - local[3][0])*(local[2][0] - local[3][0])
-              + (local[2][1] - local[3][1])*(local[2][1] - local[3][1]));
-    ly1 = (int)((local[1][0] - local[2][0])*(local[1][0] - local[2][0])
-              + (local[1][1] - local[2][1])*(local[1][1] - local[2][1]));
-    ly2 = (int)((local[3][0] - local[0][0])*(local[3][0] - local[0][0])
-              + (local[3][1] - local[0][1])*(local[3][1] - local[0][1]));
-    if( lx2 > lx1 ) lx1 = lx2;
-    if( ly2 > ly1 ) ly1 = ly2;
-    xdiv2 = PATTERN_WIDTH;
-    ydiv2 = PATTERN_HEIGHT;
-    if( arImageProcMode == AR_IMAGE_PROC_IN_FULL ) {
-        while( xdiv2*xdiv2 < lx1/4 ) xdiv2*=2;
-        while( ydiv2*ydiv2 < ly1/4 ) ydiv2*=2;
-    }
-    else {
-        while( xdiv2*xdiv2*4 < lx1/4 ) xdiv2*=2;
-        while( ydiv2*ydiv2*4 < ly1/4 ) ydiv2*=2;
-    }
-    if( xdiv2 > PATTERN_SAMPLE_NUM ) xdiv2 = PATTERN_SAMPLE_NUM;
-    if( ydiv2 > PATTERN_SAMPLE_NUM ) ydiv2 = PATTERN_SAMPLE_NUM;
+	CvMat cvFromPt = cvMat(4, 2, CV_32F, fromPt);
+	CvMat cvToPt = cvMat(4, 2, CV_32F, toPt);
+	CvMat cvMatHomo = cvMat(3,3, CV_32F, s);
+	cvFindHomography(&cvFromPt, &cvToPt, &cvMatHomo);
+	D3DXMATRIX matHomo;
+	D3DXMatrixIdentity(&matHomo);
 
-    xdiv = xdiv2/PATTERN_WIDTH;
-    ydiv = ydiv2/PATTERN_HEIGHT;
-/*
-printf("%3d(%f), %3d(%f)\n", xdiv2, sqrt(lx1), ydiv2, sqrt(ly1));
-*/
+	matHomo._11 = cvMatHomo.data.fl[0*3 + 0];
+	matHomo._21 = cvMatHomo.data.fl[0*3 + 1];
+	matHomo._31 = cvMatHomo.data.fl[0*3 + 2];
+
+	matHomo._12 = cvMatHomo.data.fl[1*3 + 0];
+	matHomo._22 = cvMatHomo.data.fl[1*3 + 1];
+	matHomo._32 = cvMatHomo.data.fl[1*3 + 2];
+
+	matHomo._13 = cvMatHomo.data.fl[2*3 + 0];
+	matHomo._23 = cvMatHomo.data.fl[2*3 + 1];
+	matHomo._33 = cvMatHomo.data.fl[2*3 + 2];
 
 
-	// special case xdiv==1 and ydiv==1, so we can remove all divides and multiplies for indexing
-	//
-	if(xdiv==1 && ydiv==1)
+
+	int nXSamplePerPixel = max(1, PATTERN_SAMPLE_NUM / PATTERN_WIDTH);
+	int nYSamplePerPixel = max(1, PATTERN_SAMPLE_NUM / PATTERN_HEIGHT);
+	float borderW = this->getBorderWidth();
+
+	float xBigStep = (1.0 - borderW*2.0)/ PATTERN_WIDTH;
+	float yBigStep = (1.0 - borderW*2.0)/ PATTERN_HEIGHT;
+	float xStep = xBigStep/(nXSamplePerPixel+1);
+	float yStep = yBigStep/(nYSamplePerPixel+1);
+	D3DXVECTOR4 pt(0,0,1,1);
+	for (int  ydiv =0;  ydiv < PATTERN_HEIGHT;  ydiv++)
 	{
-		ARFloat border = relBorderWidth * 10.0f;
-		ARFloat xyFrom = 100.0f + border,
-				xyTo = 110.0f - border,
-				xyStep = xyTo-xyFrom;
-		ARFloat steps[PATTERN_WIDTH];
-
-		for( i = 0; i < xdiv2; i++ )
-			steps[i] = xyFrom + xyStep * (ARFloat)(i+0.5f) / (ARFloat)xdiv2;
-
-		for( j = 0; j < ydiv2; j++ ) {
-			yw = steps[j];
-			for( i = 0; i < xdiv2; i++ ) {
-				xw = steps[i];
-				d = para[2][0]*xw + para[2][1]*yw + para[2][2];
-				if( d == 0 ) return(-1);
-				xc = (int)((para[0][0]*xw + para[0][1]*yw + para[0][2])/d);
-				yc = (int)((para[1][0]*xw + para[1][1]*yw + para[1][2])/d);
-				//das hier sollte noch getestet werden...
-				/*
-				if( arImageProcMode == AR_IMAGE_PROC_IN_HALF ) {
-					xc = ((xc+1)/2)*2;
-					yc = ((yc+1)/2)*2;
-				}*/
-
-				if( xc >= 0 && xc < arImXsize && yc >= 0 && yc < arImYsize )
+		for (int xdiv =0; xdiv < PATTERN_WIDTH; xdiv++)
+		{
+			D3DXVECTOR3 illum(0,0,0);
+			int yc = 0; int xc = 0;
+			for (int ys = 0; ys < nYSamplePerPixel; ys++)
+			{
+				for (int xs = 0; xs < nXSamplePerPixel; xs++)
 				{
+					pt = D3DXVECTOR4(0,0,1,1);
+					pt.x = (xs + 1)*xStep + borderW + xdiv*xBigStep;
+					pt.y = (ys + 1)*yStep + borderW + ydiv*yBigStep;
+					D3DXVec4Transform(&pt, &pt, &matHomo);
+					pt /= pt.z;
+					xc = pt.x; yc = pt.y;
+					if (xc < 0 || xc >= arImXsize || yc < 0 || yc >= arImYsize )
+					{
+						continue;
+					}
 					switch(pixelFormat)
 					{
 					case PIXEL_FORMAT_ABGR:
-						ext_pat[j][i][0] = image[(yc*arImXsize+xc)*4+1];
-						ext_pat[j][i][1] = image[(yc*arImXsize+xc)*4+2];
-						ext_pat[j][i][2] = image[(yc*arImXsize+xc)*4+3];
+						illum.x += image[(yc*arImXsize+xc)*4+1];
+						illum.y += image[(yc*arImXsize+xc)*4+2];
+						illum.z += image[(yc*arImXsize+xc)*4+3];
 						break;
-					
+
 					case PIXEL_FORMAT_BGRA:
-						ext_pat[j][i][0] = image[(yc*arImXsize+xc)*4+0];
-						ext_pat[j][i][1] = image[(yc*arImXsize+xc)*4+1];
-						ext_pat[j][i][2] = image[(yc*arImXsize+xc)*4+2];
+						illum.x += image[(yc*arImXsize+xc)*4+0];
+						illum.y += image[(yc*arImXsize+xc)*4+1];
+						illum.z += image[(yc*arImXsize+xc)*4+2];
 						break;
 
 					case PIXEL_FORMAT_BGR:
-						ext_pat[j][i][0] = image[(yc*arImXsize+xc)*3+0];
-						ext_pat[j][i][1] = image[(yc*arImXsize+xc)*3+1];
-						ext_pat[j][i][2] = image[(yc*arImXsize+xc)*3+2];
+						illum.x += image[(yc*arImXsize+xc)*3+0];
+						illum.y += image[(yc*arImXsize+xc)*3+1];
+						illum.z += image[(yc*arImXsize+xc)*3+2];
 						break;
 
 					case PIXEL_FORMAT_RGBA:
-						ext_pat[j][i][0] = image[(yc*arImXsize+xc)*4+2];
-						ext_pat[j][i][1] = image[(yc*arImXsize+xc)*4+1];
-						ext_pat[j][i][2] = image[(yc*arImXsize+xc)*4+0];
-
+						illum.x += image[(yc*arImXsize+xc)*4+2];
+						illum.y += image[(yc*arImXsize+xc)*4+1];
+						illum.z += image[(yc*arImXsize+xc)*4+0];
+						break;
 					case PIXEL_FORMAT_RGB:
-						ext_pat[j][i][0] = image[(yc*arImXsize+xc)*3+2];
-						ext_pat[j][i][1] = image[(yc*arImXsize+xc)*3+1];
-						ext_pat[j][i][2] = image[(yc*arImXsize+xc)*3+0];
+						illum.x += image[(yc*arImXsize+xc)*3+2];
+						illum.y += image[(yc*arImXsize+xc)*3+1];
+						illum.z += image[(yc*arImXsize+xc)*3+0];
 						break;
 
 					case PIXEL_FORMAT_RGB565:
 						col8 = getLUM8_from_RGB565(image16+yc*arImXsize+xc);
-						ext_pat[j][i][0] = col8;
-						ext_pat[j][i][1] = col8;
-						ext_pat[j][i][2] = col8;
+						illum.x += col8;
+						illum.y += col8;
+						illum.z += col8;
 						break;
 
 					case PIXEL_FORMAT_LUM:
 						col8 = image[(yc*arImXsize+xc)];
-						ext_pat[j][i][0] = col8;
-						ext_pat[j][i][1] = col8;
-						ext_pat[j][i][2] = col8;
+						illum.x += col8;
+						illum.y += col8;
+						illum.z += col8;
 						break;
 					}
 				}
+
 			}
-		}
-	}
-	else
-	// general case: xdiv!=1 or ydiv!=1
-	//
-	{
-		ARFloat border = relBorderWidth * 10.0f;
-		ARFloat xyFrom = 100.0f + border,
-				xyTo = 110.0f - border,
-				xyStep = xyTo-xyFrom;
-		int jy,ix;
-		ARUint8 col8;
-
-		put_zero( (ARUint8 *)ext_pat2, PATTERN_HEIGHT*PATTERN_WIDTH*3*sizeof(ARUint32) );
-
-		for( j = 0; j < ydiv2; j++ ) {
-			//yw = (ARFloat)(102.5) + (ARFloat)(5.0) * (ARFloat)(j+0.5) / (ARFloat)ydiv2;
-			yw = xyFrom + xyStep * (ARFloat)(j+0.5f) / (ARFloat)ydiv2;
-			for( i = 0; i < xdiv2; i++ ) {
-				//xw = (ARFloat)(102.5) + (ARFloat)(5.0) * (ARFloat)(i+0.5) / (ARFloat)xdiv2;
-				xw = xyFrom + xyStep * (ARFloat)(i+0.5f) / (ARFloat)xdiv2;
-				d = para[2][0]*xw + para[2][1]*yw + para[2][2];
-				if( d == 0 ) return(-1);
-				xc = (int)((para[0][0]*xw + para[0][1]*yw + para[0][2])/d);
-				yc = (int)((para[1][0]*xw + para[1][1]*yw + para[1][2])/d);
-				/*
-				if( arImageProcMode == AR_IMAGE_PROC_IN_HALF ) {
-					xc = ((xc+1)/2)*2;
-					yc = ((yc+1)/2)*2;
-				}*/
-				if( xc >= 0 && xc < arImXsize && yc >= 0 && yc < arImYsize )
-				{
-					/*if(PIX_FORMAT==PIXEL_FORMAT_ABGR) {
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*PIX_SIZE+1];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*PIX_SIZE+2];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*PIX_SIZE+3];
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_BGRA) {
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*PIX_SIZE+0];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*PIX_SIZE+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*PIX_SIZE+2];
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_BGR) {
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*PIX_SIZE+0];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*PIX_SIZE+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*PIX_SIZE+2];
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_RGBA) {
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*PIX_SIZE+2];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*PIX_SIZE+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*PIX_SIZE+0];
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_RGB) {
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*PIX_SIZE+2];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*PIX_SIZE+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*PIX_SIZE+0];
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_RGB565) {
-						int jy=j/ydiv, ix=i/xdiv;
-						//ARUint8 col = RGB565_to_LUM8_LUT[image16[yc*arImXsize+xc]];
-						ARUint8 col = getLUM8_from_RGB565(image16+yc*arImXsize+xc);
-						ext_pat2[jy][ix][0] += col;
-						ext_pat2[jy][ix][1] += col;
-						ext_pat2[jy][ix][2] += col;
-					}
-					if(PIX_FORMAT==PIXEL_FORMAT_LUM) {
-						int jy=j/ydiv, ix=i/xdiv;
-						ARUint8 col = image[(yc*arImXsize+xc)*PIX_SIZE];
-						ext_pat2[jy][ix][0] += col;
-						ext_pat2[jy][ix][1] += col;
-						ext_pat2[jy][ix][2] += col;
-					}*/
-
-					switch(pixelFormat)
-					{
-					case PIXEL_FORMAT_ABGR:
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*4+1];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*4+2];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*4+3];
-						break;
-
-					case PIXEL_FORMAT_BGRA:
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*4+0];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*4+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*4+2];
-						break;
-
-					case PIXEL_FORMAT_BGR:
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*3+0];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*3+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*3+2];
-						break;
-
-					case PIXEL_FORMAT_RGBA:
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*4+2];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*4+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*4+0];
-						break;
-
-					case PIXEL_FORMAT_RGB:
-						ext_pat2[j/ydiv][i/xdiv][0] += image[(yc*arImXsize+xc)*3+2];
-						ext_pat2[j/ydiv][i/xdiv][1] += image[(yc*arImXsize+xc)*3+1];
-						ext_pat2[j/ydiv][i/xdiv][2] += image[(yc*arImXsize+xc)*3+0];
-						break;
-
-					case PIXEL_FORMAT_RGB565:
-						jy=j/ydiv; ix=i/xdiv;
-						col8 = getLUM8_from_RGB565(image16+yc*arImXsize+xc);
-						ext_pat2[jy][ix][0] += col8;
-						ext_pat2[jy][ix][1] += col8;
-						ext_pat2[jy][ix][2] += col8;
-						break;
-
-					case PIXEL_FORMAT_LUM:
-						jy=j/ydiv; ix=i/xdiv;
-						col8 = image[yc*arImXsize+xc];
-						ext_pat2[jy][ix][0] += col8;
-						ext_pat2[jy][ix][1] += col8;
-						ext_pat2[jy][ix][2] += col8;
-						break;
-					}
-				}
-			}
-		}
-
-		for( j = 0; j < PATTERN_HEIGHT; j++ ) {
-			for( i = 0; i < PATTERN_HEIGHT; i++ ) {
-				ext_pat[j][i][0] = ext_pat2[j][i][0] / (xdiv*ydiv);
-				ext_pat[j][i][1] = ext_pat2[j][i][1] / (xdiv*ydiv);
-				ext_pat[j][i][2] = ext_pat2[j][i][2] / (xdiv*ydiv);
-			}
+			illum /= nXSamplePerPixel * nYSamplePerPixel;
+			ext_pat[ydiv][xdiv][0] = illum.x;
+			ext_pat[ydiv][xdiv][1] = illum.y;
+			ext_pat[ydiv][xdiv][2] = illum.z;
 		}
 	}
 

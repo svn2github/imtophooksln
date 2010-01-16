@@ -79,11 +79,11 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 		CvMat mat = cvMat(3,3, CV_32F, &s);
 		float* t = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
 		float* d = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
-
+		int nValidDetected = 0;
 		memset(t,0,4*2*pARResult->m_nDetected*sizeof(float));
 		memset(d,0,4*2*pARResult->m_nDetected*sizeof(float));
 
-		for (int i =0; i< pARResult->m_nDetected; i++)
+		for (int i = 0; i< pARResult->m_nDetected; i++)
 		{
 			ARMultiEachMarkerInfoT* pcfgMarker = NULL;
 			for (int j =0; j< pARResult->m_pMarkerConfig->marker_num; j++)
@@ -96,17 +96,10 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			}
 			if (pcfgMarker == NULL)
 			{
-				free(t);
-				free(d);
-				return S_FALSE;
+				continue;
 			}
-			
-			const ARFloat* arV[4]= {NULL};
 
-			swprintf_s(str, MAX_PATH, L"@@@@ patt_id = %d, dir = %d \n",
-				pARResult->m_pDetectedMarks[i].id, pARResult->m_pDetectedMarks[i].dir);
-			OutputDebugStringW(str);
-			
+			const ARFloat* arV[4]= {NULL};
 			
 			switch (pARResult->m_pDetectedMarks[i].dir)
 			{
@@ -137,10 +130,10 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			default:
 				free(t);
 				free(d);
-				return S_FALSE;
+				continue;
 				break;
 			}
-
+			nValidDetected++;
 			D3DXVECTOR2 v[4] = {D3DXVECTOR2(0,0)};
 			D3DXVECTOR2 center;
 			const ARFloat* vLT = NULL, *vRT = NULL, *vRB = NULL, *vLB = NULL;
@@ -193,21 +186,27 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			D3DXVec3TransformCoord(&ov3, &ov3, &matTran);
 			D3DXVec3TransformCoord(&ov4, &ov4, &matTran);
 
-			t[4*2*i + 0] = ov1.x;  t[4*2*i + 1] = ov1.y;
-			t[4*2*i + 2] = ov2.x;  t[4*2*i + 3] = ov2.y;
-			t[4*2*i + 4] = ov3.x;  t[4*2*i + 5] = ov3.y;
-			t[4*2*i + 6] = ov4.x;  t[4*2*i + 7] = ov4.y;
+			t[4*2*(nValidDetected-1) + 0] = ov1.x;  t[4*2*(nValidDetected-1) + 1] = ov1.y;
+			t[4*2*(nValidDetected-1) + 2] = ov2.x;  t[4*2*(nValidDetected-1) + 3] = ov2.y;
+			t[4*2*(nValidDetected-1) + 4] = ov3.x;  t[4*2*(nValidDetected-1) + 5] = ov3.y;
+			t[4*2*(nValidDetected-1) + 6] = ov4.x;  t[4*2*(nValidDetected-1) + 7] = ov4.y;
 
-			d[4*2*i + 0] = arV[0][0]/w;  d[4*2*i + 1] = arV[0][1]/h;
-			d[4*2*i + 2] = arV[1][0]/w;  d[4*2*i + 3] = arV[1][1]/h;
-			d[4*2*i + 4] = arV[2][0]/w;  d[4*2*i + 5] = arV[2][1]/h;
-			d[4*2*i + 6] = arV[3][0]/w;  d[4*2*i + 7] = arV[3][1]/h;
+			d[4*2*(nValidDetected-1) + 0] = arV[0][0]/w;  d[4*2*(nValidDetected-1) + 1] = arV[0][1]/h;
+			d[4*2*(nValidDetected-1) + 2] = arV[1][0]/w;  d[4*2*(nValidDetected-1) + 3] = arV[1][1]/h;
+			d[4*2*(nValidDetected-1) + 4] = arV[2][0]/w;  d[4*2*(nValidDetected-1) + 5] = arV[2][1]/h;
+			d[4*2*(nValidDetected-1) + 6] = arV[3][0]/w;  d[4*2*(nValidDetected-1) + 7] = arV[3][1]/h;
+		}
+		if (nValidDetected < 1)
+		{
+			free(t);
+			free(d);
+			return S_FALSE;
 		}
 		CvMat cvPt;
 		CvMat dstPt;
 
-		cvPt = cvMat(pARResult->m_nDetected*4, 2, CV_32F, t);
-		dstPt = cvMat(pARResult->m_nDetected*4, 2, CV_32F, d);
+		cvPt = cvMat(nValidDetected*4, 2, CV_32F, t);
+		dstPt = cvMat(nValidDetected*4, 2, CV_32F, d);
 		cvFindHomography(&dstPt, &cvPt, &mat);
 
 		D3DXMATRIX matHomo;
