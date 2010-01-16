@@ -30,4 +30,6 @@ public:
 public:
 	AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~AR2WarpController();
+protected:
+	virtual CCritSec* GetReceiveCS(IPin* pPin);
 };

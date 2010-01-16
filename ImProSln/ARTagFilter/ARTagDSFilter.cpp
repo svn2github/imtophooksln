@@ -77,6 +77,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	HRESULT hr;
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
+
 		AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
 		if (pProps->dwStreamId != AM_STREAM_MEDIA) {
 			return S_OK;
@@ -249,7 +250,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		
-		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 16>(bitHeader.biWidth, bitHeader.biHeight);
+		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 64>(bitHeader.biWidth, bitHeader.biHeight);
 		GUID guidSubType = *inputMT.Subtype();
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{

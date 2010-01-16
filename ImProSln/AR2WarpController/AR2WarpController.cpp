@@ -54,6 +54,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	}
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin)
 	{
+
 		CMediaSample* pCSample = (CMediaSample*)pSample;
 		ARTagResultData* pARResult = NULL;
 		pCSample->GetPointer((BYTE**)&pARResult);
@@ -364,4 +365,16 @@ HRESULT AR2WarpController::GetPages(CAUUID *pPages)
 	pPages->pElems[0] = CLSID_AR2WarpControllerPropertyPage;
 	return S_OK;
 	
+}
+
+CCritSec* AR2WarpController::GetReceiveCS(IPin* pPin)
+{
+	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
+	{
+		return NULL;
+	}
+	else
+	{
+		return __super::GetReceiveCS(pPin);
+	}
 }

@@ -121,6 +121,10 @@ BOOL CMuxTransformFilter::IsAnyOutPinConnect()
 	}
 	return FALSE;
 }
+CCritSec* CMuxTransformFilter::GetReceiveCS(IPin* pPin)
+{
+	return &m_csReceive;
+}
 HRESULT CMuxTransformFilter::Stop()
 {
 	CAutoLock lck1(&m_csFilter);
@@ -595,13 +599,26 @@ HRESULT
 CMuxTransformInputPin::Receive(IMediaSample * pSample)
 {
 	HRESULT hr;
-	CAutoLock lck(&m_pTransformFilter->m_csReceive);
-	ASSERT(pSample);
+	CCritSec* receiveCS = m_pTransformFilter->GetReceiveCS(this);
+	if (receiveCS != NULL)
+	{
+		CAutoLock lck(receiveCS);
+		ASSERT(pSample);
 
-	// check all is well with the base class
-	hr = CBaseInputPin::Receive(pSample);
-	if (S_OK == hr) {
-		hr = m_pTransformFilter->Receive(pSample, this);
+		// check all is well with the base class
+		hr = CBaseInputPin::Receive(pSample);
+		if (S_OK == hr) {
+			hr = m_pTransformFilter->Receive(pSample, this);
+		}
+	}
+	else
+	{
+		ASSERT(pSample);
+		// check all is well with the base class
+		hr = CBaseInputPin::Receive(pSample);
+		if (S_OK == hr) {
+			hr = m_pTransformFilter->Receive(pSample, this);
+		}
 	}
 	return hr;
 }

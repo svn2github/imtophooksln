@@ -243,6 +243,7 @@ private:
 	virtual BOOL IsAnyOutPinConnect();
 protected:
 	virtual HRESULT CreatePins() = 0;
+	virtual CCritSec* GetReceiveCS(IPin* pPin);
 
 };
 
