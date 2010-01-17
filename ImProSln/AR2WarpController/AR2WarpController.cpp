@@ -105,69 +105,44 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			switch (pARResult->m_pDetectedMarks[i].dir)
 			{
 			case 0:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
-				break;
-			case 1:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
-				break;
-			case 2:
 				arV[0] = pARResult->m_pDetectedMarks[i].vertex[2];
 				arV[1] = pARResult->m_pDetectedMarks[i].vertex[3];
 				arV[2] = pARResult->m_pDetectedMarks[i].vertex[0];
 				arV[3] = pARResult->m_pDetectedMarks[i].vertex[1];
 				break;
-			case 3:
+			case 1:
 				arV[0] = pARResult->m_pDetectedMarks[i].vertex[1];
 				arV[1] = pARResult->m_pDetectedMarks[i].vertex[2];
 				arV[2] = pARResult->m_pDetectedMarks[i].vertex[3];
 				arV[3] = pARResult->m_pDetectedMarks[i].vertex[0];
 				break;
+			case 2:
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
+				break;
+			case 3:
+				arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
+				arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
+				arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
+				arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
+				break;
 			default:
-				free(t);
-				free(d);
+
 				continue;
 				break;
 			}
 			nValidDetected++;
 			D3DXVECTOR2 v[4] = {D3DXVECTOR2(0,0)};
 			D3DXVECTOR2 center;
-			const ARFloat* vLT = NULL, *vRT = NULL, *vRB = NULL, *vLB = NULL;
+			
 			v[0].x = arV[0][0]; v[0].y = arV[0][1];
 			v[1].x = arV[1][0]; v[1].y = arV[1][1];
 			v[2].x = arV[2][0]; v[2].y = arV[2][1];
 			v[3].x = arV[3][0]; v[3].y = arV[3][1];
 			center = (v[0] + v[1] + v[2] + v[3]) / 4.0;
-			for (int i =0 ; i< 4; i++)
-			{
-				D3DXVECTOR2 dv;
-				dv = v[i] - center;
-				if (dv.x <0 && dv.y < 0)
-				{
-					vLT = arV[i];
-				}
-				else if (dv.x >= 0 && dv.y < 0)
-				{
-					vRT = arV[i];
-				}
-				else if (dv.x >= 0 && dv.y >= 0)
-				{
-					vRB = arV[i];
-				}
-				else
-				{
-					vLB = arV[i];
-				}
-			}
-			if ( vLT != arV[0] || vRT != arV[1] || vRB != arV[2] || vLB != arV[3])
-			{
-				int test = 0;
-			}
+	
 			D3DXMATRIX matTran;
 			D3DXMATRIX matW2VS;
 			D3DXMatrixScaling(&matW2VS, 1.0, -1.0, 1.0);
