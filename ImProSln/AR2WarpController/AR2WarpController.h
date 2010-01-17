@@ -31,5 +31,6 @@ public:
 	AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~AR2WarpController();
 protected:
+	double  m_RANSIC_Threshold;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
 };

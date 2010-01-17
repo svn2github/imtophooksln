@@ -7,7 +7,7 @@
 AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
 { 
-	
+	m_RANSIC_Threshold = 5;
 }
 AR2WarpController::~AR2WarpController()
 {
@@ -54,7 +54,6 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	}
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin)
 	{
-
 		CMediaSample* pCSample = (CMediaSample*)pSample;
 		ARTagResultData* pARResult = NULL;
 		pCSample->GetPointer((BYTE**)&pARResult);
@@ -66,7 +65,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 		{
 			return S_FALSE;
 		}
-
+		
 	    CMuxTransformInputPin* pin = (CMuxTransformInputPin*)pReceivePin;
 	
 		float w = pARResult->m_screenW;
@@ -129,7 +128,6 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 				arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
 				break;
 			default:
-
 				continue;
 				break;
 			}
@@ -183,7 +181,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 
 		cvPt = cvMat(nValidDetected*4, 2, CV_32F, t);
 		dstPt = cvMat(nValidDetected*4, 2, CV_32F, d);
-		cvFindHomography(&dstPt, &cvPt, &mat);
+		cvFindHomography(&dstPt, &cvPt, &mat, CV_RANSAC, m_RANSIC_Threshold);
 
 		D3DXMATRIX matHomo;
 		D3DXMatrixIdentity(&matHomo);
