@@ -273,7 +273,9 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			return S_FALSE;
 		}
-		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS);
+		D3DXMATRIX matWarp;
+		GetWarpMatrix(matWarp);
+		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&matWarp);
 		DoTransform(pIn, pOut, &m_pInputPins[0]->GetCurMediaType(), &m_pOutputPins[0]->GetCurMediaType());
 	}
 	return S_OK;
@@ -419,6 +421,7 @@ HRESULT HomoWarpFilter::SetWarpVertex(float LTx, float LTy, float LBx, float LBy
 	D3DXVECTOR2 v2(LBx, LBy);
 	D3DXVECTOR2 v3(RTx, RTy);
 	D3DXVECTOR2 v4(RBx, RBy);
+	CAutoLock autolock(&m_accessWarpMatCS);
 	m_matTTS = ComputeTTS(v1, v2, v3, v4);
 	return S_OK;
 }
@@ -429,6 +432,7 @@ HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float&
 	D3DXVECTOR2 v2(0,1);
 	D3DXVECTOR2 v3(1,0);
 	D3DXVECTOR2 v4(1,1);
+	CAutoLock autolock(&m_accessWarpMatCS);
 	D3DXVec2TransformCoord(&v1, &v1, &m_matTTS);
 	D3DXVec2TransformCoord(&v2, &v2, &m_matTTS);
 	D3DXVec2TransformCoord(&v3, &v3, &m_matTTS);
@@ -443,10 +447,16 @@ HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float&
 
 HRESULT HomoWarpFilter::SetWarpMatrix(const D3DXMATRIX& mat)
 {
+	CAutoLock autolock(&m_accessWarpMatCS);
 	m_matTTS = mat;
 	return S_OK;
 }
-
+HRESULT HomoWarpFilter::GetWarpMatrix(D3DXMATRIX& mat)
+{
+	CAutoLock autolock(&m_accessWarpMatCS);
+	mat = m_matTTS;
+	return S_OK;
+}
 CCritSec* HomoWarpFilter::GetReceiveCS(IPin* pPin)
 {
 	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
