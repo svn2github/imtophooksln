@@ -41,12 +41,13 @@
 #define IDC_Mat32                       2023
 #define IDC_SLIDER_ConfThreshold        2023
 #define IDC_Mat33                       2024
-#define IDC_txtThreshold2               2024
 #define IDC_txtConfThreshold            2024
 #define IDC_Mat20                       2025
 #define IDC_Mat21                       2026
 #define IDC_Mat22                       2027
 #define IDC_Mat23                       2028
+#define IDC_BUTTON1                     2029
+#define IDC_BTN_Load                    2029
 
 // Next default values for new objects
 // 
@@ -54,7 +55,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        2002
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         2023
+#define _APS_NEXT_CONTROL_VALUE         2030
 #define _APS_NEXT_SYMED_VALUE           2015
 #endif
 #endif
