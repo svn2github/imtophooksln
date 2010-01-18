@@ -22,7 +22,8 @@ ARTag::ARTag(int Num, float x, float y, float size, bool visible,char* tagDir){
 	char fileName[100] ;
 
 	//sprintf(fileName,"bch/BchThin_%04d.png",tagNum) ;
-	sprintf(fileName,"%s\\bch\\BchThin_%04d.png",tagDir,tagNum) ;
+	//sprintf(fileName,"%s\\bch\\BchThin_%04d.png",tagDir,tagNum) ;
+	sprintf(fileName,"%s\\ARToolKitPlus_AllMarkers\\marker_%03d.png",tagDir,tagNum) ;
 	
 	IplImage* tmptag = cvLoadImage(fileName,0);
 	tagImage = cvCreateImage(cvSize(tagSize,tagSize),8,1);
@@ -67,6 +68,10 @@ ARLayout::ARLayout(int imageWidth , int imageHeight, int numX, int numY, int tag
 	
 	float startX =Space, startY = Space ;
 	float size = min((LayoutWidth-numX*Space)/numX, (LayoutHeight-numY*Space)/numY); 
+
+	if((LayoutWidth-numX*Space)/numX > (LayoutHeight-numY*Space)/numY){
+		numY = (int)LayoutHeight/(size + Space);
+	}
 
 	for(int i = 0 ; i < numX ; i ++){
 		for(int j = 0 ; j< numY ; j ++){

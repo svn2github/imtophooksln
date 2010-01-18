@@ -5,7 +5,6 @@
 #define BITMAP_NAME TEXT("sample_800.bmp")
 #define WIDTH 800
 #define HEIGHT 600 
-const TCHAR* DXUtil_GetDXSDKMediaPath();
 
 ARLayoutFilter::ARLayoutFilter(HRESULT *phr, ARLayoutSource *pParent, LPCWSTR pPinName) : 
 CSourceStream(NAME("AR_LAYOUT"), phr, pParent, pPinName) ,
@@ -38,16 +37,13 @@ m_rtFrameLength(UNITS / 5) // Display 5 bitmap frames per second
 	WCHAR szPath[MAX_PATH] = L"";
 	_tcsncat(szPath, str, pszFile - str);
 
-	//swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\HomoWarp.fx", szPath);
-	//swprintf_s(str, MAX_PATH, szPath);
-
 	changeLayout = false; 
 	char fileDir[100];
 
 	int size= wcslen(szCurrentDir);
 	wcstombs(fileDir, szPath, size+1);
 
-	wsprintf(szFileCurrent, TEXT("%s\\bch\\%s\0"), szPath, BITMAP_NAME);
+	wsprintf(szFileCurrent, TEXT("%s\\ARToolKitPlus_AllMarkers\\%s\0"), szPath, BITMAP_NAME);
 
 	layout = new ARLayout(WIDTH,HEIGHT,8,6,10,fileDir) ;
 	m_iImageHeight = HEIGHT;
@@ -56,33 +52,6 @@ m_rtFrameLength(UNITS / 5) // Display 5 bitmap frames per second
 	m_hFile = CreateFile(szFileCurrent, GENERIC_READ, 0, NULL, OPEN_EXISTING, 
 		FILE_ATTRIBUTE_NORMAL, NULL);
 
-	//if (m_hFile == INVALID_HANDLE_VALUE)
-	//{
-	//	// File was not in the application's current directory,
-	//	// so look in the DirectX SDK media path instead.
-	//	lstrcpyn(szFileMedia, DXUtil_GetDXSDKMediaPath(), MAX_PATH-1);
-	//	lstrcat(szFileMedia, BITMAP_NAME);
-
-	//	m_hFile = CreateFile(szFileMedia, GENERIC_READ, 0, NULL, OPEN_EXISTING, 
-	//		FILE_ATTRIBUTE_NORMAL, NULL);
-
-	//	if (m_hFile == INVALID_HANDLE_VALUE)
-	//	{
-	//		TCHAR szMsg[MAX_PATH + MAX_PATH + 100];
-
-	//		wsprintf(szMsg, TEXT("Could not open bitmap source file in the application directory:\r\n\r\n\t[%s]\n\n")
-	//			TEXT("or in the DirectX SDK Media folder:\r\n\r\n\t[%s]\n\n")
-	//			TEXT("Please copy this file either to the application's folder\r\n")
-	//			TEXT("or to the DirectX SDK Media folder, then recreate this filter.\r\n")
-	//			TEXT("Otherwise, you will not be able to render the output pin.\0"),
-	//			szFileCurrent, szFileMedia);
-
-	//		OutputDebugString(szMsg);
-	//		MessageBox(NULL, szMsg, TEXT("PushSource filter error"), MB_ICONERROR | MB_OK);
-	//		*phr = HRESULT_FROM_WIN32(GetLastError());
-	//		return;
-	//	}
-	//}
 
 	DWORD dwFileSize = GetFileSize(m_hFile, NULL);
 	if (dwFileSize == INVALID_FILE_SIZE)
@@ -110,10 +79,6 @@ m_rtFrameLength(UNITS / 5) // Display 5 bitmap frames per second
 		return;
 	}
 
-	// WARNING - This code does not verify that the file is a valid bitmap file.
-	// In your own filter, you would check this or else generate the bitmaps 
-	// yourself in memory.
-
 	 cbFileHeader = sizeof(BITMAPFILEHEADER);
 
 	// Store the size of the BITMAPINFO 
@@ -125,6 +90,8 @@ m_rtFrameLength(UNITS / 5) // Display 5 bitmap frames per second
 
 	// Store a pointer to the starting address of the pixel bits
 	m_pImage = m_pFile + cbFileHeader + m_cbBitmapInfo;
+
+    LoadnewBitmap() ;
 
 	// Close and invalidate the file handle, since we have copied its bitmap data
 	CloseHandle(m_hFile);
@@ -270,7 +237,6 @@ HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample)
 	// If the bitmap file was not loaded, just fail here.
 	if (!m_pImage)
 		return E_FAIL;
-
 	CAutoLock cAutoLockShared(&m_cSharedState);
 
 	// Access the sample's data buffer
@@ -282,122 +248,9 @@ HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample)
 
 	VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)m_mt.pbFormat;
 
-	// If we want to change the contents of our source buffer (m_pImage)
-	// at some interval or based on some condition, this is where to do it.
-	// Remember that the new data has the same format that we specified in GetMediaType.
-	// For example: 
-	// if(m_iFrameNumber > SomeValue)
-	//    LoadNewBitsIntoBuffer(m_pImage)
-
-	// Copy the DIB bits over into our filter's output buffer.
-	// Since sample size may be larger than the image size, bound the copy size.
 	memcpy(pData, m_pImage, min(pVih->bmiHeader.biSizeImage, (DWORD) cbData));
 
-	// Set the timestamps that will govern playback frame rate.
-	// If this file is getting written out as an AVI,
-	// then you'll also need to configure the AVI Mux filter to 
-	// set the Average Time Per Frame for the AVI Header.
-	// The current time is the sample's start
-	REFERENCE_TIME rtStart = m_iFrameNumber * m_rtFrameLength;
-	REFERENCE_TIME rtStop  = rtStart + m_rtFrameLength;
-
-	pSample->SetTime(&rtStart, &rtStop);
-	m_iFrameNumber++;
-
-	// Set TRUE on every sample for uncompressed frames
-	pSample->SetSyncPoint(TRUE);
 	return S_OK;
-}
-
-
-
-//HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample){
-//
-//	HRESULT hr;
-//	BYTE *pData;
-//	long cbData;
-//
-//	WCHAR msg[256];
-//
-//	pSample->GetPointer(&pData);
-//	cbData = pSample->GetSize();
-//
-//	CMediaType *pmt;
-//	hr = pSample->GetMediaType((AM_MEDIA_TYPE**)&pmt);
-//	if(hr == S_OK)
-//	{
-//		SetMediaType(pmt);
-//		DeleteMediaType(pmt);
-//	}
-//	ASSERT(m_mt.formattype == FORMAT_VideoInfo);
-//	ASSERT(m_mt.cbFormat >= sizeof(VIDEOINFOHEADER));
-//	VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)m_mt.pbFormat;
-//
-//	//if (wcscmp(PinName,"Layout")== 1)
-//	{	
-//		hr = WriteToLayout(msg,pData,pVih);
-//
-//	}
-//	//else
-//		hr = WriteToMask(msg,pData,pVih);
-//		
-//	return S_OK;
-//}
-//
-//HRESULT ARLayoutFilter::WriteToLayout(LPWSTR wszText,BYTE* pData, VIDEOINFOHEADER* pVih){
-//
-//	
-//	return S_OK;
-//}
-//
-//HRESULT ARLayoutFilter::WriteToMask(LPWSTR wszText,BYTE* pData, VIDEOINFOHEADER* pVih){
-//
-//	return S_OK;
-//}
-
-const TCHAR* DXUtil_GetDXSDKMediaPath()
-{
-	static TCHAR strNull[2] = {0};
-	static TCHAR strPath[MAX_PATH + 10];
-	HKEY  hKey=0;
-	DWORD type=0, size=MAX_PATH;
-
-	strPath[0] = 0;     // Initialize to NULL
-
-	// Open the appropriate registry key
-	LONG result = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
-		TEXT("Software\\Microsoft\\DirectX SDK"),
-		0, KEY_READ, &hKey );
-	if( ERROR_SUCCESS != result )
-		return strNull;
-
-	result = RegQueryValueEx( hKey, TEXT("DX9O4SDK Samples Path"), NULL,
-		&type, (BYTE*)strPath, &size );
-
-	if( ERROR_SUCCESS != result )
-	{
-		size = MAX_PATH;    // Reset size field
-		result = RegQueryValueEx( hKey, TEXT("DX81SDK Samples Path"), NULL,
-			&type, (BYTE*)strPath, &size );
-
-		if( ERROR_SUCCESS != result )
-		{
-			size = MAX_PATH;    // Reset size field
-			result = RegQueryValueEx( hKey, TEXT("DX8SDK Samples Path"), NULL,
-				&type, (BYTE*)strPath, &size );
-
-			if( ERROR_SUCCESS != result )
-			{
-				RegCloseKey( hKey );
-				return strNull;
-			}
-		}
-	}
-
-	RegCloseKey( hKey );
-	lstrcat( strPath, TEXT("\\Media\\Misc\\\0") );
-
-	return strPath;
 }
 
 HRESULT ARLayoutFilter::GetPages(CAUUID *pPages)
