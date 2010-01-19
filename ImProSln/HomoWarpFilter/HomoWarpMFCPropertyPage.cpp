@@ -15,11 +15,13 @@ IMPLEMENT_DYNAMIC(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
 	CMFCBasePropertyPage::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CHK_FlipY, m_ckFlipY);
 }
 
 
 BEGIN_MESSAGE_MAP(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 
+	ON_BN_CLICKED(IDC_CHK_FlipY, &CHomoWarpMFCPropertyPage::OnBnClickedChkFlipy)
 END_MESSAGE_MAP()
 
 
@@ -116,6 +118,8 @@ bool CHomoWarpMFCPropertyPage::GetSetting()
 
 	::SLIDER_SetPos(m_slrRTx, (int)(RTx * m_slrScale));
 	::SLIDER_SetPos(m_slrRTy, (int)(RTy * m_slrScale));
+	
+	m_ckFlipY.SetCheck(m_pFilter->GetIsFlipY());
 	updateSliderTxt();
 	return true;
 }
@@ -138,7 +142,7 @@ bool CHomoWarpMFCPropertyPage::ApplySetting()
 	float RTy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRTy);
 
 	m_pFilter->SetWarpVertex(LTx, LTy, LBx, LBy, RBx, RBy, RTx, RTy);
-
+	m_pFilter->SetIsFlipY(m_ckFlipY.GetCheck());
 	return true;
 }
 bool CHomoWarpMFCPropertyPage::updateSliderTxt()
@@ -257,4 +261,9 @@ int CHomoWarpMFCPropertyPage::GetDialogResourceID()
 int CHomoWarpMFCPropertyPage::GetTitileResourceID() 
 { 
 	return IDS_HomoWarpPropertyDlg_Title;
+}
+
+void CHomoWarpMFCPropertyPage::OnBnClickedChkFlipy()
+{
+	SetDirty();
 }

@@ -12,5 +12,8 @@ public:
 		float RBx, float RBy, float RTx, float RTy);
 	virtual HRESULT GetWarpVertex(float& LTx, float& LTy, float& LBx, float& LBy, 
 		float& RBx, float& RBy, float& RTx, float& RTy);
+
+	virtual bool GetIsFlipY();
+	virtual bool SetIsFlipY(bool bFlipY);
 };
 

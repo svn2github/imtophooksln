@@ -205,9 +205,9 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	}
 }
 
-HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType)
+HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType, bool bFlipY = true)
 {	
-	CopyInputImage2InputTexture(pIn, pInType, true);
+	CopyInputImage2InputTexture(pIn, pInType, bFlipY);
 	m_pD3DDisplay->SetTexture(m_pInTexture);
 	m_pD3DDisplay->Render();
 	CopyRenderTarget2OutputTexture();

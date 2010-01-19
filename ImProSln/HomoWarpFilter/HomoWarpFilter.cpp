@@ -8,6 +8,7 @@ HomoWarpFilter::HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 : CMuxTransformFilter(NAME("HomoWarp Filter"), 0, CLSID_HomoWarpFilter)
 { 
 	D3DXMatrixIdentity(&m_matTTS);
+	m_bFlipY = true;
 }
 HomoWarpFilter::~HomoWarpFilter()
 {
@@ -276,7 +277,7 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		D3DXMATRIX matWarp;
 		GetWarpMatrix(matWarp);
 		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&matWarp);
-		DoTransform(pIn, pOut, &m_pInputPins[0]->GetCurMediaType(), &m_pOutputPins[0]->GetCurMediaType());
+		DoTransform(pIn, pOut, &m_pInputPins[0]->GetCurMediaType(), &m_pOutputPins[0]->GetCurMediaType(), m_bFlipY);
 	}
 	return S_OK;
 }

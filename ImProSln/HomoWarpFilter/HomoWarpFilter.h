@@ -44,7 +44,11 @@ public:
 
 	virtual HRESULT SetWarpMatrix(const D3DXMATRIX& mat);
 	virtual HRESULT GetWarpMatrix(D3DXMATRIX& mat);
+
+	virtual bool GetIsFlipY() { return m_bFlipY;};
+	virtual bool SetIsFlipY(bool bFlipY){ m_bFlipY = bFlipY; return true;};
 protected:
+	bool m_bFlipY;
 	CCritSec m_accessWarpMatCS;
 	D3DXMATRIX m_matTTS;
 	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);

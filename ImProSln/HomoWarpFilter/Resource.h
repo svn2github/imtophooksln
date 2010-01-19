@@ -3,7 +3,6 @@
 // Used by HomoWarpFilter.rc
 //
 #define IDD_HomoWarpPropertyPage        107
-#define IDD_PROPPAGE_LARGE              108
 #define IDD_HomoWarpMFCPropertyPage     108
 #define IDS_HomoWarpPropertyDlg_Title   7000
 #define IDC_SLIDER_LTx                  7000
@@ -18,6 +17,8 @@
 #define IDC_txtLB                       7010
 #define IDC_txtRT                       7012
 #define IDC_txtRB                       7013
+#define IDC_CHECK1                      7015
+#define IDC_CHK_FlipY                   7015
 
 // Next default values for new objects
 // 
@@ -25,7 +26,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        7001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         7015
+#define _APS_NEXT_CONTROL_VALUE         7016
 #define _APS_NEXT_SYMED_VALUE           7012
 #endif
 #endif

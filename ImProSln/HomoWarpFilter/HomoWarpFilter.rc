@@ -150,6 +150,7 @@ BEGIN
     LTEXT           "Static",IDC_txtRT,156,66,51,8
     LTEXT           "RB:",IDC_STATIC,142,119,11,11
     LTEXT           "Static",IDC_txtRB,156,119,51,8
+    CONTROL         "FlipY",IDC_CHK_FlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,14,31,10
 END
 
 IDD_HomoWarpMFCPropertyPage DIALOGEX 0, 0, 235, 156

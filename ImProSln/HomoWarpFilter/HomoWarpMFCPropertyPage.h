@@ -1,6 +1,7 @@
 #pragma once
 #include "MFCBasePropertyPage.h"
 #include "resource.h"
+#include "afxwin.h"
 // CHomoWarpMFCPropertyPage dialog
 
 class CHomoWarpMFCPropertyPage : public CMFCBasePropertyPage
@@ -55,4 +56,6 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
 	virtual int GetTitileResourceID();
 	
+	CButton m_ckFlipY;
+	afx_msg void OnBnClickedChkFlipy();
 };
