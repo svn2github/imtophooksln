@@ -573,7 +573,32 @@ BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 		OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
 		return FALSE;
 	}
-
+	D3DCAPS9 caps;
+	m_pDevice->GetDeviceCaps(&caps);
+	if (caps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL)
+	{
+		int powerof2Width = 1;
+		int powerof2Height = 1;
+		while (powerof2Width < screenW)
+		{
+			powerof2Width *= 2;
+		}
+		while (powerof2Height < screenH)
+		{
+			powerof2Height *= 2;
+		}
+		d3dpp.BackBufferWidth = powerof2Width;
+		d3dpp.BackBufferHeight = powerof2Height;
+		m_pDevice->Release();
+		m_pDevice = NULL;
+		if( FAILED( m_pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
+			D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_pDevice )))
+		{
+			OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
+			return FALSE;
+		}
+	}
+	
 	// Turn on the zbuffer
 	m_pDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	// Turn on ambient lighting 

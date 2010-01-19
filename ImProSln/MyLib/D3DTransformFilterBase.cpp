@@ -161,8 +161,16 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	pOutSurface->GetDesc(&surOutDesc);
 	D3DLOCKED_RECT rect;
 	pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
-	int height = surOutDesc.Height;
-	int width = surOutDesc.Width;
+	
+	
+	pOutMediaType->cbFormat;
+	int surHeight = surOutDesc.Height;
+	int surWidth = surOutDesc.Width;
+
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pOutMediaType->pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	int height = bitHeader.biHeight;
+	int width = bitHeader.biWidth;
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 	{
 		channel = 3;
@@ -171,28 +179,36 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	{
 		channel = 4;
 	}
+
 	if (bFlipY)
-	{
-		for(int y = 0; y < height; y++ )
+	{	
+		int x = 0; int y = 0; float dstX = 0; float dstY = 0;
+		float tmpW = surWidth / width;
+		float tmpH = surHeight / height;
+		for( y = 0; y < height; y++ )
 		{
-			for (int x = 0; x< width; x++)
+			for ( x = 0; x< width; x++)
 			{
-				pOutData[(height - y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
-				pOutData[(height - y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
-				pOutData[(height - y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+				dstX = x * tmpW;  dstY = y * tmpH;
+				pOutData[(height - y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+				pOutData[(height - y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+				pOutData[(height - y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
 			}
 		}
 	}
 	else
 	{
-		
-		for(int y = 0; y < height; y++ )
+		int x = 0; int y = 0; float dstX = 0; float dstY = 0;
+		float tmpW = surWidth / width;
+		float tmpH = surHeight / height;
+		for( y = 0; y < height; y++ )
 		{
-			for (int x = 0; x< width; x++)
+			for ( x = 0; x< width; x++)
 			{
-				pOutData[y*width*channel + x*channel] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4];
-				pOutData[y*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 1];
-				pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[y*rect.Pitch + x*4 + 2];
+				dstX = x * tmpW;  dstY = y * tmpH;
+				pOutData[y*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+				pOutData[y*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+				pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
 			}
 		}
 		
