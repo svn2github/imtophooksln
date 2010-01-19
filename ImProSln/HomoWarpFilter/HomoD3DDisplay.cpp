@@ -74,7 +74,16 @@ ID3DXEffect* HomoD3DDisplay::GetEffect()
 	{
 		extern HMODULE GetModule();
 		DWORD dwShaderFlags = D3DXFX_NOT_CLONEABLE ;
-
+		D3DCAPS9 cap;
+		m_pDevice->GetDeviceCaps(&cap);
+		if (cap.PixelShaderVersion < D3DPS_VERSION(2,0))
+		{
+			dwShaderFlags |= D3DXSHADER_FORCE_PS_SOFTWARE_NOOPT;
+		}
+		if (cap.VertexShaderVersion < D3DVS_VERSION(2,0))
+		{
+			dwShaderFlags |= D3DXSHADER_FORCE_VS_SOFTWARE_NOOPT;
+		}
 		WCHAR str[MAX_PATH] = {0};
 		HMODULE module = GetModule();
 		GetModuleFileName(module, str, MAX_PATH);
