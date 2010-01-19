@@ -42,10 +42,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AR2WarpController", "AR2WarpController\AR2WarpController.vcproj", "{1BF93D99-3375-4C0E-BC4C-FDA0F652228D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARLayoutFilter", "ArLayoutFilter\MyTestFilter\MyTestFilter.vcproj", "{FD8E9BA2-38A5-4964-A855-950EAFBE750C}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AC2F0807-BECA-484D-BBE7-7A2C208FC806} = {AC2F0807-BECA-484D-BBE7-7A2C208FC806}
-		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA} = {E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

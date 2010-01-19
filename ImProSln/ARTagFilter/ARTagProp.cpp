@@ -12,6 +12,7 @@ m_pARProperty(0)
 {
 	m_hWndXSize = 0;
 	m_hWndYSize = 0;
+	m_hWndLoad = 0;
 }
 
 ARTagCameraSettingPage::~ARTagCameraSettingPage()
@@ -67,6 +68,29 @@ void ARTagCameraSettingPage::SetDirty()
 	}
 
 }
+bool ARTagCameraSettingPage::GetSetting()
+{
+	int xsize, ysize;
+	double mat[16] = {0};
+	double dist_factor[4] = {0};
+	m_pARProperty->getCamera(xsize, ysize, mat, dist_factor);
+	WCHAR tmpStr[MAX_PATH];
+	swprintf_s(tmpStr, MAX_PATH, L"%d", xsize);
+	SetWindowText(m_hWndXSize, tmpStr);
+	swprintf_s(tmpStr, MAX_PATH, L"%d", ysize);
+	SetWindowText(m_hWndYSize, tmpStr);
+	for (int i =0; i< 4; i++)
+	{
+		swprintf_s(tmpStr, MAX_PATH, L"%.2f", dist_factor[i]);
+		SetWindowText(m_hWndDistFactor[i], tmpStr);
+	}
+	for (int i =0; i< 16; i++)
+	{
+		swprintf_s(tmpStr, MAX_PATH, L"%.2f", mat[i]);
+		SetWindowText(m_hWndMat[i], tmpStr);
+	}
+	return true;
+}
 HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 {
 	if (m_pARProperty == NULL )
@@ -119,6 +143,76 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 						mat[12], mat[13], mat[14],  mat[15]);
 	theApp.WriteProfileString(L"Camera Setting", L"mat", tmpStr);
 }
+BOOL ARTagCameraSettingPage::OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg = FALSE)
+{
+	if (pOutStr == NULL)
+	{
+		return FALSE;
+	}
+	WCHAR wszCur[_MAX_PATH] = {0};
+	GetCurrentDirectoryW(_MAX_PATH, wszCur);
+	//TODO: the buffer may be not large enough under multiple selection case.
+	//		We'll have to hook the dialog to dynamically decide the buffer size.
+	const int nBufSize = dwflag & OFN_ALLOWMULTISELECT ? 21000 : MAX_PATH;
+	WCHAR* fnBuf = new WCHAR[nBufSize];
+	fnBuf[0] = L'\0';
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(OPENFILENAME)); 
+	ofn.lStructSize       = sizeof(OPENFILENAME);
+	ofn.hwndOwner         = hwndParent;         
+	ofn.hInstance         = GetModuleHandle(NULL);  
+	ofn.lpstrFilter       = pwcsFilter;
+	ofn.lpstrCustomFilter = NULL;     
+	ofn.nMaxCustFilter    = 0;
+	ofn.nFilterIndex      = 0;
+	ofn.lpstrFile         = fnBuf;     
+	ofn.nMaxFile          = nBufSize;
+	ofn.lpstrFileTitle    = NULL;          
+	ofn.nMaxFileTitle     = 0;     
+	ofn.lpstrInitialDir   = _T("");
+	ofn.lpstrTitle        = pwcsDialogTitle;
+	ofn.nFileOffset       = 0;            
+	ofn.nFileExtension    = 0;
+	ofn.lpstrDefExt       = _T(""); 
+	ofn.lCustData         = 0;           
+	ofn.lpfnHook          = NULL; //OFNHookFilter; 
+	ofn.lpTemplateName    = NULL; 
+	ofn.Flags             = OFN_EXPLORER | OFN_ENABLEHOOK | OFN_PATHMUSTEXIST | dwflag; // | OFN_ENABLEHOOK | OFN_ENABLEINCLUDENOTIFY;
+
+	BOOL bRet = FALSE;
+
+	if (saveDlg)
+	{
+		ofn.Flags |= OFN_OVERWRITEPROMPT;
+		bRet = GetSaveFileName(&ofn);
+	}
+	else
+		bRet = GetOpenFileName(&ofn);
+
+
+	//restore the current directory changed by GetOpenFileName.
+	SetCurrentDirectoryW(wszCur);
+	if(!bRet)
+	{
+		DWORD dwErr = CommDlgExtendedError();
+		delete[] fnBuf;
+		fnBuf = NULL;
+		//dwErr == 0 if user cancel
+		if(dwErr == 0)
+			return FALSE;
+		else
+			return FALSE;
+	}
+	else
+	{
+		
+		wcscpy(pOutStr, fnBuf);
+		delete[] fnBuf;
+		fnBuf = NULL;
+		return TRUE;		
+	}
+
+}
 BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 										 UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -142,6 +236,16 @@ BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 				SetDirty();
 				return 1;
 			}	
+			if (cmd2 == BN_CLICKED && cmd == IDC_BTN_Load)
+			{
+				WCHAR pFileName[MAX_PATH] = {0};
+				OpenFileDialog(m_Dlg, L"*.xml", L"Choose CameraINI File", 0, pFileName);
+				if (pFileName != NULL)
+				{
+					m_pARProperty->loadCameraFromXMLFile(pFileName);
+					GetSetting();
+				}
+			}
 		}
 		break;
 	}
@@ -183,26 +287,9 @@ HRESULT ARTagCameraSettingPage::OnActivate(void)
 	m_hWndMat[13] = GetDlgItem(m_Dlg, IDC_Mat31);
 	m_hWndMat[14] = GetDlgItem(m_Dlg, IDC_Mat32);
 	m_hWndMat[15] = GetDlgItem(m_Dlg, IDC_Mat33);
-	int xsize, ysize;
-	double mat[16] = {0};
-	double dist_factor[4] = {0};
-	m_pARProperty->getCamera(xsize, ysize, mat, dist_factor);
-	WCHAR tmpStr[MAX_PATH];
-	swprintf_s(tmpStr, MAX_PATH, L"%d", xsize);
-	SetWindowText(m_hWndXSize, tmpStr);
-	swprintf_s(tmpStr, MAX_PATH, L"%d", ysize);
-	SetWindowText(m_hWndYSize, tmpStr);
-	for (int i =0; i< 4; i++)
-	{
-		swprintf_s(tmpStr, MAX_PATH, L"%.2f", dist_factor[i]);
-		SetWindowText(m_hWndDistFactor[i], tmpStr);
-	}
-	for (int i =0; i< 16; i++)
-	{
-		swprintf_s(tmpStr, MAX_PATH, L"%.2f", mat[i]);
-		SetWindowText(m_hWndMat[i], tmpStr);
-	}
 
+	m_hWndLoad = GetDlgItem(m_Dlg, IDC_BTN_Load);
+	GetSetting();
 
 	return NOERROR;
 }

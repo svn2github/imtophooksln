@@ -24,8 +24,9 @@ protected:
 	HWND m_hWndMat[16];
 	HWND m_hWndXSize;
 	HWND m_hWndYSize;
-
+	HWND m_hWndLoad;
 	void SetDirty();
+	bool GetSetting();
 	HRESULT ApplyCameraSetting();
 public:
 	ARTagCameraSettingPage(IUnknown *pUnk);
@@ -36,7 +37,7 @@ public:
 	virtual BOOL OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual HRESULT OnActivate(void);
 	virtual HRESULT OnApplyChanges(void);
-
+	BOOL OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg);
 	//
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 

@@ -13,6 +13,9 @@
 #include "ARTagD3DDisplay.h"
 #include "ARTagProp.h"
 #include "MyMediaSample.h"
+#include "msxml2.h"
+#include <string.h>
+
 using namespace ARToolKitPlus;
 extern CARTagFilterApp theApp;
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
@@ -572,6 +575,246 @@ bool ARTagDSFilter::getCamera(int& xsize, int &ysize, double* mat, double* dist_
 	}
 	
 	return true;
+}
+HRESULT ARTagDSFilter::VariantFromString(PCWSTR wszValue, VARIANT &Variant)
+{
+	HRESULT hr = S_OK;
+	BSTR bstr = SysAllocString(wszValue);
+
+	V_VT(&Variant)   = VT_BSTR;
+	V_BSTR(&Variant) = bstr;
+	return hr;
+}
+HRESULT ARTagDSFilter::loadCameraFromXMLFile(WCHAR* filename)
+{
+	IXMLDOMDocument* pXmlDom = NULL;
+	HRESULT hr = CoCreateInstance(__uuidof(DOMDocument60), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pXmlDom));
+
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+	pXmlDom->put_async(VARIANT_FALSE);  
+	pXmlDom->put_validateOnParse(VARIANT_FALSE);
+	pXmlDom->put_resolveExternals(VARIANT_FALSE);
+
+	VARIANT varFileName;
+	VariantInit(&varFileName);
+	VariantFromString(filename, varFileName);
+
+	BSTR bstrXML = NULL;
+	BSTR bstrErr = NULL;
+	VARIANT_BOOL varStatus;
+	hr = pXmlDom->load(varFileName, &varStatus);
+	if (FAILED(hr))
+	{
+		return S_FALSE;
+	}
+	if (varStatus != VARIANT_TRUE)
+	{
+		return S_FALSE;
+	}
+	pXmlDom->get_xml(&bstrXML);
+	IXMLDOMNodeList* nodeList = NULL;
+	IXMLDOMNode* nodeRoot = NULL;
+	IXMLDOMNode* node = NULL;
+	IXMLDOMNode* nodeNext = NULL;
+	IXMLDOMAttribute * attr = NULL;
+	IXMLDOMNamedNodeMap* pNameNodeMap = NULL;
+	long length = 0;
+
+	int* xsize = NULL;
+	int* ysize = NULL;
+	double mat[16] = {0};
+	double* dist_factor[4] = {NULL, NULL, NULL, NULL};
+	double* focal_length_x = NULL;
+	double* focal_length_y = NULL;
+	double* center_x = NULL;
+	double* center_y = NULL;
+	pXmlDom->getElementsByTagName(L"CAMERADATACAMERADATA", &nodeList);
+	
+	nodeList->get_length(&length);
+	if (length <=0 )
+	{
+		return S_FALSE;
+	}
+	
+	nodeList->get_item(0, &nodeRoot);
+	nodeRoot->get_firstChild(&node);
+	do {	
+		node->get_attributes(&pNameNodeMap);
+		pNameNodeMap->get_length(&length);
+		for (long i =0; i<length; i++)
+		{
+			IXMLDOMNode* pNodeAttr = NULL;
+			CComVariant           varValue;
+			CComBSTR              bstrName;
+
+			pNameNodeMap->get_item(i, &pNodeAttr );
+			pNodeAttr->get_nodeName(&bstrName);
+			pNodeAttr->get_nodeValue(&varValue);
+			if (wcscmp(bstrName, L"screen_width") == 0)
+			{
+				xsize = new int();
+				swscanf(varValue.bstrVal, L"%d", xsize);
+			}
+			else if (wcscmp(bstrName, L"screen_height") == 0)
+			{
+				ysize = new int();
+				swscanf(varValue.bstrVal, L"%d", ysize);
+			}
+			else if (wcscmp(bstrName, L"dist_1") == 0)
+			{
+				dist_factor[0] = new double();
+				swscanf(varValue.bstrVal, L"%lf", dist_factor[0]);
+			}
+			else if (wcscmp(bstrName, L"dist_2") == 0)
+			{
+				dist_factor[1] = new double();
+				swscanf(varValue.bstrVal, L"%lf", dist_factor[1]);
+			}
+			else if (wcscmp(bstrName, L"dist_3") == 0)
+			{
+				dist_factor[2] = new double();
+				swscanf(varValue.bstrVal, L"%lf", dist_factor[2]);
+			}
+			else if (wcscmp(bstrName, L"dist_4") == 0)
+			{
+				dist_factor[3] = new double();
+				swscanf(varValue.bstrVal, L"%lf", dist_factor[3]);
+			}
+			else if (wcscmp(bstrName, L"len_1") == 0)
+			{
+				focal_length_x = new double();
+				swscanf(varValue.bstrVal, L"%lf", focal_length_x);
+			}
+			else if (wcscmp(bstrName, L"len_2") == 0)
+			{
+				focal_length_y = new double();
+				swscanf(varValue.bstrVal, L"%lf", focal_length_y);
+			}
+			else if (wcscmp(bstrName, L"point_1") == 0)
+			{
+				center_x = new double();
+				swscanf(varValue.bstrVal, L"%lf", center_x);
+			}
+			else if (wcscmp(bstrName, L"point_2") == 0)
+			{
+				center_y = new double();
+				swscanf(varValue.bstrVal, L"%lf", center_y);
+			}
+
+			pNodeAttr->Release();
+			pNodeAttr = NULL;
+		}
+
+		hr = node->get_nextSibling(&nodeNext);
+		node->Release();
+		node = nodeNext;
+		nodeNext = NULL;
+		if (FAILED(hr) || node == NULL)
+		{
+			break;
+		}
+	} while(1);
+
+	HRESULT ret = S_FALSE;
+	if (!(xsize == NULL || ysize == NULL || dist_factor[0] == NULL || dist_factor[1] == NULL ||
+		dist_factor[2] == NULL || dist_factor[3] == NULL || focal_length_x == NULL || focal_length_y == NULL ||
+		center_x == NULL || center_y == NULL))
+	{
+		ret = S_OK;
+		mat[4*0 + 0] = *focal_length_x;
+		mat[4*1 + 1] = *focal_length_y;
+		mat[4*2 + 2] = 1;
+		mat[4*3 + 3] = 1;
+		mat[4*0 + 2] = *center_x;
+		mat[4*1 + 2] = *center_x;
+		double distfactor[4] = { *dist_factor[0], *dist_factor[1], 
+			*dist_factor[2], *dist_factor[3]};
+
+		this->setCamera(*xsize, *ysize, mat, distfactor, 1.0, 1000);
+	}
+	
+	if (pXmlDom != NULL)
+	{
+		pXmlDom->Release();
+		pXmlDom = NULL;
+	}
+	if (nodeList != NULL)
+	{
+		nodeList->Release();
+		nodeList = NULL;
+	}
+	
+	if ( nodeRoot != NULL)
+	{
+		nodeRoot->Release();
+		nodeRoot = NULL;
+	}
+	if (node != NULL)
+	{
+		node->Release();
+		node = NULL;
+	}
+	if (nodeNext != NULL)
+	{
+		nodeNext->Release();
+		nodeNext = NULL;
+	}
+	if (attr != NULL)
+	{
+		attr->Release();
+		attr = NULL;
+	}
+	if (pNameNodeMap != NULL)
+	{
+		pNameNodeMap->Release();
+		pNameNodeMap = NULL;
+	}
+	if ( xsize != NULL)
+	{
+		delete xsize;
+		xsize = NULL;
+	}
+	if ( ysize != NULL)
+	{
+		delete ysize;
+		ysize = NULL;
+	}
+	for (int i =0; i<4; i++)
+	{
+		if (dist_factor[i] != NULL)
+		{
+			delete dist_factor[i];
+			dist_factor[i] = NULL;
+		}
+	}
+	if (center_x != NULL)
+	{
+		delete center_x;
+		center_x = NULL;
+	}
+	if (center_y != NULL)
+	{
+		delete center_y;
+		center_y = NULL;
+	}
+	if (focal_length_x != NULL)
+	{
+		delete focal_length_x;
+		focal_length_x = NULL;
+	}
+	if (focal_length_y != NULL)
+	{
+		delete focal_length_y;
+		focal_length_y = NULL;
+	}
+	SysFreeString(bstrXML);
+	SysFreeString(bstrErr);
+	VariantClear(&varFileName);
+
+	return ret;
 }
 bool ARTagDSFilter::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 {
