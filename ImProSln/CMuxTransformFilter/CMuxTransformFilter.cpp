@@ -503,10 +503,6 @@ CMuxTransformInputPin::SetMediaType(const CMediaType* mtIn)
 	return m_pTransformFilter->SetMediaType(PINDIR_INPUT, this, mtIn);
 }
 
-CMediaType CMuxTransformInputPin::GetCurMediaType()
-{
-	return m_mt;
-}
 HRESULT CMuxTransformInputPin::CheckStreaming()
 {
 	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
@@ -784,10 +780,6 @@ CMuxTransformOutputPin::SetMediaType(const CMediaType* pmtOut)
 	return m_pTransformFilter->SetMediaType(PINDIR_OUTPUT, this, pmtOut);
 }
 
-CMediaType CMuxTransformOutputPin::GetCurMediaType()
-{
-	return m_mt;
-}
 // pass the buffer size decision through to the main transform class
 
 HRESULT
@@ -827,6 +819,7 @@ CMuxTransformOutputPin::GetMediaType(
 STDMETHODIMP
 CMuxTransformOutputPin::Notify(IBaseFilter * pSender, Quality q)
 {
+	this->CurrentMediaType();
 	UNREFERENCED_PARAMETER(pSender);
 	ValidateReadPtr(pSender,sizeof(IBaseFilter));
 

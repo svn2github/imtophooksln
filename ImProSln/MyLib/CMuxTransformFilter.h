@@ -48,7 +48,6 @@ public:
 
 	// set the connection media type
 	virtual HRESULT SetMediaType(const CMediaType* mt);
-	virtual CMediaType GetCurMediaType();
 	// --- IMemInputPin -----
 
 	// here's the next block of data from the stream.
@@ -125,7 +124,6 @@ public:
 
 	// set the connection media type
 	virtual HRESULT SetMediaType(const CMediaType *pmt);
-	virtual CMediaType GetCurMediaType();
 	// called from CBaseOutputPin during connection to ask for
 	// the count and size of buffers we need.
 	virtual HRESULT DecideBufferSize(

@@ -248,7 +248,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			m_pOutTexture->Release();
 			m_pOutTexture = NULL;
 		}
-		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
@@ -320,7 +320,7 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn)
 	HRESULT hr = S_OK;
 	if (m_pD3DDisplay != NULL)
 	{
-		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		
 		return DoTransform(pIn, &inputMT);
 	}
@@ -443,7 +443,7 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 	{
 		return S_FALSE;
 	}
-	CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+	CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
 	{
@@ -493,7 +493,7 @@ HRESULT ARTagDSFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[0]->GetCurMediaType();
+		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		*pMediaType = inputMT;
 		return S_OK;
 	}
