@@ -21,8 +21,6 @@ ARTag::ARTag(int Num, float x, float y, float size, bool visible,char* tagDir){
 	reDraw = true ;
 	char fileName[100] ;
 
-	//sprintf(fileName,"bch/BchThin_%04d.png",tagNum) ;
-	//sprintf(fileName,"%s\\bch\\BchThin_%04d.png",tagDir,tagNum) ;
 	sprintf(fileName,"%s\\ARToolKitPlus_AllMarkers\\marker_%03d.png",tagDir,tagNum) ;
 	
 	IplImage* tmptag = cvLoadImage(fileName,0);
@@ -40,8 +38,6 @@ void ARTag::changeSize(float size){
 	tagSize = size; 
 }
 
-
-
 ARLayout::ARLayout(){
 	LayoutWidth = 0;
 	LayoutHeight = 0;
@@ -58,6 +54,8 @@ ARLayout::ARLayout(int imageWidth , int imageHeight, int numX, int numY, int tag
 	numTagX = numX ;
 	numTagY = numY ;
 	Space = tagspace;
+	float size = tagSizeArrange();
+
 	TotalTag = numX * numY ;
 	int noTag = 0 ;
 	for(int i = 0 ;i < 100 ; i ++){
@@ -67,18 +65,11 @@ ARLayout::ARLayout(int imageWidth , int imageHeight, int numX, int numY, int tag
 	}
 	
 	float startX =Space, startY = Space ;
-	float size = min((LayoutWidth-numX*Space)/numX, (LayoutHeight-numY*Space)/numY); 
-
-	if((LayoutWidth-numX*Space)/numX > (LayoutHeight-numY*Space)/numY){
-		numY = (int)LayoutHeight/(size + Space);
-	}
-
 	for(int i = 0 ; i < numX ; i ++){
 		for(int j = 0 ; j< numY ; j ++){
 
 			ARTag *tag = new ARTag(i* numY + j,startX,startY,size,true,ARtagDir) ;
 			startY = startY + Space + size;
-
 			Layout.push_back(*tag) ;
 		}
 		startX = startX + Space + size;
@@ -91,11 +82,12 @@ ARLayout::ARLayout(int imageWidth , int imageHeight, int numX, int numY, int tag
 void ARLayout::changeLayout(){
 
 	Layout.clear();
+	float size = tagSizeArrange();
+
 	TotalTag = numTagX * numTagY ;
 	int noTag = 0 ;
 
 	float startX =Space, startY = Space ;
-	float size = min((LayoutWidth-numTagX*Space)/numTagX, (LayoutHeight-numTagY*Space)/numTagY); 
 
 	for(int i = 0 ; i < numTagX ; i ++){
 		for(int j = 0 ; j< numTagY ; j ++){
@@ -110,7 +102,6 @@ void ARLayout::changeLayout(){
 	}
 
 	combineTagtoIplImage();
-
 
 }
 
@@ -129,25 +120,28 @@ void ARLayout::setSpace(int tagSpace){
 	Space = tagSpace ;
 }
 
+void ARLayout::LayoutGenerate(int imageWidth , int imageHeight, int numX, int numY, int tagspace){
+	
+	numTagX = numX ;
+	numTagY = numY ;
+	Space = tagspace;
+	float size = tagSizeArrange();
 
-void ARLayout::LayoutGenerate(int imageWidth , int imageHeight, int numX, int numY, int space){
-
-	int totalTag = numX * numY ;
-	float startX =space, startY = space ;
-	float size = max((imageWidth-numX*space)/numX, (imageHeight-numY*space)/numY); 
+	TotalTag = numTagX * numTagY ;
+	float startX =Space, startY = Space ;
 
 	FILE *fptr = fopen("data\\layout.txt", "w" );
 
 	fprintf( fptr, "%d %d\n", imageWidth, imageHeight);
-	fprintf( fptr, "%d %d %d\n", numX, numY, space);
+	fprintf( fptr, "%d %d %d\n", numTagX, numTagY, Space);
 
-	for(int i = 0 ; i < numX ; i ++){
-		for(int j = 0 ; j< numY ; j ++){						 
-			fprintf( fptr, "%d %f %f %f \n", i* numY + j, startX,startY,size); 
-			startY = startY + space + size;
+	for(int i = 0 ; i < numTagX ; i ++){
+		for(int j = 0 ; j< numTagY ; j ++){						 
+			fprintf( fptr, "%d %f %f %f \n", i* numTagY + j, startX,startY,size); 
+			startY = startY + Space + size;
 		}
-		startX = startX + space + size;
-		startY = space;
+		startX = startX + Space + size;
+		startY = Space;
 	}
 
 	fclose( fptr );
@@ -161,7 +155,6 @@ void ARLayout ::LoadLayout(char * fileName){
 	TotalTag = numTagX * numTagY ;
 	int noTag ;
 	float startX, startY, size ;
-
 
 	for(int i = 0 ; i < TotalTag ; i ++){
 
@@ -214,11 +207,14 @@ IplImage* ARLayout::getLayout(){
 	return layoutImage;
 
 }
-void ARLayout::setTagDir(char* Dir){
+float ARLayout::tagSizeArrange(){
+	int size = max((LayoutWidth-numTagX*Space)/numTagX, (LayoutHeight-numTagY*Space)/numTagY); 
 
-	char fileName[100] ;
-
-	//sprintf(fileName,TEXT("%s\\%s\0"), szCurrentDir, BITMAP_NAME);
-	sprintf(fileName,"%s\\bch\BchThin_%04d.png",Dir,3) ;
-
+	if((LayoutWidth-numTagX*Space)/numTagX > (LayoutHeight-numTagY*Space)/numTagY){
+		numTagY = (int)LayoutHeight/(size + Space);
+	}
+	else if((LayoutWidth-numTagX*Space)/numTagX < (LayoutHeight-numTagY*Space)/numTagY){
+		numTagX = (int)LayoutWidth/(size + Space);
+	}
+	return size; 
 }

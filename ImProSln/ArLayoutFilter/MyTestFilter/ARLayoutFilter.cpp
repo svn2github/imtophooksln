@@ -8,19 +8,14 @@
 
 ARLayoutFilter::ARLayoutFilter(HRESULT *phr, ARLayoutSource *pParent, LPCWSTR pPinName) : 
 CSourceStream(NAME("AR_LAYOUT"), phr, pParent, pPinName) ,
-m_FramesWritten(0),
-m_bZeroMemory(0),
 m_pBmi(0),
 m_cbBitmapInfo(0),
 m_hFile(INVALID_HANDLE_VALUE),
 m_pFile(NULL),
 m_pImage(NULL),
-m_iFrameNumber(0),
-m_tagImageData(NULL),
-m_rtFrameLength(UNITS / 5) // Display 5 bitmap frames per second
+m_tagImageData(NULL)
 {
 	PinName = pPinName ;
-
 	//////////////////////////////////////////////////////////////////////////
 	TCHAR szCurrentDir[MAX_PATH], szFileCurrent[MAX_PATH], szFileMedia[MAX_PATH];
 
@@ -143,7 +138,6 @@ HRESULT ARLayoutFilter::GetMediaType(CMediaType *pMediaType)
 		return(E_OUTOFMEMORY);
 
 	ZeroMemory(pvi, pMediaType->cbFormat);   
-	pvi->AvgTimePerFrame = m_rtFrameLength;
 
 	// Copy the header info
 	memcpy(&(pvi->bmiHeader), m_pBmi, m_cbBitmapInfo);

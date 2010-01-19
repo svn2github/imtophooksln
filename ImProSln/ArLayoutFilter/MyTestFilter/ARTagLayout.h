@@ -37,7 +37,6 @@ public :
 	ARTag(int Num, float x,float y, float size, bool visible, char* tagDir) ;
 	void setVisible(bool state) ;
 	void changeSize(float size);
-
 };		
 class ARLayout{
 
@@ -58,9 +57,10 @@ public :
 	void LoadLayout(char* fileName) ;
 	void combineTagtoIplImage();
 	void checkTag(float x, float y);
-	void setTagDir(char* Dir);
-	IplImage* getLayout();
 	void changeLayout();
+	float tagSizeArrange() ;  // return tag size
+	IplImage* getLayout();
+	
 	
 	void setNumTagX(int numX) ;
 	void setNumTagY(int numY) ;

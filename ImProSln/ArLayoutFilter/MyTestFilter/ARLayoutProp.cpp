@@ -104,7 +104,7 @@ void ARLayoutPropPage::OnBnClickedButton1()
 {
 	int numX = GetDlgItemInt(IDC_NumX);
 	int numY = GetDlgItemInt(IDC_NumY);
-	int width = GetDlgItemInt(IDC_WIDTH);
+	int tagSize = GetDlgItemInt(IDC_WIDTH);
 	m_pFilter->setNumOfX(numX);
 	m_pFilter->setNumOfY(numY);
 }
