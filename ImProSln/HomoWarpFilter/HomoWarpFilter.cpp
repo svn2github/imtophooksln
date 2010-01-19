@@ -429,15 +429,19 @@ HRESULT HomoWarpFilter::SetWarpVertex(float LTx, float LTy, float LBx, float LBy
 HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float& LBy, 
 							  float& RBx, float& RBy, float& RTx, float& RTy)
 {
-	D3DXVECTOR2 v1(0,0);
-	D3DXVECTOR2 v2(0,1);
-	D3DXVECTOR2 v3(1,0);
-	D3DXVECTOR2 v4(1,1);
-	CAutoLock autolock(&m_accessWarpMatCS);
-	D3DXVec2TransformCoord(&v1, &v1, &m_matTTS);
-	D3DXVec2TransformCoord(&v2, &v2, &m_matTTS);
-	D3DXVec2TransformCoord(&v3, &v3, &m_matTTS);
-	D3DXVec2TransformCoord(&v4, &v4, &m_matTTS);
+	D3DXVECTOR4 v1(0,0,1,1);
+	D3DXVECTOR4 v2(0,1,1,1);
+	D3DXVECTOR4 v3(1,0,1,1);
+	D3DXVECTOR4 v4(1,1,1,1);
+	m_accessWarpMatCS.Lock();
+	D3DXMATRIX matInvTTS;
+	D3DXMatrixInverse(&matInvTTS, NULL, &m_matTTS);
+	m_accessWarpMatCS.Unlock();
+	D3DXVec4Transform(&v1, &v1, &matInvTTS);
+	D3DXVec4Transform(&v2, &v2, &matInvTTS);
+	D3DXVec4Transform(&v3, &v3, &matInvTTS);
+	D3DXVec4Transform(&v4, &v4, &matInvTTS);
+	v1 /= v1.z; v2 /= v2.z; v3 /= v3.z; v4 /= v4.z;
 
 	LTx = v1.x; LTy = v1.y;
 	LBx = v2.x; LBy = v2.y;
