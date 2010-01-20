@@ -182,9 +182,9 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 
 	if (bFlipY)
 	{	
-		int x = 0; int y = 0; float dstX = 0; float dstY = 0;
-		float tmpW = surWidth / width;
-		float tmpH = surHeight / height;
+		int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+		float tmpW = ((float)surWidth) / width;
+		float tmpH = ((float)surHeight) / height;
 		for( y = 0; y < height; y++ )
 		{
 			for ( x = 0; x< width; x++)
@@ -198,9 +198,9 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	}
 	else
 	{
-		int x = 0; int y = 0; float dstX = 0; float dstY = 0;
-		float tmpW = surWidth / width;
-		float tmpH = surHeight / height;
+		int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+		float tmpW = ((float)surWidth) / width;
+		float tmpH = ((float)surHeight) / height;
 		for( y = 0; y < height; y++ )
 		{
 			for ( x = 0; x< width; x++)
@@ -224,9 +224,11 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType, bool bFlipY = true)
 {	
 	CopyInputImage2InputTexture(pIn, pInType, bFlipY);
+	
 	m_pD3DDisplay->SetTexture(m_pInTexture);
 	m_pD3DDisplay->Render();
 	CopyRenderTarget2OutputTexture();
+	
 	CopyOutputTexture2OutputData(pOut, pOutType, true);
 
 	return S_OK;
