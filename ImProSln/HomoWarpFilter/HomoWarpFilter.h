@@ -33,7 +33,7 @@ public:
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType);
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
-	
+	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//implement IHomoWarpFilterProperty
@@ -62,6 +62,7 @@ protected:
 private:
 	virtual HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin);
+	virtual CMuxTransformOutputPin* GetConnectedOutputPin();
 public:
 	HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~HomoWarpFilter();

@@ -44,7 +44,22 @@ int CMuxTransformFilter::GetPinCount()
 	{
 		return 0;
 	}
-	return m_pInputPins.size() + m_pOutputPins.size();
+	int count = 0;
+	for (int i =0; i <  m_pInputPins.size(); i++)
+	{
+		if (m_pInputPins[i]->m_bVisible)
+		{
+			count++;
+		}
+	}
+	for (int i =0; i < m_pOutputPins.size(); i++)
+	{
+		if (m_pOutputPins[i]->m_bVisible)
+		{
+			count++;
+		}
+	}
+	return count;
 }
 CBasePin* CMuxTransformFilter::GetPin(int n)
 {
@@ -53,18 +68,29 @@ CBasePin* CMuxTransformFilter::GetPin(int n)
 	{
 		return NULL;
 	}
-	if (n < m_pInputPins.size())
+	for ( int i = 0; i < m_pInputPins.size(); i++)
 	{
-		return m_pInputPins[n];
+		if (m_pInputPins[i]->m_bVisible)
+		{
+			if (n == 0)
+			{
+				return m_pInputPins[i];
+			}
+			n--;
+		}
 	}
-	else if ( n < GetPinCount())
+	for ( int i = 0; i < m_pOutputPins.size(); i++)
 	{
-		return m_pOutputPins[GetPinCount() - n - 1];
+		if (m_pOutputPins[i]->m_bVisible)
+		{
+			if (n == 0)
+			{
+				return m_pOutputPins[i];
+			}
+			n--;
+		}
 	}
-	else
-	{
-		return NULL;
-	}
+	return NULL;
 }
 HRESULT CMuxTransformFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
 {
@@ -336,7 +362,6 @@ HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const
 	CMuxTransformInputPin* pInPin = (CMuxTransformInputPin*) pInputPin;
 	CMuxTransformOutputPin* pOutPin = (CMuxTransformOutputPin*) pOutputPin;
 	// default - times are the same
-
 	AM_SAMPLE2_PROPERTIES * const pProps = pInPin->SampleProps();
 	DWORD dwFlags = m_bSampleSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
 
@@ -416,6 +441,7 @@ CMuxTransformInputPin::CMuxTransformInputPin(
 									   __in_opt LPCWSTR pName)
 									   : CBaseInputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pName)
 {
+	m_bVisible = true;
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformInputPin::CMuxTransformInputPin")));
 	m_pTransformFilter = pTransformFilter;
 }
@@ -429,6 +455,7 @@ CMuxTransformInputPin::CMuxTransformInputPin(
 									   __in_opt LPCWSTR pName)
 									   : CBaseInputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pName)
 {
+	m_bVisible = true;
 	DbgLog((LOG_TRACE,2,TEXT("CTransformInputPin::CTransformInputPin")));
 	m_pTransformFilter = pTransformFilter;
 }
@@ -640,6 +667,7 @@ CMuxTransformOutputPin::CMuxTransformOutputPin(
 	: CBaseOutputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pPinName),
 	m_pPosition(NULL)
 {
+	m_bVisible = true;
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
 	m_pTransformFilter = pTransformFilter;
 }
@@ -653,6 +681,7 @@ CMuxTransformOutputPin::CMuxTransformOutputPin(
 	: CBaseOutputPin(pObjectName, pTransformFilter, &pTransformFilter->m_csFilter, phr, pPinName),
 	m_pPosition(NULL)
 {
+	m_bVisible = true;
 	DbgLog((LOG_TRACE,2,TEXT("CMuxTransformOutputPin::CMuxTransformOutputPin")));
 	m_pTransformFilter = pTransformFilter;
 

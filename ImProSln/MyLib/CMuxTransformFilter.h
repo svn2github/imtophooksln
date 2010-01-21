@@ -12,10 +12,10 @@ class CMuxTransformFilter;
 class CMuxTransformInputPin : public CBaseInputPin
 {
 	friend class CMuxTransformFilter;
-
+public:
+	bool m_bVisible;
 protected:
 	CMuxTransformFilter *m_pTransformFilter;
-	
 public:
 
 	CMuxTransformInputPin(
@@ -80,7 +80,8 @@ public:
 class CMuxTransformOutputPin : public CBaseOutputPin
 {
 	friend class CMuxTransformFilter;
-
+public:
+	bool m_bVisible;
 protected:
 	CMuxTransformFilter *m_pTransformFilter;
 
@@ -187,7 +188,7 @@ public:
 
 	// Standard setup for output sample
 	virtual HRESULT InitializeOutputSample(IMediaSample *pSample, const IPin* pInputPin, const IPin* pOutputPin, __deref_out IMediaSample **ppOutSample);
-
+	
 	// if you override Receive, you may need to override these three too
 	virtual HRESULT EndOfStream(void);
 	virtual HRESULT BeginFlush(void);

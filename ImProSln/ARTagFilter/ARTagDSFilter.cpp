@@ -13,6 +13,7 @@
 #include "ARTagD3DDisplay.h"
 #include "ARTagProp.h"
 #include "MyMediaSample.h"
+#include "MyARTagMediaSample.h"
 #include "msxml2.h"
 #include <string.h>
 
@@ -264,7 +265,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		{
 			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
 		}
-		CreateInOutTextures(bitHeader.biWidth, bitHeader.biHeight);
+		CreateTextures(bitHeader.biWidth, bitHeader.biHeight);
 		CString strDistFactor = L"0.245073 -0.759911 0.001721 0.008927";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
 		double distfactor[4] = {0};
 		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
@@ -388,12 +389,11 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 				CMediaSample* pSample = NULL;
 				
 				pAllocator->GetBuffer((IMediaSample**)&pSample, NULL, NULL, 0);
-				pSample->SetPointer((BYTE*)pARTagResult, sizeof(ARTagResultData));
-				ARTagResultData* test = NULL;
-				pSample->GetPointer((BYTE**)&test);
-				
-
-				m_pOutputPins[1]->Deliver(pSample);
+				if (pSample != NULL)
+				{
+					pSample->SetPointer((BYTE*)pARTagResult, sizeof(ARTagResultData));
+					m_pOutputPins[1]->Deliver(pSample);
+				}
 				if (pSample != NULL)
 				{
 					pSample->Release();
@@ -412,8 +412,10 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 	if (m_bDrawTag)
 	{
 		CopyInputImage2InputTexture(pIn, pInType, false);
+		SetRenderTarget();
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
+		ResetRenderTarget();
 		CopyRenderTarget2OutputTexture();
 		CopyOutputTexture2OutputData(pIn, pInType, true);
 	}

@@ -63,7 +63,8 @@ HRESULT HomoWarpFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr;
 	// Set up the output sample
-	hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
+
+	hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(), &pOutSample);
 
 	if (FAILED(hr)) {
 		return hr;
@@ -84,7 +85,7 @@ HRESULT HomoWarpFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 		// sample should not be delivered; we only deliver the sample if it's
 		// really S_OK (same as NOERROR, of course.)
 		if (hr == NOERROR) {
-			hr = m_pOutputPins[0]->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			hr = GetConnectedOutputPin()->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 			// S_FALSE returned from Transform is a PRIVATE agreement
@@ -122,10 +123,24 @@ HRESULT HomoWarpFilter::ReceiveInput1(IMediaSample *pSample, const IPin* pReceiv
 		for (int col =0; col < 4; col++)
 			mat.m[row][col] =  pWarpData->warpMat[row][col];
 
-	this->SetWarpMatrix(mat);
-	
+	this->SetWarpMatrix(mat);	
 	return S_OK;
 }
+
+CMuxTransformOutputPin* HomoWarpFilter::GetConnectedOutputPin()
+{
+	for (int i =0; i< m_pOutputPins.size(); i++)
+	{
+		if (m_pOutputPins[i]->IsConnected())
+		{
+			return m_pOutputPins[i];
+		}
+	}
+	return NULL;
+}
+
+
+
 HRESULT HomoWarpFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
 	HRESULT hr;
@@ -193,10 +208,23 @@ HRESULT HomoWarpFilter::CreatePins()
 			pInput1 = NULL;
 			return NULL;
 		}
-
+		CMuxTransformOutputPin* pOutput2 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"d3dsurf");   // Pin name
+		if (pOutput2 == NULL) {
+			delete pInput0;
+			pInput0 = NULL;
+			delete pInput1;
+			pInput1 = NULL;
+			delete pOutput;
+			pOutput = NULL;
+			return NULL;
+		}
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
 		m_pOutputPins.push_back(pOutput);
+		m_pOutputPins.push_back(pOutput2);
 	}
 	return S_OK;
 }
@@ -227,7 +255,7 @@ HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 
 HRESULT HomoWarpFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if (m_pOutputPins.size() >= 0 && m_pOutputPins[0] == pPin)
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
@@ -239,6 +267,11 @@ HRESULT HomoWarpFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 			return NOERROR;
 		}
 	}
+	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	{
+		CheckPointer(pmt, E_POINTER);
+		return NOERROR;
+	}
 	return E_FAIL;
 }
 
@@ -247,23 +280,34 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 	HRESULT hr = S_OK;
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
-		if (m_pInTexture != NULL)
-		{
-			m_pInTexture->Release();
-			m_pInTexture = NULL;
-		}
-		if (m_pOutTexture != NULL)
-		{
-			m_pOutTexture->Release();
-			m_pOutTexture = NULL;
-		}
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
-	
 	}
-	return S_OK;
+	if (direction == PINDIR_OUTPUT && m_pOutputPins.size() > 1)
+	{
+		for (vector<CMuxTransformOutputPin*>::iterator iter = m_pOutputPins.begin(); iter != m_pOutputPins.end(); iter++)
+		{
+			if (*iter != pMyPin)
+			{
+				(*iter)->m_bVisible = false;
+			}
+		}
+		return S_OK;
+	}
+}
+
+HRESULT HomoWarpFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
+{
+	if (dir == PINDIR_OUTPUT)
+	{
+		for (int i =0; i< m_pOutputPins.size(); i++)
+		{
+			m_pOutputPins[i]->m_bVisible = true;
+		}
+	}
+	return __super::BreakConnect(dir, pPin);
 }
 HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
@@ -277,7 +321,7 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		D3DXMATRIX matWarp;
 		GetWarpMatrix(matWarp);
 		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&matWarp);
-		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &m_pOutputPins[0]->CurrentMediaType(), m_bFlipY);
+		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType(), m_bFlipY);
 	}
 	return S_OK;
 }
@@ -315,6 +359,23 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 				return E_FAIL;
 		}
 	}
+
+	else if (m_pOutputPins.size() >= 2 && m_pOutputPins[1] == pOutPin)
+	{
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
+
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+	}
 	return NOERROR;
 }
 
@@ -337,6 +398,18 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 		*pMediaType = inputMT;
 		return S_OK;
 	}
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		CMediaType mt;
+		mt.SetType(&GUID_MyMediaSample);
+		mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+		mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+		D3DSURFACE_DESC desc;
+		m_pOutTexture->GetLevelDesc(0, &desc);
+		mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+		*pMediaType = mt;
+		return S_OK;
+	}
 	return VFW_S_NO_MORE_ITEMS;
 }
 
@@ -356,6 +429,11 @@ bool HomoWarpFilter::IsAcceptedType(const CMediaType *pmt)
 		{
 			return true;
 		}
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		return true;
 	}
 	return false;
 }

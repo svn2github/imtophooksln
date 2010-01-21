@@ -43,6 +43,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AR2WarpController", "AR2War
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARLayoutFilter", "ArLayoutFilter\MyTestFilter\MyTestFilter.vcproj", "{FD8E9BA2-38A5-4964-A855-950EAFBE750C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXRender", "DXRender\DXRender.vcproj", "{570792BF-0247-4B35-AF10-5725469DBFCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_MFCStatic|Win32 = Debug_MFCStatic|Win32
@@ -164,6 +166,15 @@ Global
 		{FD8E9BA2-38A5-4964-A855-950EAFBE750C}.Release|Win32.ActiveCfg = Release|Win32
 		{FD8E9BA2-38A5-4964-A855-950EAFBE750C}.Release|Win32.Build.0 = Release|Win32
 		{FD8E9BA2-38A5-4964-A855-950EAFBE750C}.Release|x64.ActiveCfg = Release|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug_MFCStatic|Win32.ActiveCfg = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug_MFCStatic|Win32.Build.0 = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug_MFCStatic|x64.ActiveCfg = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug|Win32.Build.0 = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Debug|x64.ActiveCfg = Debug|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|Win32.ActiveCfg = Release|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|Win32.Build.0 = Release|Win32
+		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

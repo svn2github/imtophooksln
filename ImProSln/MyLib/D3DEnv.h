@@ -19,7 +19,11 @@ protected:
 	virtual HWND GetD3DWnd();
 	virtual IDirect3D9* GetD3D();
 	virtual HRESULT initD3D(UINT winW, UINT winH);
+	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
 	virtual HRESULT ReleaseD3D();
+	virtual BOOL IsD3DReady();
+	virtual BOOL IsReadyCloseWindow() { return TRUE;};
+
 	static LRESULT CALLBACK D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	static ATOM RegisterWndClass(HINSTANCE hInstance);
 };

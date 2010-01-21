@@ -299,6 +299,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\MyLib\MyARTagMediaSample.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -358,6 +362,10 @@
 			</File>
 			<File
 				RelativePath=".\IHomoWarpFilter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\MyARTagMediaSample.h"
 				>
 			</File>
 			<File

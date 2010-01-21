@@ -7,10 +7,9 @@
 
 // CMFCBasePropertyPage dialog
 
-class CMFCBasePropertyPage : public CDialog, public IPropertyPage, public CUnknown
+class CMFCBasePropertyPage : public CDialog, public IPropertyPage, public CUnknown 
 {
 	DECLARE_DYNAMIC(CMFCBasePropertyPage)
-
 public:
 	CMFCBasePropertyPage(LPCTSTR pName, LPUNKNOWN pUnk); 
 	virtual ~CMFCBasePropertyPage();

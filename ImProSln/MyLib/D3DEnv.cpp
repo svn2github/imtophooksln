@@ -13,6 +13,11 @@ D3DEnv::D3DEnv()
 D3DEnv::~D3DEnv()
 {
 	ReleaseD3D();
+	if (m_hWndD3D != 0 )
+	{
+		::DestroyWindow(m_hWndD3D);
+		m_hWndD3D = 0;
+	}
 	vector<D3DEnv*>::iterator thisIter = find(m_pAllInstances.begin(), m_pAllInstances.end(), this);
 	if (thisIter != m_pAllInstances.end())
 	{
@@ -26,14 +31,17 @@ HRESULT D3DEnv::ReleaseD3D()
 		m_pD3D->Release();
 		m_pD3D = NULL;
 	}
-	if (m_hWndD3D != 0)
-	{
-		::CloseWindow(m_hWndD3D);
-		m_hWndD3D = 0;
-	}
+
 	return S_OK;
 }
-
+BOOL D3DEnv::IsD3DReady()
+{
+	if (m_pD3D == NULL || m_hWndD3D == 0)
+	{
+		return FALSE;
+	}
+	return TRUE;
+}
 HWND D3DEnv::GetD3DWnd()
 {
 	return m_hWndD3D;
@@ -48,22 +56,7 @@ HRESULT D3DEnv::initD3D(UINT winW = 0, UINT winH = 0)
 {
 	HRESULT hr = S_FALSE;
 	RegisterWndClass(GetModule());
-	if (winW != 0 && winH != 0)
-	{
-		if (m_hWndD3D == 0)
-		{
-			m_hWndD3D = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
-				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
-		}
-	}
-	else
-	{
-		if (m_hWndD3D == 0)
-		{
-			m_hWndD3D = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
-				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
-		}
-	}
+	CreateD3DWindow(winW, winH);
 	if (m_hWndD3D == NULL)
 	{
 		DWORD err = GetLastError();
@@ -85,13 +78,50 @@ HRESULT D3DEnv::initD3D(UINT winW = 0, UINT winH = 0)
 	}
 	return hr;
 }
-
+HRESULT D3DEnv::CreateD3DWindow(UINT winW, UINT winH)
+{
+	if (winW != 0 && winH != 0)
+	{
+		if (m_hWndD3D == 0)
+		{
+			m_hWndD3D = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
+		}
+	}
+	else
+	{
+		if (m_hWndD3D == 0)
+		{
+			m_hWndD3D = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
+		}
+	}
+	return S_OK;
+}
 
 LRESULT D3DEnv::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	int i = 0;
 	switch (message)
 	{
+	case WM_CLOSE:
+	case WM_DESTROY:
+		for (i = 0; i < m_pAllInstances.size(); i++)
+		{
+			if (!m_pAllInstances[i]->IsReadyCloseWindow())
+			{
+				return 0;
+			}
+		}
+		for (i = 0; i < m_pAllInstances.size(); i++)
+		{
+			if (m_pAllInstances[i]->IsD3DReady())
+			{
+				m_pAllInstances[i]->ReleaseD3D();
+				m_pAllInstances[i]->m_hWndD3D = NULL;
+			}
+		}
+		return DefWindowProc(hWnd, message, wParam, lParam);
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -104,7 +134,7 @@ ATOM D3DEnv::RegisterWndClass(HINSTANCE hInstance)
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
+	wcex.style			= CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
 	wcex.lpfnWndProc	= D3DWndProc;
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;

@@ -4,6 +4,7 @@
 #include "MyMediaSample.h"
 #include <d3dx9math.h>
 #include "cv.h"
+#include "MyARTagMediaSample.h"
 AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
 { 
@@ -206,6 +207,12 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 		CMediaSample* pSendSample = NULL;
 
 		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		if (pSendSample == NULL)
+		{
+			free(t);
+			free(d);
+			return S_FALSE;
+		}
 		pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
 		m_pOutputPins[0]->Deliver(pSendSample);
 		if (pSendSample != NULL)
