@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\MyLib\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -48,7 +48,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -166,7 +166,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug_MFCStatic|Win32"
+			Name="Debug_mdd|Win32"
 			OutputDirectory="$(SolutionDir)\MyLib\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -194,10 +194,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_AFXDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -216,7 +216,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_mfcstatic.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -255,7 +255,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug_MFCStatic|Win32"
+					Name="Debug_mdd|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -291,7 +291,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug_MFCStatic|Win32"
+					Name="Debug_mdd|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

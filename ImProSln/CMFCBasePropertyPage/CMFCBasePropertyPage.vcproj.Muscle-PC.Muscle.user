@@ -62,7 +62,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug_MFCStatic|Win32"
+			Name="Debug_mdd|Win32"
 			>
 			<DebugSettings
 				Command=""

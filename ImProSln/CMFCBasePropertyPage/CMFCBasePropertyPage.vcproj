@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)\MyLib\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -48,7 +48,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -166,12 +166,10 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug_MFCStatic|Win32"
+			Name="Debug_mdd|Win32"
 			OutputDirectory="$(SolutionDir)\MyLib\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			UseOfMFC="1"
-			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -187,36 +185,25 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
 				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				DebugInformationFormat="4"
+				PreprocessorDefinitions="_AFXDLL;WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				RuntimeLibrary="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_mfcstatic.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -268,14 +255,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug_MFCStatic|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

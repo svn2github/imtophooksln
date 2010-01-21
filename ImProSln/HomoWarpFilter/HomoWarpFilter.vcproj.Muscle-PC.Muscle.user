@@ -11,7 +11,7 @@
 			<DebugSettings
 				Command="C:\Program Files\Final Codecs\Codecs\GraphEdit.exe "
 				WorkingDirectory=""
-				CommandArguments="D:\Projects\ImProSln\bin\HomoWarpFilter.grf"
+				CommandArguments="D:\Projects\ImProSln\setting\HomoWarpDXRender.grf"
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"
@@ -37,37 +37,9 @@
 			Name="Release|Win32"
 			>
 			<DebugSettings
-				Command=""
-				WorkingDirectory=""
-				CommandArguments=""
-				Attach="false"
-				DebuggerType="3"
-				Remote="1"
-				RemoteMachine="MUSCLE-PC"
-				RemoteCommand=""
-				HttpUrl=""
-				PDBPath=""
-				SQLDebugging=""
-				Environment=""
-				EnvironmentMerge="true"
-				DebuggerFlavor=""
-				MPIRunCommand=""
-				MPIRunArguments=""
-				MPIRunWorkingDirectory=""
-				ApplicationCommand=""
-				ApplicationArguments=""
-				ShimCommand=""
-				MPIAcceptMode=""
-				MPIAcceptFilter=""
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug_MFCStatic|Win32"
-			>
-			<DebugSettings
 				Command="C:\Program Files\Final Codecs\Codecs\GraphEdit.exe "
 				WorkingDirectory=""
-				CommandArguments="D:\Projects\ImProSln\bin\HomoWarpFilter.grf"
+				CommandArguments="D:\Projects\ImProSln\setting\HomoWarpDXRender.grf"
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"
