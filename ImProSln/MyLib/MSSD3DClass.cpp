@@ -568,7 +568,7 @@ BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 
 	// Create the D3DDevice
 	if( FAILED( m_pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
-		D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_pDevice )))
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &d3dpp, &m_pDevice )))
 	{
 		OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
 		return FALSE;
