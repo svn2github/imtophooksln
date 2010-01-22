@@ -100,7 +100,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -128,8 +128,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
-				RuntimeLibrary="0"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -149,7 +150,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/Entry:FilterDllMain"
+				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter_mfcstatic.lib CMFCBasePropertyPage_mfcstatic.lib cv200.lib cxcore200.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
 				ModuleDefinitionFile=".\AR2WarpController.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -299,6 +303,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\D3DEnv.h"
@@ -309,6 +321,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -335,6 +355,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MyARTagMediaSample.h"
@@ -345,6 +373,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

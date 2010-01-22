@@ -100,11 +100,11 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			Name="Release_mdd|Win32"
+			OutputDirectory="$(SolutionDir)\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -129,8 +129,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;..\OpenCV\cv\include;..\OpenCV\cxcore\include;..\OpenCV\otherlibs\highgui;D:\Projects\ImProSln\Hook"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_USE_DOUBLE_"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv;..\MyLib"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_USE_DOUBLE_;_AFXDLL"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -152,9 +152,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/ENTRY:FilterDllMain&#x0D;&#x0A;"
-				AdditionalDependencies="strmbase.lib winmm.lib   cv.lib cxcore.lib ARToolKitPlusD.lib highgui.lib d3dx9.lib d3d9.lib"
+				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib  ARToolKitPlus.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV\lib; $(SolutionDir)\OpenCV\bin; $(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32;"
+				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\bin&quot;; "
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -229,7 +229,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Release_mdd|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -312,6 +312,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\D3DEnv.h"
@@ -322,6 +330,14 @@
 				>
 				<FileConfiguration
 					Name="Debug_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -348,6 +364,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MSSD3DClass.h"
@@ -364,6 +388,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MyARTagMediaSample.h"
@@ -374,6 +406,14 @@
 				>
 				<FileConfiguration
 					Name="Debug_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
