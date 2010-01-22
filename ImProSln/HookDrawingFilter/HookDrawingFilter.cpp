@@ -5,7 +5,7 @@
 
 
 HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CSource(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter)
+: CMuxSourceFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter)
 { 
 
 }
@@ -43,4 +43,17 @@ HRESULT HookDrawingFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 		// Call the parent class.
 		return CBaseFilter::NonDelegatingQueryInterface(iid, ppv);
 	}
+}
+
+HRESULT HookDrawingFilter::CreatePins()
+{
+	return S_OK;
+}
+HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
+{
+	return S_FALSE;
+}
+HRESULT HookDrawingFilter::GetMediaType(int iPosition, __inout CMediaType *pMediaType, IPin* pPin)
+{
+	return S_FALSE;
 }

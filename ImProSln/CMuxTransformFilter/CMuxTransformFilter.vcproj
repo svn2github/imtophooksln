@@ -323,6 +323,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MuxSourceFilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -362,6 +366,10 @@
 			</File>
 			<File
 				RelativePath=".\CMuxTransformFilterApp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\MuxSourceFilter.h"
 				>
 			</File>
 			<File
