@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="DCCaptureFilter"
-	ProjectGUID="{0A7AC080-5B1A-4AAA-85F6-563FA24C9825}"
-	RootNamespace="DCCaptureFilter"
+	Name="HookDrawingFilter"
+	ProjectGUID="{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}"
+	RootNamespace="HookDrawingFilter"
 	Keyword="MFCDLLProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,10 +68,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter_mfcstatic.lib CMFCBasePropertyPage_mfcstatic.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin"
-				ModuleDefinitionFile=".\DCCaptureFilter.def"
+				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				ModuleDefinitionFile=".\HookDrawingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -100,7 +100,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin\"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -128,6 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -149,8 +150,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/Entry:FilterDllMain"
+				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
 				LinkIncremental="1"
-				ModuleDefinitionFile=".\DCCaptureFilter.def"
+				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				ModuleDefinitionFile=".\HookDrawingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -189,23 +193,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\DCCapture.cpp"
+				RelativePath=".\HookDrawingFilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilter.def"
+				RelativePath=".\HookDrawingFilter.def"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilterApp.cpp"
+				RelativePath=".\HookDrawingFilterApp.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilterProp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DCCaptureFilterReg.cpp"
+				RelativePath=".\HookDrawingReg.cpp"
 				>
 			</File>
 			<File
@@ -235,23 +235,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\DCCaptureFilter.h"
+				RelativePath=".\HookDrawingFilter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilterApp.h"
+				RelativePath=".\HookDrawingFilterApp.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilterProp.h"
+				RelativePath=".\HookDrawingReg.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DCCaptureFilterReg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IDCCaptureFilter.h"
+				RelativePath=".\IHookDrawingFilter.h"
 				>
 			</File>
 			<File
@@ -273,31 +269,11 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\DCCaptureFilter.rc"
+				RelativePath=".\HookDrawingFilter.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\res\DCCaptureFilter.rc2"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="MyLib"
-			>
-			<File
-				RelativePath="..\MyLib\D3DEnv.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\MyLib\D3DEnv.h"
+				RelativePath=".\res\HookDrawingFilter.rc2"
 				>
 			</File>
 		</Filter>

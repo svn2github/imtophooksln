@@ -1,4 +1,4 @@
-// DCCaptureFilter.h : main header file for the DCCaptureFilter DLL
+// HookDrawingFilter.h : main header file for the HookDrawingFilter DLL
 //
 
 #pragma once
@@ -10,14 +10,14 @@
 #include "resource.h"		// main symbols
 
 
-// CDCCaptureFilterApp
-// See DCCaptureFilter.cpp for the implementation of this class
+// CHookDrawingFilterApp
+// See HookDrawingFilter.cpp for the implementation of this class
 //
 
-class CDCCaptureFilterApp : public CWinApp
+class CHookDrawingFilterApp : public CWinApp
 {
 public:
-	CDCCaptureFilterApp();
+	CHookDrawingFilterApp();
 
 // Overrides
 public:

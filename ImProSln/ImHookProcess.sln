@@ -58,6 +58,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXRenderer", "DXRender\DXRe
 		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA} = {E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookDrawingFilter", "HookDrawingFilter\HookDrawingFilter.vcproj", "{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_mdd|Win32 = Debug_mdd|Win32
@@ -201,6 +203,18 @@ Global
 		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|Win32.ActiveCfg = Release|Win32
 		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|Win32.Build.0 = Release|Win32
 		{570792BF-0247-4B35-AF10-5725469DBFCE}.Release|x64.ActiveCfg = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug_mdd|Win32.ActiveCfg = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug_mdd|Win32.Build.0 = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug_mdd|x64.ActiveCfg = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug|Win32.Build.0 = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Debug|x64.ActiveCfg = Debug|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release_mdd|Win32.ActiveCfg = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release_mdd|Win32.Build.0 = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release_mdd|x64.ActiveCfg = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|Win32.ActiveCfg = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|Win32.Build.0 = Release|Win32
+		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

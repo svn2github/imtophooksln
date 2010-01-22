@@ -93,7 +93,7 @@
 			Name="Release_mdd|Win32"
 			>
 			<DebugSettings
-				Command="$(TargetPath)"
+				Command=""
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"
