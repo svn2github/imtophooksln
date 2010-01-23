@@ -4,7 +4,7 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
-#include <vector>
+
 using namespace std;
 
 class CMuxSourceOutputPin;
@@ -23,7 +23,7 @@ protected:
 	virtual HRESULT OnThreadCreate(IPin* pPin){return NOERROR;};
 	virtual HRESULT OnThreadDestroy(IPin* pPin){return NOERROR;};
 	virtual HRESULT OnThreadStartPlay(IPin* pPin){return NOERROR;};
-	
+
 public:
 	CMuxSourceFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN lpunk, CLSID clsid, __inout HRESULT *phr);
 	CMuxSourceFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN lpunk, CLSID clsid);

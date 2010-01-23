@@ -115,9 +115,14 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 		{
 			return E_FAIL;
 		}
+		DWORD filterFlag = D3DX_FILTER_LINEAR;
+		if (bFlipY)
+		{
+			filterFlag |= D3DX_FILTER_MIRROR_V;
+		}
 		hr = pInputTexture->GetSurfaceLevel(0, &pInputSurface);
 		hr = D3DXLoadSurfaceFromSurface(pInSurface, NULL, NULL, pInputSurface, NULL, NULL,
-			D3DX_FILTER_LINEAR, 0);
+			filterFlag, 0);
 		if (pInputSurface != NULL)
 		{
 			pInputSurface->Release();

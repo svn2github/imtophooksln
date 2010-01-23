@@ -35,6 +35,12 @@ CMuxTransformFilter::~CMuxTransformFilter()
 		m_pOutputPins[i] = NULL;
 	}
 	m_pOutputPins.clear();
+	for (int i =0; i < m_pStreamPins.size(); i++)
+	{
+		delete m_pStreamPins[i];
+		m_pStreamPins[i] = NULL;
+	}
+	m_pStreamPins.clear();
 }
 
 int CMuxTransformFilter::GetPinCount()
@@ -55,6 +61,13 @@ int CMuxTransformFilter::GetPinCount()
 	for (int i =0; i < m_pOutputPins.size(); i++)
 	{
 		if (m_pOutputPins[i]->m_bVisible)
+		{
+			count++;
+		}
+	}
+	for (int i=0; i < m_pStreamPins.size(); i++)
+	{
+		if (m_pStreamPins[i]->m_bVisible)
 		{
 			count++;
 		}
@@ -90,6 +103,17 @@ CBasePin* CMuxTransformFilter::GetPin(int n)
 			n--;
 		}
 	}
+	for ( int i = 0; i < m_pOutputPins.size(); i++)
+	{
+		if (m_pStreamPins[i]->m_bVisible)
+		{
+			if (n == 0)
+			{
+				return m_pStreamPins[i];
+			}
+			n--;
+		}
+	}
 	return NULL;
 }
 HRESULT CMuxTransformFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
@@ -113,6 +137,17 @@ HRESULT CMuxTransformFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
 		if (wcscmp(m_pOutputPins[i]->m_pName, Id) == 0)
 		{
 			*ppPin = m_pOutputPins[i];
+			if (*ppPin) {
+				(*ppPin)->AddRef();
+			}
+			return hr;
+		}
+	}
+	for (int i =0; i < m_pStreamPins.size(); i++)
+	{
+		if (wcscmp(m_pStreamPins[i]->m_pName, Id) == 0)
+		{
+			*ppPin = m_pStreamPins[i];
 			if (*ppPin) {
 				(*ppPin)->AddRef();
 			}
@@ -873,4 +908,326 @@ CMuxTransformOutputPin::Notify(IBaseFilter * pSender, Quality q)
 	}
 	return errorHr;
 } // Notify
+
+
+
+CMuxTransformStream::CMuxTransformStream(
+							 __in_opt LPCTSTR pObjectName,
+							 __inout HRESULT *phr,
+							 __inout CMuxTransformFilter *ps,
+							 __in_opt LPCWSTR pPinName)
+							 : CBaseOutputPin(pObjectName, ps, ps->pStateLock(), phr, pPinName),
+							 m_pFilter(ps) {
+	m_bVisible = true;
+}
+
+#ifdef UNICODE
+CMuxTransformStream::CMuxTransformStream(
+							 __in_opt LPCSTR pObjectName,
+							 __inout HRESULT *phr,
+							 __inout CMuxTransformFilter *ps,
+							 __in_opt LPCWSTR pPinName)
+							 : CBaseOutputPin(pObjectName, ps, ps->pStateLock(), phr, pPinName),
+							 m_pFilter(ps) {
+	m_bVisible = true;
+}
+#endif
+//
+// CMuxTransformStream::Destructor
+//
+// Decrements the number of pins on this filter
+CMuxTransformStream::~CMuxTransformStream(void) {
+
+}
+
+HRESULT CMuxTransformStream::FillBuffer(IMediaSample *pSamp)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->FillBuffer(pSamp, this);
+}
+HRESULT CMuxTransformStream::DecideBufferSize(
+								 IMemAllocator * pAlloc,
+								 __inout ALLOCATOR_PROPERTIES *pProp)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->DecideBufferSize(pAlloc, this, pProp);
+}
+HRESULT CMuxTransformStream::OnThreadCreate(void)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->OnThreadCreate(this);
+}
+HRESULT CMuxTransformStream::OnThreadDestroy(void)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->OnThreadDestroy(this);
+}
+HRESULT CMuxTransformStream::OnThreadStartPlay(void)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->OnThreadStartPlay(this);
+}
+
+HRESULT CMuxTransformStream::GetMediaType(int iPosition, CMediaType *pMediaType)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->GetMediaType(iPosition, this, pMediaType);
+}
+HRESULT CMuxTransformStream::CheckMediaType(const CMediaType *pMediaType) {
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	CAutoLock lock(m_pFilter->pStateLock());
+	return m_pFilter->CheckOutputType(pMediaType, this);
+}
+
+//
+// Active
+//
+// The pin is active - start up the worker thread
+HRESULT CMuxTransformStream::Active(void) {
+
+	CAutoLock lock(m_pFilter->pStateLock());
+
+	HRESULT hr;
+
+	if (m_pFilter->IsActive()) {
+		return S_FALSE;	// succeeded, but did not allocate resources (they already exist...)
+	}
+
+	// do nothing if not connected - its ok not to connect to
+	// all pins of a source filter
+	if (!IsConnected()) {
+		return NOERROR;
+	}
+
+	hr = CBaseOutputPin::Active();
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	ASSERT(!ThreadExists());
+
+	// start the thread
+	if (!Create()) {
+		return E_FAIL;
+	}
+
+	// Tell thread to initialize. If OnThreadCreate Fails, so does this.
+	hr = Init();
+	if (FAILED(hr))
+		return hr;
+
+	return Pause();
+}
+
+
+//
+// Inactive
+//
+// Pin is inactive - shut down the worker thread
+// Waits for the worker to exit before returning.
+HRESULT CMuxTransformStream::Inactive(void) {
+
+	CAutoLock lock(m_pFilter->pStateLock());
+
+	HRESULT hr;
+
+	// do nothing if not connected - its ok not to connect to
+	// all pins of a source filter
+	if (!IsConnected()) {
+		return NOERROR;
+	}
+
+	// !!! need to do this before trying to stop the thread, because
+	// we may be stuck waiting for our own allocator!!!
+
+	hr = CBaseOutputPin::Inactive();  // call this first to Decommit the allocator
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	if (ThreadExists()) {
+		hr = Stop();
+
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		hr = Exit();
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		Close();	// Wait for the thread to exit, then tidy up.
+	}
+
+	// hr = CBaseOutputPin::Inactive();  // call this first to Decommit the allocator
+	//if (FAILED(hr)) {
+	//	return hr;
+	//}
+
+	return NOERROR;
+}
+
+
+//
+// ThreadProc
+//
+// When this returns the thread exits
+// Return codes > 0 indicate an error occured
+DWORD CMuxTransformStream::ThreadProc(void) {
+
+	HRESULT hr;  // the return code from calls
+	Command com;
+
+	do {
+		com = GetRequest();
+		if (com != CMD_INIT) {
+			DbgLog((LOG_ERROR, 1, TEXT("Thread expected init command")));
+			Reply((DWORD) E_UNEXPECTED);
+		}
+	} while (com != CMD_INIT);
+
+	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread initializing")));
+
+	hr = OnThreadCreate(); // perform set up tasks
+	if (FAILED(hr)) {
+		DbgLog((LOG_ERROR, 1, TEXT("CMuxTransformStream::OnThreadCreate failed. Aborting thread.")));
+		OnThreadDestroy();
+		Reply(hr);	// send failed return code from OnThreadCreate
+		return 1;
+	}
+
+	// Initialisation suceeded
+	Reply(NOERROR);
+
+	Command cmd;
+	do {
+		cmd = GetRequest();
+
+		switch (cmd) {
+
+	case CMD_EXIT:
+		Reply(NOERROR);
+		break;
+
+	case CMD_RUN:
+		DbgLog((LOG_ERROR, 1, TEXT("CMD_RUN received before a CMD_PAUSE???")));
+		// !!! fall through???
+
+	case CMD_PAUSE:
+		Reply(NOERROR);
+		DoBufferProcessingLoop();
+		break;
+
+	case CMD_STOP:
+		Reply(NOERROR);
+		break;
+
+	default:
+		DbgLog((LOG_ERROR, 1, TEXT("Unknown command %d received!"), cmd));
+		Reply((DWORD) E_NOTIMPL);
+		break;
+		}
+	} while (cmd != CMD_EXIT);
+
+	hr = OnThreadDestroy();	// tidy up.
+	if (FAILED(hr)) {
+		DbgLog((LOG_ERROR, 1, TEXT("CMuxTransformStream::OnThreadDestroy failed. Exiting thread.")));
+		return 1;
+	}
+
+	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread exiting")));
+	return 0;
+}
+
+
+//
+// DoBufferProcessingLoop
+//
+// Grabs a buffer and calls the users processing function.
+// Overridable, so that different delivery styles can be catered for.
+HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
+
+	Command com;
+
+	OnThreadStartPlay();
+
+	do {
+		while (!CheckRequest(&com)) {
+
+			IMediaSample *pSample;
+
+			HRESULT hr = GetDeliveryBuffer(&pSample,NULL,NULL,0);
+			if (FAILED(hr)) {
+				Sleep(1);
+				continue;	// go round again. Perhaps the error will go away
+				// or the allocator is decommited & we will be asked to
+				// exit soon.
+			}
+
+			// Virtual function user will override.
+			hr = FillBuffer(pSample);
+
+			if (hr == S_OK) {
+				hr = Deliver(pSample);
+				pSample->Release();
+
+				// downstream filter returns S_FALSE if it wants us to
+				// stop or an error if it's reporting an error.
+				if(hr != S_OK)
+				{
+					DbgLog((LOG_TRACE, 2, TEXT("Deliver() returned %08x; stopping"), hr));
+					return S_OK;
+				}
+
+			} else if (hr == S_FALSE) {
+				// derived class wants us to stop pushing data
+				pSample->Release();
+				DeliverEndOfStream();
+				return S_OK;
+			} else {
+				// derived class encountered an error
+				pSample->Release();
+				DbgLog((LOG_ERROR, 1, TEXT("Error %08lX from FillBuffer!!!"), hr));
+				DeliverEndOfStream();
+				m_pFilter->NotifyEvent(EC_ERRORABORT, hr, 0);
+				return hr;
+			}
+
+			// all paths release the sample
+		}
+
+		// For all commands sent to us there must be a Reply call!
+
+		if (com == CMD_RUN || com == CMD_PAUSE) {
+			Reply(NOERROR);
+		} else if (com != CMD_STOP) {
+			Reply((DWORD) E_UNEXPECTED);
+			DbgLog((LOG_ERROR, 1, TEXT("Unexpected command!!!")));
+		}
+	} while (com != CMD_STOP);
+
+	return S_FALSE;
+}
 

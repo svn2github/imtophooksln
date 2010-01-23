@@ -142,6 +142,93 @@ public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
 	virtual IMemAllocator* GetAllocator() {return m_pAllocator;};
 };
+
+class CMuxTransformStream : public CAMThread, public CBaseOutputPin {
+	friend class CMuxTransformFilter;
+public:
+
+	CMuxTransformStream(__in_opt LPCTSTR pObjectName,
+		__inout HRESULT *phr,
+		__inout CMuxTransformFilter *pms,
+		__in_opt LPCWSTR pName);
+#ifdef UNICODE
+	CMuxTransformStream(__in_opt LPCSTR pObjectName,
+		__inout HRESULT *phr,
+		__inout CMuxTransformFilter *pms,
+		__in_opt LPCWSTR pName);
+#endif
+	virtual ~CMuxTransformStream(void);  // virtual destructor ensures derived class destructors are called too.
+
+protected:
+
+	CMuxTransformFilter *m_pFilter;	// The parent of this stream
+
+	// *
+	// * Data Source
+	// *
+	// * The following three functions: FillBuffer, OnThreadCreate/Destroy, are
+	// * called from within the ThreadProc. They are used in the creation of
+	// * the media samples this pin will provide
+	// *
+	virtual HRESULT DecideBufferSize(
+		IMemAllocator * pAlloc,
+		__inout ALLOCATOR_PROPERTIES *pProp);
+
+	// Override this to provide the worker thread a means
+	// of processing a buffer
+	virtual HRESULT FillBuffer(IMediaSample *pSamp);
+
+	// Called as the thread is created/destroyed - use to perform
+	// jobs such as start/stop streaming mode
+	// If OnThreadCreate returns an error the thread will exit.
+	virtual HRESULT OnThreadCreate(void);
+	virtual HRESULT OnThreadDestroy(void);
+	virtual HRESULT OnThreadStartPlay(void);
+
+	// *
+	// * Worker Thread
+	// *
+
+	HRESULT Active(void);    // Starts up the worker thread
+	HRESULT Inactive(void);  // Exits the worker thread.
+
+public:
+	bool m_bVisible;
+	// thread commands
+	enum Command {CMD_INIT, CMD_PAUSE, CMD_RUN, CMD_STOP, CMD_EXIT};
+	HRESULT Init(void) { return CallWorker(CMD_INIT); }
+	HRESULT Exit(void) { return CallWorker(CMD_EXIT); }
+	HRESULT Run(void) { return CallWorker(CMD_RUN); }
+	HRESULT Pause(void) { return CallWorker(CMD_PAUSE); }
+	HRESULT Stop(void) { return CallWorker(CMD_STOP); }
+
+protected:
+	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
+	BOOL    CheckRequest(Command *pCom) { return CAMThread::CheckRequest( (DWORD *) pCom); }
+
+	// override these if you want to add thread commands
+	virtual DWORD ThreadProc(void);  		// the thread function
+
+	virtual HRESULT DoBufferProcessingLoop(void);    // the loop executed whilst running
+
+
+	// *
+	// * AM_MEDIA_TYPE support
+	// *
+
+	// If you support more than one media type then override these 2 functions
+	virtual HRESULT CheckMediaType(const CMediaType *pMediaType);
+	virtual HRESULT GetMediaType(int iPosition, __inout CMediaType *pMediaType);  // List pos. 0-n
+
+	virtual STDMETHODIMP QueryId(__deref_out LPWSTR * Id)
+	{
+		return AMGetWideString(m_pName, Id);
+	}
+};
+
+
+
+
 class CMuxTransformFilter : public CBaseFilter
 {
 public:
@@ -157,18 +244,27 @@ public:
 	CMuxTransformFilter(__in_opt LPCSTR , __inout_opt LPUNKNOWN, REFCLSID clsid);
 #endif
 	virtual ~CMuxTransformFilter();
-	// These must be supplied in a derived class
-	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin) = 0;
-	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin) PURE;
-	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin) PURE;
+	// These must be supplied in a derived class 
+	// Transform Filter Method
+	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin) { return E_UNEXPECTED; };
+	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin) { return E_UNEXPECTED;};
+	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin) { return E_UNEXPECTED;};
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
-		__inout ALLOCATOR_PROPERTIES *pprop) PURE;
-	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) PURE;
+		__inout ALLOCATOR_PROPERTIES *pprop) { return E_UNEXPECTED;};
+	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
+	// Source Filter Method
+	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };
+
 	// =================================================================
 	// ----- Optional Override Methods           -----------------------
 	// =================================================================
+	// Source Filter Method 
+	virtual HRESULT OnThreadCreate(IPin* pPin){return NOERROR;};
+	virtual HRESULT OnThreadDestroy(IPin* pPin){return NOERROR;};
+	virtual HRESULT OnThreadStartPlay(IPin* pPin){return NOERROR;};
 
+	// Transform Filter Method
 	// you can also override these if you want to know about streaming
 	virtual HRESULT StartStreaming();
 	virtual HRESULT StopStreaming();
@@ -197,7 +293,8 @@ public:
 		REFERENCE_TIME tStart,
 		REFERENCE_TIME tStop,
 		double dRate);
-
+	
+	CCritSec*	pStateLock(void) { return &m_csFilter; }
 #ifdef PERF
 	// Override to register performance measurement with a less generic string
 	// You should do this to avoid confusion with other filters
@@ -236,7 +333,7 @@ protected:
 	friend class CMuxTransformOutputPin;
 	vector<CMuxTransformInputPin*> m_pInputPins;
 	vector<CMuxTransformOutputPin*> m_pOutputPins;
-
+	vector<CMuxTransformStream*> m_pStreamPins;
 private:
 	virtual BOOL IsAnyInputPinConnect();
 	virtual BOOL IsAnyOutPinConnect();
