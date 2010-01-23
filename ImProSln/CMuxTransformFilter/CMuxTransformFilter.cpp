@@ -103,7 +103,7 @@ CBasePin* CMuxTransformFilter::GetPin(int n)
 			n--;
 		}
 	}
-	for ( int i = 0; i < m_pOutputPins.size(); i++)
+	for ( int i = 0; i < m_pStreamPins.size(); i++)
 	{
 		if (m_pStreamPins[i]->m_bVisible)
 		{

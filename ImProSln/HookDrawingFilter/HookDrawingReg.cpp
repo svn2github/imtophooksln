@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "HookDrawingReg.h"
-
+#include "HookDrawingProp.h"
 
 
 static WCHAR g_wszName[] = L"HookDrawing Filter";
@@ -84,6 +84,13 @@ CFactoryTemplate g_Templates[] =
 		g_wszName,
 			&CLSID_HookDrawingFilter,
 			HookDrawingFilter::CreateInstance,
+			NULL,
+			NULL
+	},
+	{
+		L"HookDrawing Prop Page",
+			&CLSID_HookDrawingPropPage,
+			HookDrawingPropPage::CreateInstance,
 			NULL,
 			NULL
 	}

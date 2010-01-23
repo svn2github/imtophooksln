@@ -8,5 +8,7 @@ MIDL_INTERFACE("7F0E386C-4E82-4998-8B6C-32D7787C700E")
 IHookDrawingFilter: public IUnknown
 {
 public:
-	
+	virtual BOOL IsHooked();
+	virtual HWND GetHookedWindow();
+	virtual BOOL SetHookedWindow(HWND hwnd);
 };

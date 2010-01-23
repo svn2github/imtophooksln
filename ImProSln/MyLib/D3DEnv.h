@@ -25,6 +25,6 @@ protected:
 	virtual BOOL IsReadyCloseWindow() { return TRUE;};
 
 	static LRESULT CALLBACK D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	static ATOM RegisterWndClass(HINSTANCE hInstance);
+	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
 };
 

@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;..\Detours\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib detours.lib detoured.lib "
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;..\MyLib\bin;..\Detours\lib;"
 				ModuleDefinitionFile=".\HookDrawingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -193,6 +193,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\HookDrawingDisplay.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\HookDrawingFilter.cpp"
 				>
 			</File>
@@ -202,6 +206,10 @@
 			</File>
 			<File
 				RelativePath=".\HookDrawingFilterApp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\HookDrawingProp.cpp"
 				>
 			</File>
 			<File
@@ -235,11 +243,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\HookDrawingDisplay.h"
+				>
+			</File>
+			<File
 				RelativePath=".\HookDrawingFilter.h"
 				>
 			</File>
 			<File
 				RelativePath=".\HookDrawingFilterApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\HookDrawingProp.h"
 				>
 			</File>
 			<File
@@ -277,11 +293,91 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="MyLib"
+			>
+			<File
+				RelativePath="..\MyLib\CMuxTransformFilter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\D3DEnv.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\D3DEnv.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\D3DTransformFilterBase.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\D3DTransformFilterBase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\MSSD3DClass.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\MSSD3DClass.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\MyMediaSample.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\MyMediaSample.h"
+				>
+			</File>
+		</Filter>
+		<File
+			RelativePath="..\fx\HookDrawing.fx"
+			>
+		</File>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="HookDrawingFilter.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

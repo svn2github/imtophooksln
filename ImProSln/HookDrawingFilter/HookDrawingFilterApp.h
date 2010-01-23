@@ -13,7 +13,7 @@
 // CHookDrawingFilterApp
 // See HookDrawingFilter.cpp for the implementation of this class
 //
-
+HMODULE GetModule();
 class CHookDrawingFilterApp : public CWinApp
 {
 public:

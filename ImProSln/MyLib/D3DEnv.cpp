@@ -56,7 +56,7 @@ HRESULT D3DEnv::initD3D(UINT winW = 0, UINT winH = 0)
 {
 	HRESULT hr = S_FALSE;
 	RegisterWndClass(GetModule());
-	CreateD3DWindow(winW, winH);
+	hr= CreateD3DWindow(winW, winH);
 	if (m_hWndD3D == NULL)
 	{
 		DWORD err = GetLastError();

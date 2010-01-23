@@ -289,6 +289,12 @@ HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 		m_pRenderTarget->Release();
 		m_pRenderTarget = NULL;
 	}
+	if (w == 0 || h == 0)
+	{
+		HDC dc = GetDC(m_hWndD3D);
+		w = GetDeviceCaps(dc, HORZRES);
+		h = GetDeviceCaps(dc, VERTRES);
+	}
 	hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
 		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &m_pOutTexture);
 	if (FAILED(hr))

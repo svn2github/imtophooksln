@@ -185,7 +185,7 @@ void CImHookProcessDlg::OnDestroy()
 
 void CImHookProcessDlg::onUnHook()
 {
-	m_HookedWnd == NULL;
+	m_HookedWnd = NULL;
 	m_btnBrowse.EnableWindow(TRUE);
 	m_btnCreateProc.EnableWindow(TRUE);
 	m_edProcPath.EnableWindow(TRUE);

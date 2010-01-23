@@ -59,6 +59,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DXRenderer", "DXRender\DXRe
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookDrawingFilter", "HookDrawingFilter\HookDrawingFilter.vcproj", "{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}"
+	ProjectSection(ProjectDependencies) = postProject
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F} = {93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookInject", "HookInject\HookInject.vcproj", "{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -215,6 +220,18 @@ Global
 		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|Win32.ActiveCfg = Release|Win32
 		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|Win32.Build.0 = Release|Win32
 		{ED1DE989-2EC3-44C0-ADB6-2FB51DF38A91}.Release|x64.ActiveCfg = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug_mdd|Win32.ActiveCfg = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug_mdd|Win32.Build.0 = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug_mdd|x64.ActiveCfg = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug|Win32.Build.0 = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Debug|x64.ActiveCfg = Debug|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release_mdd|Win32.ActiveCfg = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release_mdd|Win32.Build.0 = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release_mdd|x64.ActiveCfg = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release|Win32.ActiveCfg = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release|Win32.Build.0 = Release|Win32
+		{93B5F3DF-3DF1-48E0-A1B6-D6DEBE46F50F}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
