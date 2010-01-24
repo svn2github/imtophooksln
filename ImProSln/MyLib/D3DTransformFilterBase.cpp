@@ -116,10 +116,6 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 			return E_FAIL;
 		}
 		DWORD filterFlag = D3DX_FILTER_LINEAR;
-		if (bFlipY)
-		{
-			filterFlag |= D3DX_FILTER_MIRROR_V;
-		}
 		hr = pInputTexture->GetSurfaceLevel(0, &pInputSurface);
 		hr = D3DXLoadSurfaceFromSurface(pInSurface, NULL, NULL, pInputSurface, NULL, NULL,
 			filterFlag, 0);
@@ -144,28 +140,25 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 		rect.bottom = bitHeader.biHeight;
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
-			if (bFlipY)
-			{
-				pImg = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
-				pImg->imageData = (char*)pInData;
-				cvFlip(pImg, NULL, 0);
-			}
 			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_FILTER_LINEAR, NULL);
 		}
 		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) )
 		{
-			if (bFlipY)
-			{
-				pImg = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
-				pImg->imageData = (char*)pInData;
-				cvFlip(pImg, NULL, 0);
-			}
 			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_FILTER_LINEAR, NULL);
 		}
 		else
 		{
 			hr = E_FAIL;
 		}
+	}
+	if (bFlipY)
+	{
+		D3DLOCKED_RECT surRect;
+		pInSurface->LockRect(&surRect, NULL, 0);
+		pImg = cvCreateImageHeader(cvSize(surInDesc.Width, surInDesc.Height), 8, 4);
+		pImg->imageData = (char*)surRect.pBits;
+		cvFlip(pImg, NULL, 0);
+		pInSurface->UnlockRect();
 	}
 	if ( pInSurface != NULL)
 	{

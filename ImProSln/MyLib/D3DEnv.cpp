@@ -108,14 +108,14 @@ LRESULT D3DEnv::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 	case WM_DESTROY:
 		for (i = 0; i < m_pAllInstances.size(); i++)
 		{
-			if (!m_pAllInstances[i]->IsReadyCloseWindow())
+			if (m_pAllInstances[i]->GetD3DWnd() == hWnd && !m_pAllInstances[i]->IsReadyCloseWindow())
 			{
 				return 0;
 			}
 		}
 		for (i = 0; i < m_pAllInstances.size(); i++)
 		{
-			if (m_pAllInstances[i]->IsD3DReady())
+			if (m_pAllInstances[i]->GetD3DWnd() == hWnd && m_pAllInstances[i]->IsD3DReady())
 			{
 				m_pAllInstances[i]->ReleaseD3D();
 				m_pAllInstances[i]->m_hWndD3D = NULL;
