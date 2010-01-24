@@ -44,7 +44,7 @@ public:
 	LONGLONG		m_llFrameCount;
 protected:
 
-	BITMAPINFO *m_pBmi;                 // Pointer to the bitmap header
+	BITMAPINFO  *m_pBmi;                 // Pointer to the bitmap header
 	DWORD       m_cbBitmapInfo;         // Size of the bitmap header
 
 	// File opening variables 

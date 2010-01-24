@@ -1,0 +1,10 @@
+; BGMappingFilter.def : Declares the module parameters for the DLL.
+
+LIBRARY      "BGMappingFilter"
+
+EXPORTS
+    DllMain                 PRIVATE
+            DllGetClassObject       PRIVATE
+            DllCanUnloadNow         PRIVATE
+            DllRegisterServer       PRIVATE
+            DllUnregisterServer     PRIVATE

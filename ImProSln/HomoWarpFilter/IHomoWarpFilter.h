@@ -16,4 +16,3 @@ public:
 	virtual bool GetIsFlipY();
 	virtual bool SetIsFlipY(bool bFlipY);
 };
-

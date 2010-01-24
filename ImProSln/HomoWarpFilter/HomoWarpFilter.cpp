@@ -318,6 +318,7 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			return S_FALSE;
 		}
+		
 		D3DXMATRIX matWarp;
 		GetWarpMatrix(matWarp);
 		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&matWarp);
