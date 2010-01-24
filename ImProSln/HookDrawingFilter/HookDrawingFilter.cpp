@@ -14,7 +14,6 @@ static UINT HOOKED_BITBLTCALLED = ::RegisterWindowMessage(HOOKED_BITBLTCALLED_MS
 HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter)
 {
-	m_bHooked = false;
 	m_hHookedWnd = 0;
 	HRESULT hr = initD3D();
 	if (SUCCEEDED(hr))
@@ -136,6 +135,7 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 		D3DSURFACE_DESC desc;
 		m_pOutTexture->GetLevelDesc(0, &desc);
 		mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+		mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
 		*pMediaType = mt;
 		return S_OK;
 	}
@@ -296,7 +296,7 @@ void HookDrawingFilter::onBitBltCalled()
 		{
 			return ;
 		}
-		HDC myhdc = GetWindowDC(hClientWnd);
+		HDC myhdc = GetDC(hClientWnd);
 		HDC hdc = bltCmd.m_hdc; 
 		HDC hdcSrc = bltCmd.m_hdcSrc;
 		int height = bltCmd.m_height;
@@ -369,4 +369,10 @@ BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height,
 	pSurface->Release();
 	pSurface = NULL;
 	return TRUE;
+}
+
+BOOL HookDrawingFilter::CaptureHookWnd()
+{
+	return TRUE;
+
 }

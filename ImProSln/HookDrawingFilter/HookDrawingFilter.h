@@ -49,10 +49,10 @@ public:
 	virtual HWND GetHookedWindow();
 	virtual BOOL SetHookedWindow(HWND hwnd);
 protected:
-	BOOL m_bHooked;
 	HWND m_hHookedWnd;
 	CCritSec m_csInTexture;
 	void onHookedWindowDestory();
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
+	BOOL CaptureHookWnd();
 };

@@ -6,9 +6,8 @@
 #define IDC_EDIT3                       1007
 #define IDC_BUTTON3                     1008
 #define IDC_BUTTON4                     1009
+#define IDC_BTNSetWindow                1012
 #define IDS_HookDrawingPropPage_Title   13000
-#define IDC_BUTTON1                     13000
-#define IDC_BtnResume                   13000
 
 // Next default values for new objects
 // 

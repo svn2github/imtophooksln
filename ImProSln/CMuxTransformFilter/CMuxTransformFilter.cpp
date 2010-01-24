@@ -193,17 +193,6 @@ HRESULT CMuxTransformFilter::Stop()
 		return NOERROR;
 	}
 
-	// Succeed the Stop if we are not completely connected
-	ASSERT(m_pInputPins.size() == 0 || m_pOutputPins.size() != 0);
-	if ( IsAnyInputPinConnect() == FALSE || IsAnyOutPinConnect() == FALSE) {
-			m_State = State_Stopped;
-			m_bEOSDelivered = FALSE;
-			return NOERROR;
-	}
-
-	ASSERT(m_pInputPins.size());
-	ASSERT(m_pOutputPins.size());
-
 	// decommit the input pin before locking or we can deadlock
 	for (int i = 0; i < m_pInputPins.size(); i++)
 	{
@@ -216,7 +205,10 @@ HRESULT CMuxTransformFilter::Stop()
 	{
 		m_pOutputPins[i]->Inactive();
 	}
-
+	for (int i = 0 ; i < m_pStreamPins.size(); i++)
+	{
+		m_pStreamPins[i]->Inactive();
+	}
 	// allow a class derived from CTransformFilter
 	// to know about starting and stopping streaming
 	HRESULT hr = StopStreaming();

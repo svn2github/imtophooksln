@@ -233,8 +233,11 @@ HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 {
 	CheckPointer(pmt, E_POINTER);
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
-	{
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+	{	
+		CheckPointer(pmt, E_POINTER);
+		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo) && 
+			!IsEqualGUID(*pmt->FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC)) 
+		{
 			return E_INVALIDARG;
 		}
 		// Can we transform this type
@@ -281,9 +284,18 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		initD3D(bitHeader.biWidth, bitHeader.biHeight);
+		if (IsEqualGUID(*inputMT.Type(), GUID_MyMediaSample) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			initD3D(desc->Width, desc->Height);
+		}
+		else
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			initD3D(bitHeader.biWidth, bitHeader.biHeight);
+		}
 	}
 	if (direction == PINDIR_OUTPUT && m_pOutputPins.size() > 1)
 	{
@@ -408,6 +420,7 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 		D3DSURFACE_DESC desc;
 		m_pOutTexture->GetLevelDesc(0, &desc);
 		mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+		mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
 		*pMediaType = mt;
 		return S_OK;
 	}
