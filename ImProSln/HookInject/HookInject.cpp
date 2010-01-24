@@ -12,17 +12,16 @@ using namespace HOOKINJECT;
 LONG_PTR g_orgWndProc = NULL;
 UINT HOOKED_WNDDESTORY = 0;
 UINT HOOKED_SETHOOKCLIENT = 0;
-
+UINT HOOKED_BITBLTCALLED = 0;
 ////////////////////Share Data Segation///////////
+#define QUEUE_SIZE 500
 #pragma data_seg(".MuscleSeg")
 HWND g_hHookServerWnd = NULL;
 DWORD g_hHookServerProcID = 0;
-
 HWND g_hHookClientWnd = NULL;
 DWORD g_hHookClientProcID = 0;
+MyQueue<DrawBitBltCommand, 500> g_BitBltCmdQueue = MyQueue<DrawBitBltCommand, 500>();
 
-queue<DrawBitBltCommand*> g_BitBltCmdQueue;
-CCritSec g_csBitBltQueue;
 #pragma data_seg()
 #pragma comment(linker, "/section:.MuscleSeg,rws")
 /////////HOOOOOOOOOOOOOOOOK///////////////////////
@@ -152,9 +151,9 @@ BOOL WINAPI pHookBitBlt(HDC hdc, int x, int y, int width, int height, HDC hdcSrc
 		{
 			return ret;
 		}
-		PushBitBltCmd(new DrawBitBltCommand(hdc, x, y, width, height, hdcSrc,
+		PushBitBltCmd(DrawBitBltCommand(hdc, x, y, width, height, hdcSrc,
 			x1, y1, rop));
-		
+		SendMessage(g_hHookServerWnd, HOOKED_BITBLTCALLED, NULL, NULL);
 	}
 
 	return ret;
@@ -248,36 +247,28 @@ HOOKINJECT_API bool HOOKINJECT::GetHookServer(HWND& hServerWnd)
 	hServerWnd = g_hHookServerWnd;
 	return true;
 }
-HOOKINJECT_API bool HOOKINJECT::PushBitBltCmd(DrawBitBltCommand* cmd)
+HOOKINJECT_API bool HOOKINJECT::PushBitBltCmd(DrawBitBltCommand& cmd)
 {
-	CAutoLock lck(&g_csBitBltQueue);
-	g_BitBltCmdQueue.push(cmd);
+
+	g_BitBltCmdQueue.Push(cmd);
 	return true;
 }
-HOOKINJECT_API DrawBitBltCommand* HOOKINJECT::PopBitBltCmd()
+HOOKINJECT_API bool HOOKINJECT::PopBitBltCmd(DrawBitBltCommand& cmd)
 {
-	CAutoLock lck(&g_csBitBltQueue);
-	if (g_BitBltCmdQueue.empty())
+	if (g_BitBltCmdQueue.IsEmpty())
 	{
-		return NULL;
+		return false;
 	}
-	DrawBitBltCommand* ret = g_BitBltCmdQueue.back();
-	g_BitBltCmdQueue.pop();
+	bool ret = g_BitBltCmdQueue.Pop(cmd);
 	return ret;
 }
 HOOKINJECT_API bool HOOKINJECT::ClearBitBltCmd()
 {
-	CAutoLock lck(&g_csBitBltQueue);
-	while (!g_BitBltCmdQueue.empty())
-	{
-		DrawBitBltCommand* cmd = g_BitBltCmdQueue.back();
-		delete cmd;
-		cmd = NULL;
-		g_BitBltCmdQueue.pop();
-	}
+
+	g_BitBltCmdQueue.Clear();
 	return true;
 }
-DrawBitBltCommand::DrawBitBltCommand()
+HOOKINJECT::DrawBitBltCommand::DrawBitBltCommand()
 {
 	m_hdc = 0;
 	m_x = 0;
@@ -289,7 +280,7 @@ DrawBitBltCommand::DrawBitBltCommand()
 	m_y1 = 0;
 	m_rop = 0;
 }
-DrawBitBltCommand::DrawBitBltCommand(HDC hdc,int x,int y,int width,
+HOOKINJECT::DrawBitBltCommand::DrawBitBltCommand(HDC hdc,int x,int y,int width,
 		int height, HDC hdcSrc, int x1, int y1, DWORD rop)
 {
 	m_hdc = hdc;

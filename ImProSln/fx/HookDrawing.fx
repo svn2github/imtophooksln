@@ -1,5 +1,4 @@
-	 
-struct VSOUT {
+	struct VSOUT {
     float4 pos	: POSITION;
 	float4 normal : NORMAL;
     float2 UV		: TEXCOORD0;
@@ -18,7 +17,7 @@ sampler2D g_Sampler = sampler_state {
 }; 
 
 float4 mainPS(VSOUT vin) : COLOR {
-	return tex2D(g_Sampler, float2(uv.x, uv.y));
+	return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
 }
 
 technique technique0 {

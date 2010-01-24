@@ -15,8 +15,40 @@ HookDrawingDisplay::~HookDrawingDisplay(void)
 
 BOOL HookDrawingDisplay::Render()
 {
-	
-	return FALSE;
+	if (m_pDisplayPlane == NULL)
+	{
+		return FALSE;
+	}
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
+	m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
+	HRESULT hr;
+	ID3DXEffect* pEffect = GetEffect();
+	if (pEffect == NULL)
+	{
+		return FALSE;
+	}
+	m_pCamera->CameraOn();
+	UINT iPass, cPasses = 0;
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{
+		hr = pEffect->SetTexture("g_Texture", m_pTexture);
+		hr = pEffect->SetTechnique("technique0");
+		hr = pEffect->Begin(&cPasses, 0);
+		for (iPass = 0; iPass < cPasses; iPass++)
+		{
+			pEffect->BeginPass(iPass);	
+			m_pDisplayPlane->Render();			
+			pEffect->EndPass();
+		}
+
+		hr = pEffect->End();
+		m_pDevice->EndScene();
+	}
+	m_pDevice->Present(NULL,NULL,NULL,NULL);
+	m_pCamera->CameraOff();
+	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+	return S_OK;
 }
 
 BOOL HookDrawingDisplay::Render(IDirect3DBaseTexture9* pTexture)

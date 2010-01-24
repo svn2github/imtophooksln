@@ -243,7 +243,7 @@ HRESULT CMuxTransformFilter::Pause()
 	// This makes sure that it doesn't sit there forever waiting for
 	// samples which we cannot ever deliver without an input connection.
 
-	else if (IsAnyInputPinConnect() == FALSE) {
+	/*else if (IsAnyInputPinConnect() == FALSE) {
 		if (m_pOutputPins.size() && m_bEOSDelivered == FALSE) {
 			for (int i =0; i < m_pOutputPins.size(); i++)
 			{
@@ -259,7 +259,7 @@ HRESULT CMuxTransformFilter::Pause()
 
 	else if (IsAnyOutPinConnect() == FALSE) {
 		m_State = State_Paused;
-	}
+	}*/
 
 	else {
 		if (m_State == State_Stopped) {

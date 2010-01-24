@@ -18,6 +18,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 	case DLL_PROCESS_ATTACH:
 		HOOKED_WNDDESTORY = RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 		HOOKED_SETHOOKCLIENT = RegisterWindowMessage(HOOKED_SETHOOKCLIENT_MSG);
+		HOOKED_BITBLTCALLED = RegisterWindowMessage(HOOKED_BITBLTCALLED_MSG);
+
 		OutputDebugStringW(L"@@@@ DLL_PROCESS_ATTACH!!\n");
 		if (g_hHookServerProcID == 0)
 		{

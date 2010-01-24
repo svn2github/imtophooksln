@@ -10,6 +10,7 @@
 #define HOOKINJECT_API __declspec(dllimport)
 #endif
 
+#define HOOKED_BITBLTCALLED_MSG L"HOOKED_BITBLTCALLED_MSG-797EC903-BBA7-473f-B671-EA34E8068ECB"
 #define HOOKED_SETHOOKCLIENT_MSG L"HOOKED_RESETWNDPROC_MSG-49353183-2419-4f6a-AC41-C663EFDCEB1F"
 #define HOOKED_WNDDESTORY_MSG L"HOOKED_WNDDESTORY_MSG-14407E4C-9A6E-4b85-A13E-01AC3F516964"
 #define HOOKED_DOHOOKCREATEDEVICE_MSG L"HOOKED_WNDDESTORY_MSG-D9D9FDF7-C71B-43e2-8BCD-7D4952329221"
@@ -17,8 +18,9 @@
 namespace HOOKINJECT
 {
 
-	struct DrawBitBltCommand
+	HOOKINJECT_API class DrawBitBltCommand
 	{
+	public:
 		HDC m_hdc;
 		int m_x;
 		int m_y;
@@ -28,12 +30,12 @@ namespace HOOKINJECT
 		int m_x1;
 		int m_y1;
 		DWORD m_rop;
-		DrawBitBltCommand();
-		DrawBitBltCommand(HDC hdc,int x,int y,int width,
+		HOOKINJECT_API DrawBitBltCommand();
+		HOOKINJECT_API DrawBitBltCommand(HDC hdc,int x,int y,int width,
 			int height, HDC hdcSrc, int x1, int y1, DWORD rop);
 	};
-	HOOKINJECT_API bool PushBitBltCmd(DrawBitBltCommand* cmd);
-	HOOKINJECT_API DrawBitBltCommand* PopBitBltCmd();
+	HOOKINJECT_API bool PushBitBltCmd(DrawBitBltCommand& cmd);
+	HOOKINJECT_API bool PopBitBltCmd(DrawBitBltCommand& cmd);
 	HOOKINJECT_API bool ClearBitBltCmd();
 
 	HOOKINJECT_API bool SetHookServerProcID(DWORD procID);
