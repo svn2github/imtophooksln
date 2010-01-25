@@ -252,6 +252,13 @@ LRESULT HookDrawingFilter::HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wP
 			g_Instance->onBitBltCalled();
 		}
 	}
+	if (message == WM_SHOWWINDOW)
+	{
+		if (g_Instance != NULL)
+		{
+			g_Instance->CaptureHookWnd();
+		}
+	}
 	switch (message)
 	{
 	
@@ -354,12 +361,7 @@ BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height,
 	float rX = ((float)desc.Width / dcW);
 	float rY = ((float)desc.Height / dcH);
 	WCHAR str[MAX_PATH];
-	swprintf_s(str, MAX_PATH, L"@@@@ drawX = %d, drawY = %d, drawW = %d, drawH = %d \n"
-		, (int)(rX*x), (int)(rY*y), (int)(rX*width), (int)(rY*height));
-	OutputDebugStringW(str);
-	swprintf_s(str, MAX_PATH, L"@@@@ x = %d, y = %d, width = %d, height= %d \n"
-		, (int)x, (int)y, (int)width, (int)height);
-	OutputDebugStringW(str);
+	
 	BOOL ret = StretchBlt(textureDC, rX*x, rY*y, rX*width, rY*height, hdc, x, y, width, height, rop);
 	
 	pSurface->ReleaseDC(textureDC);
@@ -370,6 +372,44 @@ BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height,
 
 BOOL HookDrawingFilter::CaptureHookWnd()
 {
+	if (!IsD3DReady())
+	{
+		return FALSE;
+	}
+	HWND hClientWnd = 0;
+	if (!HOOKINJECT::GetHookClient(hClientWnd))
+	{
+		return FALSE;
+	}
+	CAutoLock lck(&m_csInTexture);
+	HDC myhdc = GetDC(hClientWnd);
+	RECT rect;
+	GetClientRect(hClientWnd, &rect);
+
+	int dcW = rect.right - rect.left;
+	int dcH = rect.bottom - rect.top;
+
+	HRESULT hr;
+	IDirect3DSurface9* pSurface = NULL;
+	hr = m_pInTexture->GetSurfaceLevel(0, &pSurface);
+	HDC textureDC;
+	hr = pSurface->GetDC(&textureDC);
+	if (FAILED(hr))
+	{
+		ReleaseDC(hClientWnd, myhdc);
+		pSurface->ReleaseDC(textureDC);
+		pSurface->Release();
+		return FALSE;
+	}
+	D3DSURFACE_DESC desc;
+	pSurface->GetDesc(&desc);
+
+	BOOL ret = StretchBlt(textureDC, 0, 0, desc.Width, desc.Height, myhdc, 0, 0, dcW, dcH, 0);
+	ReleaseDC(hClientWnd, myhdc);
+	pSurface->ReleaseDC(textureDC);
+	pSurface->Release();
+	pSurface = NULL;
+
 	return TRUE;
 
 }
