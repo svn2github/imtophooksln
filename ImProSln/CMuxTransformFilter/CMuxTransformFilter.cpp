@@ -292,10 +292,9 @@ HRESULT CMuxTransformFilter::EndOfStream(void)
 	HRESULT hr = NOERROR;
 	for (int i =0 ; i < m_pOutputPins.size(); i++ )
 	{
-		hr = m_pOutputPins[i]->DeliverEndOfStream();
-		if (FAILED(hr))
+		if (m_pOutputPins[i]->IsConnected())
 		{
-			return hr;
+			hr = m_pOutputPins[i]->DeliverEndOfStream();
 		}
 	}
 	return hr;
