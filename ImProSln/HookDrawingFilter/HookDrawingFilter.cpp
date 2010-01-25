@@ -5,11 +5,112 @@
 #include "HookDrawingDisplay.h"
 #include "HookDrawingProp.h"
 #include "..\\HookInject\IHookInject.h"
-
+#include "cv.h"
 HookDrawingFilter* g_Instance = NULL;
 
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 static UINT HOOKED_BITBLTCALLED = ::RegisterWindowMessage(HOOKED_BITBLTCALLED_MSG);
+
+HookDrawingStream::HookDrawingStream(LPCTSTR pObjectName, HRESULT *phr,
+									 CMuxTransformFilter *pms, LPCWSTR pName) :
+CMuxTransformStream(pObjectName, phr, pms, pName)
+{
+	D3DXMatrixIdentity(&m_matTTS);
+}
+#ifdef UNICODE
+HookDrawingStream::HookDrawingStream( LPCSTR pObjectName, HRESULT *phr,
+									 CMuxTransformFilter *pms, LPCWSTR pName) :
+				  CMuxTransformStream(pObjectName, phr, pms, pName)
+{
+	D3DXMatrixIdentity(&m_matTTS);
+}
+#endif
+HookDrawingStream::~HookDrawingStream(void)
+{
+
+}
+
+const D3DXMATRIX* HookDrawingStream::GetWarpMatrix()
+{
+	CAutoLock lck(&m_csMatTTS);
+	return &m_matTTS;
+}
+BOOL HookDrawingStream::SetWarpMatrix(const D3DXMATRIX& mat)
+{
+	CAutoLock lck(&m_csMatTTS);
+	m_matTTS = mat;
+	return TRUE;
+}
+BOOL HookDrawingStream::SetWarpByPts(const D3DXVECTOR2& lt, const D3DXVECTOR2& lb,
+				  const D3DXVECTOR2& rb, const D3DXVECTOR2& rt)
+{
+	
+	WCHAR str[MAX_PATH];
+	D3DXMatrixIdentity(&m_matTTS);
+	CvMat cvPt;
+	CvMat dstPt;
+	float t[] = {0,0,
+		0,1,
+		1,1,
+		1,0};
+	float d[] = {lt.x, lt.y,
+		lb.x, lb.y,
+		rb.x, rb.y,
+		rt.x, rt.y};
+	float s[] = {0,0,0,
+		0,0,0,
+		0,0,0};
+
+	cvPt = cvMat( 4, 2, CV_32F, &t);
+	dstPt = cvMat(4, 2, CV_32F, &d);
+	CvMat mat = cvMat(3,3, CV_32F, &s);
+	cvFindHomography(&dstPt, &cvPt, &mat);
+	CAutoLock lck(&m_csMatTTS);
+	m_matTTS._11 = mat.data.fl[0*3 + 0];
+	m_matTTS._21 = mat.data.fl[0*3 + 1];
+	m_matTTS._31 = mat.data.fl[0*3 + 2];
+
+	m_matTTS._12 = mat.data.fl[1*3 + 0];
+	m_matTTS._22 = mat.data.fl[1*3 + 1];
+	m_matTTS._32 = mat.data.fl[1*3 + 2];
+
+	m_matTTS._13 = mat.data.fl[2*3 + 0];
+	m_matTTS._23 = mat.data.fl[2*3 + 1];
+	m_matTTS._33 = mat.data.fl[2*3 + 2];
+
+	return TRUE;
+}
+BOOL HookDrawingStream::GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2& rb, 
+				D3DXVECTOR2& rt)
+{
+	CAutoLock lck(&m_csMatTTS);
+	D3DXVECTOR4 v1(0,0,1,1);
+	D3DXVECTOR4 v2(0,1,1,1);
+	D3DXVECTOR4 v3(1,1,1,1);
+	D3DXVECTOR4 v4(1,0,1,1);
+
+	D3DXMATRIX matInvTTS;
+	D3DXMatrixInverse(&matInvTTS, NULL, &m_matTTS);
+
+	D3DXVec4Transform(&v1, &v1, &matInvTTS);
+	D3DXVec4Transform(&v2, &v2, &matInvTTS);
+	D3DXVec4Transform(&v3, &v3, &matInvTTS);
+	D3DXVec4Transform(&v4, &v4, &matInvTTS);
+	v1 /= v1.z; v2 /= v2.z; v3 /= v3.z; v4 /= v4.z;
+	lt.x = v1.x; lt.y = v1.y;
+	lb.x = v2.x; lb.y = v2.y;
+	rb.x = v3.x; rb.y = v3.y;
+	rt.x = v4.x; rt.y = v4.y;
+
+	return TRUE;
+}
+
+
+
+
+
+
+
 
 HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter), m_numPins(4)
@@ -100,7 +201,7 @@ HRESULT HookDrawingFilter::CreatePins()
 		{
 			WCHAR strPinName[MAX_PATH];
 			swprintf_s(strPinName, MAX_PATH, L"d3dsurf%d", i);
-			CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
+			CMuxTransformStream* pOutput0 = new HookDrawingStream(NAME("CMuxTransform stream pin"),
 				&hr,              // Owner filter
 				this,               // Result code
 				strPinName);      // Pin name
@@ -137,6 +238,9 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	SetRenderTarget();
 	{
 		CAutoLock lck(&m_csInTexture);
+		const D3DXMATRIX* matTTS = ((HookDrawingStream*)pPin)->GetWarpMatrix();
+		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(matTTS);
+			
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		m_pD3DDisplay->Render();
 	}

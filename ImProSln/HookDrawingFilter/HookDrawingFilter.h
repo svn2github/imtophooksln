@@ -11,6 +11,32 @@
 DEFINE_GUID(CLSID_HookDrawingFilter, 
 			0x30a0104e, 0xa12f, 0x4238, 0x9b, 0xa4, 0xd1, 0x95, 0xba, 0x8f, 0xb5, 0x8a);
 
+class HookDrawingStream : public CMuxTransformStream
+{
+public:
+	D3DXMATRIX m_matTTS;
+	CCritSec m_csMatTTS;
+	const D3DXMATRIX* GetWarpMatrix();
+	BOOL SetWarpMatrix(const D3DXMATRIX& mat);
+	BOOL SetWarpByPts(const D3DXVECTOR2& lt, const D3DXVECTOR2& lb,
+		const D3DXVECTOR2& rb, const D3DXVECTOR2& rt);
+	BOOL GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2& rb, 
+				D3DXVECTOR2& rt);
+
+	HookDrawingStream(__in_opt LPCTSTR pObjectName,
+		__inout HRESULT *phr,
+		__inout CMuxTransformFilter *pms,
+		__in_opt LPCWSTR pName);
+#ifdef UNICODE
+	HookDrawingStream(__in_opt LPCSTR pObjectName,
+		__inout HRESULT *phr,
+		__inout CMuxTransformFilter *pms,
+		__in_opt LPCWSTR pName);
+#endif
+	virtual ~HookDrawingStream(void);  // virtual destructor ensures derived class destructors are called too.
+
+};
+
 
 class HookDrawingFilter :
 	public CMuxTransformFilter, public IHookDrawingFilter, public D3DTransformFilterBase

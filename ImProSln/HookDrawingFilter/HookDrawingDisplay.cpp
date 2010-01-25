@@ -5,13 +5,17 @@
 HookDrawingDisplay::HookDrawingDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
 MS3DDisplay(hWnd, pD3D, rtWidth, rtHeight)
 {
-	
+	D3DXMatrixIdentity(&m_matTTS);
 }
 
 HookDrawingDisplay::~HookDrawingDisplay(void)
 {
 }
-
+BOOL HookDrawingDisplay::SetMatTTS(const D3DXMATRIX* mat)
+{
+	m_matTTS = *mat;
+	return TRUE;
+}
 
 BOOL HookDrawingDisplay::Render()
 {
@@ -32,6 +36,7 @@ BOOL HookDrawingDisplay::Render()
 	UINT iPass, cPasses = 0;
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
+		hr = pEffect->SetMatrix("g_matTexTransform", &m_matTTS);
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
 		hr = pEffect->SetTechnique("technique0");
 		hr = pEffect->Begin(&cPasses, 0);

@@ -1,4 +1,13 @@
-	struct VSOUT {
+
+float4x4 g_matTexTransform   
+<
+	string UIWidget="matTTS";
+> = {1.0f, 0.0f, 0.0f, 0.0f, 
+     0.0f, 1.0f, 0.0f, 0.0f,
+	 0.0f, 0.0f, 1.0f, 0.0f,
+	 0.0f, 0.0f, 0.0f, 1.0f}; 
+	 
+struct VSOUT {
     float4 pos	: POSITION;
 	float4 normal : NORMAL;
     float2 UV		: TEXCOORD0;
@@ -17,7 +26,18 @@ sampler2D g_Sampler = sampler_state {
 }; 
 
 float4 mainPS(VSOUT vin) : COLOR {
-	return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
+	float4 uv = mul(float4(vin.UV , 1.0, 1.0), g_matTexTransform );
+	
+	uv.x /= uv.z;
+	uv.y /= uv.z;
+	uv.z = 1;
+	if (uv.x > 1.0 || uv.x < 0 || uv.y > 1.0 || uv.y < 0 )
+		return float4(0,0,0,0);
+	else
+	{			
+		return tex2D(g_Sampler, float2(uv.x, uv.y));
+	}
+	
 }
 
 technique technique0 {
