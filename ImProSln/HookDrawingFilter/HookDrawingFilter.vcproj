@@ -217,6 +217,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HookDrawingStreamProp.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -263,7 +267,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\HookDrawingStreamProp.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IHookDrawingFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IHookDrawingStream.h"
 				>
 			</File>
 			<File

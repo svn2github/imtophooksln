@@ -71,6 +71,7 @@ END
 STRINGTABLE 
 BEGIN
     IDS_HookDrawingPropPage_Title "HookDrawing Prop Page"
+    IDS_HookDrawingStreamPropPage_Title "Hook Stream Prop Page"
 END
 
 #endif    // Chinese (Taiwan) resources
@@ -139,6 +140,20 @@ BEGIN
     PUSHBUTTON      "Detour Create Proc",IDC_BUTTON4,139,40,78,14
 END
 
+IDD_HookDrawingStreamPropPage DIALOGEX 0, 0, 235, 156
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_edLeft,34,35,40,14,ES_AUTOHSCROLL
+    RTEXT           "Left:",IDC_STATIC,15,38,19,11
+    RTEXT           "Right:",IDC_STATIC,15,61,19,11
+    EDITTEXT        IDC_edRight,34,58,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edTop,134,35,40,14,ES_AUTOHSCROLL
+    RTEXT           "Top:",IDC_STATIC,115,38,19,11
+    RTEXT           "Bottom:",IDC_STATIC,107,61,27,11
+    EDITTEXT        IDC_edBottom,134,58,40,14,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -154,6 +169,18 @@ BEGIN
         RIGHTMARGIN, 228
         TOPMARGIN, 7
         BOTTOMMARGIN, 149
+    END
+
+    IDD_HookDrawingStreamPropPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        VERTGUIDE, 34
+        VERTGUIDE, 134
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+        HORZGUIDE, 49
+        HORZGUIDE, 72
     END
 END
 #endif    // APSTUDIO_INVOKED

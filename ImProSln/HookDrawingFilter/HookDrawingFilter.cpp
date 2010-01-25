@@ -6,6 +6,8 @@
 #include "HookDrawingProp.h"
 #include "..\\HookInject\IHookInject.h"
 #include "cv.h"
+#include "IHookDrawingStream.h"
+#include "HookDrawingStreamProp.h"
 HookDrawingFilter* g_Instance = NULL;
 
 static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
@@ -64,7 +66,7 @@ BOOL HookDrawingStream::SetWarpByPts(const D3DXVECTOR2& lt, const D3DXVECTOR2& l
 	cvPt = cvMat( 4, 2, CV_32F, &t);
 	dstPt = cvMat(4, 2, CV_32F, &d);
 	CvMat mat = cvMat(3,3, CV_32F, &s);
-	cvFindHomography(&dstPt, &cvPt, &mat);
+	cvFindHomography(&cvPt, &dstPt, &mat);
 	CAutoLock lck(&m_csMatTTS);
 	m_matTTS._11 = mat.data.fl[0*3 + 0];
 	m_matTTS._21 = mat.data.fl[0*3 + 1];
@@ -89,13 +91,10 @@ BOOL HookDrawingStream::GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2
 	D3DXVECTOR4 v3(1,1,1,1);
 	D3DXVECTOR4 v4(1,0,1,1);
 
-	D3DXMATRIX matInvTTS;
-	D3DXMatrixInverse(&matInvTTS, NULL, &m_matTTS);
-
-	D3DXVec4Transform(&v1, &v1, &matInvTTS);
-	D3DXVec4Transform(&v2, &v2, &matInvTTS);
-	D3DXVec4Transform(&v3, &v3, &matInvTTS);
-	D3DXVec4Transform(&v4, &v4, &matInvTTS);
+	D3DXVec4Transform(&v1, &v1, &m_matTTS);
+	D3DXVec4Transform(&v2, &v2, &m_matTTS);
+	D3DXVec4Transform(&v3, &v3, &m_matTTS);
+	D3DXVec4Transform(&v4, &v4, &m_matTTS);
 	v1 /= v1.z; v2 /= v2.z; v3 /= v3.z; v4 /= v4.z;
 	lt.x = v1.x; lt.y = v1.y;
 	lb.x = v2.x; lb.y = v2.y;
@@ -106,8 +105,35 @@ BOOL HookDrawingStream::GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2
 }
 
 
+STDMETHODIMP HookDrawingStream::GetPages(CAUUID *pPages)
+{
+	pPages->cElems = 1;
+	pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID));
+	if (pPages->pElems == NULL) 
+	{
+		return E_OUTOFMEMORY;
+	}
+	pPages->pElems[0] = CLSID_HookDrawingStreamPropPage;
+	return S_OK;
+}
 
-
+HRESULT HookDrawingStream::NonDelegatingQueryInterface(REFIID iid, void **ppv)
+{
+	if (iid == IID_IHookDrawingStream) 
+	{
+		return GetInterface(static_cast<IHookDrawingStream*>(this), ppv);
+	}
+	else if (iid == IID_ISpecifyPropertyPages)
+	{
+		return GetInterface(
+			static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+	else
+	{
+		// Call the parent class.
+		return __super::NonDelegatingQueryInterface(iid, ppv);
+	}
+}
 
 
 
@@ -472,21 +498,21 @@ HRESULT HookDrawingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
 	if ( dir == PINDIR_OUTPUT)
 	{
-		int unvisibleCount = 0;
+		int unConnectCount = 0;
 		for (int i =0; i<m_pStreamPins.size(); i++)
 		{
-			if (!m_pStreamPins[i]->m_bVisible)
+			if (m_pStreamPins[i]->m_bVisible && !m_pStreamPins[i]->IsConnected())
 			{
-				unvisibleCount++;
+				unConnectCount++;
 			}
 		}
 		
-		for (int i =0; i<m_pStreamPins.size() && unvisibleCount > 1; i++)
+		for (int i = m_pStreamPins.size() -1; i >= 0 && unConnectCount > 0; i--)
 		{
 			if (!m_pStreamPins[i]->IsConnected() && m_pStreamPins[i]->m_bVisible)
 			{
 				m_pStreamPins[i]->m_bVisible = false;
-				unvisibleCount--;
+				unConnectCount--;
 			}
 		}
 	}

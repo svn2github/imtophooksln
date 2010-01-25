@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "HookDrawingReg.h"
 #include "HookDrawingProp.h"
-
+#include "HookDrawingStreamProp.h"
 
 static WCHAR g_wszName[] = L"HookDrawing Filter";
 const AMOVIESETUP_PIN psudHookDrawingFilterPins[] =
@@ -91,6 +91,13 @@ CFactoryTemplate g_Templates[] =
 		L"HookDrawing Prop Page",
 			&CLSID_HookDrawingPropPage,
 			HookDrawingPropPage::CreateInstance,
+			NULL,
+			NULL
+	},
+	{
+		L"Hook Stream Prop Page",
+			&CLSID_HookDrawingStreamPropPage,
+			HookDrawingStreamPropPage::CreateInstance,
 			NULL,
 			NULL
 	}
