@@ -29,10 +29,15 @@ public:
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	//Derive from D3DTransformFilterBase
+	virtual HRESULT CreateTextures(UINT w, UINT h);
 	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
 	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
+	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
+
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -44,13 +49,16 @@ public:
 	virtual ~HookDrawingFilter();
 
 public:
-	
 	virtual BOOL IsHooked();
 	virtual HWND GetHookedWindow();
 	virtual BOOL SetHookedWindow(HWND hwnd);
 protected:
+	const int m_numPins;
 	HWND m_hHookedWnd;
 	CCritSec m_csInTexture;
+	CCritSec m_csFillBuffer;
+	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
+	BOOL SwitchOutTexture(int idx);
 	void onHookedWindowDestory();
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);

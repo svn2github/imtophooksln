@@ -939,6 +939,44 @@ HRESULT CMuxTransformStream::FillBuffer(IMediaSample *pSamp)
 	}
 	return m_pFilter->FillBuffer(pSamp, this);
 }
+
+HRESULT CMuxTransformStream::CheckConnect(IPin *pPin)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}	
+	HRESULT hr = m_pFilter->CheckConnect(PINDIR_OUTPUT, this, pPin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return __super::CheckConnect(pPin);
+}
+HRESULT CMuxTransformStream::BreakConnect()
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}	
+	HRESULT hr = m_pFilter->BreakConnect(PINDIR_OUTPUT, this);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return __super::BreakConnect();
+}
+HRESULT CMuxTransformStream::CompleteConnect(IPin *pReceivePin)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = m_pFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return __super::CompleteConnect(pReceivePin);
+
+}
 HRESULT CMuxTransformStream::DecideBufferSize(
 								 IMemAllocator * pAlloc,
 								 __inout ALLOCATOR_PROPERTIES *pProp)

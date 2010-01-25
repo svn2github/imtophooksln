@@ -177,7 +177,10 @@ protected:
 	// Override this to provide the worker thread a means
 	// of processing a buffer
 	virtual HRESULT FillBuffer(IMediaSample *pSamp);
-
+	// implement it by calling filter
+	virtual HRESULT CheckConnect(IPin *pPin);
+	virtual HRESULT BreakConnect();
+	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 	// Called as the thread is created/destroyed - use to perform
 	// jobs such as start/stop streaming mode
 	// If OnThreadCreate returns an error the thread will exit.

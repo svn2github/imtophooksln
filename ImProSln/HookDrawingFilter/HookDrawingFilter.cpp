@@ -12,7 +12,7 @@ static UINT HOOKED_WNDDESTORY = ::RegisterWindowMessage(HOOKED_WNDDESTORY_MSG);
 static UINT HOOKED_BITBLTCALLED = ::RegisterWindowMessage(HOOKED_BITBLTCALLED_MSG);
 
 HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter)
+: CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter), m_numPins(4)
 {
 	m_hHookedWnd = 0;
 	HRESULT hr = initD3D();
@@ -29,6 +29,12 @@ HookDrawingFilter::~HookDrawingFilter()
 		::PostMessageW(m_hHookedWnd, WM_CLOSE, NULL, NULL);
 	}
 	g_Instance = NULL;
+	for (int i =0; i< m_pAddOutTexture.size(); i++)
+	{
+		m_pAddOutTexture[i]->Release();
+		m_pAddOutTexture[i] = NULL;
+	}
+	m_pAddOutTexture.clear();
 }
 
 CUnknown *WINAPI HookDrawingFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -90,16 +96,20 @@ HRESULT HookDrawingFilter::CreatePins()
 			m_pStreamPins[c] = NULL;
 		}
 		m_pStreamPins.clear();
-		CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
-			&hr,              // Owner filter
-			this,               // Result code
-			L"d3dsurf");      // Pin name
-		//  Can't fail
-		ASSERT(SUCCEEDED(hr));
-		if (pOutput0 == NULL) {
-			return NULL;
+		for ( int i =0; i < m_numPins; i++)
+		{
+			WCHAR strPinName[MAX_PATH];
+			swprintf_s(strPinName, MAX_PATH, L"d3dsurf%d", i);
+			CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
+				&hr,              // Owner filter
+				this,               // Result code
+				strPinName);      // Pin name
+			if (i != 0)
+			{
+				pOutput0->m_bVisible = false;
+			}
+			m_pStreamPins.push_back(pOutput0);
 		}
-		m_pStreamPins.push_back(pOutput0);
 	}
 	
 	return S_OK;
@@ -110,6 +120,20 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	{
 		return S_FALSE;
 	}
+	CAutoLock lck2(&m_csFillBuffer);
+	int idx = -1;
+	for(int i =0; i< m_pStreamPins.size(); i++)
+	{
+		if (pPin == m_pStreamPins[i])
+		{
+			idx = i;
+			break;
+		}
+	}
+	if (idx < 0 || idx >= m_pStreamPins.size())
+	{
+		return S_FALSE;
+	}
 	SetRenderTarget();
 	{
 		CAutoLock lck(&m_csInTexture);
@@ -117,6 +141,7 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		m_pD3DDisplay->Render();
 	}
 	ResetRenderTarget();
+	SwitchOutTexture(idx);
 	CopyRenderTarget2OutputTexture();	
 	CMediaType mt;
 	GetMediaType(0, pPin, &mt);
@@ -126,7 +151,16 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 
 HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout CMediaType *pMediaType)
 {
-	if (m_pStreamPins.size() >= 1 && m_pStreamPins[0] == pPin)
+	bool isStreamPin = false;
+	for (int i =0; i <m_pStreamPins.size(); i++)
+	{
+		if (m_pStreamPins[i] == pPin)
+		{
+			isStreamPin = true;
+			break;
+		}
+	}
+	if (isStreamPin)
 	{
 		CMediaType mt;
 		mt.SetType(&GUID_MyMediaSample);
@@ -143,7 +177,16 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 }
 HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 {
-	if (m_pStreamPins.size() >= 1 && m_pStreamPins[0] == pPin)
+	bool isStreamPin = false;
+	for (int i =0; i <m_pStreamPins.size(); i++)
+	{
+		if (m_pStreamPins[i] == pPin)
+		{
+			isStreamPin = true;
+			break;
+		}
+	}
+	if (isStreamPin)
 	{
 		CheckPointer(mtOut, E_POINTER);
 		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
@@ -159,7 +202,16 @@ HRESULT HookDrawingFilter::DecideBufferSize(
 								 __inout ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr;
-	if (m_pStreamPins.size() >= 1 && m_pStreamPins[0] == pOutPin)
+	bool isStreamPin = false;
+	for (int i =0; i <m_pStreamPins.size(); i++)
+	{
+		if (m_pStreamPins[i] == pOutPin)
+		{
+			isStreamPin = true;
+			break;
+		}
+	}
+	if (isStreamPin)
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
@@ -182,6 +234,35 @@ MS3DDisplay* HookDrawingFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, i
 	return new HookDrawingDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
 }
 
+HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
+{
+	HRESULT hr = S_FALSE;
+	for (int i =0; i< m_pAddOutTexture.size(); i++)
+	{
+		m_pAddOutTexture[i]->Release();
+		m_pAddOutTexture[i] = NULL;
+	}
+	m_pAddOutTexture.clear();
+	if (w == 0 || h == 0)
+	{
+		HDC dc = GetDC(m_hWndD3D);
+		w = GetDeviceCaps(dc, HORZRES);
+		h = GetDeviceCaps(dc, VERTRES);
+	}
+	for (int i =0 ;i< m_numPins; i++)
+	{
+		LPDIRECT3DTEXTURE9 pAddTexture = NULL;
+		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+			0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &pAddTexture);
+		if (FAILED(hr))
+		{
+			return hr;
+		}
+		m_pAddOutTexture.push_back(pAddTexture);
+	}
+
+	return __super::CreateTextures(w, h);
+}
 HRESULT HookDrawingFilter::GetPages(CAUUID *pPages)
 {
 	pPages->cElems = 1;
@@ -266,6 +347,46 @@ LRESULT HookDrawingFilter::HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wP
 		return D3DEnv::D3DWndProc(hWnd, message, wParam, lParam);
 	}
 	return 0;
+}
+
+HRESULT HookDrawingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
+{
+	if ( direction == PINDIR_OUTPUT)
+	{
+		for (int i =0; i<m_pStreamPins.size(); i++)
+		{
+			if (!m_pStreamPins[i]->IsConnected() && !m_pStreamPins[i]->m_bVisible)
+			{
+				m_pStreamPins[i]->m_bVisible = true;
+				break;
+			}
+		}
+	}
+	return __super::CompleteConnect(direction, pMyPin, pOtherPin);
+}
+HRESULT HookDrawingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
+{
+	if ( dir == PINDIR_OUTPUT)
+	{
+		int unvisibleCount = 0;
+		for (int i =0; i<m_pStreamPins.size(); i++)
+		{
+			if (!m_pStreamPins[i]->m_bVisible)
+			{
+				unvisibleCount++;
+			}
+		}
+		
+		for (int i =0; i<m_pStreamPins.size() && unvisibleCount > 1; i++)
+		{
+			if (!m_pStreamPins[i]->IsConnected() && m_pStreamPins[i]->m_bVisible)
+			{
+				m_pStreamPins[i]->m_bVisible = false;
+				unvisibleCount--;
+			}
+		}
+	}
+	return __super::BreakConnect(dir, pPin);
 }
 
 BOOL HookDrawingFilter::IsHooked()
@@ -412,4 +533,13 @@ BOOL HookDrawingFilter::CaptureHookWnd()
 
 	return TRUE;
 
+
+BOOL HookDrawingFilter::SwitchOutTexture(int idx)
+{
+	if (idx < 0 || idx >= m_pAddOutTexture.size())
+	{
+		return FALSE;
+	}
+	m_pOutTexture = m_pAddOutTexture[idx];
+	return TRUE;
 }
