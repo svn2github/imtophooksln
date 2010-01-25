@@ -25,6 +25,17 @@ CMFCBasePropertyPage::~CMFCBasePropertyPage()
 		m_pPageSite = NULL;
 	}
 }
+
+void CMFCBasePropertyPage::SetDirty()
+{
+	m_bDirty = TRUE;
+	HRESULT hr = S_OK;
+
+	if (m_pPageSite) {
+		hr = m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+	}
+}
+
 LRESULT CMFCBasePropertyPage::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	this->OnReceiveMessage(GetSafeHwnd(), message, wParam, lParam);
