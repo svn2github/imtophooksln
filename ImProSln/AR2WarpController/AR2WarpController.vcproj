@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter_mfcstatic.lib CMFCBasePropertyPage_mfcstatic.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
 				ModuleDefinitionFile=".\AR2WarpController.def"
