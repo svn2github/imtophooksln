@@ -532,8 +532,7 @@ BOOL HookDrawingFilter::CaptureHookWnd()
 	pSurface = NULL;
 
 	return TRUE;
-
-
+}
 BOOL HookDrawingFilter::SwitchOutTexture(int idx)
 {
 	if (idx < 0 || idx >= m_pAddOutTexture.size())
