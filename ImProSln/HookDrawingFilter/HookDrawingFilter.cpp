@@ -316,21 +316,12 @@ void HookDrawingFilter::onBitBltCalled()
 		}
 
 		RECT rect;
-		GetWindowRect(hwnd, &rect);
-
+		GetClientRect(hwnd, &rect);
+	
 		int dcW = rect.right - rect.left;
 		int dcH = rect.bottom - rect.top;
 
-		POINT pt;  pt.x = x; pt.y = y;
-		MapWindowPoints(hwnd, hClientWnd, &pt,1);
-		
-		float low_l = 0, low_t = 0, low_r = 1.0, low_b = 1.0;
-		
-		float tSrcX_L = dcW * low_l;
-		float tSrcY_L = dcH * low_t;
-		float sSrcX_L = low_r - low_l;
-		float sSrcY_L = low_b - low_t;
-		DrawBitBlt(myhdc, (pt.x - tSrcX_L)*(1.0/sSrcX_L), (pt.y - tSrcY_L)*(1.0/sSrcY_L), width*(1.0/sSrcX_L), height*(1.0/sSrcY_L), dcW, dcH, hdcSrc, x1, y1, width, height, rop);
+		DrawBitBlt(myhdc, x, y, width, height, dcW, dcH, hdcSrc, x1, y1, width, height, rop);
 		ReleaseDC(hClientWnd, myhdc);
 		return;
 	}
@@ -362,7 +353,13 @@ BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height,
 
 	float rX = ((float)desc.Width / dcW);
 	float rY = ((float)desc.Height / dcH);
-
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"@@@@ drawX = %d, drawY = %d, drawW = %d, drawH = %d \n"
+		, (int)(rX*x), (int)(rY*y), (int)(rX*width), (int)(rY*height));
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ x = %d, y = %d, width = %d, height= %d \n"
+		, (int)x, (int)y, (int)width, (int)height);
+	OutputDebugStringW(str);
 	BOOL ret = StretchBlt(textureDC, rX*x, rY*y, rX*width, rY*height, hdc, x, y, width, height, rop);
 	
 	pSurface->ReleaseDC(textureDC);
