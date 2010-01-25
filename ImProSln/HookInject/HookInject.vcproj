@@ -117,6 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="..\Detours\include;../DSLib/include/BaseClasses;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HOOKINJECT_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -135,7 +136,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="detours.lib detoured.lib strmbasd.lib winmm.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\Detours\lib; ../DSLib/lib;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
