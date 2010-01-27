@@ -9,6 +9,7 @@
 #include "vector2d.h"
 #include "mesh2d.h"
 #include <list>
+#include "cv.h"
 
 namespace touchlib
 {
@@ -25,6 +26,8 @@ namespace touchlib
 
 		//! capture the frame and do the detection
 		virtual bool process() = 0;
+
+		virtual bool processOnce(IplImage* pSrc) = 0;
 
 		//! Gets the raw camera output
 		virtual void getRawImage(char **img, int &width, int &height) = 0;

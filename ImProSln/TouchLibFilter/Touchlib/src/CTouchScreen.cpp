@@ -231,7 +231,54 @@ void CTouchScreen::registerListener(ITouchListener *listener)
 	listenerList.push_back(listener);
 }
 
+bool CTouchScreen::processOnce(IplImage* pSrc)
+{
+	if(filterChain.size() == 0)		// If there are no filters
+		return false;				// error out
+	//printf("Process chain\n");
+	filterChain[0]->process(pSrc);	// Otherwise go to the first filter
+	IplImage *output = filterChain.back()->getOutput(); // and get the first frame
 
+	if(output != NULL) {			// If there is output to get
+		//printf("Process chain complete\n");
+		frame = output;		// assign it to the private CTouchScreen::frame variable
+
+		if(bTracking == true)		// If we are currently tracking blobs
+		{
+			//printf("Tracking 1\n");
+			tracker->findBlobs(frame);		// Locate the blobs
+			tracker->trackBlobs();			// and update their location
+
+#ifdef WIN32
+			DWORD dw = WaitForSingleObject(eventListMutex, INFINITE);
+			//dw == WAIT_OBJECT_0
+			if(dw == WAIT_TIMEOUT || dw == WAIT_FAILED) {		// If locking the mutex failed
+				// handle time-out error
+				//throw TimeoutExcp();
+				printf("Failed %d", dw);						// output result to terminal
+
+			}
+			else 		// Locking the mutex succeeds
+			{
+				//printf("Tracking 2\n");
+				tracker->gatherEvents();			// then find out which blobs are new and track the old blob's movement
+				ReleaseMutex(eventListMutex);		// and unlock the mutex
+			}
+#else
+			int err;
+			if((err = pthread_mutex_lock(&eventListMutex)) != 0){
+				// some error occured
+				fprintf(stderr,"locking of mutex failed\n");
+			}else{
+				tracker->gatherEvents();	// then find out which blobs are new and track the old blob's movement
+				pthread_mutex_unlock(&eventListMutex);		// and unlock the mutex
+			}
+#endif
+		}
+		//return true;
+	}
+	return true;
+}
 bool CTouchScreen::process()
 {
 	// The main event loop for this CTouchScreen instance

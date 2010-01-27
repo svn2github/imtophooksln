@@ -9,9 +9,9 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="C:\Windows\system32\regsvr32.exe"
+				Command="C:\Program Files\Final Codecs\Codecs\GraphEdit.exe "
 				WorkingDirectory=""
-				CommandArguments="D:\Projects\ImProSln\bin\TouchLibFilter.dll"
+				CommandArguments="D:\Projects\ImProSln\setting\TouchLib.grf"
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

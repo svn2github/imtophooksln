@@ -7,7 +7,8 @@
 #include "TouchLibFilterApp.h"
 #include "cv.h"
 #include "MyMediaSample.h"
-
+#include "d3dx9.h"
+#include "highgui.h"
 TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("TouchLib Filter"), 0, CLSID_TouchLibFilter)
 { 
@@ -64,7 +65,11 @@ HRESULT TouchLibFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 
 HRESULT TouchLibFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
-	return S_OK;
+	if (m_pInputPins.size() >= 0 && pReceivePin == m_pInputPins[0] )
+	{
+		return ReceiveInput0(pSample, pReceivePin);
+	}
+	return S_FALSE;
 }
 
 HRESULT TouchLibFilter::CreatePins()
@@ -152,7 +157,7 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 
 HRESULT TouchLibFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
-	if (dir == PINDIR_OUTPUT)
+	if (dir == PINDIR_INPUT)
 	{
 		DestoryTouchScreen();
 	}
@@ -260,18 +265,198 @@ bool TouchLibFilter::CreateTouchScreen()
 		m_pTouchScreen = NULL;
 	}
 	m_pTouchScreen = TouchScreenDevice::getTouchScreen();
+	m_pTouchScreen->setDebugMode(false);
+
+	m_monolabel = m_pTouchScreen->pushFilter("mono");
+	m_bgLabel = m_pTouchScreen->pushFilter("backgroundremove");
+	m_pTouchScreen->setParameter(m_bgLabel, "threshold", "0");
+
+	m_shpLabel = m_pTouchScreen->pushFilter("simplehighpass");
+	m_pTouchScreen->setParameter( m_shpLabel, "blur", "13");
+	m_pTouchScreen->setParameter( m_shpLabel, "noise", "3");
+
+	m_scalerLabel = m_pTouchScreen->pushFilter("scaler");
+	m_pTouchScreen->setParameter(m_scalerLabel, "level", "70");
+
+	m_rectifyLabel = m_pTouchScreen->pushFilter("rectify");
+	m_pTouchScreen->setParameter(m_rectifyLabel, "level", "75");
+	
+	m_pTouchScreen->setParameter(m_bgLabel, "mask", (char*)m_pTouchScreen->getCameraPoints());
+	m_pTouchScreen->setParameter(m_bgLabel, "capture", "");
+	m_pTouchScreen->registerListener((ITouchListener*)this);
 	return true;
 }
 bool TouchLibFilter::DestoryTouchScreen()
 {
-	if (m_pTouchScreen != NULL)
-	{
-		delete m_pTouchScreen;
-		m_pTouchScreen = NULL;
-	}
+	TouchScreenDevice::destroy();
 	return true;
 }
+HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOut)
+{
+	if (m_pInputPins.size() < 1)
+		return S_FALSE;
+	if (m_pTouchScreen == NULL)
+	{
+		return S_FALSE;
+	}
+	BYTE* pOutData = NULL;
+	pOut->GetPointer(&pOutData);
+	IplImage* pSrc = NULL;
+	LPDIRECT3DTEXTURE9 pInTexture = NULL;
 
+	int channel = 4;
+	CMediaType mt = ((CMuxTransformInputPin*)m_pInputPins[0])->CurrentMediaType();
+	if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+	{
+		D3DLOCKED_RECT InRect;
+		pSample->GetPointer((BYTE**)&pInTexture);
+		pInTexture->LockRect(0, &InRect, NULL, 0);
+
+		D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
+		pSrc = cvCreateImageHeader(cvSize(desc->Width, desc->Height), 8, 4);
+		pSrc->imageData = (char*)InRect.pBits;
+
+
+	}
+	else
+	{
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		
+		if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB24)) 
+		{
+			channel = 3;
+		}
+		else if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32) ||
+			IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_ARGB32))
+		{
+			channel = 4;
+		}
+		else
+		{
+			return S_FALSE;
+		}
+		pSrc = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
+		BYTE* pInData = NULL;
+		pSample->GetPointer(&pInData);
+		pSrc->imageData = (char*)pInData;
+
+	}
+	m_pTouchScreen->processOnce(pSrc);
+
+	IplImage* outImage = NULL;
+	
+	outImage = m_pTouchScreen->getFilterImage(m_rectifyLabel);
+	if (outImage == NULL)
+		return S_FALSE;
+	int width = outImage->height;
+	int height = outImage->width;
+	for (int y = 0 ; y < width; y++)
+	{
+		for (int x = 0; x< height; x++)
+		{
+			for (int i = 0 ; i < channel; i++)
+			{
+				pOutData[y*width*channel + x*channel + i] = outImage->imageData[y*width + x];
+			}
+		}
+	}
+	if (pInTexture != NULL)
+	{
+		pInTexture->UnlockRect(0);
+	}
+	if (pSrc != NULL)
+	{
+		cvReleaseImageHeader(&pSrc);
+		pSrc = NULL;
+	}
+	return S_OK;
+}
+HRESULT TouchLibFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	if (m_pOutputPins.size() < 1)
+	{
+		return S_FALSE;
+	}
+
+	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
+	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+		return S_OK;
+	}
+	ASSERT(pSample);
+	IMediaSample * pOutSample;
+	// If no output to deliver to then no point sending us data
+	ASSERT (m_pOutputPins.size() != NULL);
+	HRESULT hr;
+	// Set up the output sample
+
+	hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
+
+	if (FAILED(hr)) {
+		return hr;
+	}
+
+	// Start timing the transform (if PERF is defined)
+	MSR_START(m_idTransform);
+
+	hr = TransformInput0(pSample, pOutSample);
+
+	// Stop the clock and log it (if PERF is defined)
+	MSR_STOP(m_idTransform);
+
+	if (FAILED(hr)) {
+		DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
+	} else {
+		// the Transform() function can return S_FALSE to indicate that the
+		// sample should not be delivered; we only deliver the sample if it's
+		// really S_OK (same as NOERROR, of course.)
+		if (hr == NOERROR) {
+			hr = m_pOutputPins[0]->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			m_bSampleSkipped = FALSE;	// last thing no longer dropped
+		} else {
+			// S_FALSE returned from Transform is a PRIVATE agreement
+			// We should return NOERROR from Receive() in this cause because returning S_FALSE
+			// from Receive() means that this is the end of the stream and no more data should
+			// be sent.
+			if (S_FALSE == hr) {
+
+				//  Release the sample before calling notify to avoid
+				//  deadlocks if the sample holds a lock on the system
+				//  such as DirectDraw buffers do
+				pOutSample->Release();
+				m_bSampleSkipped = TRUE;
+				if (!m_bQualityChanged) {
+					NotifyEvent(EC_QUALITY_CHANGE,0,0);
+					m_bQualityChanged = TRUE;
+				}
+				return NOERROR;
+			}
+		}
+	}
+
+	// release the output buffer. If the connected pin still needs it,
+	// it will have addrefed it itself.
+	pOutSample->Release();
+	return S_OK;
+
+}
+
+
+//ITouchListener
+void TouchLibFilter::fingerDown(TouchData data)
+{
+	int test = 0;
+}
+//! Notify that a finger has just been made active. 
+void TouchLibFilter::fingerUpdate(TouchData data)
+{
+	int test = 0;
+}
+//! A finger is no longer active..
+void TouchLibFilter::fingerUp(TouchData data)
+{
+	int test = 0;
+}
 /*
 bool TouchLibFilter::SimpleHighpassFilter(IplImage* srcImage, IplImage *dstImage)
 {

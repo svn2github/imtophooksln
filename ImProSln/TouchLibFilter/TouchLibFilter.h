@@ -16,7 +16,7 @@ DEFINE_GUID(CLSID_TouchLibFilter,
 
 class TouchLibFilter :
 	public CMuxTransformFilter, public ITouchLibFilter,
-	public ISpecifyPropertyPages
+	public ISpecifyPropertyPages, public ITouchListener
 {
 
 public:
@@ -40,8 +40,18 @@ public:
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//implement ITouchLibFilterProperty
 
+	//ITouchListener
+	virtual void fingerDown(TouchData data);
+	//! Notify that a finger has just been made active. 
+	virtual void fingerUpdate(TouchData data);
+	//! A finger is no longer active..
+	virtual void fingerUp(TouchData data);
 protected:
-	float m_blurLevel;
+	ITouchScreen* m_pTouchScreen;
+	string m_monolabel, m_bgLabel, m_shpLabel, 
+		m_scalerLabel, m_rectifyLabel;
+
+	/*float m_blurLevel;
 	float m_noiseLevel;
 	int m_noiseSmoothType;
 	unsigned int m_levelScale;
@@ -49,10 +59,17 @@ protected:
 	bool m_bAutoSet;
 	IplImage* m_buffer;
 
-	bool IsAcceptedType(const CMediaType *pmt);
+	
 	bool SimpleHighpassFilter(IplImage* srcImage, IplImage* dstImage);
 	bool ScaleFilter(IplImage* srcImage, IplImage* dstImage);
 	bool RectifyFilter(IplImage* srcImage, IplImage* dstImage);
+	*/
+	bool CreateTouchScreen();
+	bool DestoryTouchScreen();
+	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
+	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
+protected:
+	bool IsAcceptedType(const CMediaType *pmt);
 public:
 	TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~TouchLibFilter();

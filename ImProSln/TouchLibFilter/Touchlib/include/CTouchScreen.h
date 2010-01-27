@@ -7,7 +7,7 @@
 #include "ITouchListener.h"
 #include "mesh2d.h"
 #include "IBlobTracker.h"
-
+#include "cv.h"
 
 #include <vector>
 
@@ -34,8 +34,9 @@ namespace touchlib
 		virtual void registerListener(ITouchListener *listener);
 
 		// capture the frame and do the detection
-		virtual bool process();
+		virtual bool processOnce(IplImage* pSrc);
 
+		virtual bool process();
 		// Gets the raw camera output
 		virtual void getRawImage(char **img, int &width, int &height);
 
