@@ -1,0 +1,10 @@
+; TouchLibFilter.def : Declares the module parameters for the DLL.
+
+LIBRARY      "TouchLibFilter"
+
+EXPORTS
+            DllMain                 PRIVATE
+            DllGetClassObject       PRIVATE
+            DllCanUnloadNow         PRIVATE
+            DllRegisterServer       PRIVATE
+            DllUnregisterServer     PRIVATE
