@@ -1,0 +1,5 @@
+[Update]
+url = http://videowrapper.svn.sourceforge.net/svnroot/videowrapper/trunk/Distribution/BitRock/DevelopmentUpdate.xml
+version_id = 00020600
+update_download_location = C:\Users\Muscle\AppData\Local\Temp
+check_for_updates = 1

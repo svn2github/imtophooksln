@@ -7,14 +7,27 @@
 #include "TouchLibFilterApp.h"
 #include "cv.h"
 #include "MyMediaSample.h"
+
 TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("TouchLib Filter"), 0, CLSID_TouchLibFilter)
 { 
-
+	/*
+	m_blurLevel = 13;
+	m_noiseLevel = 3;
+	m_noiseSmoothType = 3;
+	m_levelScale = 70;
+	m_levelRectify = 75;
+	m_bAutoSet = false;
+	m_buffer = NULL;*/
+	m_pTouchScreen = NULL;
 }
 TouchLibFilter::~TouchLibFilter()
 {
-
+	/*if (m_buffer != NULL)
+	{
+		cvReleaseImage(&m_buffer);
+		m_buffer = NULL;
+	}*/
 }
 
 CUnknown *WINAPI TouchLibFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -130,11 +143,19 @@ HRESULT TouchLibFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 
 HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
+	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pMyPin)
+	{
+		CreateTouchScreen();
+	}
 	return S_OK;
 }
 
 HRESULT TouchLibFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
+	if (dir == PINDIR_OUTPUT)
+	{
+		DestoryTouchScreen();
+	}
 	return __super::BreakConnect(dir, pPin);
 }
 
@@ -231,3 +252,106 @@ HRESULT TouchLibFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
+bool TouchLibFilter::CreateTouchScreen()
+{
+	if (m_pTouchScreen != NULL)
+	{
+		delete m_pTouchScreen;
+		m_pTouchScreen = NULL;
+	}
+	m_pTouchScreen = TouchScreenDevice::getTouchScreen();
+	return true;
+}
+bool TouchLibFilter::DestoryTouchScreen()
+{
+	if (m_pTouchScreen != NULL)
+	{
+		delete m_pTouchScreen;
+		m_pTouchScreen = NULL;
+	}
+	return true;
+}
+
+/*
+bool TouchLibFilter::SimpleHighpassFilter(IplImage* srcImage, IplImage *dstImage)
+{
+	if (srcImage == NULL || dstImage == NULL)
+	{
+		return false;
+	}
+	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
+		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
+	{
+		return false;
+	}
+	
+
+	if (m_buffer == NULL) {
+		m_buffer = cvCreateImage(cvGetSize(srcImage), srcImage->depth, srcImage->nChannels);
+		m_buffer->origin = srcImage->origin;
+	}
+
+	// create the unsharp mask using a linear average filter
+	int blurParameter = m_blurLevel*2+1;
+	cvSmooth(srcImage, m_buffer, CV_BLUR, blurParameter, blurParameter);
+	
+	cvSub(srcImage, m_buffer, m_buffer);
+
+	// filter out the noise using a median filter
+	int noiseParameter = m_noiseLevel*2+1;
+	cvSmooth(m_buffer, dstImage, m_noiseSmoothType, noiseParameter, noiseParameter);
+	return true;
+}
+bool TouchLibFilter::ScaleFilter(IplImage* srcImage, IplImage* dstImage)
+{
+	if (srcImage == NULL || dstImage == NULL)
+	{
+		return false;
+	}
+	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
+		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
+	{
+		return false;
+	}
+	// derived class responsible for allocating storage for filtered image
+
+	cvMul(srcImage, srcImage, dstImage, (float)m_levelScale / 128.0f);
+	return true;
+}
+
+bool TouchLibFilter::RectifyFilter(IplImage* srcImage, IplImage* dstImage)
+{
+	if (srcImage == NULL || dstImage == NULL)
+	{
+		return false;
+	}
+	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
+		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
+	{
+		return false;
+	}
+
+	if(m_bAutoSet)
+	{
+		touchlib::BwImage img(srcImage);
+
+		int h, w;
+		h = img.getHeight();
+		w = img.getWidth();
+
+		unsigned char highest = 0;
+
+		for(int y=0; y<h; y++)
+			for(int x=0; x<w; x++)
+			{
+				if(img[y][x] > highest)
+					highest = img[y][x];
+			}
+
+			m_levelRectify = (unsigned int)highest;
+			m_bAutoSet = false;
+	}
+
+	cvThreshold(srcImage, dstImage, m_levelRectify, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
+}
+*/

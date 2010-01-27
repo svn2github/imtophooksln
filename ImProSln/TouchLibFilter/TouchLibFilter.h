@@ -5,6 +5,9 @@
 #include <initguid.h>
 #include "combase.h"
 #include "CMuxTransformFilter.h"
+#include "TouchScreenDevice.h"
+
+using namespace touchlib;
 
 // {F982AA58-0213-4235-B342-314D853D5CEE}
 DEFINE_GUID(CLSID_TouchLibFilter, 
@@ -38,8 +41,18 @@ public:
 	//implement ITouchLibFilterProperty
 
 protected:
+	float m_blurLevel;
+	float m_noiseLevel;
+	int m_noiseSmoothType;
+	unsigned int m_levelScale;
+	unsigned int m_levelRectify;
+	bool m_bAutoSet;
+	IplImage* m_buffer;
+
 	bool IsAcceptedType(const CMediaType *pmt);
-	
+	bool SimpleHighpassFilter(IplImage* srcImage, IplImage* dstImage);
+	bool ScaleFilter(IplImage* srcImage, IplImage* dstImage);
+	bool RectifyFilter(IplImage* srcImage, IplImage* dstImage);
 public:
 	TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~TouchLibFilter();
