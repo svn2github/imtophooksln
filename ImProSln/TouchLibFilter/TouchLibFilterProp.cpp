@@ -11,6 +11,7 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 
 
 BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
+	ON_BN_CLICKED(IDC_BTNShowConfigWnd, &TouchLibPropPage::OnBnClickedBtnshowconfigwnd)
 END_MESSAGE_MAP()
 
 
@@ -84,4 +85,12 @@ CUnknown *WINAPI TouchLibPropPage::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 	}
 
 	return pNewObject;
+}
+
+void TouchLibPropPage::OnBnClickedBtnshowconfigwnd()
+{
+	// TODO: Add your control notification handler code here
+	if (m_pFilter == NULL)
+		return;
+	m_pFilter->ShowConfigWindow();
 }

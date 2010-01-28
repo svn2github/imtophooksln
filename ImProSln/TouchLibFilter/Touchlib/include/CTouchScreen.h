@@ -30,6 +30,8 @@ namespace touchlib
 		~CTouchScreen();
 
 // ITouchScreen
+		//
+		virtual bool showFilterOutputs();
 
 		//! A client registers itself as a listener for touch events
 		virtual void registerListener(ITouchListener *listener);

@@ -47,4 +47,5 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_TouchLibPropPage;}
 	virtual int GetTitileResourceID() { return IDS_TouchLibPropPage_Title;}
 
+	afx_msg void OnBnClickedBtnshowconfigwnd();
 };

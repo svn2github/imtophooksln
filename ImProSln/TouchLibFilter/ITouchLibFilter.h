@@ -9,5 +9,5 @@ MIDL_INTERFACE("C4454D89-08E8-4ad4-A001-2D1C9A5D62E0")
 ITouchLibFilter: public IUnknown
 {
 public:
-
+	virtual bool ShowConfigWindow();
 };

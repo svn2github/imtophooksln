@@ -21,6 +21,7 @@ namespace touchlib
 	class  ITouchScreen
 	{
 	public:
+		virtual bool showFilterOutputs() = 0;
 		//! A client registers itself as a listener for touch events
 		virtual void registerListener(ITouchListener *listener) = 0;
 

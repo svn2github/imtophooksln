@@ -12,14 +12,11 @@
 TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("TouchLib Filter"), 0, CLSID_TouchLibFilter)
 { 
-	/*
-	m_blurLevel = 13;
-	m_noiseLevel = 3;
-	m_noiseSmoothType = 3;
-	m_levelScale = 70;
-	m_levelRectify = 75;
-	m_bAutoSet = false;
-	m_buffer = NULL;*/
+	m_monolabel = "null";
+	m_bgLabel = "null";
+	m_shpLabel = "null";
+	m_scalerLabel = "null";
+	m_rectifyLabel = "null";
 	m_pTouchScreen = NULL;
 }
 TouchLibFilter::~TouchLibFilter()
@@ -115,8 +112,7 @@ HRESULT TouchLibFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
 	{	
 		CheckPointer(pmt, E_POINTER);
-		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo) && 
-			!IsEqualGUID(*pmt->FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC)) 
+		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo)) 
 		{
 			return E_INVALIDARG;
 		}
@@ -304,6 +300,15 @@ bool TouchLibFilter::DestoryTouchScreen()
 	m_pTouchScreen = NULL;
 	return true;
 }
+bool TouchLibFilter::ShowConfigWindow()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	return m_pTouchScreen->showFilterOutputs();
+}
+
 HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOut)
 {
 	if (m_pInputPins.size() < 1)
@@ -312,76 +317,56 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	{
 		return S_FALSE;
 	}
+	BYTE* pInData = NULL; 
 	BYTE* pOutData = NULL;
 	pOut->GetPointer(&pOutData);
 	IplImage* pSrc = NULL;
-	LPDIRECT3DTEXTURE9 pInTexture = NULL;
+	IplImage* pDest = NULL;
 
 	int channel = 4;
 	CMediaType mt = ((CMuxTransformInputPin*)m_pInputPins[0])->CurrentMediaType();
-	if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+	
+
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	
+	if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB24)) 
 	{
-		D3DLOCKED_RECT InRect;
-		pSample->GetPointer((BYTE**)&pInTexture);
-		pInTexture->LockRect(0, &InRect, NULL, 0);
-
-		D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
-		pSrc = cvCreateImageHeader(cvSize(desc->Width, desc->Height), 8, 4);
-		pSrc->imageData = (char*)InRect.pBits;
-
-
+		channel = 3;
+	}
+	else if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32) ||
+		IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_ARGB32))
+	{
+		channel = 4;
 	}
 	else
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		
-		if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB24)) 
-		{
-			channel = 3;
-		}
-		else if (IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32) ||
-			IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_ARGB32))
-		{
-			channel = 4;
-		}
-		else
-		{
-			return S_FALSE;
-		}
-		pSrc = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
-		BYTE* pInData = NULL;
-		pSample->GetPointer(&pInData);
-		pSrc->imageData = (char*)pInData;
-
+		return S_FALSE;
 	}
+	pSrc = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
+	pDest = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
+
+
+
+	pSample->GetPointer(&pInData);
+	pOut->GetPointer(&pOutData);
+	pSrc->imageData = (char*)pInData;
+	pDest->imageData = (char*)pOutData;
+	
 	m_pTouchScreen->processOnce(pSrc);
 	m_pTouchScreen->getEvents();
-	IplImage* outImage = NULL;
 	
-	outImage = m_pTouchScreen->getFilterImage(m_rectifyLabel);
-	if (outImage == NULL)
-		return S_FALSE;
-	int width = outImage->height;
-	int height = outImage->width;
-	for (int y = 0 ; y < width; y++)
-	{
-		for (int x = 0; x< height; x++)
-		{
-			for (int i = 0 ; i < channel; i++)
-			{
-				pOutData[y*width*channel + x*channel + i] = outImage->imageData[y*width + x];
-			}
-		}
-	}
-	if (pInTexture != NULL)
-	{
-		pInTexture->UnlockRect(0);
-	}
+	cvCopy(pSrc, pDest);
+
 	if (pSrc != NULL)
 	{
 		cvReleaseImageHeader(&pSrc);
 		pSrc = NULL;
+	}
+	if (pDest != NULL)
+	{
+		cvReleaseImageHeader(&pDest);
+		pDest = NULL;
 	}
 	return S_OK;
 }

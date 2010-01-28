@@ -66,6 +66,7 @@ protected:
 	*/
 	bool CreateTouchScreen(float cw, float ch);
 	bool DestoryTouchScreen();
+	virtual bool ShowConfigWindow();
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
 protected:

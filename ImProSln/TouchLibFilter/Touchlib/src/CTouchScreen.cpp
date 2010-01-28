@@ -291,7 +291,14 @@ void CTouchScreen::registerListener(ITouchListener *listener)
 	// Add new ITouchListener to the end of the list
 	listenerList.push_back(listener);
 }
-
+bool CTouchScreen::showFilterOutputs()
+{
+	for (int i =0; i< filterChain.size(); i++)
+	{
+		filterChain[i]->showOutput(true);
+	}
+	return true;
+}
 bool CTouchScreen::processOnce(IplImage* pSrc)
 {
 	if(filterChain.size() == 0)		// If there are no filters
