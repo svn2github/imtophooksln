@@ -37,7 +37,7 @@ CTouchScreen::CTouchScreen()
 {
 	// Initialize BwImage frame
 	frame = 0;
-
+	pTrackingFrame = NULL;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -96,7 +96,7 @@ CTouchScreen::CTouchScreen(float cw, float ch)
 {
 	// Initialize BwImage frame
 	frame = 0;
-
+	pTrackingFrame = NULL;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -190,7 +190,11 @@ CTouchScreen::~CTouchScreen()
 
 	for(i=0; i<filterChain.size(); i++)		// Go through and delete each filter
 		delete filterChain[i];
-
+	if (pTrackingFrame != NULL)
+	{
+		cvReleaseImage(&pTrackingFrame);
+		pTrackingFrame = NULL;
+	}
 
 	delete tracker;
 }
@@ -298,11 +302,19 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 
 	if(output != NULL) {			// If there is output to get
 		//printf("Process chain complete\n");
+
 		frame = output;		// assign it to the private CTouchScreen::frame variable
 
 		if(bTracking == true)		// If we are currently tracking blobs
 		{
+			if (pTrackingFrame == NULL)
+			{
+				pTrackingFrame = cvCloneImage(output);
+			}
+			cvCopyImage(output, pTrackingFrame);
+			frame = pTrackingFrame;
 			//printf("Tracking 1\n");
+
 			tracker->findBlobs(frame);		// Locate the blobs
 			tracker->trackBlobs();			// and update their location
 

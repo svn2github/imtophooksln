@@ -147,7 +147,7 @@ namespace touchlib
 #ifdef WIN32
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html
 #endif
-
+		IplImage* pTrackingFrame;
 		BwImage frame;
 		BwImage labelImg;
 

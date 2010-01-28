@@ -15,7 +15,7 @@
 
 namespace touchlib 
 {
-	class TOUCHLIB_CORE_EXPORT CCapture
+	class CCapture
 	{
 	public:
 		CCapture();

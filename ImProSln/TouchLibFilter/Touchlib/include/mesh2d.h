@@ -24,7 +24,7 @@
 namespace touchlib 
 {
 	template <class T>
-	class TOUCHLIB_CORE_EXPORT mesh2d
+	class mesh2d
 	{
 	public:
 		mesh2d()

@@ -4,7 +4,7 @@
 #include <Image.h>
 #include <touchlib_platform.h>
 
-namespace TOUCHLIB_CORE_EXPORT touchlib 
+namespace touchlib 
 {
 	class ICapture
 	{

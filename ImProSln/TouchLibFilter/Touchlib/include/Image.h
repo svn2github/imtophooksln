@@ -11,7 +11,7 @@ namespace touchlib
 	// to provide a simple interface to pixels and height/width info.
 
 	template<class T> 
-	class TOUCHLIB_CORE_EXPORT Image  
+	class Image  
 	{  
 		public:  
 			Image(IplImage* img=0) {imgp=img;}  

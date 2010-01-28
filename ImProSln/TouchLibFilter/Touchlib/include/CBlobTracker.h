@@ -22,7 +22,7 @@
 namespace touchlib
 {
 
-	class TOUCHLIB_CORE_EXPORT CBlob
+	class CBlob
 	{
     public:
 		CBlob()
@@ -51,7 +51,7 @@ namespace touchlib
 
     //////////////
 
-	class TOUCHLIB_CORE_EXPORT CFinger : public CBlob
+	class CFinger : public CBlob
 	{
 	public:
 		CFinger() 

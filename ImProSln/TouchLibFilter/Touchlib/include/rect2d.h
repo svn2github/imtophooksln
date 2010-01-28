@@ -11,7 +11,7 @@ namespace touchlib
 	// See www.irrlicht3d.org
 
     // The Irrlicht Engine License
-    // Copyright © 2002-2005 Nikolaus Gebhardt
+    // Copyright ?2002-2005 Nikolaus Gebhardt
     // This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held 
     // liable for any damages arising from the use of this software.
     //
@@ -29,7 +29,7 @@ namespace touchlib
 
 
     template <class T>
-	class TOUCHLIB_CORE_EXPORT rect
+	class rect
 	{
 	public:
 

@@ -162,6 +162,7 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight);
 		}
+		m_pTouchScreen->beginTracking();
 	}
 	return S_OK;
 }
@@ -355,7 +356,7 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 
 	}
 	m_pTouchScreen->processOnce(pSrc);
-
+	m_pTouchScreen->getEvents();
 	IplImage* outImage = NULL;
 	
 	outImage = m_pTouchScreen->getFilterImage(m_rectifyLabel);
