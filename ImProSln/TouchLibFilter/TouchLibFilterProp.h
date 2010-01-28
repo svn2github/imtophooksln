@@ -1,15 +1,16 @@
 #pragma once
 #include "ITouchLibFilter.h"
+#include "ITouchListener.h"
 #include "MFCBasePropertyPage.h"
 #include "resource.h"
 #include "afxwin.h"
 // TouchLibPropPage dialog
-
+using namespace touchlib ;
 // {FBEAA4C2-1F38-4572-9F9E-54A9782EC777}
 DEFINE_GUID(CLSID_TouchLibPropPage, 
 			0xfbeaa4c2, 0x1f38, 0x4572, 0x9f, 0x9e, 0x54, 0xa9, 0x78, 0x2e, 0xc7, 0x77);
 
-class TouchLibPropPage : public CMFCBasePropertyPage
+class TouchLibPropPage : public CMFCBasePropertyPage, public ITouchListener
 {
 	DECLARE_DYNAMIC(TouchLibPropPage)
 
@@ -46,6 +47,17 @@ public:
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_TouchLibPropPage;}
 	virtual int GetTitileResourceID() { return IDS_TouchLibPropPage_Title;}
-
+	virtual void fingerDown(TouchData data);
+	virtual void fingerUpdate(TouchData data) ;
+	virtual void fingerUp(TouchData data);
 	afx_msg void OnBnClickedBtnshowconfigwnd();
+
+	CEdit m_edFingerMsg;
+	CString m_strFingerMsg;
+	WCHAR m_tmpStr[MAX_PATH];
+	afx_msg void OnBnClickedBtnclear();
+	afx_msg void OnBnClickedCkshowmsg();
+	CButton m_ckShowMsg;
+	CButton m_ckShowConfigWnd;
+	afx_msg void OnBnClickedCkshowconfig();
 };

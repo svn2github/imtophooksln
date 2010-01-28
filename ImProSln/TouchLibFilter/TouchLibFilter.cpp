@@ -300,13 +300,13 @@ bool TouchLibFilter::DestoryTouchScreen()
 	m_pTouchScreen = NULL;
 	return true;
 }
-bool TouchLibFilter::ShowConfigWindow()
+bool TouchLibFilter::ShowConfigWindow(bool bShow)
 {
 	if (m_pTouchScreen == NULL)
 	{
 		return false;
 	}
-	return m_pTouchScreen->showFilterOutputs();
+	return m_pTouchScreen->showFilterOutputs(bShow);
 }
 
 HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOut)
@@ -439,102 +439,45 @@ HRESULT TouchLibFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 
 }
 
+void TouchLibFilter::registerListener(ITouchListener *listener)
+{
+	CAutoLock lck(&m_csListenerList);
+	m_listenerList.push_back(listener);
+}
+void TouchLibFilter::unregisterListener(ITouchListener *listener)
+{
+	CAutoLock lck(&m_csListenerList);
+	std::vector<ITouchListener *>::iterator iter;
+	iter = find(m_listenerList.begin(), m_listenerList.end(), listener);
+	if (iter == m_listenerList.end())	
+	{
+		return;
+	}
+	m_listenerList.erase(iter);
+}
 
 //ITouchListener
 void TouchLibFilter::fingerDown(TouchData data)
 {
-	int test = 0;
+	for (int i =0; i< m_listenerList.size(); i++)
+	{
+		m_listenerList[i]->fingerDown(data);
+	}
+	
 }
 //! Notify that a finger has just been made active. 
 void TouchLibFilter::fingerUpdate(TouchData data)
 {
-	int test = 0;
+	for (int i =0; i< m_listenerList.size(); i++)
+	{
+		m_listenerList[i]->fingerUpdate(data);
+	}
 }
 //! A finger is no longer active..
 void TouchLibFilter::fingerUp(TouchData data)
 {
-	int test = 0;
+	for (int i =0; i< m_listenerList.size(); i++)
+	{
+		m_listenerList[i]->fingerUp(data);
+	}
 }
-/*
-bool TouchLibFilter::SimpleHighpassFilter(IplImage* srcImage, IplImage *dstImage)
-{
-	if (srcImage == NULL || dstImage == NULL)
-	{
-		return false;
-	}
-	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
-		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
-	{
-		return false;
-	}
-	
-
-	if (m_buffer == NULL) {
-		m_buffer = cvCreateImage(cvGetSize(srcImage), srcImage->depth, srcImage->nChannels);
-		m_buffer->origin = srcImage->origin;
-	}
-
-	// create the unsharp mask using a linear average filter
-	int blurParameter = m_blurLevel*2+1;
-	cvSmooth(srcImage, m_buffer, CV_BLUR, blurParameter, blurParameter);
-	
-	cvSub(srcImage, m_buffer, m_buffer);
-
-	// filter out the noise using a median filter
-	int noiseParameter = m_noiseLevel*2+1;
-	cvSmooth(m_buffer, dstImage, m_noiseSmoothType, noiseParameter, noiseParameter);
-	return true;
-}
-bool TouchLibFilter::ScaleFilter(IplImage* srcImage, IplImage* dstImage)
-{
-	if (srcImage == NULL || dstImage == NULL)
-	{
-		return false;
-	}
-	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
-		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
-	{
-		return false;
-	}
-	// derived class responsible for allocating storage for filtered image
-
-	cvMul(srcImage, srcImage, dstImage, (float)m_levelScale / 128.0f);
-	return true;
-}
-
-bool TouchLibFilter::RectifyFilter(IplImage* srcImage, IplImage* dstImage)
-{
-	if (srcImage == NULL || dstImage == NULL)
-	{
-		return false;
-	}
-	if (srcImage->width != dstImage->height || srcImage->height != dstImage->width || 
-		srcImage->depth != dstImage->depth || srcImage->nChannels != dstImage->nChannels)
-	{
-		return false;
-	}
-
-	if(m_bAutoSet)
-	{
-		touchlib::BwImage img(srcImage);
-
-		int h, w;
-		h = img.getHeight();
-		w = img.getWidth();
-
-		unsigned char highest = 0;
-
-		for(int y=0; y<h; y++)
-			for(int x=0; x<w; x++)
-			{
-				if(img[y][x] > highest)
-					highest = img[y][x];
-			}
-
-			m_levelRectify = (unsigned int)highest;
-			m_bAutoSet = false;
-	}
-
-	cvThreshold(srcImage, dstImage, m_levelRectify, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
-}
-*/

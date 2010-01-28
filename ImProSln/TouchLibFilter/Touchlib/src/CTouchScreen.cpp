@@ -288,14 +288,23 @@ void CTouchScreen::setScreenBBox(rect2df &box)
 
 void CTouchScreen::registerListener(ITouchListener *listener)
 {
-	// Add new ITouchListener to the end of the list
 	listenerList.push_back(listener);
 }
-bool CTouchScreen::showFilterOutputs()
+void CTouchScreen::unregisterListener(ITouchListener *listener)
+{
+	std::vector<ITouchListener *>::iterator iter;
+	iter = find(listenerList.begin(), listenerList.end(), listener);
+	if (iter == listenerList.end())	
+	{
+		return;
+	}
+	listenerList.erase(iter);
+}
+bool CTouchScreen::showFilterOutputs(bool bShow)
 {
 	for (int i =0; i< filterChain.size(); i++)
 	{
-		filterChain[i]->showOutput(true);
+		filterChain[i]->showOutput(bShow);
 	}
 	return true;
 }

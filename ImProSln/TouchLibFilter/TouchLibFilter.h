@@ -41,37 +41,31 @@ public:
 	//implement ITouchLibFilterProperty
 
 	//ITouchListener
+
 	virtual void fingerDown(TouchData data);
 	//! Notify that a finger has just been made active. 
 	virtual void fingerUpdate(TouchData data);
 	//! A finger is no longer active..
 	virtual void fingerUp(TouchData data);
+
 protected:
 	ITouchScreen* m_pTouchScreen;
 	string m_monolabel, m_bgLabel, m_shpLabel, 
 		m_scalerLabel, m_rectifyLabel;
 
-	/*float m_blurLevel;
-	float m_noiseLevel;
-	int m_noiseSmoothType;
-	unsigned int m_levelScale;
-	unsigned int m_levelRectify;
-	bool m_bAutoSet;
-	IplImage* m_buffer;
-
-	
-	bool SimpleHighpassFilter(IplImage* srcImage, IplImage* dstImage);
-	bool ScaleFilter(IplImage* srcImage, IplImage* dstImage);
-	bool RectifyFilter(IplImage* srcImage, IplImage* dstImage);
-	*/
 	bool CreateTouchScreen(float cw, float ch);
 	bool DestoryTouchScreen();
-	virtual bool ShowConfigWindow();
+	virtual bool ShowConfigWindow(bool bShow);
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
+
+	vector<ITouchListener*> m_listenerList;
+	CCritSec m_csListenerList;
 protected:
 	bool IsAcceptedType(const CMediaType *pmt);
 public:
 	TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~TouchLibFilter();
+	virtual void registerListener(ITouchListener *listener);
+	virtual void unregisterListener(ITouchListener *listener);
 };

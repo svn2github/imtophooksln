@@ -31,11 +31,11 @@ namespace touchlib
 
 // ITouchScreen
 		//
-		virtual bool showFilterOutputs();
+		virtual bool showFilterOutputs(bool bShow);
 
 		//! A client registers itself as a listener for touch events
 		virtual void registerListener(ITouchListener *listener);
-
+		virtual void unregisterListener(ITouchListener *listener);
 		// capture the frame and do the detection
 		virtual bool processOnce(IplImage* pSrc);
 

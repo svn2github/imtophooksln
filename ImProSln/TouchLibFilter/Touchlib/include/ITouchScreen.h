@@ -21,10 +21,10 @@ namespace touchlib
 	class  ITouchScreen
 	{
 	public:
-		virtual bool showFilterOutputs() = 0;
+		virtual bool showFilterOutputs(bool bShow) = 0;
 		//! A client registers itself as a listener for touch events
 		virtual void registerListener(ITouchListener *listener) = 0;
-
+		virtual void unregisterListener(ITouchListener *listener) = 0;
 		//! capture the frame and do the detection
 		virtual bool process() = 0;
 
