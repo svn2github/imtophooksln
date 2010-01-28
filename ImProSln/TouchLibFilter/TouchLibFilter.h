@@ -6,7 +6,7 @@
 #include "combase.h"
 #include "CMuxTransformFilter.h"
 #include "TouchScreenDevice.h"
-
+#include "OSCSender.h"
 using namespace touchlib;
 
 // {F982AA58-0213-4235-B342-314D853D5CEE}
@@ -53,14 +53,15 @@ protected:
 	string m_monolabel, m_bgLabel, m_shpLabel, 
 		m_scalerLabel, m_rectifyLabel;
 
-	bool CreateTouchScreen(float cw, float ch);
+	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
 	bool DestoryTouchScreen();
 	virtual bool ShowConfigWindow(bool bShow);
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
-
+	CMuxTransformInputPin* GetConnectedInputPin();
 	vector<ITouchListener*> m_listenerList;
 	CCritSec m_csListenerList;
+	OSCSender m_oscSender;
 protected:
 	bool IsAcceptedType(const CMediaType *pmt);
 public:
@@ -68,4 +69,10 @@ public:
 	virtual ~TouchLibFilter();
 	virtual void registerListener(ITouchListener *listener);
 	virtual void unregisterListener(ITouchListener *listener);
+	virtual bool IsOSCConnected();
+	virtual bool ConnectOSC(string ipaddress, int port);
+	virtual bool DisConnectOSC();
+	virtual bool GetIPAddress(string& outIpAddress);
+	virtual int GetPort();
+	virtual bool IsTouchReady();
 };

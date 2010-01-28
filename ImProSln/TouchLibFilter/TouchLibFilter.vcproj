@@ -189,6 +189,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\OSCSender.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -236,6 +240,10 @@
 			>
 			<File
 				RelativePath=".\ITouchLibFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OSCSender.h"
 				>
 			</File>
 			<File

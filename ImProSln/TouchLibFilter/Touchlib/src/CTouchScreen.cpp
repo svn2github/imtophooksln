@@ -189,14 +189,21 @@ CTouchScreen::~CTouchScreen()
 
 
 	for(i=0; i<filterChain.size(); i++)		// Go through and delete each filter
+	{
 		delete filterChain[i];
+		filterChain[i] = NULL;
+	}
+	filterChain.clear();
 	if (pTrackingFrame != NULL)
 	{
 		cvReleaseImage(&pTrackingFrame);
 		pTrackingFrame = NULL;
 	}
-
-	delete tracker;
+	if (tracker != NULL)
+	{
+		delete tracker;
+		tracker = NULL;
+	}
 }
 
 void CTouchScreen::initScreenPoints()
@@ -320,9 +327,10 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 		//printf("Process chain complete\n");
 
 		frame = output;		// assign it to the private CTouchScreen::frame variable
-
+		
 		if(bTracking == true)		// If we are currently tracking blobs
 		{
+			
 			if (pTrackingFrame == NULL)
 			{
 				pTrackingFrame = cvCloneImage(output);
@@ -330,8 +338,9 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 			cvCopyImage(output, pTrackingFrame);
 			frame = pTrackingFrame;
 			//printf("Tracking 1\n");
-
+			
 			tracker->findBlobs(frame);		// Locate the blobs
+			
 			tracker->trackBlobs();			// and update their location
 
 #ifdef WIN32
@@ -359,7 +368,9 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 				pthread_mutex_unlock(&eventListMutex);		// and unlock the mutex
 			}
 #endif
+			
 		}
+		
 		//return true;
 	}
 	return true;

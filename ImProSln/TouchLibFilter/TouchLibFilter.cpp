@@ -21,11 +21,7 @@ TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 }
 TouchLibFilter::~TouchLibFilter()
 {
-	/*if (m_buffer != NULL)
-	{
-		cvReleaseImage(&m_buffer);
-		m_buffer = NULL;
-	}*/
+	DestoryTouchScreen();
 }
 
 CUnknown *WINAPI TouchLibFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -66,13 +62,17 @@ HRESULT TouchLibFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	{
 		return ReceiveInput0(pSample, pReceivePin);
 	}
+	else if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[1])
+	{
+		return ReceiveInput0(pSample, pReceivePin);
+	}
 	return S_FALSE;
 }
 
 HRESULT TouchLibFilter::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 1 || m_pOutputPins.size() < 1) {
+	if (m_pInputPins.size() < 2 || m_pOutputPins.size() < 1) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -91,7 +91,10 @@ HRESULT TouchLibFilter::CreatePins()
 			&hr,               // Result code
 			L"input");      // Pin name
 		//  Can't fail
-		
+		CMuxTransformInputPin* pInput1 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"bg subbed");      // Pin name
 		
 
 		CMuxTransformOutputPin* pOutput = new CMuxTransformOutputPin(NAME("Transform output pin"),
@@ -101,6 +104,7 @@ HRESULT TouchLibFilter::CreatePins()
 		// Can't fail
 	
 		m_pInputPins.push_back(pInput0);
+		m_pInputPins.push_back(pInput1);
 		m_pOutputPins.push_back(pOutput);
 	}
 	return S_OK;
@@ -109,7 +113,8 @@ HRESULT TouchLibFilter::CreatePins()
 HRESULT TouchLibFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 {
 	CheckPointer(pmt, E_POINTER);
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
+	if ((m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin) ||
+			(m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin))
 	{	
 		CheckPointer(pmt, E_POINTER);
 		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo)) 
@@ -144,19 +149,45 @@ HRESULT TouchLibFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 
 HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
+	if (direction == PINDIR_INPUT)
+	{
+		for (vector<CMuxTransformInputPin*>::iterator iter = m_pInputPins.begin(); iter != m_pInputPins.end(); iter++)
+		{
+			if (*iter != pMyPin)
+			{
+				(*iter)->m_bVisible = false;
+			}
+		}
+	}
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType mt = m_pInputPins[0]->CurrentMediaType();
 		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
-			CreateTouchScreen(desc->Width, desc->Height);
+			CreateTouchScreen(desc->Width, desc->Height, false);
 		}
 		else
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight);
+			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, false);
+		}
+		m_pTouchScreen->beginTracking();
+	}
+	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pMyPin)
+	{
+		CMediaType mt = m_pInputPins[1]->CurrentMediaType();
+		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
+			CreateTouchScreen(desc->Width, desc->Height, true);
+		}
+		else
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, true);
 		}
 		m_pTouchScreen->beginTracking();
 	}
@@ -168,6 +199,10 @@ HRESULT TouchLibFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 	if (dir == PINDIR_INPUT)
 	{
 		DestoryTouchScreen();
+		for (int i =0; i< m_pInputPins.size(); i++)
+		{
+			m_pInputPins[i]->m_bVisible = true;
+		}
 	}
 	return __super::BreakConnect(dir, pPin);
 }
@@ -180,12 +215,13 @@ HRESULT TouchLibFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 	{
 		return S_FALSE;
 	}
-	CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
+	CMediaType inputMT = GetConnectedInputPin()->CurrentMediaType();
 	if (inputMT.Type() == NULL)
 	{
 		return S_FALSE;
 	}
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
+	if ((m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin) || 
+		(m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin))
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
@@ -228,7 +264,12 @@ HRESULT TouchLibFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 		*pMediaType = inputMT;
 		return S_OK;
 	}
-
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		CMediaType inputMT = m_pInputPins[1]->CurrentMediaType();
+		*pMediaType = inputMT;
+		return S_OK;
+	}
 	return VFW_S_NO_MORE_ITEMS;
 }
 
@@ -265,7 +306,7 @@ HRESULT TouchLibFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
-bool TouchLibFilter::CreateTouchScreen(float cw, float ch)
+bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove)
 {
 	if (m_pTouchScreen != NULL)
 	{
@@ -274,11 +315,12 @@ bool TouchLibFilter::CreateTouchScreen(float cw, float ch)
 	}
 	m_pTouchScreen = TouchScreenDevice::getTouchScreen(cw, ch);
 	m_pTouchScreen->setDebugMode(false);
-
 	m_monolabel = m_pTouchScreen->pushFilter("mono");
-	m_bgLabel = m_pTouchScreen->pushFilter("backgroundremove");
-	m_pTouchScreen->setParameter(m_bgLabel, "threshold", "0");
-
+	if (!bSkipbackgroundRemove)
+	{
+		m_bgLabel = m_pTouchScreen->pushFilter("backgroundremove");
+		m_pTouchScreen->setParameter(m_bgLabel, "threshold", "0");
+	}
 	m_shpLabel = m_pTouchScreen->pushFilter("simplehighpass");
 	m_pTouchScreen->setParameter( m_shpLabel, "blur", "13");
 	m_pTouchScreen->setParameter( m_shpLabel, "noise", "3");
@@ -288,10 +330,14 @@ bool TouchLibFilter::CreateTouchScreen(float cw, float ch)
 
 	m_rectifyLabel = m_pTouchScreen->pushFilter("rectify");
 	m_pTouchScreen->setParameter(m_rectifyLabel, "level", "75");
-	
-	m_pTouchScreen->setParameter(m_bgLabel, "mask", (char*)m_pTouchScreen->getCameraPoints());
-	m_pTouchScreen->setParameter(m_bgLabel, "capture", "");
+	if (!bSkipbackgroundRemove)
+	{
+		m_pTouchScreen->setParameter(m_bgLabel, "mask", (char*)m_pTouchScreen->getCameraPoints());
+		m_pTouchScreen->setParameter(m_bgLabel, "capture", "");
+	}
 	m_pTouchScreen->registerListener((ITouchListener*)this);
+	registerListener(&m_oscSender);
+	
 	return true;
 }
 bool TouchLibFilter::DestoryTouchScreen()
@@ -324,7 +370,7 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	IplImage* pDest = NULL;
 
 	int channel = 4;
-	CMediaType mt = ((CMuxTransformInputPin*)m_pInputPins[0])->CurrentMediaType();
+	CMediaType mt = ((CMuxTransformInputPin*)this->GetConnectedInputPin())->CurrentMediaType();
 	
 
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
@@ -369,6 +415,17 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 		pDest = NULL;
 	}
 	return S_OK;
+}
+CMuxTransformInputPin* TouchLibFilter::GetConnectedInputPin()
+{
+	for (int i =0; i< m_pInputPins.size(); i++)
+	{
+		if (m_pInputPins[i]->IsConnected())
+		{
+			return m_pInputPins[i];
+		}
+	}
+	return NULL;
 }
 HRESULT TouchLibFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin)
 {
@@ -480,4 +537,36 @@ void TouchLibFilter::fingerUp(TouchData data)
 	{
 		m_listenerList[i]->fingerUp(data);
 	}
+}
+
+bool TouchLibFilter::IsOSCConnected()
+{
+	return m_oscSender.isConnected();
+}
+bool TouchLibFilter::ConnectOSC(string ipaddress, int port)
+{
+	if (m_oscSender.isConnected())
+	{
+		return false;
+	}
+	m_oscSender.connectSocket(ipaddress, port);
+	return true;
+}
+bool TouchLibFilter::DisConnectOSC()
+{
+	m_oscSender.disConnectSocket();
+	return true;
+}
+bool TouchLibFilter::GetIPAddress(string& outIpAddress)
+{
+	outIpAddress = m_oscSender.m_ipAddress;
+	return true;
+}
+int TouchLibFilter::GetPort()
+{
+	return m_oscSender.m_port;
+}
+bool TouchLibFilter::IsTouchReady()
+{
+	return (m_pTouchScreen != NULL);
 }

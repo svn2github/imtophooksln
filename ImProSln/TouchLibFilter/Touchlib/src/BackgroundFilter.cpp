@@ -24,10 +24,21 @@ BackgroundFilter::BackgroundFilter(char* s) : Filter(s)
 
 BackgroundFilter::~BackgroundFilter()
 {
+	if (polyMask != NULL)
+	{
+		delete[] polyMask;
+		polyMask = NULL;
+	}
 	if(destination)
+	{
 		cvReleaseImage(&destination);
+		destination = NULL;
+	}
 	if(reference)
+	{
 		cvReleaseImage(&reference);
+		reference = NULL;
+	}
 }
 
 void BackgroundFilter::setParameter(const char *name, const char *value)

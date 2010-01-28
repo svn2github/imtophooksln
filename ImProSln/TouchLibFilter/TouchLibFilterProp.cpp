@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "TouchLibFilterProp.h"
 #include "TouchLibFilterApp.h"
+#include <string>
+using namespace std;
 extern CTouchLibFilterApp theApp;
 
 IMPLEMENT_DYNAMIC(TouchLibPropPage, CMFCBasePropertyPage)
@@ -11,6 +13,9 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT1, m_strFingerMsg);
 	DDX_Control(pDX, IDC_CKSHOWMSG, m_ckShowMsg);
 	DDX_Control(pDX, IDC_CKShowConfig, m_ckShowConfigWnd);
+	DDX_Control(pDX, IDC_BTNCONNECT, m_btnConnect);
+	DDX_Control(pDX, IDC_EDIT2, m_edIP);
+	DDX_Control(pDX, IDC_EDIT3, m_edPort);
 }
 
 
@@ -18,6 +23,7 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BTNCLEAR, &TouchLibPropPage::OnBnClickedBtnclear)
 	ON_BN_CLICKED(IDC_CKSHOWMSG, &TouchLibPropPage::OnBnClickedCkshowmsg)
 	ON_BN_CLICKED(IDC_CKShowConfig, &TouchLibPropPage::OnBnClickedCkshowconfig)
+	ON_BN_CLICKED(IDC_BTNCONNECT, &TouchLibPropPage::OnBnClickedBtnconnect)
 END_MESSAGE_MAP()
 
 
@@ -72,7 +78,15 @@ BOOL TouchLibPropPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 }
 HRESULT TouchLibPropPage::OnActivate(void)
 {
-	EnableWindow(TRUE);
+	if (m_pFilter != NULL && m_pFilter->IsTouchReady())
+	{
+		EnableWindow(TRUE);
+		GetSetting();
+	}
+	else
+	{
+		EnableWindow(FALSE);
+	}
 	return S_OK;
 }
 HRESULT TouchLibPropPage::OnApplyChanges(void)
@@ -164,4 +178,61 @@ void TouchLibPropPage::OnBnClickedCkshowconfig()
 	if (m_pFilter == NULL)
 		return;
 	m_pFilter->ShowConfigWindow(m_ckShowConfigWnd.GetCheck());
+}
+
+bool TouchLibPropPage::GetSetting()
+{
+	if (m_pFilter == NULL)
+	{
+		return false;
+	}
+	string ipaddress;
+	int port = 3333;
+	m_pFilter->GetIPAddress(ipaddress);
+	::SetWindowTextA(m_edIP.GetSafeHwnd(),ipaddress.c_str());
+	WCHAR str[MAX_PATH];
+	port = m_pFilter->GetPort();
+	swprintf(str, MAX_PATH, L"%d", port);
+	m_edPort.SetWindowText(str);
+
+	if (m_pFilter->IsOSCConnected())
+	{
+		m_edIP.EnableWindow(FALSE);
+		m_edPort.EnableWindow(FALSE);
+		m_btnConnect.SetWindowText(L"DisConnect");
+	}
+	else
+	{
+		m_edIP.EnableWindow(TRUE);
+		m_edPort.EnableWindow(TRUE);
+		m_btnConnect.SetWindowText(L"Connect");
+	}
+	return true;
+}
+bool TouchLibPropPage::ApplySetting()
+{
+	return true;
+}
+void TouchLibPropPage::OnBnClickedBtnconnect()
+{
+	if (m_pFilter == NULL)
+	{
+		return;
+	}
+	char addressIP[MAX_PATH] = {0};
+	::GetWindowTextA(m_edIP.GetSafeHwnd(), addressIP, MAX_PATH);
+	string strAddressIP = addressIP;
+	int port = 3333;
+	WCHAR str[MAX_PATH];
+	m_edPort.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%d", &port);
+	if (m_pFilter->IsOSCConnected())
+	{
+		m_pFilter->DisConnectOSC();
+	}
+	else
+	{
+		m_pFilter->ConnectOSC(strAddressIP, port);
+	}
+	GetSetting();
 }

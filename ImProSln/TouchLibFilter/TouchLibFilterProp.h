@@ -60,4 +60,8 @@ public: //inherit from CMFCBaseProperty Page
 	CButton m_ckShowMsg;
 	CButton m_ckShowConfigWnd;
 	afx_msg void OnBnClickedCkshowconfig();
+	CButton m_btnConnect;
+	CEdit m_edIP;
+	CEdit m_edPort;
+	afx_msg void OnBnClickedBtnconnect();
 };

@@ -1,5 +1,7 @@
 #pragma once
 #include "ITouchListener.h"
+#include <string>
+using namespace std;
 using namespace touchlib;
 // {C4454D89-08E8-4ad4-A001-2D1C9A5D62E0}
 DEFINE_GUID(IID_ITouchLibFilter, 
@@ -13,4 +15,10 @@ public:
 	virtual bool ShowConfigWindow(bool bShow);
 	virtual void registerListener(ITouchListener *listener);
 	virtual void unregisterListener(ITouchListener *listener);
+	virtual bool IsOSCConnected();
+	virtual bool ConnectOSC(string ipaddress, int port);
+	virtual bool DisConnectOSC();
+	virtual bool GetIPAddress(string& outIpAddress);
+	virtual int GetPort();
+	virtual bool IsTouchReady();
 };
