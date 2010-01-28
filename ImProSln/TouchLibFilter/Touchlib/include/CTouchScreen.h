@@ -26,6 +26,7 @@ namespace touchlib
 	{
 	public:
 		CTouchScreen();
+		CTouchScreen(float cw, float ch);
 		~CTouchScreen();
 
 // ITouchScreen
@@ -118,7 +119,7 @@ namespace touchlib
 		void transformDimension(float &width, float &height, float centerX, float centerY);
 
 		void initScreenPoints();
-		void initCameraPoints();
+		void initCameraPoints(float cw = 640.0, float ch = 480.0);
 	
 		// returns -1 if none found..
 		int findTriangleWithin(vector2df pt);

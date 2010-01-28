@@ -150,7 +150,18 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 {
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pMyPin)
 	{
-		CreateTouchScreen();
+		CMediaType mt = m_pInputPins[0]->CurrentMediaType();
+		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
+			CreateTouchScreen(desc->Width, desc->Height);
+		}
+		else
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight);
+		}
 	}
 	return S_OK;
 }
@@ -257,14 +268,14 @@ HRESULT TouchLibFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
-bool TouchLibFilter::CreateTouchScreen()
+bool TouchLibFilter::CreateTouchScreen(float cw, float ch)
 {
 	if (m_pTouchScreen != NULL)
 	{
-		delete m_pTouchScreen;
+		TouchScreenDevice::destroy();
 		m_pTouchScreen = NULL;
 	}
-	m_pTouchScreen = TouchScreenDevice::getTouchScreen();
+	m_pTouchScreen = TouchScreenDevice::getTouchScreen(cw, ch);
 	m_pTouchScreen->setDebugMode(false);
 
 	m_monolabel = m_pTouchScreen->pushFilter("mono");
@@ -289,6 +300,7 @@ bool TouchLibFilter::CreateTouchScreen()
 bool TouchLibFilter::DestoryTouchScreen()
 {
 	TouchScreenDevice::destroy();
+	m_pTouchScreen = NULL;
 	return true;
 }
 HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOut)

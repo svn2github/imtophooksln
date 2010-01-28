@@ -92,6 +92,65 @@ CTouchScreen::CTouchScreen()
         setBlobTracker(new CBlobTracker());
 }
 
+CTouchScreen::CTouchScreen(float cw, float ch)
+{
+	// Initialize BwImage frame
+	frame = 0;
+
+#ifdef WIN32
+	tracker = 0;	// just reset the pointer to be safe...
+	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
+#else
+	pthread_mutex_init(&eventListMutex, NULL);	// Initialize Linux/Apple mutex
+#endif
+
+	/** These are all initializations of default config.xml variables	*/
+	reject_distance_threshold = 250;	// The distance and
+	reject_min_dimension = 2;			// min
+	reject_max_dimension = 250;			// max dimension limits on blobs
+
+	ghost_frames = 0;
+	minimumDisplacementThreshold = IBlobTracker::DEFAULT_MINIMUM_DISPLACEMENT_THRESHOLD;
+
+	screenBB = rect2df(vector2df(0.0f, 0.0f), vector2df(1.0f, 1.0f));	// Initialize the screen bounding box
+	initScreenPoints();		// Calculates the calibration points based on a 4:3 aspect ratio
+	initCameraPoints(cw, ch);		// Calculates the camera resolution or defaults to 640x480
+
+	debugMode = true;		// Initialization assumes you want to show trackbar sliders in your windows for manual calibration
+	bTracking = false;		// We are not yet tracking any blobs, so we initialize this flag to false
+
+	screenMesh.recalcBoundingBox();		// Initialize the screen mesh
+
+	// Initialize the triangles[72] with the [GRID_X * GRID_Y * 2t * 3i] indices for the points
+	int i,j;
+	int t = 0;
+	for(j=0; j<GRID_Y; j++)
+	{
+		for(i=0; i<GRID_X; i++)
+		{
+			triangles[t+0] = (i+0) + ((j+0) * (GRID_X+1));
+			triangles[t+1] = (i+1) + ((j+0) * (GRID_X+1));
+			triangles[t+2] = (i+0) + ((j+1) * (GRID_X+1));
+
+			t += 3;
+
+			triangles[t+0] = (i+1) + ((j+0) * (GRID_X+1));
+			triangles[t+1] = (i+1) + ((j+1) * (GRID_X+1));
+			triangles[t+2] = (i+0) + ((j+1) * (GRID_X+1));
+
+			t += 3;
+		}
+	}
+
+
+	bCalibrating = false;		// Set the calibration flag to false (toggled when recording finger data as new mesh points)
+	calibrationStep = 0;		// Start at the beginning
+
+
+	this->tracker = NULL;	// create a default blob tracker
+	setBlobTracker(new CBlobTracker());
+}
+
 void CTouchScreen::setBlobTracker(IBlobTracker* blobTracker)
 {
 	// Check that the tracker isn't in use
@@ -158,11 +217,9 @@ void CTouchScreen::initScreenPoints()
 	}
 }
 
-void CTouchScreen::initCameraPoints()
+void CTouchScreen::initCameraPoints(float cw, float ch)
 {
 	int p = 0;
-
-	float cw = 640.0, ch = 480.0; // 640x480 default if no frame is available
 
 	// try and get a frame from the filter stack, and we'll use that as our frame size
 	if(filterChain.size() > 0) {		// If we have a filter
