@@ -1,6 +1,9 @@
 #include "MSSD3DClass.h"
 
 #include <math.h>
+
+extern HMODULE GetModule();
+
 MS3DObj::MS3DObj()
 {
 	D3DXCreateMatrixStack(0, &m_pMatrixStack);
@@ -440,21 +443,85 @@ BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECT
 	return TRUE;
 }
 
-
-MS3DDisplay::MS3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0) : MSEventManager(NULL), MSDXBase(NULL)
+MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(NULL)
 {
-	m_hDisplayWnd = hWnd;
-	m_pD3D = pD3D;
-	m_pD3D->AddRef();
+	m_hDisplayWnd = NULL;
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
-
-	//InitializeCriticalSection(&m_CS);
-	InitDevice(rtWidth, rtHeight);
+	RegisterWndClass(GetModule());
+	CreateD3DWindow(rtWidth, rtHeight);
+	InitDevice(pD3D, rtWidth, rtHeight);
 	CreateTexture(rtWidth, rtHeight);
-	//SetEditWarpEnable(TRUE);
+}
+MS3DDisplay::MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(pDevice)
+{
+	m_hDisplayWnd = NULL;
+	m_hRenderThread = 0;
+	m_pEffect = NULL;
+	CreateTexture(rtWidth, rtHeight);
+}
+HRESULT	MS3DDisplay::ShowDisplayWnd(BOOL bShow)
+{
+	if (m_hDisplayWnd == 0)
+	{
+		return S_FALSE;
+	}
+	ShowWindow(m_hDisplayWnd, bShow);
+	return S_OK;
+}
+ATOM MS3DDisplay::RegisterWndClass(HINSTANCE hInstance)
+{
+	WNDCLASSEX wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style			= CS_HREDRAW | CS_VREDRAW | CS_NOCLOSE;
+	wcex.lpfnWndProc	= D3DDisplayWndProc;
+	wcex.cbClsExtra		= 0;
+	wcex.cbWndExtra		= 0;
+	wcex.hInstance		= hInstance;
+	wcex.hIcon			= NULL;
+	wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground	= (HBRUSH)(COLOR_WINDOW+1);
+	wcex.lpszMenuName	= NULL;
+	wcex.lpszClassName	= L"D3DDisplayWnd";
+	wcex.hIconSm		= NULL;
+	ATOM ret = RegisterClassEx(&wcex);
+
+	return ret;
 }
 
+LRESULT MS3DDisplay::D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+HRESULT MS3DDisplay::CreateD3DWindow(UINT winW, UINT winH)
+{
+	if (winW != 0 && winH != 0)
+	{
+		if (m_hDisplayWnd == 0)
+		{
+			m_hDisplayWnd  = CreateWindowExW(NULL, L"D3DDisplayWnd", L"D3DDisplayWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
+			ShowWindow(m_hDisplayWnd, FALSE);
+		}
+	}
+	else
+	{
+		if (m_hDisplayWnd  == 0)
+		{
+			m_hDisplayWnd  = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
+			ShowWindow(m_hDisplayWnd , FALSE);
+		}
+	}
+	return S_OK;
+}
 
 MS3DDisplay::~MS3DDisplay()
 {
@@ -475,10 +542,10 @@ MS3DDisplay::~MS3DDisplay()
 		delete m_pCamera;
 		m_pCamera = NULL;
 	}
-	if (m_pD3D != NULL)
+	if (m_hDisplayWnd != 0)
 	{
-		m_pD3D->Release();
-		m_pD3D = NULL;
+		::DestroyWindow(m_hDisplayWnd);
+		m_hDisplayWnd = 0;
 	}
 	//DeleteCriticalSection(&m_CS);
 }
@@ -534,12 +601,12 @@ BOOL MS3DDisplay::Stop()
 	return TRUE;
 }
 
-BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
+BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 {
-	if (m_pD3D == NULL)
+	if (pD3D == NULL)
 	{
 		return FALSE;
-}
+	}
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
 	D3DPRESENT_PARAMETERS d3dpp;
@@ -567,7 +634,7 @@ BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	// Create the D3DDevice
-	if( FAILED( m_pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
+	if( FAILED( pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
 		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &d3dpp, &m_pDevice )))
 	{
 		OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
@@ -591,7 +658,7 @@ BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 		d3dpp.BackBufferHeight = powerof2Height;
 		m_pDevice->Release();
 		m_pDevice = NULL;
-		if( FAILED( m_pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
+		if( FAILED( pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
 			D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_pDevice )))
 		{
 			OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
@@ -619,7 +686,7 @@ BOOL MS3DDisplay::InitDevice(UINT rtWidth, UINT rtHeight)
 
 BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 {
-	if (m_hDisplayWnd == NULL || m_pDevice == NULL)
+	if (m_pDevice == NULL)
 	{
 		return FALSE;
 	}
@@ -629,7 +696,8 @@ BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 		m_pTexture = NULL;
 	}
 	HRESULT hr;
-	HDC dc = GetDC(m_hDisplayWnd);
+	HWND desktop = GetDesktopWindow();
+	HDC dc = GetDC(desktop);
 	int screenW = GetDeviceCaps(dc, HORZRES);
 	int screenH = GetDeviceCaps(dc, VERTRES);
 	if (rtWidth == 0 || rtHeight == 0)
@@ -872,7 +940,7 @@ BOOL MSEventManager::PassMouseMessage(UINT message, WPARAM wParam, LPARAM lParam
 		m_bMouseOver = TRUE;
 		Invoke(L"WM_MOUSEENTER", NULL, NULL, (void*)this);
 	}
-	UINT test1, test2, test3, test4;
+	
 	switch (message)
 	{
 		case WM_LBUTTONDOWN:

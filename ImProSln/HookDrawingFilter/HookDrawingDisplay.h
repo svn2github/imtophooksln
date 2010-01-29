@@ -11,7 +11,8 @@ protected:
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 public:
-	HookDrawingDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	HookDrawingDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	HookDrawingDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight);
 	~HookDrawingDisplay(void);
 	virtual BOOL SetMatTTS(const D3DXMATRIX* mat);
 };

@@ -1,13 +1,18 @@
 #include "StdAfx.h"
 #include "HomoD3DDisplay.h"
 
-HomoD3DDisplay::HomoD3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
-MS3DDisplay(hWnd, pD3D, rtWidth, rtHeight)
+HomoD3DDisplay::HomoD3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
+MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
 	D3DXMatrixIdentity(&m_matTTS);
 	GetEffect();
 }
-
+HomoD3DDisplay::HomoD3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) :
+MS3DDisplay(pDevice, rtWidth, rtHeight)
+{
+	D3DXMatrixIdentity(&m_matTTS);
+	GetEffect();
+}
 HomoD3DDisplay::~HomoD3DDisplay(void)
 {
 }
@@ -104,3 +109,4 @@ ID3DXEffect* HomoD3DDisplay::GetEffect()
 	}
 	return m_pEffect;
 }
+

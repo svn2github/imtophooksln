@@ -74,7 +74,8 @@ protected:
 
 	bool             IsAcceptedType(const CMediaType *pMT);
 	//for Override D3DTransformFilterBase
-	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	virtual HRESULT DoTransform(IMediaSample *pIn, const CMediaType* pInType);
 	virtual HRESULT Transform( IMediaSample *pIn);
 public:

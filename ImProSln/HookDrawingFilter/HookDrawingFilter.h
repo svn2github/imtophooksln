@@ -63,9 +63,8 @@ public:
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	//Derive from D3DTransformFilterBase
 	virtual HRESULT CreateTextures(UINT w, UINT h);
-	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
-	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
-	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
@@ -88,6 +87,7 @@ public:
 protected:
 	const int m_numPins;
 	HWND m_hHookedWnd;
+	HWND m_hHookRecMsgWnd;
 	CCritSec m_csInTexture;
 	CCritSec m_csFillBuffer;
 
@@ -97,4 +97,6 @@ protected:
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
 	BOOL CaptureHookWnd();
+	ATOM RegisterHookWndClass(HINSTANCE hInstance);
+	HRESULT CreateHookWindow(UINT winW, UINT winH);
 };

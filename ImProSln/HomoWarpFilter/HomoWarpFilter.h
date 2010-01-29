@@ -58,7 +58,9 @@ protected:
 
 	virtual bool         IsAcceptedType(const CMediaType *pMT);
 	//for implement D3DTransformFilterBase Method
-	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	
+	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 private:
 	virtual HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin);

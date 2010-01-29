@@ -106,8 +106,21 @@ HRESULT MS3DARMarker::CreateD3DXTextMesh( IDirect3DDevice9* pd3dDevice,
 
 	return hr;
 }
-ARTagD3DDisplay::ARTagD3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
-	MS3DDisplay(hWnd, pD3D, rtWidth, rtHeight)
+ARTagD3DDisplay::ARTagD3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : 
+MS3DDisplay(pDevice, rtWidth, rtHeight)
+{
+	HRESULT hr = S_FALSE;
+	m_pD3DLine = NULL;
+
+	m_pD3DFont = NULL;
+	m_pD3DSprite = NULL;
+	hr = D3DXCreateSprite(m_pDevice, &m_pD3DSprite);
+	hr = D3DXCreateLine(m_pDevice, &m_pD3DLine);
+	hr = D3DXCreateFont(m_pDevice, 15, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
+}
+ARTagD3DDisplay::ARTagD3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
+	MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
 	HRESULT hr = S_FALSE;
 	m_pD3DLine = NULL;

@@ -50,7 +50,7 @@ HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight)
 		delete m_pD3DDisplay;
 		m_pD3DDisplay = NULL;
 	}
-	m_pD3DDisplay = Create3DDisplay(m_hWndD3D, m_pD3D, rtWidth, rtHeight);
+	m_pD3DDisplay = Create3DDisplay(GetD3D9(), rtWidth, rtHeight);
 	if (m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
@@ -284,7 +284,7 @@ HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 	}
 	if (w == 0 || h == 0)
 	{
-		HDC dc = GetDC(m_hWndD3D);
+		HDC dc = GetDC(GetD3DWnd());
 		w = GetDeviceCaps(dc, HORZRES);
 		h = GetDeviceCaps(dc, VERTRES);
 	}

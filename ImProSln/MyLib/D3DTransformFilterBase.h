@@ -22,8 +22,8 @@ protected:
 	virtual HRESULT CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInType, bool bFlipY);
 	virtual HRESULT DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType, bool bFlipY);
 	virtual HRESULT CreateTextures(UINT w, UINT h);
-	virtual MS3DDisplay* Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight) = 0;
-
+	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight) = 0;
+	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight) = 0;
 	virtual HRESULT initD3D(UINT rtWidth = 0, UINT rtHeight = 0);
 	virtual HRESULT ReleaseD3D();
 	

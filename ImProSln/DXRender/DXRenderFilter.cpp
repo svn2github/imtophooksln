@@ -59,12 +59,12 @@ HRESULT DXRenderFilter::SetMediaType(const CMediaType *pmt)
 }
 HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 {
-	if (m_pD3D == NULL)
+	if (m_pD3DDisplay == NULL)
 	{
 		D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) m_InputMT.pbFormat;
 		initD3D(desc->Width, desc->Height);
 	}
-	ShowWindow(m_hWndD3D, TRUE);
+	m_pD3DDisplay->ShowDisplayWnd(TRUE);
 	return __super::CompleteConnect(pReceivePin);
 }
 HRESULT DXRenderFilter::BreakConnect()
@@ -112,9 +112,14 @@ void DXRenderFilter::OnReceiveFirstSample(IMediaSample *pMediaSample)
 	return ;
 }
 
-MS3DDisplay* DXRenderFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight)
+
+MS3DDisplay* DXRenderFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	return new DXRenderDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
+	return new DXRenderDisplay(pD3D, rtWidth, rtHeight);
+}
+MS3DDisplay* DXRenderFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
+{
+	return new DXRenderDisplay(pDevice, rtWidth, rtHeight);
 }
 BOOL DXRenderFilter::IsReadyCloseWindow()
 {

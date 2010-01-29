@@ -36,7 +36,8 @@ public:
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 	
 public:
-	ARTagD3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	ARTagD3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	ARTagD3DDisplay(IDirect3DDevice9* pD3D, UINT rtWidth, UINT rtHeight);
 	~ARTagD3DDisplay(void);
 };
 

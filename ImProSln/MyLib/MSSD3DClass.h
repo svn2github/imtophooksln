@@ -337,39 +337,35 @@ public:
 class MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase, public MSTextureBase
 {
 protected:
-	HWND m_hDisplayWnd;
-	IDirect3D9* m_pD3D;
+	
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
 	ID3DXEffect* m_pEffect;
 	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
 	virtual ID3DXEffect* GetEffect();
-
+	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
+	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
 private:
+	HWND m_hDisplayWnd;
 	HANDLE m_hRenderThread;
-
-	BOOL InitDevice(UINT rtWidth = 0, UINT rtHeight = 0);
+	BOOL InitDevice(IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0);
 	static BOOL _Run(void* _THIS);
 	BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 
 public:
-	MS3DDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
+	MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight);
 	virtual ~MS3DDisplay();
+	HRESULT ShowDisplayWnd(BOOL bShow);
 	virtual BOOL Run();
 	virtual BOOL Stop();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)=0;
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
-
+	
+	static LRESULT CALLBACK D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
-
-
-
-
-
-
-
 
 #endif
 

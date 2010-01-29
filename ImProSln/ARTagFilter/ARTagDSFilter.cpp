@@ -25,8 +25,6 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
 	m_pCallback = NULL;
-	m_hWndD3D = NULL;
-	m_pD3D = NULL;
 	m_pD3DDisplay = NULL;
 	m_pOutTexture = NULL;
 	m_pInTexture = NULL;
@@ -952,7 +950,11 @@ BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc)
 	m_pCallback = pfunc;
 	return TRUE;
 }
-MS3DDisplay* ARTagDSFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight)
+MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	return new ARTagD3DDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
+	return new ARTagD3DDisplay(pD3D, rtWidth, rtHeight);
+}
+MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
+{
+	return new ARTagD3DDisplay(pDevice, rtWidth, rtHeight);
 }

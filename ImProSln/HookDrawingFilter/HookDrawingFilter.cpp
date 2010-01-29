@@ -142,10 +142,13 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 : CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter), m_numPins(4)
 {
 	m_hHookedWnd = 0;
+	m_hHookRecMsgWnd = 0;
+	RegisterHookWndClass(GetModule());
+	CreateHookWindow(320, 240); // size doesn't matter
 	HRESULT hr = initD3D();
 	if (SUCCEEDED(hr))
 	{
-		HOOKINJECT::SetHookServer(GetD3DWnd());
+		HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
 		HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
 	}
 }
@@ -154,6 +157,11 @@ HookDrawingFilter::~HookDrawingFilter()
 	if (m_hHookedWnd != NULL)
 	{
 		::PostMessageW(m_hHookedWnd, WM_CLOSE, NULL, NULL);
+	}
+	if (m_hHookRecMsgWnd != 0)
+	{
+		::DestroyWindow(m_hHookRecMsgWnd);
+		m_hHookRecMsgWnd = 0;
 	}
 	g_Instance = NULL;
 	for (int i =0; i< m_pAddOutTexture.size(); i++)
@@ -359,9 +367,14 @@ HRESULT HookDrawingFilter::DecideBufferSize(
 	}
 }
 
-MS3DDisplay* HookDrawingFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight)
+MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	return new HookDrawingDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
+	return new HookDrawingDisplay(pD3D, rtWidth, rtHeight);
+}
+
+MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
+{
+	return new HookDrawingDisplay(pDevice, rtWidth, rtHeight);
 }
 
 HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
@@ -375,7 +388,7 @@ HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
 	m_pAddOutTexture.clear();
 	if (w == 0 || h == 0)
 	{
-		HDC dc = GetDC(m_hWndD3D);
+		HDC dc = GetDC(GetDesktopWindow());
 		w = GetDeviceCaps(dc, HORZRES);
 		h = GetDeviceCaps(dc, VERTRES);
 	}
@@ -406,7 +419,7 @@ HRESULT HookDrawingFilter::GetPages(CAUUID *pPages)
 }
 
 
-ATOM HookDrawingFilter::RegisterWndClass(HINSTANCE hInstance)
+ATOM HookDrawingFilter::RegisterHookWndClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
 
@@ -427,23 +440,25 @@ ATOM HookDrawingFilter::RegisterWndClass(HINSTANCE hInstance)
 
 	return ret;
 }
-HRESULT HookDrawingFilter::CreateD3DWindow(UINT winW, UINT winH)
+HRESULT HookDrawingFilter::CreateHookWindow(UINT winW, UINT winH)
 {
 	if (winW != 0 && winH != 0)
 	{
-		if (m_hWndD3D == 0)
+		if (m_hHookRecMsgWnd == 0)
 		{
-			m_hWndD3D = CreateWindowExW(NULL, L"HookDrawingWnd", L"HookDrawingWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			m_hHookRecMsgWnd = CreateWindowExW(NULL, L"HookDrawingWnd", L"HookDrawingWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
 				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
 		}
+		::ShowWindow(m_hHookRecMsgWnd, FALSE);
 	}
 	else
 	{
-		if (m_hWndD3D == 0)
+		if (m_hHookRecMsgWnd == 0)
 		{
-			m_hWndD3D = CreateWindowExW(NULL, L"HookDrawingWnd", L"HookDrawingWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			m_hHookRecMsgWnd = CreateWindowExW(NULL, L"HookDrawingWnd", L"HookDrawingWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
 				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
 		}
+		::ShowWindow(m_hHookRecMsgWnd, FALSE);
 	}
 	return S_OK;
 }

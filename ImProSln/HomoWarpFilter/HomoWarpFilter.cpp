@@ -464,11 +464,15 @@ HRESULT HomoWarpFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
-MS3DDisplay* HomoWarpFilter::Create3DDisplay(HWND hWndD3D,IDirect3D9* pD3D, int rtWidth, int rtHeight)
+MS3DDisplay* HomoWarpFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	return new HomoD3DDisplay(hWndD3D, pD3D, rtWidth, rtHeight);
+	return new HomoD3DDisplay(pD3D, rtWidth, rtHeight);
 }
 
+MS3DDisplay* HomoWarpFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
+{
+	return new HomoD3DDisplay(pDevice, rtWidth, rtHeight);
+}
 D3DXMATRIX HomoWarpFilter::ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4)
 {
 	WCHAR str[MAX_PATH];

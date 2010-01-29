@@ -2,12 +2,16 @@
 #include "HookDrawingDisplay.h"
 
 
-HookDrawingDisplay::HookDrawingDisplay(HWND hWnd, IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
-MS3DDisplay(hWnd, pD3D, rtWidth, rtHeight)
+HookDrawingDisplay::HookDrawingDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
+MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
 	D3DXMatrixIdentity(&m_matTTS);
 }
-
+HookDrawingDisplay::HookDrawingDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : 
+MS3DDisplay(pDevice, rtWidth, rtHeight)
+{
+	D3DXMatrixIdentity(&m_matTTS);
+}
 HookDrawingDisplay::~HookDrawingDisplay(void)
 {
 }
