@@ -11,7 +11,7 @@
 			<DebugSettings
 				Command="D:\DirectShow\GraphEdit.exe"
 				WorkingDirectory=""
-				CommandArguments="D:\DirectShow\BGMapping.GRF"
+				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

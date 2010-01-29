@@ -9,8 +9,6 @@
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
 { 
-	background = new BYTE[WIDTH*HEIGHT];
-	camImage =  new BYTE[WIDTH*HEIGHT];
 }
 BGMappingFilter::~BGMappingFilter()
 {
@@ -120,6 +118,13 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 
 HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin)
 {	
+	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
+	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+		return S_OK;
+	}
+	ASSERT(pSample);
+	long bsize = pSample->GetSize();
+
 	pSample->GetPointer(&background);
 
 	return S_OK;
@@ -233,22 +238,22 @@ HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pP
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 			return E_INVALIDARG;
 		}
-		/*if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
+		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
 			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
-			return NOERROR;*/
-		// Can we transform this type
-		if(IsAcceptedType(pmt)){
 			return NOERROR;
-		}
+		/*if(IsAcceptedType(pmt)){
+			return NOERROR;
+		}*/
 	}
-	/*else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
+	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_WarpConfig))
-		{
+		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 			return E_INVALIDARG;
 		}
-		return NOERROR;
-	}*/
+		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
+			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
+			return NOERROR;		
+	}
 	return E_FAIL;
 }
 
@@ -261,8 +266,8 @@ bool BGMappingFilter::IsAcceptedType(const CMediaType *pmt){
 		{
 			return true;
 		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) ||
-			IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))
+			
 		{
 			return true;
 		}
@@ -283,7 +288,7 @@ HRESULT BGMappingFilter::CheckOutputType( const CMediaType * pmt , const IPin* p
 		}
 		
 	}
-	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	else if (m_pOutputPins.size() > 1 && m_pOutputPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
 		return NOERROR;
@@ -336,12 +341,17 @@ HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	pIn->GetPointer(&pData);
 	pOut->GetPointer(&outData);
 	cbData = pIn->GetSize();
+	long sizeout = pOut->GetSize();
 	
-	//CMediaType inputPin = ((CMuxTransformInputPin*) pIn)->CurrentMediaType() ;
-    //VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin.pbFormat;
-    //BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-	
+ // CMediaType inputPin = ((CMuxTransformInputPin*) pIn)->CurrentMediaType() ;
+ // VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin.pbFormat;
+ // BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+
 	memcpy(outData, pData,cbData);
+
+	/*for(long i = 0 ; i < cbData ; i ++){
+		outData[i] =  background[i];
+	}*/
 	//for (int i=0; i < bitHeader.biHeight ; i++){
 	//	for(int j = 0 ; j < bitHeader.biWidth ; j ++){
 	//		outData[i*WIDTH+j] =  pData[i*WIDTH+j];// - background[i*WIDTH+j];
@@ -418,36 +428,12 @@ HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inou
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
 	{
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
+		long size = inputMT.GetSampleSize();
 		*pMediaType = inputMT;
 		return S_OK;
 	}
 	return VFW_S_NO_MORE_ITEMS;
 }
-
-
-//bool BGMappingFilter::IsAcceptedType(const CMediaType *pmt)
-//{
-//	GUID guidSubType = *pmt->Subtype();
-//
-//	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
-//	{
-//		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-//		{
-//			return true;
-//		}
-//		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) ||
-//			IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-//		{
-//			return true;
-//		}
-//	}
-//	/*else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
-//		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
-//	{
-//		return true;
-//	}*/
-//	return false;
-//}
 
 HRESULT BGMappingFilter::GetPages(CAUUID *pPages)
 {

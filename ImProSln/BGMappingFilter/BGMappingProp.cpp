@@ -4,23 +4,16 @@
 #include "stdafx.h"
 #include "BGMappingFilter.h"
 #include "BGMappingProp.h"
-
 #include "DSMacro.h"
 #include "resource.h"
+
 // CHomoWarpMFCPropertyPage dialog
 
 IMPLEMENT_DYNAMIC(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
-
-void CBGMappingPorpertyPage::DoDataExchange(CDataExchange* pDX)
-{
-	CBGMappingPorpertyPage::DoDataExchange(pDX);
-	
-}
-
-
 BEGIN_MESSAGE_MAP(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBGMappingPorpertyPage::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
 
 
@@ -109,15 +102,14 @@ BOOL CBGMappingPorpertyPage::OnReceiveMessage(HWND hwnd,
 
 HRESULT CBGMappingPorpertyPage::OnActivate(void)
 {
-	HWND m_Dlg = GetSafeHwnd();
 	if (m_pFilter == NULL)
 	{
-		::EnableWindow(m_Dlg, FALSE);
+		::EnableWindow(this->GetSafeHwnd(), FALSE);
 		return S_OK;
 	}
-	::EnableWindow(m_Dlg, TRUE);
-
-	return NOERROR;
+	::EnableWindow(this->GetSafeHwnd(), TRUE);
+   
+	return S_OK;
 }
 
 
@@ -128,5 +120,12 @@ int CBGMappingPorpertyPage::GetDialogResourceID()
 
 int CBGMappingPorpertyPage::GetTitileResourceID() 
 { 
-	return 0;//IDS_HomoWarpPropertyDlg_Title;
+	return IDS_BGMappingPropertyPageTitle;
+}
+
+void CBGMappingPorpertyPage::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
 }

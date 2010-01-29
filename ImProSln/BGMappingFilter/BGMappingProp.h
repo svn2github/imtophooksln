@@ -20,7 +20,6 @@ public:
 
 
 protected:
-	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 
@@ -43,4 +42,5 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
 	virtual int GetTitileResourceID();
 	
+	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 };

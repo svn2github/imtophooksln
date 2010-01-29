@@ -53,5 +53,5 @@ public:
 
 private:
 	BYTE* background;
-	BYTE* camImage;
+
 };
