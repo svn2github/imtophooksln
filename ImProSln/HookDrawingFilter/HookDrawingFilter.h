@@ -88,7 +88,6 @@ protected:
 	const int m_numPins;
 	HWND m_hHookedWnd;
 	HWND m_hHookRecMsgWnd;
-	CCritSec m_csInTexture;
 	CCritSec m_csFillBuffer;
 
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;

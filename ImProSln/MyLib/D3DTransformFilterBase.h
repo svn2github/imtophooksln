@@ -3,8 +3,9 @@
 #include "Streams.h"
 #include "D3DEnv.h"
 #include "MSSD3DClass.h"
+#include "MSD3DLib.h"
 
-class D3DTransformFilterBase : public D3DEnv
+class MSD3DLIB_API D3DTransformFilterBase : public D3DEnv
 {
 protected:
 	MS3DDisplay*  m_pD3DDisplay;
@@ -14,6 +15,8 @@ protected:
 	LPDIRECT3DTEXTURE9 m_pRenderTarget;
 
 	LPDIRECT3DSURFACE9 m_pBackupRenderTarget;
+	CCritSec m_csInTexture;
+
 	virtual HRESULT SetRenderTarget();
 	virtual HRESULT ResetRenderTarget();
 

@@ -684,6 +684,9 @@ BOOL HookDrawingFilter::SwitchOutTexture(int idx)
 	{
 		return FALSE;
 	}
+	if (m_pOutTexture != NULL)
+		m_pOutTexture->Release();
 	m_pOutTexture = m_pAddOutTexture[idx];
+	m_pAddOutTexture[idx]->AddRef();
 	return TRUE;
 }

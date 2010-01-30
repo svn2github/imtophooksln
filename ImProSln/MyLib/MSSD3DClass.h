@@ -6,10 +6,10 @@
 #include <vector>
 #include <map>
 #include <D3DX9Effect.h>
-
+#include "MSD3DLib.h"
 using namespace std;
 
-class IEventManager
+class MSD3DLIB_API IEventManager
 {
 protected:
 	vector<IEventManager*> m_Children;
@@ -35,7 +35,7 @@ public:
 	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam, void* pData) = 0;
 };
 
-class MSEventManager : public IEventManager
+class MSD3DLIB_API MSEventManager : public IEventManager
 {
 protected:
 	class cmp_wstr 
@@ -78,7 +78,7 @@ public:
 	virtual BOOL Invoke(WCHAR* msg, WPARAM wParam, LPARAM lParam, void* pData);
 	virtual BOOL PassMouseMessage(UINT message, WPARAM wParam, LPARAM lParam, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir) ;
 };
-class MSDXBase
+class MSD3DLIB_API MSDXBase
 {
 protected:
 	IDirect3DDevice9* m_pDevice;
@@ -107,14 +107,14 @@ public:
 	}
 };
 
-class IRenderBase
+class MSD3DLIB_API IRenderBase
 {	
 public:
 	virtual BOOL Render() = 0;
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture) = 0;
 };
 
-class ITransformHierarchy
+class MSD3DLIB_API ITransformHierarchy
 {
 public:
 	BOOL PushMatrix();
@@ -124,7 +124,7 @@ public:
 };
 
 
-class IMS3DBase
+class MSD3DLIB_API IMS3DBase
 {
 public:
 	virtual D3DXMATRIX GetTransform() = 0;
@@ -136,7 +136,7 @@ public:
 	virtual BOOL PopMatrix()= 0;
 };
 
-class MS3DObj : public IMS3DBase
+class MSD3DLIB_API MS3DObj : public IMS3DBase
 {
 protected:
 	ID3DXMatrixStack* m_pMatrixStack;
@@ -155,7 +155,7 @@ public:
 	virtual D3DXVECTOR3 GetPosition();
 };
 
-class IMeshBase
+class MSD3DLIB_API IMeshBase
 {
 public: 
 	virtual IDirect3DVertexBuffer9* GetVertexBuffer() = 0;
@@ -164,7 +164,7 @@ public:
 	virtual UINT GetPrimitiveNumber() = 0;
 };
 
-class MSMeshBase : public IMeshBase, public MSDXBase, public IRenderBase
+class MSD3DLIB_API MSMeshBase : public IMeshBase, public MSDXBase, public IRenderBase
 {
 public:
 	struct CUSTOMVERTEX
@@ -198,7 +198,7 @@ public:
 	virtual LPD3DXMESH GetMesh();
 };
 
-class MS3DPlane : public MSMeshBase, public MS3DObj
+class MSD3DLIB_API MS3DPlane : public MSMeshBase, public MS3DObj
 {
 private:
 	virtual BOOL InitGeometry();
@@ -210,7 +210,7 @@ public:
 
 };
 
-class IMSCamera
+class MSD3DLIB_API IMSCamera
 {
 public:
 	virtual BOOL SetEyePos(D3DXVECTOR3& vEyePt) = 0;
@@ -225,7 +225,7 @@ public:
 	virtual D3DXMATRIX GetProjMatrix() = 0;
 
 };
-class MSTextureBase
+class MSD3DLIB_API MSTextureBase
 {
 protected:
 	LPDIRECT3DTEXTURE9 m_pTexture;
@@ -254,7 +254,7 @@ public:
 };
 
 
-class MSCamera : public MSDXBase, public IMSCamera
+class MSD3DLIB_API MSCamera : public MSDXBase, public IMSCamera
 {
 public:
 	enum ProjType
@@ -311,7 +311,7 @@ public:
 	virtual BOOL Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 };
 
-class MS3DButton : public MS3DPlane, public MSEventManager
+class MSD3DLIB_API MS3DButton : public MS3DPlane, public MSEventManager
 {
 
 public:
@@ -334,7 +334,7 @@ public:
 	static BOOL __stdcall OnMouseDragMove(void* _THIS, WPARAM wParam, LPARAM lParam, void* pData);
 };
 
-class MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase, public MSTextureBase
+class MSD3DLIB_API MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase, public MSTextureBase
 {
 protected:
 	

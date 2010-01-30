@@ -23,7 +23,8 @@ HRESULT D3DTransformFilterBase::ReleaseD3D()
 		delete m_pD3DDisplay;
 		m_pD3DDisplay = NULL;
 	}
-	/*if (m_pInTexture != NULL)
+	CAutoLock lck(&m_csInTexture);
+	if (m_pInTexture != NULL)
 	{
 		m_pInTexture->Release();
 		m_pInTexture = NULL;
@@ -32,7 +33,7 @@ HRESULT D3DTransformFilterBase::ReleaseD3D()
 	{
 		m_pOutTexture->Release();
 		m_pOutTexture = NULL;
-	}*/
+	}
 	/*if (m_pOutTextureSample != NULL)
 	{
 		m_pOutTextureSample->Release();

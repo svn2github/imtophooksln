@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\HomoWarpFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -304,72 +304,12 @@
 			Name="MyLib"
 			>
 			<File
-				RelativePath="..\MyLib\D3DEnv.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\MyLib\D3DEnv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\D3DTransformFilterBase.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\MyLib\D3DTransformFilterBase.h"
 				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MSSD3DClass.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MSSD3DClass.h"

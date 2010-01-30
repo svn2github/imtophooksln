@@ -3,10 +3,11 @@
 #include "Streams.h"
 #include <d3dx9.h>
 #include <vector>
+#include "MSD3DLib.h"
 
 using namespace std;
 
-class D3DEnv
+class MSD3DLIB_API D3DEnv
 {
 private:
 	static ATOM RegisterWndClass(HINSTANCE hInstance);
