@@ -38,14 +38,19 @@ public:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 
 protected:
+	CCritSec m_csARMarker;
 	ARMultiEachMarkerInfoT* m_ARMarkers;
 	int m_numMarker;
+	float m_minMarkerWidth;
 	bool initARMarkers();
 public:
 	ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARLayoutDXFilter();
 	virtual bool LoadConfigFromFile(WCHAR* filename);
 	virtual bool SaveConfigToFile(WCHAR* filename);
-
-
+	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
+		fRECT* fingerRects, UINT numFingerRects );
+private:
+	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
+	ARMultiEachMarkerInfoT* GetARMarker(int id);
 };

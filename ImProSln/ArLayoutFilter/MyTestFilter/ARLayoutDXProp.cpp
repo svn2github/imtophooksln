@@ -10,6 +10,10 @@ void ARLayoutDXPropPage::DoDataExchange(CDataExchange* pDX)
 {
 	CMFCBasePropertyPage::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDFilePath, m_edFilePath);
+	DDX_Control(pDX, IDC_EDLeft, m_edLeft);
+	DDX_Control(pDX, IDC_EDRight, m_edRight);
+	DDX_Control(pDX, IDC_EDTop, m_edTop);
+	DDX_Control(pDX, IDC_EDBottom, m_edBottom);
 }
 
 
@@ -17,6 +21,7 @@ BEGIN_MESSAGE_MAP(ARLayoutDXPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BTNBrowse, &ARLayoutDXPropPage::OnBnClickedBtnbrowse)
 	ON_BN_CLICKED(IDC_BTN_SAVE, &ARLayoutDXPropPage::OnBnClickedBtnSave)
 	ON_BN_CLICKED(IDC_BTN_Load, &ARLayoutDXPropPage::OnBnClickedBtnLoad)
+	ON_BN_CLICKED(IDC_BTNTest, &ARLayoutDXPropPage::OnBnClickedBtntest)
 END_MESSAGE_MAP()
 
 
@@ -78,6 +83,11 @@ HRESULT ARLayoutDXPropPage::OnActivate(void)
 	CString path;
 	path = theApp.GetProfileString(L"MySetting",L"ARLayoutConfigPath", L"");
 	m_edFilePath.SetWindowText(path);
+
+	m_edLeft.SetWindowText(L"0.0");
+	m_edRight.SetWindowText(L"1.0");
+	m_edTop.SetWindowText(L"0.0");
+	m_edBottom.SetWindowText(L"1.0");
 	return S_OK;
 }
 HRESULT ARLayoutDXPropPage::OnApplyChanges(void)
@@ -153,4 +163,32 @@ void ARLayoutDXPropPage::OnBnClickedBtnLoad()
 		return;
 	}
 	theApp.WriteProfileString(L"MySetting",L"ARLayoutConfigPath",path);
+}
+
+void ARLayoutDXPropPage::OnBnClickedBtntest()
+{
+	if (m_pFilter == NULL)
+		return;
+
+	WCHAR str[MAX_PATH];
+	
+	double l = 0, t = 0, b = 0, r = 0;
+	m_edLeft.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%lf", &l);
+	
+	m_edRight.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%lf", &r);
+
+	m_edTop.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%lf", &t);
+
+	m_edBottom.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%lf", &b);
+
+	fRECT camView[1];
+	camView[0].left = l;  camView[0].right = r;
+	camView[0].bottom = b; camView[0].top = t;
+
+	m_pFilter->DecideLayout(camView, 1, NULL, 0);
+
 }

@@ -16,6 +16,12 @@
 #define IDC_BTN_Load                    6009
 #define IDC_BUTTON3                     6010
 #define IDC_BTN_SAVE                    6011
+#define IDC_EDLeft                      6012
+#define IDC_EDRight                     6013
+#define IDC_EDTop                       6014
+#define IDC_EDIT5                       6015
+#define IDC_EDBottom                    6015
+#define IDC_BTNTest                     6016
 
 // Next default values for new objects
 // 
@@ -23,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        6001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         6012
+#define _APS_NEXT_CONTROL_VALUE         6017
 #define _APS_NEXT_SYMED_VALUE           6000
 #endif
 #endif

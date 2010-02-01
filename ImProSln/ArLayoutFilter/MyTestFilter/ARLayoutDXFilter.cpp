@@ -5,6 +5,8 @@
 #include "ARLayoutDXDisplay.h"
 #include "ARLayoutDXProp.h"
 #include "cv.h"
+#include <map>
+using namespace std;
 
 ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("ARLayoutDX Filter"), 0, CLSID_ARLayoutFilter)
@@ -12,6 +14,7 @@ ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 
 	m_ARMarkers = NULL;
 	m_numMarker = 0;
+	m_minMarkerWidth = 1.0;
 	initD3D(800, 600);
 	initARMarkers();
 }
@@ -100,12 +103,14 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		SetRenderTarget();
-		ARMultiMarkerInfoT markerConfig;
-		memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
-		markerConfig.marker = m_ARMarkers;
-		markerConfig.marker_num = m_numMarker;
-		((ARLayoutDXDisplay*)m_pD3DDisplay)->Render(&markerConfig);
-
+		{
+			CAutoLock lck(&m_csARMarker);
+			ARMultiMarkerInfoT markerConfig;
+			memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
+			markerConfig.marker = m_ARMarkers;
+			markerConfig.marker_num = m_numMarker;
+			((ARLayoutDXDisplay*)m_pD3DDisplay)->Render(&markerConfig);
+		}
 		ResetRenderTarget();
 		CopyRenderTarget2OutputTexture();	
 		CMediaType mt;
@@ -250,12 +255,14 @@ HRESULT ARLayoutDXFilter::GetPages(CAUUID *pPages)
 
 bool ARLayoutDXFilter::initARMarkers()
 {
+	CAutoLock lck(&m_csARMarker);
 	if (m_ARMarkers != NULL)
 	{
 		delete [] m_ARMarkers;
 		m_ARMarkers = NULL;
 	}
 	m_numMarker = 0;
+	m_minMarkerWidth = 1.0;
 	int numLevel = 3;
 	for (int level = 1; level <= numLevel; level++)
 	{
@@ -273,7 +280,10 @@ bool ARLayoutDXFilter::initARMarkers()
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = 8.0/40.0/level;
-
+		if (markerWidth < m_minMarkerWidth)
+		{
+			m_minMarkerWidth = markerWidth;
+		}
 		int numX = 1.0  / (markerWidth + 2.0/40.0/level);
 		int numY = numX;
 		for (int i = 0; i < numY; i++)
@@ -282,7 +292,7 @@ bool ARLayoutDXFilter::initARMarkers()
 			{		
 				idx++;
 				m_ARMarkers[idx].patt_id = idx;
-				m_ARMarkers[idx].visible = (level == 3);
+				m_ARMarkers[idx].visible = (level == 1);
 				m_ARMarkers[idx].width = markerWidth;					
 				m_ARMarkers[idx].trans[0][0] = 1.0; m_ARMarkers[idx].trans[0][1] = 0.0; m_ARMarkers[idx].trans[0][2] = 0.0; m_ARMarkers[idx].trans[0][3] = 0 + m_ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
 				m_ARMarkers[idx].trans[1][0] = 0.0; m_ARMarkers[idx].trans[1][1] = 1.0; m_ARMarkers[idx].trans[1][2] = 0.0; m_ARMarkers[idx].trans[1][3] = 0 - m_ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);
@@ -295,6 +305,7 @@ bool ARLayoutDXFilter::initARMarkers()
 
 bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 {
+	CAutoLock lck(&m_csARMarker);
 	try
 	{
 		if (m_ARMarkers != NULL)
@@ -303,6 +314,7 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 			m_ARMarkers = NULL;
 		}
 		m_numMarker = 0;
+		m_minMarkerWidth = 1.0;
 
 		FILE* filestream = NULL;
 		_wfopen_s(&filestream, path, L"r");
@@ -327,6 +339,10 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 									&(mat[2][0]), &(mat[2][1]), &(mat[2][2]), &(mat[2][3])
 			);
 			m_ARMarkers[i].width = width;
+			if (width < m_minMarkerWidth)
+			{
+				m_minMarkerWidth = width;
+			}
 			for (int row = 0; row < 3; row ++)
 			{
 				for (int col = 0; col < 4; col++)
@@ -346,6 +362,7 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 }
 bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
 {
+	CAutoLock lck(&m_csARMarker);
 	FILE* filestream = NULL;
 	_wfopen_s(&filestream, path, L"w");
 	if (filestream == NULL)
@@ -367,4 +384,233 @@ bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
 	}
 	fclose(filestream);
 	return true;
+}
+
+bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fingerRects, 
+									UINT numFingerRects )
+{
+	CAutoLock lck(&m_csARMarker);
+	map<int, bool> decisionMap; // idx, visible, have decided?
+
+	if (numFingerRects > 0 && fingerRects != NULL)
+	{
+		for (int i = 0; i < numFingerRects; i++)
+		{
+			for (int idx = 0; idx < m_numMarker; idx++)
+			{	
+				fRECT markerRect;
+				GetARTag2DRect(&markerRect, &(m_ARMarkers[idx]));
+				if (markerRect.IsIntersect(fingerRects[i]))
+				{
+					decisionMap[idx] = false;
+				}
+			}
+		}
+	}
+	if (numCamRect > 0 && camRects != NULL)
+	{
+		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
+		{
+			camRects[i].left = min((float)1.0, max((float)0.0, camRects[i].left));
+			camRects[i].right = min((float)1.0, max((float)0.0, camRects[i].right));
+			camRects[i].top = min((float)1.0, max((float)0.0, camRects[i].top));
+			camRects[i].bottom = min((float)1.0, max((float)0.0, camRects[i].bottom));
+		}
+
+
+
+		for (int i = 0; i < numCamRect; i++) // for each cam view
+		{
+			float camViewWidth = abs(camRects->right - camRects->left);
+			float camViewHeight = abs(camRects->bottom - camRects->top);
+			if (camViewHeight <= 0 || camViewWidth <= 0)
+			{
+				continue;
+			}
+			float idealArea = max(m_minMarkerWidth*m_minMarkerWidth, camViewWidth/4 * camViewHeight/4);
+			
+			for (int idx = 0; idx < m_numMarker; idx++)
+			{
+				fRECT myRECT;
+				GetARTag2DRect(&myRECT, &(m_ARMarkers[idx]));
+				float myArea = abs((myRECT.right - myRECT.left) * (myRECT.bottom - myRECT.top));
+				if ((myArea < idealArea) && myRECT.IsIntersect(camRects[i]) &&
+					decisionMap.find(idx) == decisionMap.end())  // in camview && area < ideaArea && not decided yet
+				{
+					bool bPlaceTaken = false;
+					
+					for (map<int, bool>::iterator iter = decisionMap.begin(); 
+						iter != decisionMap.end(); iter++) // check if this place have be taken by other Tag
+					{
+						if (iter->second == false)
+							continue;
+
+						fRECT decidedRECT; ;
+						GetARTag2DRect(&decidedRECT, &(m_ARMarkers[iter->first]));
+						if ( decidedRECT.IsIntersect(myRECT))
+						{
+							bPlaceTaken = true;
+							break;
+						}
+					}
+					if (bPlaceTaken)
+					{
+						decisionMap[idx] = false;
+					}
+					else
+					{
+						decisionMap[idx] = true;
+					}
+				}
+			}
+		}
+	}
+	for (int idx = 0; idx < m_numMarker; idx++ ) // the left tag, if place didn't be taken, visible = true;
+	{
+		if (decisionMap.find(idx) != decisionMap.end()) 
+		{
+			continue;
+		}
+
+		bool bPlaceTaken = false;
+		fRECT myRECT;
+		GetARTag2DRect(&myRECT, &(m_ARMarkers[idx]));
+		for (map<int, bool>::iterator iter = decisionMap.begin(); 
+			iter != decisionMap.end(); iter++)
+		{
+			if (iter->second == false)
+				continue;
+			fRECT decidedRECT; ;
+			GetARTag2DRect(&decidedRECT, &(m_ARMarkers[iter->first]));
+			if ( decidedRECT.IsIntersect(myRECT))
+			{
+				bPlaceTaken = true;
+				break;
+			}
+		}
+		if (bPlaceTaken)
+		{
+			decisionMap[idx] = false;
+		}
+		else
+		{
+			decisionMap[idx] = true;
+		}
+	}
+
+	for (map<int, bool>::iterator iter = decisionMap.begin(); 
+		iter != decisionMap.end(); iter++)
+	{
+		m_ARMarkers[iter->first].visible = iter->second;
+	}
+	return true;
+}
+
+bool ARLayoutDXFilter::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker)
+{
+	if (retRect == NULL || pMarker == NULL)
+	{
+		return false;
+	}
+	D3DXMATRIX matMark;
+	D3DXMatrixIdentity(&matMark);
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	D3DXVECTOR3 v[4] = { D3DXVECTOR3(0,0,0), D3DXVECTOR3(0, -pMarker->width, 0),
+		D3DXVECTOR3(pMarker->width, -pMarker->width, 0), D3DXVECTOR3(pMarker->width, 0, 0)};
+	
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&v[i], &v[i], &matMark);
+	}
+	
+	float minX = v[0].x; float maxX = v[0].x;
+	float minY = v[0].y; float maxY = v[0].y;
+	
+	for (int i = 0; i < 4; i++)
+	{
+		if(v[i].x < minX)
+		{
+			minX = v[i].x;
+		}
+		if (v[i].x > maxX)
+		{
+			maxX = v[i].x;
+		}
+		if (v[i].y < minY)
+		{
+			minY = v[i].y;
+		}
+		if (v[i].y > maxY)
+		{
+			maxY = v[i].y;
+		}
+	}
+	retRect->left = minX; retRect->right = maxX;
+	retRect->top = -maxY; retRect->bottom = -minY;
+	return true;
+}
+
+float left, top, right, bottom;
+
+fRECT::fRECT(float l, float t, float r, float b) : left(l), top(t),
+right(r), bottom(b)
+{
+
+}
+fRECT::fRECT() : left(0), top(0), right(0), bottom(0)
+{	 
+}
+
+bool fRECT::IsIntersect(const fRECT& rectB)
+{
+	bool intersectX = false, intersectY = false;
+	if ((this->left >= rectB.left && this->left <= rectB.right) ||
+		(this->right >= rectB.left && this->right <= rectB.right) ||
+		(rectB.left >= this->left && rectB.left <= this->right) ||
+		(rectB.right >= this->left && rectB.right <= this->right))
+	{
+		intersectX = true;
+	}
+	if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
+		(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
+		(rectB.top >= this->top && rectB.top <= this->bottom) ||
+		(rectB.bottom >= this->top && rectB.bottom <= this->bottom))
+	{
+		intersectY = true;
+	}
+	return (intersectX && intersectY);
+}
+/*
+bool fRECT::IsIntersect(const D3DXVECTOR2& pt)
+{
+	bool intersectX = false, intersectY = false;
+	if ( pt.x > left && pt.x < right)
+	{
+		intersectX = true;
+	}
+	if ( pt.y > top && pt.y < bottom)
+	{
+		intersectY = true;
+	}
+	return (intersectX && intersectY);
+}*/
+
+ARMultiEachMarkerInfoT* ARLayoutDXFilter::GetARMarker(int id)
+{
+	ARMultiEachMarkerInfoT* ret = NULL;
+	for (int i = 0 ; i < m_numMarker; i++)
+	{
+		if (m_ARMarkers[i].patt_id == id)
+		{
+			ret = &(m_ARMarkers[i]);
+			break;
+		}
+	}
+	return ret;
 }

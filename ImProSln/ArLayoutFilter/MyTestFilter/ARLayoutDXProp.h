@@ -46,4 +46,9 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edFilePath;
 	afx_msg void OnBnClickedBtnSave();
 	afx_msg void OnBnClickedBtnLoad();
+	CEdit m_edLeft;
+	CEdit m_edRight;
+	CEdit m_edTop;
+	CEdit m_edBottom;
+	afx_msg void OnBnClickedBtntest();
 };

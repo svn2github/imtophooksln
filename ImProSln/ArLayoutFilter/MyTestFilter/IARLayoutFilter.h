@@ -18,6 +18,16 @@ public:
 	virtual HRESULT setNumOfY(int numY) ;
 
 };
+
+class fRECT
+{
+public:
+	float left, top, right, bottom;
+
+	fRECT(float l, float t, float r, float b);
+	fRECT();
+	bool IsIntersect(const fRECT& rectB);
+};
 // {06F71C44-D839-4948-B5AB-F161BF157AEB}
 DEFINE_GUID(IID_IARLayoutDXFilter, 
 			0x6f71c44, 0xd839, 0x4948, 0xb5, 0xab, 0xf1, 0x61, 0xbf, 0x15, 0x7a, 0xeb);
@@ -29,4 +39,6 @@ IARLayoutDXFilter: public IUnknown
 public:
 	virtual bool LoadConfigFromFile(WCHAR* filename);
 	virtual bool SaveConfigToFile(WCHAR* filename);
+	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
+		fRECT* fingerRects, UINT numFingerRects );
 };
