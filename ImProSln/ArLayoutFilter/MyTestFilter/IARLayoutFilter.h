@@ -27,5 +27,6 @@ MIDL_INTERFACE("06F71C44-D839-4948-B5AB-F161BF157AEB")
 IARLayoutDXFilter: public IUnknown
 {
 public:
-
+	virtual bool LoadConfigFromFile(WCHAR* filename);
+	virtual bool SaveConfigToFile(WCHAR* filename);
 };
