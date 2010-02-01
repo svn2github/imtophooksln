@@ -158,9 +158,8 @@ public:
 		__in_opt LPCWSTR pName);
 #endif
 	virtual ~CMuxTransformStream(void);  // virtual destructor ensures derived class destructors are called too.
-
+	
 protected:
-
 	CMuxTransformFilter *m_pFilter;	// The parent of this stream
 
 	// *
@@ -204,7 +203,8 @@ public:
 	HRESULT Run(void) { return CallWorker(CMD_RUN); }
 	HRESULT Pause(void) { return CallWorker(CMD_PAUSE); }
 	HRESULT Stop(void) { return CallWorker(CMD_STOP); }
-
+	
+	virtual CMediaType& CurrentMediaType() { return m_mt; };
 protected:
 	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
 	BOOL    CheckRequest(Command *pCom) { return CAMThread::CheckRequest( (DWORD *) pCom); }

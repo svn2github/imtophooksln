@@ -282,7 +282,7 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	SwitchOutTexture(idx);
 	CopyRenderTarget2OutputTexture();	
 	CMediaType mt;
-	GetMediaType(0, pPin, &mt);
+	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
 	CopyOutputTexture2OutputData(pSamp, &mt, true);
 	return S_OK;
 }

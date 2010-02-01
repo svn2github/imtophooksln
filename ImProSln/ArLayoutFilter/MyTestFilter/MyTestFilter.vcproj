@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\DSLib/include/BaseClasses;..\..\MyLib;..\..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories="&quot;..\..\ARToolKitPlus_2.1.1\include&quot;;..\..\DSLib/include/BaseClasses;..\..\MyLib;..\..\OpenCV2.0\include\opencv"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib CMFCBasePropertyPage.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib CMFCBasePropertyPage.lib  CMuxTransformFilter.lib  d3dx9.lib d3d9.lib MSD3DLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\..\DSLib/lib;..\..\MyLib\bin;..\..\OpenCV2.0\lib;..\..\OpenCV2.0\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;..\..\DSLib/lib;..\..\MyLib\bin;..\..\OpenCV2.0\lib;..\..\OpenCV2.0\bin"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MyTestFilter.def"
 				GenerateDebugInformation="true"
@@ -198,15 +198,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ARLayoutProp.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ARLayoutReg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ARLayoutSource.cpp"
 				>
 			</File>
 			<File
@@ -252,15 +244,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ARLayoutProp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ARLayoutReg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ARLayoutSource.h"
 				>
 			</File>
 			<File
@@ -302,6 +286,90 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="MyLib"
+			>
+			<File
+				RelativePath="..\..\MyLib\CMuxTransformFilter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\D3DEnv.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\D3DTransformFilterBase.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\DSMacro.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\ImTopDisplay.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\ImTubeDisplay.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MFCBasePropertyPage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MSD3DLib.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MSSD3DClass.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MuxSourceFilter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MyARTagMediaSample.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\MyLib\MyMediaSample.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="ARLayoutDXFilter"
+			>
+			<File
+				RelativePath=".\ARLayoutDXDisplay.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARLayoutDXDisplay.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ARLayoutDXFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARLayoutDXFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ARLayoutDXProp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARLayoutDXProp.h"
+				>
+			</File>
+		</Filter>
+		<File
+			RelativePath="..\..\fx\ARLayout.fx"
+			>
+		</File>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>

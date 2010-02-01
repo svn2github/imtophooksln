@@ -910,6 +910,7 @@ CMuxTransformStream::CMuxTransformStream(
 							 : CBaseOutputPin(pObjectName, ps, ps->pStateLock(), phr, pPinName),
 							 m_pFilter(ps) {
 	m_bVisible = true;
+	
 }
 
 #ifdef UNICODE
@@ -1204,9 +1205,7 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 
 	do {
 		while (!CheckRequest(&com)) {
-
 			IMediaSample *pSample;
-
 			HRESULT hr = GetDeliveryBuffer(&pSample,NULL,NULL,0);
 			if (FAILED(hr)) {
 				Sleep(1);
@@ -1214,7 +1213,7 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 				// or the allocator is decommited & we will be asked to
 				// exit soon.
 			}
-
+			
 			// Virtual function user will override.
 			hr = FillBuffer(pSample);
 

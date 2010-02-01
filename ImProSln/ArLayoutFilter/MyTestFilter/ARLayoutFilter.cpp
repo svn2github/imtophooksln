@@ -1,13 +1,12 @@
 #include "stdafx.h"
 #include "ARLayoutFilter.h"
-#include "ARLayoutProp.h"
+#include "ARLayoutDXProp.h"
 
 #define BITMAP_NAME TEXT("sample_800.bmp")
 #define WIDTH 800
 #define HEIGHT 600 
-
-ARLayoutFilter::ARLayoutFilter(HRESULT *phr, ARLayoutSource *pParent, LPCWSTR pPinName) : 
-CSourceStream(NAME("AR_LAYOUT"), phr, pParent, pPinName) ,
+ARLayoutFilter::ARLayoutFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData) 
+: CMuxTransformFilter(NAME("AR_LAYOUT"), 0, CLSID_ARLayoutFilter),
 m_pBmi(0),
 m_cbBitmapInfo(0),
 m_hFile(INVALID_HANDLE_VALUE),
@@ -15,7 +14,6 @@ m_pFile(NULL),
 m_pImage(NULL),
 m_tagImageData(NULL)
 {
-	PinName = pPinName ;
 	//////////////////////////////////////////////////////////////////////////
 	TCHAR szCurrentDir[MAX_PATH], szFileCurrent[MAX_PATH], szFileMedia[MAX_PATH];
 
@@ -58,7 +56,7 @@ m_tagImageData(NULL)
 
 	m_pFile = new BYTE[WIDTH * HEIGHT];
 	//m_tagImageData = new BYTE[WIDTH * HEIGHT];
-
+	
 	if(!m_pFile)
 	{
 		OutputDebugString(TEXT("Could not allocate m_pImage\n"));
@@ -74,7 +72,7 @@ m_tagImageData(NULL)
 		return;
 	}
 
-	 cbFileHeader = sizeof(BITMAPFILEHEADER);
+	cbFileHeader = sizeof(BITMAPFILEHEADER);
 
 	// Store the size of the BITMAPINFO 
 	BITMAPFILEHEADER *pBm = (BITMAPFILEHEADER*)m_pFile;
@@ -90,8 +88,8 @@ m_tagImageData(NULL)
 
 	// Close and invalidate the file handle, since we have copied its bitmap data
 	CloseHandle(m_hFile);
-	m_hFile = INVALID_HANDLE_VALUE;
-
+	m_pFile = NULL;
+	
 }
 ARLayoutFilter::~ARLayoutFilter(void)
 {
@@ -118,85 +116,95 @@ HRESULT ARLayoutFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	else
 	{
 		// Call the parent class.
-		return CSourceStream::NonDelegatingQueryInterface(iid, ppv);
+		return __super::NonDelegatingQueryInterface(iid, ppv);
 	}
 }
-HRESULT ARLayoutFilter::GetMediaType(CMediaType *pMediaType)
+HRESULT ARLayoutFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
-
-	CAutoLock cAutoLock(m_pFilter->pStateLock());
-
 	CheckPointer(pMediaType, E_POINTER);
 
-	// If the bitmap file was not loaded, just fail here.
-	if (!m_pImage)
-		return E_FAIL;
-
 	// Allocate enough room for the VIDEOINFOHEADER and the color tables
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)pMediaType->AllocFormatBuffer(SIZE_PREHEADER + m_cbBitmapInfo);
-	if (pvi == 0) 
-		return(E_OUTOFMEMORY);
+	if ( m_pStreamPins.size() > 0 && pOutPin == m_pStreamPins[0] )
+	{
+		if (iPosition == 0 )
+		{
+			if (m_pImage == NULL)
+			{
+				return S_FALSE;
+			}
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)pMediaType->AllocFormatBuffer(SIZE_PREHEADER + m_cbBitmapInfo);
+			if (pvi == 0) 
+				return(E_OUTOFMEMORY);
 
-	ZeroMemory(pvi, pMediaType->cbFormat);   
+			ZeroMemory(pvi, pMediaType->cbFormat);   
 
-	// Copy the header info
-	memcpy(&(pvi->bmiHeader), m_pBmi, m_cbBitmapInfo);
+			// Copy the header info
+			memcpy(&(pvi->bmiHeader), m_pBmi, m_cbBitmapInfo);
 
-	// Set image size for use in FillBuffer
-	pvi->bmiHeader.biSizeImage  = GetBitmapSize(&pvi->bmiHeader);
+			// Set image size for use in FillBuffer
+			pvi->bmiHeader.biSizeImage  = GetBitmapSize(&pvi->bmiHeader);
 
-	// Clear source and target rectangles
-	SetRectEmpty(&(pvi->rcSource)); // we want the whole image area rendered
-	SetRectEmpty(&(pvi->rcTarget)); // no particular destination rectangle
+			// Clear source and target rectangles
+			SetRectEmpty(&(pvi->rcSource)); // we want the whole image area rendered
+			SetRectEmpty(&(pvi->rcTarget)); // no particular destination rectangle
 
-	pMediaType->SetType(&MEDIATYPE_Video);
-	pMediaType->SetFormatType(&FORMAT_VideoInfo);
-	pMediaType->SetTemporalCompression(FALSE);
+			pMediaType->SetType(&MEDIATYPE_Video);
+			pMediaType->SetFormatType(&FORMAT_VideoInfo);
+			pMediaType->SetTemporalCompression(FALSE);
 
-	// Work out the GUID for the subtype from the header info.
-	const GUID SubTypeGUID = GetBitmapSubtype(&pvi->bmiHeader);
-	pMediaType->SetSubtype(&SubTypeGUID);
-	pMediaType->SetSampleSize(pvi->bmiHeader.biSizeImage);
+			// Work out the GUID for the subtype from the header info.
+			const GUID SubTypeGUID = GetBitmapSubtype(&pvi->bmiHeader);
+			pMediaType->SetSubtype(&SubTypeGUID);
+			pMediaType->SetSampleSize(pvi->bmiHeader.biSizeImage);
+			return S_OK;
+		}
 
-	return S_OK;
+	}
+
+	return S_FALSE;
 }
 
 
-HRESULT ARLayoutFilter::DecideBufferSize(IMemAllocator *pAlloc, ALLOCATOR_PROPERTIES *pRequest)
+HRESULT ARLayoutFilter::DecideBufferSize(
+	IMemAllocator * pAlloc, const IPin* pOutPin,
+	__inout ALLOCATOR_PROPERTIES *pRequest)
 {
 	HRESULT hr;
-	CAutoLock cAutoLock(m_pFilter->pStateLock());
 
 	CheckPointer(pAlloc, E_POINTER);
 	CheckPointer(pRequest, E_POINTER);
-
-	// If the bitmap file was not loaded, just fail here.
-	if (!m_pImage)
-		return E_FAIL;
-
-	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*) m_mt.Format();
-
-	// Ensure a minimum number of buffers
-	if (pRequest->cBuffers == 0)
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pOutPin)
 	{
-		pRequest->cBuffers = 2;
-	}
-	pRequest->cbBuffer = pvi->bmiHeader.biSizeImage;
+		// If the bitmap file was not loaded, just fail here.
+		if (!m_pImage)
+			return E_FAIL;
+		
+		CMediaType mt = ((CMuxTransformStream*)pOutPin)->CurrentMediaType();
+		
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER*)mt.Format();
+		
+		// Ensure a minimum number of buffers
+		if (pRequest->cBuffers == 0)
+		{
+			pRequest->cBuffers = 2;
+		}
+		pRequest->cbBuffer = pvi->bmiHeader.biSizeImage;
 
-	ALLOCATOR_PROPERTIES Actual;
-	hr = pAlloc->SetProperties(pRequest, &Actual);
-	if (FAILED(hr)) 
-	{
-		return hr;
-	}
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pRequest, &Actual);
+		if (FAILED(hr)) 
+		{
+			return hr;
+		}
 
-	// Is this allocator unsuitable?
-	if (Actual.cbBuffer < pRequest->cbBuffer) 
-	{
-		return E_FAIL;
+		// Is this allocator unsuitable?
+		if (Actual.cbBuffer < pRequest->cbBuffer) 
+		{
+			return E_FAIL;
+		}
+		return S_OK;
 	}
-
-	return S_OK;
+	return S_FALSE;
 }
 
 int count =0 ;
@@ -214,38 +222,105 @@ HRESULT ARLayoutFilter::LoadnewBitmap(){
 }
 int nFrameRate = 0;
 
-HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample)
+HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample, IPin* pPin)
 {
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
+	{
+		BYTE *pData;
+		long cbData;
+		
+		if(changeLayout == true){
+			LoadnewBitmap() ;
+			changeLayout = false ;
+		}
+		
+		CheckPointer(pSample, E_POINTER);
 
-	BYTE *pData;
-	long cbData;
-	
-	if(changeLayout == true){
-		LoadnewBitmap() ;
-		changeLayout = false ;
+		// If the bitmap file was not loaded, just fail here.
+		if (!m_pImage)
+			return E_FAIL;
+		CAutoLock cAutoLockShared(&m_cSharedState);
+		
+		// Access the sample's data buffer
+		pSample->GetPointer(&pData);
+		cbData = pSample->GetSize();
+
+		CMediaType mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
+		// Check that we're still using video
+		ASSERT(mt.formattype == FORMAT_VideoInfo);
+
+		VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)mt.pbFormat;
+
+		memcpy(pData, m_pImage, min(pVih->bmiHeader.biSizeImage, (DWORD) cbData));
+		return S_OK;
 	}
-	
-	CheckPointer(pSample, E_POINTER);
+	return S_FALSE;
+}
+CUnknown *WINAPI ARLayoutFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
+{
+	ASSERT(phr);
+	//only allow one instance;
 
-	// If the bitmap file was not loaded, just fail here.
-	if (!m_pImage)
-		return E_FAIL;
-	CAutoLock cAutoLockShared(&m_cSharedState);
+	ARLayoutFilter *pNewObject = new ARLayoutFilter(punk, phr, FALSE);
 
-	// Access the sample's data buffer
-	pSample->GetPointer(&pData);
-	cbData = pSample->GetSize();
-
-	// Check that we're still using video
-	ASSERT(m_mt.formattype == FORMAT_VideoInfo);
-
-	VIDEOINFOHEADER *pVih = (VIDEOINFOHEADER*)m_mt.pbFormat;
-
-	memcpy(pData, m_pImage, min(pVih->bmiHeader.biSizeImage, (DWORD) cbData));
-
-	return S_OK;
+	if(pNewObject == NULL) {
+		if (phr)
+			*phr = E_OUTOFMEMORY;
+	}
+	return pNewObject;
 }
 
+HRESULT ARLayoutFilter::CreatePins()
+{
+	HRESULT hr;
+	if (m_pStreamPins.size() < 1) {
+		for (int c = 0; c< m_pInputPins.size(); c++)
+		{
+			delete m_pInputPins[c];
+			m_pInputPins[c] = NULL;
+		}
+		m_pInputPins.clear();
+		for (int c = 0; c< m_pOutputPins.size(); c++)
+		{
+			delete m_pOutputPins[c];
+			m_pOutputPins[c] = NULL;
+		}
+		m_pOutputPins.clear();
+		for (int c = 0; c< m_pStreamPins.size(); c++)
+		{
+			delete m_pStreamPins[c];
+			m_pStreamPins[c] = NULL;
+		}
+		m_pStreamPins.clear();
+	
+		CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
+				&hr,              // Owner filter
+				this,               // Result code
+				L"Layout");      // Pin name
+		
+		CMuxTransformStream* pOutput1 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
+			&hr,              // Owner filter
+			this,               // Result code
+			L"markinfo");      // Pin name
+
+		m_pStreamPins.push_back(pOutput0);
+		m_pStreamPins.push_back(pOutput1);
+	}
+	return S_OK;
+}
+HRESULT ARLayoutFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
+{
+
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin )
+	{
+		CheckPointer(mtOut, E_POINTER);
+		if (IsEqualGUID(*mtOut->Type(),MEDIATYPE_Video))
+		{
+			return NOERROR;
+		}
+	}
+	return S_OK;
+}
 HRESULT ARLayoutFilter::GetPages(CAUUID *pPages)
 {
 	pPages->cElems = 1;

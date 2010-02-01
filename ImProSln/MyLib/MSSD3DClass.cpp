@@ -19,7 +19,6 @@ MS3DObj::~MS3DObj()
 }
 D3DXMATRIX MS3DObj::GetTransform()
 {
-	D3DXMATRIX matTest = *m_pMatrixStack->GetTop();
 	return *m_pMatrixStack->GetTop();
 }
 
@@ -210,7 +209,7 @@ BOOL MS3DPlane::InitGeometry()
 		m_pMesh->Release();
 		m_pMesh = NULL;
 	}
-	hr = D3DXCreateMeshFVF(4,5, D3DXMESH_32BIT | D3DXMESH_VB_MANAGED | D3DXMESH_IB_MANAGED, 
+	hr = D3DXCreateMeshFVF(4,4, D3DXMESH_32BIT | D3DXMESH_VB_MANAGED | D3DXMESH_IB_MANAGED, 
 		D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1, m_pDevice, &m_pMesh);
 	if (FAILED(hr))
 	{
@@ -227,19 +226,19 @@ BOOL MS3DPlane::InitGeometry()
 	pVertices[1].position = D3DXVECTOR3(-1, -1, 0);
 	pVertices[2].position = D3DXVECTOR3(1, -1, 0);
 	pVertices[3].position = D3DXVECTOR3(1, 1, 0);
-	pVertices[4].position = D3DXVECTOR3(0, 0, 0);
+	
 
 	pVertices[0].normal = D3DXVECTOR3(0, 0, -1);
 	pVertices[1].normal = D3DXVECTOR3(0, 0, -1);
 	pVertices[2].normal = D3DXVECTOR3(0, 0, -1);
 	pVertices[3].normal = D3DXVECTOR3(0, 0, -1);
-	pVertices[4].normal = D3DXVECTOR3(0, 0, -1);
+	
 
 	pVertices[0].tu = 0;	pVertices[0].tv = 0;
 	pVertices[1].tu = 0;    pVertices[1].tv = 1;
 	pVertices[2].tu = 1;	pVertices[2].tv = 1;
 	pVertices[3].tu = 1;    pVertices[3].tv = 0;
-	pVertices[4].tu = 0.5;    pVertices[4].tv = 0.5;
+	
 	pVertexBuffer->Unlock();
 
 	IDirect3DIndexBuffer9* pIndexBuffer = NULL;
@@ -249,10 +248,9 @@ BOOL MS3DPlane::InitGeometry()
 	if (FAILED(pIndexBuffer->Lock(0, 0, (void**)&pIndex, 0)))
 		return FALSE;
 
-	pIndex[0] = 0;	pIndex[1] = 1;  pIndex[2] = 4;
-	pIndex[3] = 1;  pIndex[4] = 2;  pIndex[5] = 4;
-	pIndex[6] = 2;  pIndex[7] = 3;  pIndex[8] = 4;
-	pIndex[9] = 3;  pIndex[10] = 0;  pIndex[11] = 4;
+	pIndex[0] = 0;	pIndex[1] = 1;  pIndex[2] = 3;
+	pIndex[3] = 3;  pIndex[4] = 1;  pIndex[5] = 2;
+
 	pIndexBuffer->Unlock();
 	return TRUE;
 

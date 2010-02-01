@@ -288,7 +288,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
 		
 		m_ARTracker->setCamera(bitHeader.biWidth, bitHeader.biHeight, mat, distfactor, 1, 1000);
-		m_ARTracker->setBorderWidth(0.2f);
+		m_ARTracker->setBorderWidth(1.0/8.0);
 		m_ARTracker->setThreshold(100);
 		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
 		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
@@ -302,9 +302,9 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 				int idx = i*4 + j;
 				pMarkers[idx].patt_id = idx;
 				pMarkers[idx].visible = 1;
-				pMarkers[idx].width = 10.0/48.0;
-				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/48.0)*(2*j+1);
-				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/48.0)*(2*i+1);
+				pMarkers[idx].width = 8.0/42.0;
+				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/42.0)*(2*j+2);
+				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/42.0)*(2*i+2);
 				pMarkers[idx].trans[2][0] = 0.0; pMarkers[idx].trans[2][1] = 0.0; pMarkers[idx].trans[2][2] = 1.0; pMarkers[idx].trans[2][3] = 0;
 		
 			}

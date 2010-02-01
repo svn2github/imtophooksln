@@ -143,6 +143,16 @@ BEGIN
     EDITTEXT        IDC_WIDTH,74,52,40,14,ES_AUTOHSCROLL
 END
 
+IDD_ARLayoutDXFilterPropPage DIALOGEX 0, 0, 235, 156
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_EDFilePath,18,33,176,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNBrowse,199,33,21,14
+    PUSHBUTTON      "Load",IDC_BTN_Load,170,52,50,14
+    PUSHBUTTON      "Save",IDC_BTN_SAVE,115,52,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -158,6 +168,17 @@ BEGIN
         RIGHTMARGIN, 230
         TOPMARGIN, 7
         BOTTOMMARGIN, 150
+    END
+
+    IDD_ARLayoutDXFilterPropPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        VERTGUIDE, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 149
+        HORZGUIDE, 47
+        HORZGUIDE, 52
     END
 END
 #endif    // APSTUDIO_INVOKED

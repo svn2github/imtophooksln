@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "ARLayoutReg.h"
-#include "ARLayoutProp.h"
-
+#include "ARLayoutFilter.h"
+#include "ARLayoutDXFilter.h"
+#include "ARLayoutDXProp.h"
 // {9D6C4A7B-57BA-4482-A034-653BF55633F5}
 //DEFINE_GUID(CLSID_ARLayoutReg, 
 //			0x9d6c4a7b, 0x57ba, 0x4482, 0xa0, 0x34, 0x65, 0x3b, 0xf5, 0x56, 0x33, 0xf5);
@@ -63,7 +64,7 @@ STDAPI DllRegisterServer(void)
 	if (SUCCEEDED(hr))
 	{
 		hr = pFM2->RegisterFilter(
-			CLSID_ARLayoutSource,              // Filter CLSID. 
+			CLSID_ARLayoutFilter,              // Filter CLSID. 
 			g_wszName,                       // Filter name.
 			NULL ,                            // Device moniker. 
 			&CLSID_LegacyAmFilterCategory,  // Video compressor category.
@@ -91,7 +92,7 @@ STDAPI DllUnregisterServer()
 	if (SUCCEEDED(hr))
 	{
 		hr = pFM2->UnregisterFilter(&CLSID_VideoCompressorCategory, 
-			g_wszName, CLSID_ARLayoutSource);
+			g_wszName, CLSID_ARLayoutFilter);
 		pFM2->Release();
 	}
 	return hr;
@@ -102,15 +103,15 @@ CFactoryTemplate g_Templates[] =
 
 	{ 
 		g_wszName,
-			&CLSID_ARLayoutSource,
-			ARLayoutSource::CreateInstance,
+			&CLSID_ARLayoutFilter,
+			ARLayoutDXFilter::CreateInstance,
 			NULL,
 			NULL
 	},
 	{
 		L"ARLayout Property Page",
 			&CLSID_ARLayoutPropPage,
-			ARLayoutPropPage::CreateInstance,
+			ARLayoutDXPropPage::CreateInstance,
 			NULL,
 			NULL
 	}
@@ -139,32 +140,4 @@ BOOL APIENTRY FilterDllMain(HMODULE	hModule,
 HMODULE GetModule()
 {
 	return g_module;
-}
-//
-// DllEntryPoint
-//
-/*
-extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
-
-BOOL APIENTRY DllMain(HANDLE hModule, 
-					  DWORD  dwReason, 
-					  LPVOID lpReserved)
-{
-	
-	return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
-}
-*/
-// Create a new instance of this class
-
-CUnknown *WINAPI ARLayoutSource::CreateInstance(LPUNKNOWN pUnk, HRESULT *phr)
-{
-	//	DLLEntry does the right thing with the return code and
-	//	returned value on failure
-	ARLayoutSource *pUnknown = new ARLayoutSource(pUnk, phr);
-	if (pUnknown == NULL)
-	{
-		*phr = E_OUTOFMEMORY;
-	}
-
-	return pUnknown;
 }

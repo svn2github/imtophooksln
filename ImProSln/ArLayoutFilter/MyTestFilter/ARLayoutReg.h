@@ -5,7 +5,6 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
-#include "ARLayoutSource.h"
 
 STDAPI DllRegisterServer(void);
 
