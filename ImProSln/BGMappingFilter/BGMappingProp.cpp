@@ -7,13 +7,13 @@
 #include "DSMacro.h"
 #include "resource.h"
 
+
 // CHomoWarpMFCPropertyPage dialog
 
 IMPLEMENT_DYNAMIC(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
 BEGIN_MESSAGE_MAP(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
-	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBGMappingPorpertyPage::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
 
 
@@ -24,7 +24,8 @@ CBGMappingPorpertyPage::CBGMappingPorpertyPage(IUnknown *pUnk) :
 CMFCBasePropertyPage(NAME("BackGroundMapping Page"), pUnk),
 m_pFilter(0)
 {
-	
+	m_threshold = 0 ;
+	m_txt = 0 ;
 }
 
 CBGMappingPorpertyPage::~CBGMappingPorpertyPage()
@@ -79,8 +80,7 @@ CUnknown *WINAPI CBGMappingPorpertyPage::CreateInstance(LPUNKNOWN punk, HRESULT 
 
 HRESULT CBGMappingPorpertyPage::OnApplyChanges(void)
 {
-	
-		return S_OK;
+	return S_OK;
 }
 
 BOOL CBGMappingPorpertyPage::OnReceiveMessage(HWND hwnd,
@@ -93,21 +93,53 @@ BOOL CBGMappingPorpertyPage::OnReceiveMessage(HWND hwnd,
 	case WM_COMMAND:
 
 		break;
-	
+	case WM_HSCROLL:
+		updateSliderTxt();
+		ApplySetting();
+		break;
 	}
-	return S_OK;
-	
+	return S_OK;	
 }
+
+
+HRESULT CBGMappingPorpertyPage::ApplySetting(){
+
+	if (m_pFilter == NULL)
+	{
+		return false;
+	}
+
+	//SetDlgItemInt(IDC_ThresholdTxt,10);
+	//float LTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTx);
+
+}
+
+HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
+
+	if (m_pFilter == NULL)
+	{
+		return false;
+	}
+	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
+}
+
 
 
 HRESULT CBGMappingPorpertyPage::OnActivate(void)
 {
+	HWND m_Dlg = GetSafeHwnd();
 	if (m_pFilter == NULL)
 	{
-		::EnableWindow(this->GetSafeHwnd(), FALSE);
+		::EnableWindow(m_Dlg, FALSE);
 		return S_OK;
 	}
-	::EnableWindow(this->GetSafeHwnd(), TRUE);
+	::EnableWindow(m_Dlg, TRUE);
+	
+	m_threshold = ::GetDlgItem(m_Dlg,IDC_Slider_Threshold);
+	m_txt = ::GetDlgItem(m_Dlg, IDC_ThresholdTxt);
+	
+	::SLIDER_SetRange(m_threshold, 0, 255);
+	::SLIDER_SetPos(m_threshold,70);
    
 	return S_OK;
 }
@@ -129,3 +161,5 @@ void CBGMappingPorpertyPage::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResu
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
 }
+
+

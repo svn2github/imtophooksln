@@ -53,7 +53,7 @@ protected:
 	BYTE * m_pImage;                    // Points to pixel bits           
 	BYTE * m_tagImageData;                    // Points to pixel bits    
 	int cbFileHeader ;
-	IplImage* layoutIplImage ;
+	//IplImage* layoutIplImage ;
 	ARLayout *layout;
 	bool changeLayout ;
 

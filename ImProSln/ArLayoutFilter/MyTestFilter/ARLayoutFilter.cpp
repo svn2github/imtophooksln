@@ -57,7 +57,7 @@ m_tagImageData(NULL)
 	}
 
 	m_pFile = new BYTE[WIDTH * HEIGHT];
-	m_tagImageData = new BYTE[WIDTH * HEIGHT];
+	//m_tagImageData = new BYTE[WIDTH * HEIGHT];
 
 	if(!m_pFile)
 	{
@@ -206,11 +206,10 @@ HRESULT ARLayoutFilter::LoadnewBitmap(){
 
 	for (int i=0; i < HEIGHT ; i++){
 		for(int j = 0 ; j < WIDTH ; j ++){
-			m_tagImageData[i*WIDTH+j] =  layout->getLayout()->imageData[ i*WIDTH+j]; 
+			m_pImage[i*WIDTH+j] =  layout->getLayout()->imageData[ i*WIDTH+j]; 
 		}
 	}
 	
-	m_pImage = m_tagImageData;
 	return S_OK;
 }
 int nFrameRate = 0;

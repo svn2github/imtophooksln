@@ -2,6 +2,8 @@
 #include "MFCBasePropertyPage.h"
 #include "resource.h"
 #include "afxwin.h"
+#include "IBGMappingFilter.h"
+
 // CHomoWarpMFCPropertyPage dialog
 // {54A10265-D314-48b4-9518-F9896C1A6C68}
 DEFINE_GUID(CLSID_BGMappingPropertyPage, 
@@ -35,12 +37,16 @@ public:
 	virtual BOOL OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	virtual HRESULT OnActivate(void);
 	virtual HRESULT OnApplyChanges(void);
-
-	//
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
+public:
+	HRESULT updateSliderTxt();
+	HRESULT ApplySetting();
+	HWND m_threshold;
+	HWND m_txt;
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
 	virtual int GetTitileResourceID();
 	
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
+
 };

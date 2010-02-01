@@ -5,6 +5,7 @@
 #include <initguid.h>
 #include "combase.h"
 #include "CMuxTransformFilter.h"
+#include "BGMapping.h"
 
 // {D9CC776C-18CC-41f3-98EE-4F897B7350E3}
 DEFINE_GUID(CLSID_BGMappingFilter, 
@@ -39,10 +40,9 @@ public:
 
 protected:
 	HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
-	CCritSec* GetReceiveCS(IPin* pPin);
+	//CCritSec* GetReceiveCS(IPin* pPin);
 protected:
 	virtual bool         IsAcceptedType(const CMediaType *pMT);
-	//for implement D3DTransformFilterBase Method
 private:
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin);
@@ -51,7 +51,12 @@ public:
 	BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~BGMappingFilter();
 
+public:
+	virtual HRESULT setBGThreshold(int BGthres) ;
+	virtual int getBGThreshold();
+
 private:
 	BYTE* background;
+	BackGroundMapping* BG ;
 
 };

@@ -8,4 +8,6 @@ MIDL_INTERFACE("787BA1EF-C5EF-428a-9129-354FDC0C8DAB")
 IBGMappingFilter: public IUnknown
 {
 public:
+	virtual HRESULT setBGThreshold(int BGthres) ;
+	virtual int getBGThreshold();
 };

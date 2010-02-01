@@ -9,6 +9,8 @@
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
 { 
+	BG = new BackGroundMapping();
+
 }
 BGMappingFilter::~BGMappingFilter()
 {
@@ -129,17 +131,17 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 
 	return S_OK;
 }
-CCritSec* BGMappingFilter::GetReceiveCS(IPin* pPin)
-{
-	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
-	{
-		return NULL;
-	}
-	else
-	{
-		return __super::GetReceiveCS(pPin);
-	}
-}
+//CCritSec* BGMappingFilter::GetReceiveCS(IPin* pPin)
+//{
+//	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
+//	{
+//		return NULL;
+//	}
+//	else
+//	{
+//		return __super::GetReceiveCS(pPin);
+//	}
+//}
 CMuxTransformOutputPin* BGMappingFilter::GetConnectedOutputPin()
 {
 	for (int i =0; i< m_pOutputPins.size(); i++)
@@ -444,5 +446,14 @@ HRESULT BGMappingFilter::GetPages(CAUUID *pPages)
 		return E_OUTOFMEMORY;
 	}
 	pPages->pElems[0] = CLSID_BGMappingPropertyPage;
+	return S_OK;
+}
+
+int BGMappingFilter::getBGThreshold(){
+	return BG->BGthreshold;
+}
+
+HRESULT BGMappingFilter::setBGThreshold(int BGthres){
+	BG->BGthreshold = BGthres;
 	return S_OK;
 }

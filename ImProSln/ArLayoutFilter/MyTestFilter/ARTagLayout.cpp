@@ -195,10 +195,7 @@ void ARLayout::combineTagtoIplImage(){
 	cvResetImageROI(layoutImage);
 	cvFlip(layoutImage,layoutImage);  // for dShow to show the right direction of tag
 
-	// **show the layoutImage in opencv will made the Dshow not work
-	/*cvNamedWindow("test");
-	cvShowImage("test",layoutImage);
-	cvWaitKey(0);*/  
+	
 }
 
 
