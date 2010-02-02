@@ -72,7 +72,7 @@ protected:
 	bool			 m_bDrawTag;
 	CallbackFuncPtr  m_pCallback;
 	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;
-
+	CCritSec m_csARTracker;
 	bool             IsAcceptedType(const CMediaType *pMT);
 	//for Override D3DTransformFilterBase
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);

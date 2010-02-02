@@ -162,17 +162,11 @@ BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo)
 	
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
-		/*m_pCamera->CameraOn();
-		
-		if (m_pDisplayPlane != NULL)
-		{
-			m_pDisplayPlane->Render(m_pTexture);
-		}
-		*/
+
 		m_pD3DSprite->Begin(0);
 		m_pD3DSprite->Draw(m_pTexture,NULL,NULL,NULL,0xFFFFFFFF);
 		m_pD3DSprite->End();
-		m_pCamera->CameraOff();
+		
 		D3DXVECTOR2* pts = new D3DXVECTOR2[5];
 		WCHAR str[MAX_PATH];
 		for (int i=0; i < numMarkinfo; i++)

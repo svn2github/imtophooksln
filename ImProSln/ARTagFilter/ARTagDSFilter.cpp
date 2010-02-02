@@ -25,9 +25,6 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
 	m_pCallback = NULL;
-	m_pD3DDisplay = NULL;
-	m_pOutTexture = NULL;
-	m_pInTexture = NULL;
 	m_bDrawTag = true;
 
 }
@@ -231,12 +228,7 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 	HRESULT hr = S_OK;
 	
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && pMyPin == m_pInputPins[0])
-	{
-		if (m_ARTracker != NULL)
-		{
-			delete m_ARTracker;
-			m_ARTracker = NULL;
-		}
+	{	
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
@@ -292,6 +284,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 		numDetected = m_ARTracker->calc(pInData);
 		if (numDetected > 0)
 		{
+			CAutoLock lck(&m_csARTracker);
 			markinfos = new ARMarkerInfo[numDetected];
 			for (int k = 0; k < numDetected; k++)
 			{
@@ -476,6 +469,7 @@ HRESULT ARTagDSFilter::GetPages(CAUUID *pPages)
 
 bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -485,6 +479,7 @@ bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_fa
 
 bool ARTagDSFilter::getCamera(int& xsize, int &ysize, double* mat, double* dist_factor)
 {
+	CAutoLock lck(&m_csARTracker);
 	ARToolKitPlus::Camera* cam = m_ARTracker->getCamera();
 	if (cam == NULL)
 	{
@@ -517,6 +512,7 @@ HRESULT ARTagDSFilter::VariantFromString(PCWSTR wszValue, VARIANT &Variant)
 }
 HRESULT ARTagDSFilter::loadARConfigFromFile(WCHAR* path)
 {
+	CAutoLock lck(&m_csARTracker);
 	ARMultiEachMarkerInfoT* ARMarkers = NULL;
 	int numMarker = 0;
 	try
@@ -564,6 +560,7 @@ HRESULT ARTagDSFilter::loadARConfigFromFile(WCHAR* path)
 }
 HRESULT ARTagDSFilter::loadCameraFromXMLFile(WCHAR* filename)
 {
+	CAutoLock lck(&m_csARTracker);
 	IXMLDOMDocument* pXmlDom = NULL;
 	HRESULT hr = CoCreateInstance(__uuidof(DOMDocument60), NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pXmlDom));
 
@@ -795,6 +792,7 @@ HRESULT ARTagDSFilter::loadCameraFromXMLFile(WCHAR* filename)
 }
 bool ARTagDSFilter::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -803,6 +801,7 @@ bool ARTagDSFilter::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 }
 bool ARTagDSFilter::setBorderWidth(double borderWidth)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -812,6 +811,7 @@ bool ARTagDSFilter::setBorderWidth(double borderWidth)
 }
 double ARTagDSFilter::getBorderWidth()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -820,6 +820,7 @@ double ARTagDSFilter::getBorderWidth()
 }
 bool ARTagDSFilter::setThreshold(int t)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -829,6 +830,7 @@ bool ARTagDSFilter::setThreshold(int t)
 }
 int ARTagDSFilter::getThreshold()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -838,6 +840,7 @@ int ARTagDSFilter::getThreshold()
 
 bool ARTagDSFilter::setConfThreshold(float v)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -846,6 +849,7 @@ bool ARTagDSFilter::setConfThreshold(float v)
 }
 float ARTagDSFilter::getConfThreshold()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return 0;
@@ -855,6 +859,7 @@ float ARTagDSFilter::getConfThreshold()
 
 bool ARTagDSFilter::setUndistortionMode(int mode)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -864,6 +869,7 @@ bool ARTagDSFilter::setUndistortionMode(int mode)
 }
 int ARTagDSFilter::getUndistortionMode()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -872,6 +878,7 @@ int ARTagDSFilter::getUndistortionMode()
 }
 bool ARTagDSFilter::setMarkerMode(int mode)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -881,6 +888,7 @@ bool ARTagDSFilter::setMarkerMode(int mode)
 }
 int ARTagDSFilter::getMarkerMode()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -889,6 +897,7 @@ int ARTagDSFilter::getMarkerMode()
 }
 bool ARTagDSFilter::setPoseEstimator(int rpp)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -898,6 +907,7 @@ bool ARTagDSFilter::setPoseEstimator(int rpp)
 }
 int ARTagDSFilter::getPoseEstimator()
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
 		return false;
@@ -938,6 +948,7 @@ MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWid
 
 bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* inputMT)
 {
+	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker != NULL)
 	{
 		delete m_ARTracker;
@@ -1013,7 +1024,7 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 			{		
 				idx++;
 				ARMarkers[idx].patt_id = idx;
-				ARMarkers[idx].visible = (level == 1);
+				ARMarkers[idx].visible = 1;
 				ARMarkers[idx].width = markerWidth;					
 				ARMarkers[idx].trans[0][0] = 1.0; ARMarkers[idx].trans[0][1] = 0.0; ARMarkers[idx].trans[0][2] = 0.0; ARMarkers[idx].trans[0][3] = 0 + ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
 				ARMarkers[idx].trans[1][0] = 0.0; ARMarkers[idx].trans[1][1] = 1.0; ARMarkers[idx].trans[1][2] = 0.0; ARMarkers[idx].trans[1][3] = 0 - ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);

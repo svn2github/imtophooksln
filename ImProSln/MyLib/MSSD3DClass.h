@@ -248,7 +248,13 @@ public:
 	}
 	BOOL SetTexture(LPDIRECT3DTEXTURE9 pTexture)
 	{
+		if (m_pTexture != NULL)
+		{
+			m_pTexture->Release();
+			m_pTexture = NULL;
+		}
 		m_pTexture = pTexture;
+		pTexture->AddRef();
 		return TRUE;
 	}
 };
