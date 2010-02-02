@@ -9,12 +9,12 @@
 #include <iostream>
 
 using namespace std;
-
+/*
 #pragma comment(lib, "cv.lib")
 #pragma comment(lib, "highgui.lib")
 #pragma comment(lib, "cxcore.lib")
 #pragma comment(lib, "cvaux.lib")
-
+*/
 
 class BackGroundMapping{
 
