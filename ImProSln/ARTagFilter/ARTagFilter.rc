@@ -195,6 +195,7 @@ BEGIN
     CONTROL         "",IDC_SLIDER_ConfThreshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,68,154,13
     CTEXT           "static",IDC_txtConfThreshold,132,80,23,10
     RTEXT           "Conf Threshold:",IDC_STATIC,7,69,55,10
+    PUSHBUTTON      "Load ARConfig",IDC_BtnLoadARTag,156,9,65,14
 END
 
 

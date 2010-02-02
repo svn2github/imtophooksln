@@ -78,6 +78,6 @@ public:
 	virtual HRESULT OnApplyChanges(void);
 
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
-
+	BOOL OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg);
 };
 

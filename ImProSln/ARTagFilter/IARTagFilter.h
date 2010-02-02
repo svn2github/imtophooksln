@@ -16,6 +16,7 @@ public:
 	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip);
 	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);
 	virtual HRESULT loadCameraFromXMLFile(WCHAR* filename);
+	virtual HRESULT loadARConfigFromFile(WCHAR* filename);
 	virtual bool setBorderWidth(double borderWidth);
 	virtual double getBorderWidth();
 	virtual bool setThreshold(int t);

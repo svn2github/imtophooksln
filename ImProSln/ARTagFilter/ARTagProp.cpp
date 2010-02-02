@@ -467,23 +467,104 @@ void ARTagGeneralPage::SetDirty()
 	}
 
 }
+BOOL ARTagGeneralPage::OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg = FALSE)
+{
+	if (pOutStr == NULL)
+	{
+		return FALSE;
+	}
+	WCHAR wszCur[_MAX_PATH] = {0};
+	GetCurrentDirectoryW(_MAX_PATH, wszCur);
+	//TODO: the buffer may be not large enough under multiple selection case.
+	//		We'll have to hook the dialog to dynamically decide the buffer size.
+	const int nBufSize = dwflag & OFN_ALLOWMULTISELECT ? 21000 : MAX_PATH;
+	WCHAR* fnBuf = new WCHAR[nBufSize];
+	fnBuf[0] = L'\0';
+	OPENFILENAME ofn;
+	ZeroMemory(&ofn, sizeof(OPENFILENAME)); 
+	ofn.lStructSize       = sizeof(OPENFILENAME);
+	ofn.hwndOwner         = hwndParent;         
+	ofn.hInstance         = GetModuleHandle(NULL);  
+	ofn.lpstrFilter       = pwcsFilter;
+	ofn.lpstrCustomFilter = NULL;     
+	ofn.nMaxCustFilter    = 0;
+	ofn.nFilterIndex      = 0;
+	ofn.lpstrFile         = fnBuf;     
+	ofn.nMaxFile          = nBufSize;
+	ofn.lpstrFileTitle    = NULL;          
+	ofn.nMaxFileTitle     = 0;     
+	ofn.lpstrInitialDir   = _T("");
+	ofn.lpstrTitle        = pwcsDialogTitle;
+	ofn.nFileOffset       = 0;            
+	ofn.nFileExtension    = 0;
+	ofn.lpstrDefExt       = _T(""); 
+	ofn.lCustData         = 0;           
+	ofn.lpfnHook          = NULL; //OFNHookFilter; 
+	ofn.lpTemplateName    = NULL; 
+	ofn.Flags             = OFN_EXPLORER | OFN_ENABLEHOOK | OFN_PATHMUSTEXIST | dwflag; // | OFN_ENABLEHOOK | OFN_ENABLEINCLUDENOTIFY;
 
+	BOOL bRet = FALSE;
+
+	if (saveDlg)
+	{
+		ofn.Flags |= OFN_OVERWRITEPROMPT;
+		bRet = GetSaveFileName(&ofn);
+	}
+	else
+		bRet = GetOpenFileName(&ofn);
+
+
+	//restore the current directory changed by GetOpenFileName.
+	SetCurrentDirectoryW(wszCur);
+	if(!bRet)
+	{
+		DWORD dwErr = CommDlgExtendedError();
+		delete[] fnBuf;
+		fnBuf = NULL;
+		//dwErr == 0 if user cancel
+		if(dwErr == 0)
+			return FALSE;
+		else
+			return FALSE;
+	}
+	else
+	{
+
+		wcscpy(pOutStr, fnBuf);
+		delete[] fnBuf;
+		fnBuf = NULL;
+		return TRUE;		
+	}
+
+}
 BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 											  UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	WCHAR str[MAX_PATH] = {0};
-	int cmd = 0;
+	DWORD cmd = 0;
+	DWORD cmd2 = 0;
 	//swprintf_s(str, MAX_PATH, L"@@@@@ uMsg = %d \n", uMsg);
 	//OutputDebugString(str);
 	switch (uMsg) {
 	case WM_COMMAND:
-		cmd = HIWORD(wParam);
-		//swprintf_s(str, MAX_PATH, L"@@@@@ cmd = %d \n", cmd);
-		//OutputDebugString(str);
-		if (cmd == CBN_SELCHANGE || BM_SETCHECK) {
+		cmd = LOWORD(wParam);
+		cmd2 = HIWORD(wParam);
+		
+		if (cmd2 == CBN_SELCHANGE || BM_SETCHECK) {
 			SetDirty();
-			
 		}
+
+		if (cmd2 == BN_CLICKED && cmd == IDC_BtnLoadARTag)
+		{
+			WCHAR pFileName[MAX_PATH] = {0};
+			
+			OpenFileDialog(m_Dlg, L"*.txt", L"Choose ARTagConfig File", 0, pFileName);
+			if (pFileName != NULL)
+			{
+				m_pARProperty->loadARConfigFromFile(pFileName);
+			}
+		}
+
 		break;
 	case WM_HSCROLL:
 		updateSliderTxt();

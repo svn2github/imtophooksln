@@ -237,80 +237,11 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			delete m_ARTracker;
 			m_ARTracker = NULL;
 		}
-		if (m_pInTexture != NULL)
-		{
-			m_pInTexture->Release();
-			m_pInTexture = NULL;
-		}
-		if (m_pOutTexture != NULL)
-		{
-			m_pOutTexture->Release();
-			m_pOutTexture = NULL;
-		}
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initD3D(bitHeader.biWidth, bitHeader.biHeight);
-		
-		m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 64>(bitHeader.biWidth, bitHeader.biHeight);
-		GUID guidSubType = *inputMT.Subtype();
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
-
-		}
-		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
-		}
-		CreateTextures(bitHeader.biWidth, bitHeader.biHeight);
-		CString strDistFactor = L"0.245073 -0.759911 0.001721 0.008927";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
-		double distfactor[4] = {0};
-		swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
-
-		CString strMat = L"680.20544     0.0      315.158539    0.0 \
-						  0.0       679.564148   253.423645    0.0 \
-						  0.0       0.0      1.0      0.0 \
-						  0.0       0.0      0.0      1.0 ";
-		/*theApp.GetProfileString(L"Camera Setting", L"mat", 
-			L"406.04    0.0      154.0    0.0 \
-              0.0       404.38   115.0    0.0 \
-			  0.0       0.0      1.0      0.0 \
-			  0.0       0.0      0.0      1.0 ");*/
-		double mat[16] = {0};
-		swscanf_s(strMat,L"%lf %lf %lf %lf \
-			%lf %lf %lf %lf \
-			%lf %lf %lf %lf \
-			%lf %lf %lf %lf",
-			&(mat[0]), &(mat[1]), &(mat[2]), &(mat[3]), 
-			&(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
-			&(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
-			&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
-		
-		m_ARTracker->setCamera(bitHeader.biWidth, bitHeader.biHeight, mat, distfactor, 1, 1000);
-		m_ARTracker->setBorderWidth(1.0/8.0);
-		m_ARTracker->setThreshold(100);
-		m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
-		m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
-		ARMultiEachMarkerInfoT* pMarkers = new ARMultiEachMarkerInfoT[16];
-		memset((void*)pMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*16);
-
-		for (int i = 0; i < 4; i++)
-		{
-			for ( int j = 0; j < 4; j++ )
-			{
-				int idx = i*4 + j;
-				pMarkers[idx].patt_id = idx;
-				pMarkers[idx].visible = 1;
-				pMarkers[idx].width = 8.0/42.0;
-				pMarkers[idx].trans[0][0] = 1.0; pMarkers[idx].trans[0][1] = 0.0; pMarkers[idx].trans[0][2] = 0.0; pMarkers[idx].trans[0][3] = 0 + pMarkers[idx].width*j + (1.0/42.0)*(2*j+2);
-				pMarkers[idx].trans[1][0] = 0.0; pMarkers[idx].trans[1][1] = 1.0; pMarkers[idx].trans[1][2] = 0.0; pMarkers[idx].trans[1][3] = 0 - pMarkers[idx].width*i - (1.0/42.0)*(2*i+2);
-				pMarkers[idx].trans[2][0] = 0.0; pMarkers[idx].trans[2][1] = 0.0; pMarkers[idx].trans[2][2] = 1.0; pMarkers[idx].trans[2][3] = 0;
-		
-			}
-		}
-		m_ARTracker->setMarkInfo(pMarkers, 16);
-		
+		initARSetting(bitHeader.biWidth, bitHeader.biHeight, &inputMT);
 	}
 	return S_OK;
 }
@@ -359,7 +290,6 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 	if (m_ARTracker != NULL)
 	{
 		numDetected = m_ARTracker->calc(pInData);
-
 		if (numDetected > 0)
 		{
 			markinfos = new ARMarkerInfo[numDetected];
@@ -584,6 +514,53 @@ HRESULT ARTagDSFilter::VariantFromString(PCWSTR wszValue, VARIANT &Variant)
 	V_VT(&Variant)   = VT_BSTR;
 	V_BSTR(&Variant) = bstr;
 	return hr;
+}
+HRESULT ARTagDSFilter::loadARConfigFromFile(WCHAR* path)
+{
+	ARMultiEachMarkerInfoT* ARMarkers = NULL;
+	int numMarker = 0;
+	try
+	{
+		FILE* filestream = NULL;
+		_wfopen_s(&filestream, path, L"r");
+		if (filestream == NULL)
+		{
+			return false;
+		}
+		fwscanf_s(filestream, L"%d\n", &numMarker);
+		ARMarkers = new ARMultiEachMarkerInfoT[numMarker];
+		memset((void*)ARMarkers, 0, sizeof(ARMultiEachMarkerInfoT)* numMarker);
+		for (int i = 0; i < numMarker; i++ )
+		{
+			double mat[3][4] = {0};
+			double width = 0;
+			fwscanf_s(filestream, L"%d\n", &(ARMarkers[i].patt_id));
+			fwscanf_s(filestream, L"%d %lf \n", &(ARMarkers[i].visible), &width);
+			fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
+								   %lf %lf %lf %lf \n \
+								   %lf %lf %lf %lf \n",
+								   &(mat[0][0]), &(mat[0][1]), &(mat[0][2]), &(mat[0][3]),
+								   &(mat[1][0]), &(mat[1][1]), &(mat[1][2]), &(mat[1][3]),
+								   &(mat[2][0]), &(mat[2][1]), &(mat[2][2]), &(mat[2][3])
+								   );
+			ARMarkers[i].width = width;
+			
+			for (int row = 0; row < 3; row ++)
+			{
+				for (int col = 0; col < 4; col++)
+				{
+					ARMarkers[i].trans[row][col] = mat[row][col];
+				}
+			}
+		}
+		fclose(filestream);
+		setMarkInfo(ARMarkers, numMarker);
+	}
+	catch (exception e)
+	{
+		return S_FALSE;
+	}
+	return S_OK;
 }
 HRESULT ARTagDSFilter::loadCameraFromXMLFile(WCHAR* filename)
 {
@@ -957,4 +934,94 @@ MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int r
 MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
 {
 	return new ARTagD3DDisplay(pDevice, rtWidth, rtHeight);
+}
+
+bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* inputMT)
+{
+	if (m_ARTracker != NULL)
+	{
+		delete m_ARTracker;
+		m_ARTracker = NULL;
+	}
+	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 64>(width, height);
+	GUID guidSubType = *inputMT->Subtype();
+	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+	{
+		m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGB);
+
+	}
+	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+	{
+		m_ARTracker->setPixelFormat(ARToolKitPlus::PIXEL_FORMAT_RGBA);
+	}
+	
+	CString strDistFactor = L"0.245073 -0.759911 0.001721 0.008927";//theApp.GetProfileString(L"Camera Setting", L"dist_Factor", L"159.0 139.0 -84.9 0.97932");
+	double distfactor[4] = {0};
+	swscanf_s(strDistFactor,L"%lf %lf %lf %lf", &(distfactor[0]), &(distfactor[1]), &(distfactor[2]), &(distfactor[3]));
+
+	CString strMat = L"680.20544     0.0      315.158539    0.0 \
+					  0.0       679.564148   253.423645    0.0 \
+					  0.0       0.0      1.0      0.0 \
+					  0.0       0.0      0.0      1.0 ";
+	/*theApp.GetProfileString(L"Camera Setting", L"mat", 
+		L"406.04    0.0      154.0    0.0 \
+          0.0       404.38   115.0    0.0 \
+		  0.0       0.0      1.0      0.0 \
+		  0.0       0.0      0.0      1.0 ");*/
+	double mat[16] = {0};
+	swscanf_s(strMat,L"%lf %lf %lf %lf \
+		%lf %lf %lf %lf \
+		%lf %lf %lf %lf \
+		%lf %lf %lf %lf",
+		&(mat[0]), &(mat[1]), &(mat[2]), &(mat[3]), 
+		&(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
+		&(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
+		&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
+	
+	m_ARTracker->setCamera(width, height, mat, distfactor, 1, 1000);
+	m_ARTracker->setBorderWidth(1.0/8.0);
+	m_ARTracker->setThreshold(100);
+	m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
+	m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
+	
+	ARMultiEachMarkerInfoT* ARMarkers = NULL;
+	int numMarker = 0;
+
+	int numLevel = 3;
+	for (int level = 1; level <= numLevel; level++)
+	{
+		float markerWidth = 8.0/40.0/level;
+		int numX = 1.0  / (markerWidth + 2.0/40.0/level);
+		int numY = numX;
+		numMarker += numX * numY;
+
+	}
+
+	ARMarkers = new ARMultiEachMarkerInfoT[numMarker];
+
+	memset((void*)ARMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*numMarker);
+	int idx = -1;
+	for (int level = 1; level <= numLevel; level++)
+	{
+		float markerWidth = 8.0/40.0/level;
+		
+		int numX = 1.0  / (markerWidth + 2.0/40.0/level);
+		int numY = numX;
+		for (int i = 0; i < numY; i++)
+		{
+			for ( int j = 0; j < numX; j++ )
+			{		
+				idx++;
+				ARMarkers[idx].patt_id = idx;
+				ARMarkers[idx].visible = (level == 1);
+				ARMarkers[idx].width = markerWidth;					
+				ARMarkers[idx].trans[0][0] = 1.0; ARMarkers[idx].trans[0][1] = 0.0; ARMarkers[idx].trans[0][2] = 0.0; ARMarkers[idx].trans[0][3] = 0 + ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
+				ARMarkers[idx].trans[1][0] = 0.0; ARMarkers[idx].trans[1][1] = 1.0; ARMarkers[idx].trans[1][2] = 0.0; ARMarkers[idx].trans[1][3] = 0 - ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);
+				ARMarkers[idx].trans[2][0] = 0.0; ARMarkers[idx].trans[2][1] = 0.0; ARMarkers[idx].trans[2][2] = 1.0; ARMarkers[idx].trans[2][3] = 0;	
+			}
+		}
+	}
+	setMarkInfo(ARMarkers, numMarker);
+
+	return true;
 }

@@ -18,7 +18,8 @@ class ARTagDSFilter :
 	public CMuxTransformFilter, public IARTagFilter, public D3DTransformFilterBase,
 	public ISpecifyPropertyPages
 {
-	
+private: 
+	bool initARSetting(int width, int height, const CMediaType* inputMT);
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 
@@ -42,7 +43,7 @@ public:
 	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
 	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);
 	virtual HRESULT loadCameraFromXMLFile(WCHAR* filename);
-
+	virtual HRESULT loadARConfigFromFile(WCHAR* filename);
 	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker);
 
 	virtual bool setBorderWidth(double borderWidth);
@@ -66,7 +67,7 @@ public:
 private:
 	HRESULT VariantFromString(PCWSTR wszValue, VARIANT &Variant);
 protected:
-
+	
 	//
 	bool			 m_bDrawTag;
 	CallbackFuncPtr  m_pCallback;
