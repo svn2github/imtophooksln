@@ -489,7 +489,7 @@ public:
     // IQualityControl methods
     //================================================================================
 
-    STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
+    virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 
     STDMETHODIMP SetSink(IQualityControl * piqc);
 
@@ -925,7 +925,7 @@ public:
     // IQualityControl methods (from CBasePin)
     //================================================================================
 
-    STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
+    virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 
     // no need to override:
     // STDMETHODIMP SetSink(IQualityControl * piqc);

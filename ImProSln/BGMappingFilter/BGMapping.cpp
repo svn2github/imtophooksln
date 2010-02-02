@@ -1,12 +1,10 @@
 #include "stdafx.h"
 #include "BGMapping.h"
-BackGroundMapping::BackGroundMapping(){
+BackGroundMapping::BackGroundMapping(int returnW, int returnH){
 	BGthreshold = 70 ;
-	mappingTable = cvCreateImage(cvSize(WIDTH,HEIGHT),8,3);
-	gray0Image =   cvCreateImage(cvSize(WIDTH,HEIGHT),IPL_DEPTH_8U,1);
-	gray255Image = cvCreateImage(cvSize(WIDTH,HEIGHT),IPL_DEPTH_8U,1);
-	backgroundImg = cvCreateImage(cvSize(WIDTH,HEIGHT),IPL_DEPTH_8U,1);
-	resultImg = cvCreateImage(cvSize(WIDTH,HEIGHT),IPL_DEPTH_8U,1);
+	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
+	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	resultImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
 }
@@ -14,8 +12,6 @@ BackGroundMapping::BackGroundMapping(){
 BackGroundMapping::~BackGroundMapping(){
 	cvReleaseMat(&MatHomography);
 	cvReleaseImage(&mappingTable);
-	cvReleaseImage(&gray0Image);
-	cvReleaseImage(&gray255Image);
 	cvReleaseImage(&resultImg);
 	cvReleaseImage(&backgroundImg);
 }
@@ -55,11 +51,12 @@ void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
 
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
-	cvWarpPerspective(srcImg,resultImg,MatHomography);
+	/*cvWarpPerspective(srcImg,resultImg,MatHomography);
 	cvSub(resultImg,backgroundImg,resultImg);
-	cvThreshold(resultImg,resultImg,BGthreshold,255,0);
-
-	return resultImg;
+	cvThreshold(resultImg,resultImg,BGthreshold,255,0);*/
+ 
+	cvSaveImage("t.bmp",srcImg);
+	return srcImg;
 }
 
 

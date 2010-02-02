@@ -3,17 +3,43 @@
 #include "BGMappingFilterApp.h"
 #include "BGMappingProp.h"
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 640
+#define HEIGHT 480
 
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
 { 
-	BG = new BackGroundMapping();
+	
+	// set the calibration data of homo and mapping table
+	extern HMODULE GetModule();
+	WCHAR str[MAX_PATH] = {0};
+	HMODULE module = GetModule();
+	GetModuleFileName(module, str, MAX_PATH);
+	// Gets filename
+	WCHAR* pszFile = wcsrchr(str, '\\');
+	pszFile++;    // Moves on from \
+	// Get path
+	WCHAR szPath[MAX_PATH] = L"";
+	_tcsncat(szPath, str, pszFile - str);
+
+	char fileDir[100];
+	int size= wcslen(szPath);
+	char homoDir[100];
+	char mTableDir[100];
+
+	wcstombs(fileDir, szPath, size+1);
+	sprintf(homoDir,"%s\\BackgroundCaliData\\HomoMat.txt",fileDir) ;
+	sprintf(mTableDir,"%s\\BackgroundCaliData\\mTable.txt",fileDir) ;
+
+	BG = new BackGroundMapping(WIDTH,HEIGHT);
+	BG->loadHomo(homoDir,mTableDir);
 
 }
 BGMappingFilter::~BGMappingFilter()
 {
+	/*cvReleaseImage(&backgroundIplImg);
+	cvReleaseImage(&foregroundIplImg);
+	cvReleaseImage(&cameraInputIplImg);*/
 
 }
 
@@ -127,21 +153,17 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	ASSERT(pSample);
 	long bsize = pSample->GetSize();
 
-	pSample->GetPointer(&background);
+	BYTE* backgroundByteData;
+	pSample->GetPointer(&backgroundByteData);
+	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, 4);
+	backgroundtmp->imageData = (char*)backgroundByteData;
+	cvCopy(backgroundIplImg,backgroundtmp);
+	//BG->setBackground(backgroundIplImg);
 
+	cvReleaseImageHeader(&backgroundtmp);
 	return S_OK;
 }
-//CCritSec* BGMappingFilter::GetReceiveCS(IPin* pPin)
-//{
-//	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
-//	{
-//		return NULL;
-//	}
-//	else
-//	{
-//		return __super::GetReceiveCS(pPin);
-//	}
-//}
+
 CMuxTransformOutputPin* BGMappingFilter::GetConnectedOutputPin()
 {
 	for (int i =0; i< m_pOutputPins.size(); i++)
@@ -243,9 +265,6 @@ HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pP
 		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
 			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
 			return NOERROR;
-		/*if(IsAcceptedType(pmt)){
-			return NOERROR;
-		}*/
 	}
 	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
@@ -268,8 +287,7 @@ bool BGMappingFilter::IsAcceptedType(const CMediaType *pmt){
 		{
 			return true;
 		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))
-			
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))			
 		{
 			return true;
 		}
@@ -287,14 +305,9 @@ HRESULT BGMappingFilter::CheckOutputType( const CMediaType * pmt , const IPin* p
 		// Can we transform this type
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
-		}
-		
+		}		
 	}
-	else if (m_pOutputPins.size() > 1 && m_pOutputPins[0] == pPin)
-	{
-		CheckPointer(pmt, E_POINTER);
-		return NOERROR;
-	}
+
 	return E_FAIL;
 }
 
@@ -306,19 +319,47 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		//initD3D(bitHeader.biWidth, bitHeader.biHeight);
-	}
-	if (direction == PINDIR_OUTPUT && m_pOutputPins.size() > 1)
-	{
-		for (vector<CMuxTransformOutputPin*>::iterator iter = m_pOutputPins.begin(); iter != m_pOutputPins.end(); iter++)
+		cameraW = bitHeader.biWidth;
+		cameraH = bitHeader.biHeight;
+        GUID guidSubType = inputMT.subtype;
+		int channel;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
-			if (*iter != pMyPin)
-			{
-				(*iter)->m_bVisible = false;
-			}
+			channel = 3;
 		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			channel = 4;
+		}
+
+		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
+		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
+		return S_OK;
+
+	}
+
+	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin)
+	{
+		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		layoutW = bitHeader.biWidth;
+		layoutH = bitHeader.biHeight;
+
+		GUID guidSubType = inputMT.subtype;
+		int channel;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			channel = 3;
+		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			channel = 4;
+		}
+		backgroundIplImg = cvCreateImage(cvSize(layoutW, layoutH), 8, channel);
 		return S_OK;
 	}
+	return S_OK;
 }
 
 HRESULT BGMappingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
@@ -332,33 +373,25 @@ HRESULT BGMappingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 	}
 	return __super::BreakConnect(dir, pPin);
 }
+
 HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
-	BYTE *pData;
-	BYTE *outData;// = new BYTE[WIDTH*HEIGHT];
 	long cbData;
-
+	BYTE* cameraByteData;
+	BYTE* foregroundByteData;
 	// Access the sample's data buffer
-	pIn->GetPointer(&pData);
-	pOut->GetPointer(&outData);
-	cbData = pIn->GetSize();
-	long sizeout = pOut->GetSize();
-	
- // CMediaType inputPin = ((CMuxTransformInputPin*) pIn)->CurrentMediaType() ;
- // VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin.pbFormat;
- // BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	pIn->GetPointer(&cameraByteData);
+	pOut->GetPointer(&foregroundByteData);
+	cbData = pOut->GetSize();
 
-	memcpy(outData, pData,cbData);
+	IplImage* camtmp = cvCreateImageHeader(cvSize(cameraW, cameraH), 8, 4);
+	camtmp->imageData = (char*)cameraByteData;
+	cvCopy(camtmp,cameraInputIplImg);
+	cvReleaseImageHeader(&camtmp);	
 
-	/*for(long i = 0 ; i < cbData ; i ++){
-		outData[i] =  background[i];
-	}*/
-	//for (int i=0; i < bitHeader.biHeight ; i++){
-	//	for(int j = 0 ; j < bitHeader.biWidth ; j ++){
-	//		outData[i*WIDTH+j] =  pData[i*WIDTH+j];// - background[i*WIDTH+j];
-	//	}
-	//}
+	foregroundIplImg = BG->getForeground(cameraInputIplImg);
+	memcpy(foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
 	return S_OK;
 }
 
@@ -382,7 +415,6 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = inputMT.GetSampleSize();
 
-
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {
@@ -398,7 +430,6 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 	else if (m_pOutputPins.size() >= 2 && m_pOutputPins[1] == pOutPin)
 	{
 		pProp->cBuffers = 1;
-		//pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -414,7 +445,6 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 	return NOERROR;
 }
 
-
 HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
 	if (iPosition < 0) {
@@ -429,7 +459,7 @@ HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inou
 	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
+		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
 		*pMediaType = inputMT;
 		return S_OK;

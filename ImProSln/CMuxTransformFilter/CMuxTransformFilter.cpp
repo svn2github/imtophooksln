@@ -74,6 +74,10 @@ int CMuxTransformFilter::GetPinCount()
 	}
 	return count;
 }
+STDMETHODIMP CMuxTransformFilter::Notify(IBaseFilter * pSender, Quality q, IPin* pPin)
+{
+	return S_OK;
+}
 CBasePin* CMuxTransformFilter::GetPin(int n)
 {
 	HRESULT hr = CreatePins();
@@ -931,7 +935,14 @@ CMuxTransformStream::CMuxTransformStream(
 CMuxTransformStream::~CMuxTransformStream(void) {
 
 }
-
+STDMETHODIMP CMuxTransformStream::Notify(IBaseFilter * pSender, Quality q)
+{
+	if (m_pFilter == NULL)
+	{
+		return S_FALSE;
+	}
+	return m_pFilter->Notify(pSender, q, this);
+}
 HRESULT CMuxTransformStream::FillBuffer(IMediaSample *pSamp)
 {
 	if (m_pFilter == NULL)

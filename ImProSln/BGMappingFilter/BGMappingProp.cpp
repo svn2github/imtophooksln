@@ -95,24 +95,11 @@ BOOL CBGMappingPorpertyPage::OnReceiveMessage(HWND hwnd,
 		break;
 	case WM_HSCROLL:
 		updateSliderTxt();
-		ApplySetting();
 		break;
 	}
 	return S_OK;	
 }
 
-
-HRESULT CBGMappingPorpertyPage::ApplySetting(){
-
-	if (m_pFilter == NULL)
-	{
-		return false;
-	}
-
-	//SetDlgItemInt(IDC_ThresholdTxt,10);
-	//float LTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTx);
-
-}
 
 HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 
@@ -120,6 +107,7 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	{
 		return false;
 	}
+	m_pFilter->setBGThreshold(::SLIDER_GetPos(m_threshold));
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
 }
 
@@ -134,13 +122,12 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 		return S_OK;
 	}
 	::EnableWindow(m_Dlg, TRUE);
-	
 	m_threshold = ::GetDlgItem(m_Dlg,IDC_Slider_Threshold);
 	m_txt = ::GetDlgItem(m_Dlg, IDC_ThresholdTxt);
 	
 	::SLIDER_SetRange(m_threshold, 0, 255);
-	::SLIDER_SetPos(m_threshold,70);
-   
+	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
+	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
 	return S_OK;
 }
 

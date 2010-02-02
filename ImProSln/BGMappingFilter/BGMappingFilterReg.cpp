@@ -15,7 +15,7 @@ const AMOVIESETUP_PIN psudBGMappingFilterPins[] =
 , 0                   // nTypes
 , NULL                // lpTypes
 },
-{ L"config"            // strName
+{ L"layoutImage"      // strName
 , FALSE               // bRendered
 , FALSE               // bOutput
 , FALSE               // bZero

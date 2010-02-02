@@ -40,7 +40,6 @@ public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 public:
 	HRESULT updateSliderTxt();
-	HRESULT ApplySetting();
 	HWND m_threshold;
 	HWND m_txt;
 public: //inherit from CMFCBaseProperty Page

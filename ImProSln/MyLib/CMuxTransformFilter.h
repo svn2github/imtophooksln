@@ -203,7 +203,7 @@ public:
 	HRESULT Run(void) { return CallWorker(CMD_RUN); }
 	HRESULT Pause(void) { return CallWorker(CMD_PAUSE); }
 	HRESULT Stop(void) { return CallWorker(CMD_STOP); }
-	
+	virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
 protected:
 	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
@@ -289,6 +289,7 @@ public:
 	virtual HRESULT InitializeOutputSample(IMediaSample *pSample, const IPin* pInputPin, const IPin* pOutputPin, __deref_out IMediaSample **ppOutSample);
 	
 	// if you override Receive, you may need to override these three too
+	virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q, IPin* pPin);
 	virtual HRESULT EndOfStream(void);
 	virtual HRESULT BeginFlush(void);
 	virtual HRESULT EndFlush(void);

@@ -36,11 +36,10 @@ public:
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//implement IHomoWarpFilterProperty
 
 protected:
 	HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
-	//CCritSec* GetReceiveCS(IPin* pPin);
+	HRESULT ChangeBG();
 protected:
 	virtual bool         IsAcceptedType(const CMediaType *pMT);
 private:
@@ -56,7 +55,16 @@ public:
 	virtual int getBGThreshold();
 
 private:
-	BYTE* background;
+
 	BackGroundMapping* BG ;
+	CCritSec m_cSharedState;            // Protects our internal state
+	IplImage* backgroundIplImg;
+	IplImage* foregroundIplImg;
+	IplImage* cameraInputIplImg;
+	int cameraW ;
+	int cameraH ;
+	int layoutW ;
+	int layoutH ;
+
 
 };

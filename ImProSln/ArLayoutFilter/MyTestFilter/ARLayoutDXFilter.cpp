@@ -100,6 +100,7 @@ HRESULT ARLayoutDXFilter::CreatePins()
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
+	
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		SetRenderTarget();

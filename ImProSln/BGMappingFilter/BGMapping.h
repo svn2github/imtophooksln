@@ -15,13 +15,11 @@ using namespace std;
 #pragma comment(lib, "cxcore.lib")
 #pragma comment(lib, "cvaux.lib")
 
-#define WIDTH 800
-#define HEIGHT 600
 
 class BackGroundMapping{
 
 public:
-	BackGroundMapping();
+	BackGroundMapping(int w , int h);
 	~BackGroundMapping();
 	
 	void loadHomo(char* homoName , char* mTableName);
@@ -35,8 +33,6 @@ public:
 	CvMat dstPoint;
 	CvMat* MatHomography;
 
-	IplImage*gray0Image;
-	IplImage*gray255Image;
 	IplImage*mappingTable;
 	IplImage*backgroundImg;
 	IplImage*resultImg;
