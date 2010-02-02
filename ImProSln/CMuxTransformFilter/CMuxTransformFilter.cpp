@@ -1241,11 +1241,10 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 				}
 
 			} else if (hr == S_FALSE) {
-				// derived class wants us to stop pushing data
+				// derived class wants us to skip pushing data
 				pSample->Release();
-				DeliverEndOfStream();
-				return S_OK;
-			} else {
+			}
+			else {
 				// derived class encountered an error
 				pSample->Release();
 				DbgLog((LOG_ERROR, 1, TEXT("Error %08lX from FillBuffer!!!"), hr));
