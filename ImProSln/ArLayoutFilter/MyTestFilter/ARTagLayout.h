@@ -10,11 +10,6 @@
 
 using namespace std;
 
-#pragma comment(lib, "cv200.lib")
-#pragma comment(lib, "highgui200.lib")
-#pragma comment(lib, "cxcore200.lib")
-#pragma comment(lib, "cvaux200.lib")
-
 class Point2D{
 public :
 	float x;
