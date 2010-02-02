@@ -1,7 +1,12 @@
 #pragma once
 #include "IAR2WarpController.h"
 #include "CMuxTransformFilter.h"
+#include <d3dx9.h>
+#include "MyMediaSample.h"
+#include "ARToolKitPlus/TrackerMultiMarker.h"
+using namespace ARToolKitPlus;
 
+#define NUMCAM 3
 // {F0272060-6BF7-4714-AB76-90FB089BB99A}
 DEFINE_GUID(CLSID_AR2WarpController, 
 			0xf0272060, 0x6bf7, 0x4714, 0xab, 0x76, 0x90, 0xfb, 0x8, 0x9b, 0xb9, 0x9a);
@@ -18,6 +23,7 @@ public:
 
 	//implement CMuxTransformFilter Interface
 	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin);
+	virtual HRESULT ReceiveARResult(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT CreatePins();
 	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin);
 	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin);
@@ -32,5 +38,16 @@ public:
 	virtual ~AR2WarpController();
 protected:
 	double  m_RANSIC_Threshold;
+	CCritSec m_csMatCam2VW[NUMCAM];
+	D3DXMATRIX* m_matCam2VW[NUMCAM];
+
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
+	virtual bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
+	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
+	virtual bool SendWarpConfig(int camIDx);
+	virtual bool SendARLayoutStartegyData();
+
+	IPin* GetARResultPin(int idx);
+	IPin* GetWarpConfigPin(int idx);
+	IPin* GetARLayoutPin();
 };

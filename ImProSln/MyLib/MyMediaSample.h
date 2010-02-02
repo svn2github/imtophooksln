@@ -18,9 +18,53 @@ DEFINE_GUID(GUID_D3DXTEXTURE9_POINTER,
 DEFINE_GUID(GUID_FORMATTYPE_D3DXTEXTURE9DESC, 
 			0xf6de4088, 0xa0e1, 0x49f9, 0x94, 0x1, 0x34, 0x57, 0x6f, 0x94, 0x80, 0x52);
 
+// {7B95C432-C7CE-48a1-9167-94E687A2820B}
+DEFINE_GUID(GUID_ARLayoutStartegyData, 
+			0x7b95c432, 0xc7ce, 0x48a1, 0x91, 0x67, 0x94, 0xe6, 0x87, 0xa2, 0x82, 0xb);
 
 class WarpConfigData
 {
 public:
 	float warpMat[4][4];
+};
+
+#ifndef _fRECT_
+#define _fRECT_
+class fRECT
+{
+public:
+	float left, top, right, bottom;
+	fRECT(float l, float t, float r, float b) : left(l), top(t),
+		right(r), bottom(b)
+	{	}
+	fRECT() : left(0), top(0), right(0), bottom(0)
+	{	 	}
+	bool IsIntersect(const fRECT& rectB)
+	{
+		bool intersectX = false, intersectY = false;
+		if ((this->left >= rectB.left && this->left <= rectB.right) ||
+			(this->right >= rectB.left && this->right <= rectB.right) ||
+			(rectB.left >= this->left && rectB.left <= this->right) ||
+			(rectB.right >= this->left && rectB.right <= this->right))
+		{
+			intersectX = true;
+		}
+		if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
+			(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
+			(rectB.top >= this->top && rectB.top <= this->bottom) ||
+			(rectB.bottom >= this->top && rectB.bottom <= this->bottom))
+		{
+			intersectY = true;
+		}
+		return (intersectX && intersectY);
+	}
+};
+#endif
+class ARLayoutStartegyData
+{
+public:
+	fRECT* camViews;
+	unsigned int numCamView;
+	fRECT* fingerRects;
+	unsigned int numFingers;
 };

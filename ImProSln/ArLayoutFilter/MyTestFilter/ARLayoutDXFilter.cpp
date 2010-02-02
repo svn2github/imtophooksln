@@ -557,36 +557,6 @@ bool ARLayoutDXFilter::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInf
 	return true;
 }
 
-float left, top, right, bottom;
-
-fRECT::fRECT(float l, float t, float r, float b) : left(l), top(t),
-right(r), bottom(b)
-{
-
-}
-fRECT::fRECT() : left(0), top(0), right(0), bottom(0)
-{	 
-}
-
-bool fRECT::IsIntersect(const fRECT& rectB)
-{
-	bool intersectX = false, intersectY = false;
-	if ((this->left >= rectB.left && this->left <= rectB.right) ||
-		(this->right >= rectB.left && this->right <= rectB.right) ||
-		(rectB.left >= this->left && rectB.left <= this->right) ||
-		(rectB.right >= this->left && rectB.right <= this->right))
-	{
-		intersectX = true;
-	}
-	if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
-		(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
-		(rectB.top >= this->top && rectB.top <= this->bottom) ||
-		(rectB.bottom >= this->top && rectB.bottom <= this->bottom))
-	{
-		intersectY = true;
-	}
-	return (intersectX && intersectY);
-}
 /*
 bool fRECT::IsIntersect(const D3DXVECTOR2& pt)
 {

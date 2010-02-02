@@ -9,10 +9,21 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
 { 
 	m_RANSIC_Threshold = 5;
+	for (int i=0; i < NUMCAM; i++)
+	{
+		m_matCam2VW[i] = NULL;
+	}
 }
 AR2WarpController::~AR2WarpController()
 {
-
+	for (int i=0; i < NUMCAM; i++)
+	{
+		if (m_matCam2VW[i] != NULL)
+		{
+			delete m_matCam2VW[i];
+			m_matCam2VW[i] = NULL;
+		}
+	}
 }
 
 CUnknown *WINAPI AR2WarpController::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -53,184 +64,201 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		return S_FALSE;
 	}
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin)
+	HRESULT hr;
+	if ((m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin) || 
+		(m_pInputPins.size() >= 2 && m_pInputPins[1] == pReceivePin) || 
+		(m_pInputPins.size() >= 3 && m_pInputPins[2] == pReceivePin) )
 	{
-		CMediaSample* pCSample = (CMediaSample*)pSample;
-		ARTagResultData* pARResult = NULL;
-		pCSample->GetPointer((BYTE**)&pARResult);
-		if (pARResult == NULL)
+		hr = ReceiveARResult(pSample, pReceivePin);
+		if (SUCCEEDED(hr))
 		{
-			return S_FALSE;
-		}
-		if (pARResult->m_nDetected <= 0)
-		{
-			return S_FALSE;
-		}
-		
-	    CMuxTransformInputPin* pin = (CMuxTransformInputPin*)pReceivePin;
-	
-		float w = pARResult->m_screenW;
-		float h = pARResult->m_screenH;
-
-		WCHAR str[MAX_PATH];
-
-		float s[] = {0,0,0,
-			0,0,0,
-			0,0,0};
-		CvMat mat = cvMat(3,3, CV_32F, &s);
-		float* t = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
-		float* d = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
-		int nValidDetected = 0;
-		memset(t,0,4*2*pARResult->m_nDetected*sizeof(float));
-		memset(d,0,4*2*pARResult->m_nDetected*sizeof(float));
-
-		for (int i = 0; i< pARResult->m_nDetected; i++)
-		{
-			ARMultiEachMarkerInfoT* pcfgMarker = NULL;
-			for (int j =0; j< pARResult->m_pMarkerConfig->marker_num; j++)
+			if ( m_pInputPins[0] == pReceivePin && m_pOutputPins[0]->IsConnected())
 			{
-				if (pARResult->m_pMarkerConfig->marker[j].patt_id == pARResult->m_pDetectedMarks[i].id)
-				{
-					pcfgMarker = &(pARResult->m_pMarkerConfig->marker[j]);
-					break;
-				}	
+				SendWarpConfig(0);
 			}
-			if (pcfgMarker == NULL)
+			if ( m_pInputPins[1] == pReceivePin && m_pOutputPins[1]->IsConnected())
 			{
-				continue;
+				SendWarpConfig(1);
 			}
-
-			const ARFloat* arV[4]= {NULL};
-			
-			switch (pARResult->m_pDetectedMarks[i].dir)
+			if ( m_pInputPins[2] == pReceivePin && m_pOutputPins[2]->IsConnected())
 			{
-			case 0:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[2];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[3];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[0];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[1];
-				break;
-			case 1:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[1];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[2];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[3];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[0];
-				break;
-			case 2:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
-				break;
-			case 3:
-				arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
-				arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
-				arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
-				arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
-				break;
-			default:
-				continue;
-				break;
+				SendWarpConfig(2);
 			}
-			nValidDetected++;
-			D3DXVECTOR2 v[4] = {D3DXVECTOR2(0,0)};
-			D3DXVECTOR2 center;
-			
-			v[0].x = arV[0][0]; v[0].y = arV[0][1];
-			v[1].x = arV[1][0]; v[1].y = arV[1][1];
-			v[2].x = arV[2][0]; v[2].y = arV[2][1];
-			v[3].x = arV[3][0]; v[3].y = arV[3][1];
-			center = (v[0] + v[1] + v[2] + v[3]) / 4.0;
-	
-			D3DXMATRIX matTran;
-			D3DXMATRIX matW2VS;
-			D3DXMatrixScaling(&matW2VS, 1.0, -1.0, 1.0);
-			D3DXMatrixIdentity(&matTran);
-			for (int row=0; row < 3; row++)
+			if (m_pOutputPins[NUMCAM]->IsConnected())
 			{
-				for (int col =0; col < 4; col++)
-				{
-					matTran.m[col][row] = pcfgMarker->trans[row][col];
-				}
+				SendARLayoutStartegyData();
 			}
-			
-			matTran *= matW2VS;
-			D3DXVECTOR3 ov1(0,0,0), ov2(pcfgMarker->width,0,0), ov3(pcfgMarker->width, -pcfgMarker->width,0), ov4(0, -pcfgMarker->width, 0);
-			D3DXVec3TransformCoord(&ov1, &ov1, &matTran);
-			D3DXVec3TransformCoord(&ov2, &ov2, &matTran);
-			D3DXVec3TransformCoord(&ov3, &ov3, &matTran);
-			D3DXVec3TransformCoord(&ov4, &ov4, &matTran);
-
-			t[4*2*(nValidDetected-1) + 0] = ov1.x;  t[4*2*(nValidDetected-1) + 1] = ov1.y;
-			t[4*2*(nValidDetected-1) + 2] = ov2.x;  t[4*2*(nValidDetected-1) + 3] = ov2.y;
-			t[4*2*(nValidDetected-1) + 4] = ov3.x;  t[4*2*(nValidDetected-1) + 5] = ov3.y;
-			t[4*2*(nValidDetected-1) + 6] = ov4.x;  t[4*2*(nValidDetected-1) + 7] = ov4.y;
-
-			d[4*2*(nValidDetected-1) + 0] = arV[0][0]/w;  d[4*2*(nValidDetected-1) + 1] = arV[0][1]/h;
-			d[4*2*(nValidDetected-1) + 2] = arV[1][0]/w;  d[4*2*(nValidDetected-1) + 3] = arV[1][1]/h;
-			d[4*2*(nValidDetected-1) + 4] = arV[2][0]/w;  d[4*2*(nValidDetected-1) + 5] = arV[2][1]/h;
-			d[4*2*(nValidDetected-1) + 6] = arV[3][0]/w;  d[4*2*(nValidDetected-1) + 7] = arV[3][1]/h;
 		}
-		if (nValidDetected < 1)
-		{
-			free(t);
-			free(d);
-			return S_FALSE;
-		}
-		CvMat cvPt;
-		CvMat dstPt;
-
-		cvPt = cvMat(nValidDetected*4, 2, CV_32F, t);
-		dstPt = cvMat(nValidDetected*4, 2, CV_32F, d);
-		cvFindHomography(&dstPt, &cvPt, &mat, CV_RANSAC, m_RANSIC_Threshold);
-
-		D3DXMATRIX matHomo;
-		D3DXMatrixIdentity(&matHomo);
-		matHomo._11 = mat.data.fl[0*3 + 0];
-		matHomo._21 = mat.data.fl[0*3 + 1];
-		matHomo._31 = mat.data.fl[0*3 + 2];
-
-		matHomo._12 = mat.data.fl[1*3 + 0];
-		matHomo._22 = mat.data.fl[1*3 + 1];
-		matHomo._32 = mat.data.fl[1*3 + 2];
-
-		matHomo._13 = mat.data.fl[2*3 + 0];
-		matHomo._23 = mat.data.fl[2*3 + 1];
-		matHomo._33 = mat.data.fl[2*3 + 2];
-
-		WarpConfigData sendData; 
-		for (int row =0; row < 4; row++)
-			for (int col =0; col < 4; col++)
-				sendData.warpMat[row][col] = matHomo.m[row][col];
-		
-		IMemAllocator* pAllocator = m_pOutputPins[0]->GetAllocator();
-		CMediaSample* pSendSample = NULL;
-
-		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
-		if (pSendSample == NULL)
-		{
-			free(t);
-			free(d);
-			return S_FALSE;
-		}
-		pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
-		m_pOutputPins[0]->Deliver(pSendSample);
-		if (pSendSample != NULL)
-		{
-			pSendSample->Release();
-			pSendSample = NULL;
-		}
-		
-		free(t);
-		free(d);
-
 	}
+	
 	return S_OK;
 }
+
+HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	int idx = -1;
+	for (int i = 0; i < m_pInputPins.size(); i++)
+	{
+		if (m_pInputPins[i] == pReceivePin)
+		{
+			idx = i;
+		}
+	}
+	if (idx == -1 || idx >= NUMCAM)
+	{
+		return S_FALSE;
+	}
+
+	CMediaSample* pCSample = (CMediaSample*)pSample;
+	ARTagResultData* pARResult = NULL;
+	pCSample->GetPointer((BYTE**)&pARResult);
+	if (pARResult == NULL)
+	{
+		return S_FALSE;
+	}
+	if (pARResult->m_nDetected <= 0)
+	{
+		return S_FALSE;
+	}
+
+	CMuxTransformInputPin* pin = (CMuxTransformInputPin*)pReceivePin;
+
+	float w = pARResult->m_screenW;
+	float h = pARResult->m_screenH;
+
+	WCHAR str[MAX_PATH];
+
+	float s[] = {0,0,0,
+		0,0,0,
+		0,0,0};
+	CvMat mat = cvMat(3,3, CV_32F, &s);
+	float* t = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
+	float* d = (float*)malloc(4*2*pARResult->m_nDetected*sizeof(float));
+	int nValidDetected = 0;
+	memset(t,0,4*2*pARResult->m_nDetected*sizeof(float));
+	memset(d,0,4*2*pARResult->m_nDetected*sizeof(float));
+
+	for (int i = 0; i< pARResult->m_nDetected; i++)
+	{
+		ARMultiEachMarkerInfoT* pcfgMarker = NULL;
+		for (int j =0; j< pARResult->m_pMarkerConfig->marker_num; j++)
+		{
+			if (pARResult->m_pMarkerConfig->marker[j].patt_id == pARResult->m_pDetectedMarks[i].id)
+			{
+				pcfgMarker = &(pARResult->m_pMarkerConfig->marker[j]);
+				break;
+			}	
+		}
+		if (pcfgMarker == NULL)
+		{
+			continue;
+		}
+
+		const ARFloat* arV[4]= {NULL};
+
+		switch (pARResult->m_pDetectedMarks[i].dir)
+		{
+		case 0:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[1];
+			break;
+		case 1:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[0];
+			break;
+		case 2:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
+			break;
+		case 3:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
+			break;
+		default:
+			continue;
+			break;
+		}
+		D3DXVECTOR3* ov = NULL;
+		ARTag2VW(pcfgMarker, ov);
+		if (ov == NULL)
+		{
+			continue;
+		}
+		D3DXVECTOR3 ov_rev[4];
+		ov_rev[0] = ov[0];
+		ov_rev[1] = ov[3];
+		ov_rev[2] = ov[2];
+		ov_rev[3] = ov[1];
+		nValidDetected++;
+
+		t[4*2*(nValidDetected-1) + 0] = ov_rev[0].x;  t[4*2*(nValidDetected-1) + 1] = ov_rev[0].y;
+		t[4*2*(nValidDetected-1) + 2] = ov_rev[1].x;  t[4*2*(nValidDetected-1) + 3] = ov_rev[1].y;
+		t[4*2*(nValidDetected-1) + 4] = ov_rev[2].x;  t[4*2*(nValidDetected-1) + 5] = ov_rev[2].y;
+		t[4*2*(nValidDetected-1) + 6] = ov_rev[3].x;  t[4*2*(nValidDetected-1) + 7] = ov_rev[3].y;
+
+		d[4*2*(nValidDetected-1) + 0] = arV[0][0]/w;  d[4*2*(nValidDetected-1) + 1] = arV[0][1]/h;
+		d[4*2*(nValidDetected-1) + 2] = arV[1][0]/w;  d[4*2*(nValidDetected-1) + 3] = arV[1][1]/h;
+		d[4*2*(nValidDetected-1) + 4] = arV[2][0]/w;  d[4*2*(nValidDetected-1) + 5] = arV[2][1]/h;
+		d[4*2*(nValidDetected-1) + 6] = arV[3][0]/w;  d[4*2*(nValidDetected-1) + 7] = arV[3][1]/h;
+		delete [] ov;
+		ov = NULL;
+	}
+	if (nValidDetected < 1)
+	{
+		CAutoLock lck(&m_csMatCam2VW[idx]); // there is no marker detected.
+		if (m_matCam2VW[idx] != NULL)
+		{
+			delete m_matCam2VW[idx];
+			m_matCam2VW[idx] = NULL;
+		}
+		free(t);
+		free(d);
+		return S_FALSE;
+	}
+	CvMat cvPt;
+	CvMat dstPt;
+
+	cvPt = cvMat(nValidDetected*4, 2, CV_32F, d); //t: virtual space, d: camera space
+	dstPt = cvMat(nValidDetected*4, 2, CV_32F, t);
+	cvFindHomography(&cvPt, &dstPt, &mat, CV_RANSAC, m_RANSIC_Threshold); // camera to virtual space
+	{
+		CAutoLock lck(&m_csMatCam2VW[idx]);
+		if (m_matCam2VW[idx] == NULL)
+		{
+			m_matCam2VW[idx] = new D3DXMATRIX();
+		}
+		D3DXMatrixIdentity(m_matCam2VW[idx]);
+		m_matCam2VW[idx]->_11 = mat.data.fl[0*3 + 0];
+		m_matCam2VW[idx]->_21 = mat.data.fl[0*3 + 1];
+		m_matCam2VW[idx]->_31 = mat.data.fl[0*3 + 2];
+
+		m_matCam2VW[idx]->_12 = mat.data.fl[1*3 + 0];
+		m_matCam2VW[idx]->_22 = mat.data.fl[1*3 + 1];
+		m_matCam2VW[idx]->_32 = mat.data.fl[1*3 + 2];
+
+		m_matCam2VW[idx]->_13 = mat.data.fl[2*3 + 0];
+		m_matCam2VW[idx]->_23 = mat.data.fl[2*3 + 1];
+		m_matCam2VW[idx]->_33 = mat.data.fl[2*3 + 2];
+	}
+	free(t);
+	free(d);
+	return S_OK;
+}
+
+
+
 HRESULT AR2WarpController::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 1 || m_pOutputPins.size() < 1) {
+	if (m_pInputPins.size() < 3 || m_pOutputPins.size() < 4) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -243,27 +271,65 @@ HRESULT AR2WarpController::CreatePins()
 			m_pOutputPins[c] = NULL;
 		}
 		m_pOutputPins.clear();
-
-		CMuxTransformInputPin* pInput = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+		
+		CMuxTransformInputPin* pInput0 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
 			this,              // Owner filter
 			&hr,               // Result code
-			L"AR result");      // Pin name
+			L"AR result0");      // Pin name
 		//  Can't fail
-		
-		CMuxTransformOutputPin* pOutput = new CMuxTransformOutputPin(NAME("Transform output pin"),
+		CMuxTransformInputPin* pInput1 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"AR result1");      // Pin name
+		//  Can't fail
+		CMuxTransformInputPin* pInput2 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"AR result2");      // Pin name
+		//  Can't fail
+
+		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("Transform output pin"),
 			this,            // Owner filter
 			&hr,             // Result code
-			L"Warp config");   // Pin name
-		// Can't fail
+			L"Warp config0");   // Pin name
 
-		m_pInputPins.push_back(pInput);
-		m_pOutputPins.push_back(pOutput);
+		CMuxTransformOutputPin* pOutput1 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"Warp config1");   // Pin name
+		CMuxTransformOutputPin* pOutput2 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"Warp config2");   // Pin name
+		// Can't fail
+		CMuxTransformOutputPin* pOutput3 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"ARLayout config");   // Pin name
+		// Can't fail
+		m_pInputPins.push_back(pInput0);
+		m_pInputPins.push_back(pInput1);
+		m_pInputPins.push_back(pInput2);
+
+		m_pOutputPins.push_back(pOutput0);
+		m_pOutputPins.push_back(pOutput1);
+		m_pOutputPins.push_back(pOutput2);
+		m_pOutputPins.push_back(pOutput3);
 	}
 	return S_OK;
 }
 HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pPin)
 {
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
+	bool bARResult = false;
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (pPin == m_pInputPins[i])
+		{
+			bARResult = true;
+			break;
+		}
+	}
+	if (bARResult)
 	{
 		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ARResult))
 		{
@@ -275,7 +341,16 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 }
 HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 {
-	if (m_pOutputPins.size() >= 1 && m_pOutputPins[0] == pPin)
+	bool bWarpConfigPin = false;
+	for ( int i =0; i< NUMCAM; i++)
+	{
+		if (m_pOutputPins[i] == pPin)
+		{
+			bWarpConfigPin = true;
+			break;
+		}
+	}
+	if (bWarpConfigPin)
 	{
 		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_WarpConfig))
 		{
@@ -283,13 +358,30 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 		}
 		return S_OK;
 	}
-	return S_OK;
+	if (pPin == m_pOutputPins[NUMCAM])
+	{
+		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
+	return E_FAIL;
 }
 HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* pOutPin,
 								 __inout ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr;
-	if (m_pOutputPins.size() >= 1 && m_pOutputPins[0] == pOutPin)
+	bool bWarpConfigPin = false;
+	for ( int i =0; i< NUMCAM; i++)
+	{
+		if (m_pOutputPins[i] == pOutPin)
+		{
+			bWarpConfigPin = true;
+			break;
+		}
+	}
+	if (bWarpConfigPin)
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(ARTagResultData);
@@ -305,7 +397,22 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 				return E_FAIL;
 		}
 	}
-	
+	if (pOutPin == m_pOutputPins[NUMCAM])
+	{
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = sizeof(ARTagResultData);
+
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+			return E_FAIL;
+		}
+	}
 	return S_OK;
 }
 HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
@@ -316,17 +423,34 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	if (iPosition >= 1) { // WATCH OUT !!
 		return VFW_S_NO_MORE_ITEMS;
 	}
-
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
+	bool bWarpConfigPin = false;
+	for ( int i =0; i< NUMCAM; i++)
+	{
+		if (m_pOutputPins[i] == pOutPin)
+		{
+			bWarpConfigPin = true;
+			break;
+		}
+	}
+	if (bWarpConfigPin)
 	{
 		CMediaType myMediaType;
 		myMediaType.SetType(&GUID_MyMediaSample);
 		myMediaType.SetSubtype(&GUID_WarpConfig);
 		myMediaType.SetSampleSize(sizeof(WarpConfigData));
 		*pMediaType = myMediaType;
-		
 		return S_OK;
 	}
+	if (m_pOutputPins[NUMCAM] == pOutPin)// ARLayout Pin
+	{
+		CMediaType myMediaType;
+		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetSubtype(&GUID_ARLayoutStartegyData);
+		myMediaType.SetSampleSize(sizeof(ARLayoutStartegyData));
+		*pMediaType = myMediaType;
+		return S_OK; // not implement yet.
+	}
+
 	return VFW_S_NO_MORE_ITEMS;
 }
 HRESULT AR2WarpController::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
@@ -357,4 +481,141 @@ CCritSec* AR2WarpController::GetReceiveCS(IPin* pPin)
 	{
 		return __super::GetReceiveCS(pPin);
 	}
+}
+
+bool AR2WarpController::ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts)
+{
+	if (pMarker == NULL)
+	{
+		return false;
+	}
+	if (vts != NULL)
+	{
+		delete [] vts;
+		vts = NULL;
+	}
+	vts = new D3DXVECTOR3[4];
+	vts[0] = D3DXVECTOR3(0,0,0); 
+	vts[1] = D3DXVECTOR3(0, -pMarker->width, 0);
+	vts[2] = D3DXVECTOR3(pMarker->width, -pMarker->width, 0);
+	vts[3] = D3DXVECTOR3(pMarker->width, 0, 0);
+
+	D3DXMATRIX matMark, invMatY;
+	D3DXMatrixIdentity(&matMark);
+	D3DXMatrixScaling(&invMatY, 1, -1, 1);
+	
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	matMark = matMark*invMatY;
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&vts[i], &vts[i], &matMark);
+	}
+	return true;
+}
+bool AR2WarpController::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker)
+{
+	if (retRect == NULL || pMarker == NULL)
+	{
+		return false;
+	}
+	D3DXMATRIX matMark;
+	D3DXMatrixIdentity(&matMark);
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	D3DXVECTOR3 v[4] = { D3DXVECTOR3(0,0,0), D3DXVECTOR3(0, -pMarker->width, 0),
+		D3DXVECTOR3(pMarker->width, -pMarker->width, 0), D3DXVECTOR3(pMarker->width, 0, 0)};
+
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&v[i], &v[i], &matMark);
+	}
+
+	float minX = v[0].x; float maxX = v[0].x;
+	float minY = v[0].y; float maxY = v[0].y;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if(v[i].x < minX)
+		{
+			minX = v[i].x;
+		}
+		if (v[i].x > maxX)
+		{
+			maxX = v[i].x;
+		}
+		if (v[i].y < minY)
+		{
+			minY = v[i].y;
+		}
+		if (v[i].y > maxY)
+		{
+			maxY = v[i].y;
+		}
+	}
+	retRect->left = minX; retRect->right = maxX;
+	retRect->top = -maxY; retRect->bottom = -minY;
+	return true;
+}
+bool AR2WarpController::SendWarpConfig(int camIdx)
+{
+	if (camIdx < 0 || camIdx >= NUMCAM)
+	{
+		return false;
+	}
+	WarpConfigData sendData; 
+	{
+		CAutoLock lck(&m_csMatCam2VW[camIdx]);
+		for (int row =0; row < 4; row++)
+			for (int col =0; col < 4; col++)
+				sendData.warpMat[row][col] = m_matCam2VW[camIdx]->m[row][col];
+	}
+	IMemAllocator* pAllocator = m_pOutputPins[0]->GetAllocator();
+	CMediaSample* pSendSample = NULL;
+
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
+	m_pOutputPins[0]->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+	return true;
+}
+bool AR2WarpController::SendARLayoutStartegyData()
+{
+
+
+	return true;
+}
+IPin* AR2WarpController::GetARResultPin(int idx)
+{
+	if (idx < 0 || idx > NUMCAM)
+		return NULL;
+	return m_pInputPins[idx];
+}
+IPin* AR2WarpController::GetWarpConfigPin(int idx)
+{
+	if (idx < 0 || idx > NUMCAM)
+		return NULL;
+	return m_pInputPins[idx];
+}
+IPin* AR2WarpController::GetARLayoutPin()
+{
+	return m_pOutputPins[NUMCAM];
 }
