@@ -89,8 +89,12 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 
 		// Start timing the transform (if PERF is defined)
 		MSR_START(m_idTransform);
+		
+		IMediaSample * pOutSample = NULL;
+		// If no output to deliver to then no point sending us data
+		hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
 
-		hr = Transform(pSample);
+		hr = Transform(pSample, pOutSample);
 
 		// Stop the clock and log it (if PERF is defined)
 		MSR_STOP(m_idTransform);
@@ -102,7 +106,7 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 			// sample should not be delivered; we only deliver the sample if it's
 			// really S_OK (same as NOERROR, of course.)
 			if (hr == NOERROR) {
-				hr = m_pOutputPins[0]->Deliver(pSample);
+				hr = m_pOutputPins[0]->Deliver(pOutSample);
 				m_bSampleSkipped = FALSE;	// last thing no longer dropped
 			} else {
 				// S_FALSE returned from Transform is a PRIVATE agreement
@@ -110,7 +114,11 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 				// from Receive() means that this is the end of the stream and no more data should
 				// be sent.
 				if (S_FALSE == hr) {
-
+					if (pOutSample != NULL)
+					{	
+						pOutSample->Release();
+						pOutSample = NULL;
+					}
 					//  Release the sample before calling notify to avoid
 					//  deadlocks if the sample holds a lock on the system
 					//  such as DirectDraw buffers do
@@ -124,7 +132,11 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 				}
 			}
 		}
-
+		if (pOutSample != NULL)
+		{	
+			pOutSample->Release();
+			pOutSample = NULL;
+		}
 		// release the output buffer. If the connected pin still needs it,
 		// it will have addrefed it itself.
 	
@@ -237,20 +249,21 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 	}
 	return S_OK;
 }
-HRESULT ARTagDSFilter::Transform( IMediaSample *pIn)
+HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
 	if (m_pD3DDisplay != NULL)
 	{
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
-		
-		return DoTransform(pIn, &inputMT);
+		CMediaType outputMT = m_pOutputPins[0]->CurrentMediaType();
+		return DoTransform(pIn, &inputMT, pOut, &outputMT);
 	}
 	return S_OK;
 }
 
 
-HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType )
+HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
+								   IMediaSample *pOut, const CMediaType* pOutType )
 {
 
 	HRESULT hr = S_OK;
@@ -338,7 +351,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType 
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
 		ResetRenderTarget();
 		CopyRenderTarget2OutputTexture();
-		CopyOutputTexture2OutputData(pIn, pInType, true);
+		CopyOutputTexture2OutputData(pOut, pOutType, true);
 	}
 	else
 	{
@@ -1025,7 +1038,9 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 				idx++;
 				ARMarkers[idx].patt_id = idx;
 				ARMarkers[idx].visible = 1;
-				ARMarkers[idx].width = markerWidth;					
+				ARMarkers[idx].width = markerWidth;	
+				ARMarkers[idx].center[0] = markerWidth * 0.5;
+				ARMarkers[idx].center[1] = -markerWidth * 0.5;
 				ARMarkers[idx].trans[0][0] = 1.0; ARMarkers[idx].trans[0][1] = 0.0; ARMarkers[idx].trans[0][2] = 0.0; ARMarkers[idx].trans[0][3] = 0 + ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
 				ARMarkers[idx].trans[1][0] = 0.0; ARMarkers[idx].trans[1][1] = 1.0; ARMarkers[idx].trans[1][2] = 0.0; ARMarkers[idx].trans[1][3] = 0 - ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);
 				ARMarkers[idx].trans[2][0] = 0.0; ARMarkers[idx].trans[2][1] = 0.0; ARMarkers[idx].trans[2][2] = 1.0; ARMarkers[idx].trans[2][3] = 0;	

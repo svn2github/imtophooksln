@@ -77,8 +77,9 @@ protected:
 	//for Override D3DTransformFilterBase
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
-	virtual HRESULT DoTransform(IMediaSample *pIn, const CMediaType* pInType);
-	virtual HRESULT Transform( IMediaSample *pIn);
+	virtual HRESULT DoTransform(IMediaSample *pIn, const CMediaType* pInType,
+		IMediaSample *pOut, const CMediaType* pOutType);
+	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();
