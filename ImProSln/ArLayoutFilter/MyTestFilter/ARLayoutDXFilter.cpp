@@ -83,19 +83,44 @@ HRESULT ARLayoutDXFilter::CreatePins()
 		}
 		m_pStreamPins.clear();
 
+
+		CMuxTransformInputPin* pInput0 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"config");      // Pin name
+
 		CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
-			&hr,              // Owner filter
-			this,               // Result code
-			L"Layout");      // Pin name
+			&hr,              
+			this,               
+			L"Layout");      
 
 		CMuxTransformStream* pOutput1 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
-			&hr,              // Owner filter
-			this,               // Result code
-			L"markinfo");      // Pin name
-
+			&hr,              
+			this,               
+			L"markinfo");     
+		m_pInputPins.push_back(pInput0);
 		m_pStreamPins.push_back(pOutput0);
 		m_pStreamPins.push_back(pOutput1);
 	}
+	return S_OK;
+}
+HRESULT ARLayoutDXFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	if (m_pInputPins.size() > 0 && pReceivePin == m_pInputPins[0])
+	{
+		ReceiveConfig(pSample, pReceivePin);
+	}
+	return S_OK;
+}
+HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	ARLayoutStartegyData* sData = NULL;
+	pSample->GetPointer((BYTE**)&sData);
+	if (sData == NULL)
+	{
+		return S_FALSE;
+	}
+	DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
@@ -182,6 +207,21 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 	}
 	return E_FAIL;
 }
+
+HRESULT ARLayoutDXFilter::CheckInputType(const CMediaType* mtIn, const IPin* pPin)
+{
+	if (m_pInputPins.size() > 0 && m_pInputPins[0] == pPin)
+	{
+		CheckPointer(mtIn, E_POINTER);
+		if (IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) && 
+			IsEqualGUID(*mtIn->Subtype(), GUID_ARLayoutStartegyData))
+		{
+			return NOERROR;
+		}
+	}
+	return E_FAIL;
+}
+
 HRESULT ARLayoutDXFilter::DecideBufferSize(
 	IMemAllocator * pAlloc, const IPin* pOutPin,
 	__inout ALLOCATOR_PROPERTIES *pProp)
@@ -410,12 +450,14 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	}
 	if (numCamRect > 0 && camRects != NULL)
 	{
+
 		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
 		{
 			camRects[i].left = min((float)1.0, max((float)0.0, camRects[i].left));
 			camRects[i].right = min((float)1.0, max((float)0.0, camRects[i].right));
 			camRects[i].top = min((float)1.0, max((float)0.0, camRects[i].top));
 			camRects[i].bottom = min((float)1.0, max((float)0.0, camRects[i].bottom));
+			
 		}
 
 

@@ -599,7 +599,63 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 }
 bool AR2WarpController::SendARLayoutStartegyData()
 {
+	IMemAllocator* pAllocator = m_pOutputPins[NUMCAM]->GetAllocator();
+	CMediaSample* pSendSample = NULL;
 
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	ARLayoutStartegyData* pData = new ARLayoutStartegyData();
+
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (m_matCam2VW[i] == NULL)
+			continue;
+		pData->numCamView++;
+	}
+	pData->camViews = new fRECT[NUMCAM];
+	memset((void*)pData->camViews, 0, sizeof(fRECT)*pData->numCamView);
+
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (m_matCam2VW[i] == NULL)
+			continue;
+		D3DXVECTOR3 lt(0,0,0), lb(0,1,0), rb(1,1,0), rt(1,0,0);
+
+		D3DXVec3TransformCoord(&lt, &lt, m_matCam2VW[i]);
+		D3DXVec3TransformCoord(&lb, &lb, m_matCam2VW[i]);
+		D3DXVec3TransformCoord(&rb, &rb, m_matCam2VW[i]);
+		D3DXVec3TransformCoord(&rt, &rt, m_matCam2VW[i]);
+
+		pData->camViews[i].left = min(min(min(lt.x, lb.x), rb.x), rt.x); 
+		pData->camViews[i].right = max(max(max(lt.x, lb.x), rb.x), rt.x);
+		pData->camViews[i].top = min(min(min(lt.y, lb.y), rb.y), rt.y); 
+		pData->camViews[i].bottom = max(max(max(lt.y, lb.y), rb.y), rt.y); 
+
+	}
+	pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
+	WCHAR str[MAX_PATH];
+	/*if (pData->numCamView > 0)
+	{
+		swprintf_s(str, MAX_PATH, L"@@@@ l = %.2f, r = %.2f, t = %.2f, b = %.2f \n", pData->camViews[0].left, 
+			pData->camViews[0].right, pData->camViews[0].top,
+			pData->camViews[0].bottom);
+		OutputDebugStringW(str);
+	}*/
+	m_pOutputPins[NUMCAM]->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+
+	if (pData != NULL)
+	{
+		delete pData;
+		pData = NULL;
+	}
 
 	return true;
 }

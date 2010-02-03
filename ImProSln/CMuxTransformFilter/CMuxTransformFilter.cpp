@@ -562,26 +562,23 @@ CMuxTransformInputPin::SetMediaType(const CMediaType* mtIn)
 
 HRESULT CMuxTransformInputPin::CheckStreaming()
 {
-	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
-	if (!m_pTransformFilter->IsAnyOutPinConnect()) {
-		return VFW_E_NOT_CONNECTED;
-	} else {
-		//  Shouldn't be able to get any data if we're not connected!
-		ASSERT(IsConnected());
 
-		//  we're flushing
-		if (m_bFlushing) {
-			return S_FALSE;
-		}
-		//  Don't process stuff in Stopped state
-		if (IsStopped()) {
-			return VFW_E_WRONG_STATE;
-		}
-		if (m_bRunTimeError) {
-			return VFW_E_RUNTIME_ERROR;
-		}
-		return S_OK;
+	//  Shouldn't be able to get any data if we're not connected!
+	ASSERT(IsConnected());
+
+	//  we're flushing
+	if (m_bFlushing) {
+		return S_FALSE;
 	}
+	//  Don't process stuff in Stopped state
+	if (IsStopped()) {
+		return VFW_E_WRONG_STATE;
+	}
+	if (m_bRunTimeError) {
+		return VFW_E_RUNTIME_ERROR;
+	}
+	return S_OK;
+
 }
 
 // =================================================================
@@ -609,11 +606,7 @@ CMuxTransformInputPin::BeginFlush(void)
 {
 	CAutoLock lck(&m_pTransformFilter->m_csFilter);
 	//  Are we actually doing anything?
-	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
-	if (!IsConnected() ||
-		!m_pTransformFilter->IsAnyOutPinConnect()) {
-			return VFW_E_NOT_CONNECTED;
-	}
+
 	HRESULT hr = CBaseInputPin::BeginFlush();
 	if (FAILED(hr)) {
 		return hr;
@@ -631,8 +624,7 @@ CMuxTransformInputPin::EndFlush(void)
 	CAutoLock lck(&m_pTransformFilter->m_csFilter);
 	//  Are we actually doing anything?
 	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
-	if (!IsConnected() ||
-		!m_pTransformFilter->IsAnyOutPinConnect()) {
+	if (!IsConnected()){
 			return VFW_E_NOT_CONNECTED;
 	}
 

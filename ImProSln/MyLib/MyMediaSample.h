@@ -67,4 +67,19 @@ public:
 	unsigned int numCamView;
 	fRECT* fingerRects;
 	unsigned int numFingers;
+	ARLayoutStartegyData() : camViews(NULL), numCamView(0), fingerRects(NULL), numFingers(0)
+	{	}
+	~ARLayoutStartegyData()
+	{
+		if (camViews != NULL)
+		{
+			delete [] camViews;
+			camViews = NULL;
+		}
+		if (fingerRects != NULL)
+		{
+			delete[] fingerRects;
+			fingerRects = NULL;
+		}
+	}
 };

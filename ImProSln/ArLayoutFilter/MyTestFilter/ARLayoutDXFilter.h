@@ -26,9 +26,11 @@ public:
 
 	//Derive from CMuxTransformFilter
 	virtual HRESULT CreatePins();
+	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin);
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType);
 	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin);
+	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin);
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
@@ -53,4 +55,5 @@ public:
 private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);
+	HRESULT ReceiveConfig(IMediaSample *pSample, const IPin* pReceivePin);
 };

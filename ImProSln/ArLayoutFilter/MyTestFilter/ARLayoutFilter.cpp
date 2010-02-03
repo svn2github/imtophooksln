@@ -291,7 +291,6 @@ HRESULT ARLayoutFilter::CreatePins()
 			delete m_pStreamPins[c];
 			m_pStreamPins[c] = NULL;
 		}
-		m_pStreamPins.clear();
 	
 		CMuxTransformStream* pOutput0 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
 				&hr,              // Owner filter
