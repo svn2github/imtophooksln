@@ -24,6 +24,7 @@ public:
 	//implement CMuxTransformFilter Interface
 	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveARResult(IMediaSample *pSample, const IPin* pReceivePin);
+	virtual HRESULT ReceiveTouchResult(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT CreatePins();
 	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin);
 	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin);
@@ -39,8 +40,9 @@ public:
 protected:
 	double  m_RANSIC_Threshold;
 	CCritSec m_csMatCam2VW[NUMCAM];
+	CCritSec m_csFGList;
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
-
+	ForegroundRegion* m_pFGList;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
 	virtual bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);

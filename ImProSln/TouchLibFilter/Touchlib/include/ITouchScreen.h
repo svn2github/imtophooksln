@@ -9,8 +9,9 @@
 #include "vector2d.h"
 #include "mesh2d.h"
 #include <list>
+#include <vector>
 #include "cv.h"
-
+using namespace std;
 namespace touchlib
 {
 	#define GRID_X	4
@@ -21,6 +22,7 @@ namespace touchlib
 	class  ITouchScreen
 	{
 	public:
+		virtual std::vector<CvRect>* GetForeground() = 0;
 		virtual bool showFilterOutputs(bool bShow) = 0;
 		//! A client registers itself as a listener for touch events
 		virtual void registerListener(ITouchListener *listener) = 0;

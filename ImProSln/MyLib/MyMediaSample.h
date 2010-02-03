@@ -22,6 +22,10 @@ DEFINE_GUID(GUID_FORMATTYPE_D3DXTEXTURE9DESC,
 DEFINE_GUID(GUID_ARLayoutStartegyData, 
 			0x7b95c432, 0xc7ce, 0x48a1, 0x91, 0x67, 0x94, 0xe6, 0x87, 0xa2, 0x82, 0xb);
 
+// {DE2F3A15-A44B-4729-B6CF-90131D4F14A2}
+DEFINE_GUID(GUID_ForegroundRegion_Data, 
+			0xde2f3a15, 0xa44b, 0x4729, 0xb6, 0xcf, 0x90, 0x13, 0x1d, 0x4f, 0x14, 0xa2);
+
 class WarpConfigData
 {
 public:
@@ -80,6 +84,23 @@ public:
 		{
 			delete[] fingerRects;
 			fingerRects = NULL;
+		}
+	}
+};
+
+class ForegroundRegion
+{
+public:
+	fRECT* foregroundRects;
+	unsigned int numForeground;
+	ForegroundRegion() : foregroundRects(NULL), numForeground(0)
+	{	}
+	~ForegroundRegion()
+	{
+		if (foregroundRects != NULL)
+		{
+			delete[] foregroundRects;
+			foregroundRects = NULL;
 		}
 	}
 };

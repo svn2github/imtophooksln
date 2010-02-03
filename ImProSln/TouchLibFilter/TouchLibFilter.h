@@ -58,6 +58,9 @@ protected:
 	virtual bool ShowConfigWindow(bool bShow);
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
 	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
+	HRESULT SendForegroundSample();
+
+
 	CMuxTransformInputPin* GetConnectedInputPin();
 	vector<ITouchListener*> m_listenerList;
 	CCritSec m_csListenerList;

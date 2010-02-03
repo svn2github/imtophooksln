@@ -31,6 +31,11 @@ namespace touchlib
 
 // ITouchScreen
 		//
+		virtual std::vector<CvRect>* GetForeground()
+		{	if (tracker == NULL)
+				return NULL;		
+			return tracker->GetForeground();
+		}
 		virtual bool showFilterOutputs(bool bShow);
 
 		//! A client registers itself as a listener for touch events

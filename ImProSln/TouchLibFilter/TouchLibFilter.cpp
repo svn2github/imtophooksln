@@ -97,15 +97,22 @@ HRESULT TouchLibFilter::CreatePins()
 			L"bg subbed");      // Pin name
 		
 
-		CMuxTransformOutputPin* pOutput = new CMuxTransformOutputPin(NAME("Transform output pin"),
+		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("Transform output pin"),
 			this,            // Owner filter
 			&hr,             // Result code
 			L"output");   // Pin name
 		// Can't fail
-	
+		CMuxTransformOutputPin* pOutput1 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"foreground");   // Pin name
+		// Can't fail
+
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
-		m_pOutputPins.push_back(pOutput);
+		m_pOutputPins.push_back(pOutput0);
+		m_pOutputPins.push_back(pOutput1);
+
 	}
 	return S_OK;
 }
@@ -143,7 +150,15 @@ HRESULT TouchLibFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 			return NOERROR;
 		}
 	}
-
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	{
+		CheckPointer(pmt, E_POINTER);
+		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
 	return E_FAIL;
 }
 
@@ -220,8 +235,7 @@ HRESULT TouchLibFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 	{
 		return S_FALSE;
 	}
-	if ((m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin) || 
-		(m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin))
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin) 
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
@@ -229,6 +243,22 @@ HRESULT TouchLibFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = inputMT.GetSampleSize();
 
+
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+	}
+	else if	(m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = sizeof(ForegroundRegion);
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -266,10 +296,14 @@ HRESULT TouchLibFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 	}
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[1]->CurrentMediaType();
-		*pMediaType = inputMT;
+		CMediaType mt;
+		mt.SetType(&GUID_MyMediaSample);
+		mt.SetSubtype(&GUID_ForegroundRegion_Data);
+		mt.SetSampleSize(sizeof(ForegroundRegion));
+		*pMediaType = mt;
 		return S_OK;
 	}
+
 	return VFW_S_NO_MORE_ITEMS;
 }
 
@@ -402,6 +436,7 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	m_pTouchScreen->processOnce(pSrc);
 	m_pTouchScreen->getEvents();
 	
+	
 	cvCopy(pSrc, pDest);
 
 	if (pSrc != NULL)
@@ -455,7 +490,10 @@ HRESULT TouchLibFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 	MSR_START(m_idTransform);
 
 	hr = TransformInput0(pSample, pOutSample);
-
+	if (SUCCEEDED(hr))
+	{
+		SendForegroundSample();
+	}
 	// Stop the clock and log it (if PERF is defined)
 	MSR_STOP(m_idTransform);
 
@@ -495,7 +533,53 @@ HRESULT TouchLibFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 	return S_OK;
 
 }
+HRESULT TouchLibFilter::SendForegroundSample()
+{
+	if (m_pOutputPins.size() <= 1 || !m_pOutputPins[1]->IsConnected())
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = S_OK;
+	vector<CvRect>* fgList = m_pTouchScreen->GetForeground();
+	IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
+	CMediaSample* pSendSample = NULL;
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_pInputPins[0]->CurrentMediaType().pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
+	ForegroundRegion sendData;
+	if ( fgList->size() <= 0)
+	{
+		sendData.foregroundRects = NULL;
+		sendData.numForeground = 0;	
+	}
+	else
+	{
+		sendData.numForeground = fgList->size();
+		sendData.foregroundRects = new fRECT[fgList->size()];
+		memset((void*)sendData.foregroundRects, 0, fgList->size()*sizeof(fRECT));
+		for (int i =0; i< fgList->size(); i++)
+		{
+			sendData.foregroundRects[i].left = (float)fgList->at(i).x / (float)bitHeader.biWidth;
+			sendData.foregroundRects[i].top = (float)fgList->at(i).y / (float)bitHeader.biHeight;
+			sendData.foregroundRects[i].right = (fgList->at(i).x + fgList->at(i).width) /(float)bitHeader.biWidth;
+			sendData.foregroundRects[i].bottom = (fgList->at(i).y + fgList->at(i).height) /(float)bitHeader.biHeight;
+		}
+	}
+	hr = pSendSample->SetPointer((BYTE*)&sendData, sizeof(ForegroundRegion));
+	hr = m_pOutputPins[1]->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+	return S_OK;
+
+}
 void TouchLibFilter::registerListener(ITouchListener *listener)
 {
 	CAutoLock lck(&m_csListenerList);

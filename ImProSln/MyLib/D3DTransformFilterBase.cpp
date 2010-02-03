@@ -72,7 +72,6 @@ HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputTexture()
 	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
 	D3DSURFACE_DESC surRenderDesc, surOutDesc;
 	m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
-	//hr = pDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pRenderTarget );
 	m_pRenderTarget->GetSurfaceLevel(0, &pRenderTarget);
 	pRenderTarget->GetDesc(&surRenderDesc);
 	pOutSurface->GetDesc(&surOutDesc);

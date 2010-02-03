@@ -13,6 +13,7 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	{
 		m_matCam2VW[i] = NULL;
 	}
+	m_pFGList = NULL;
 }
 AR2WarpController::~AR2WarpController()
 {
@@ -23,6 +24,11 @@ AR2WarpController::~AR2WarpController()
 			delete m_matCam2VW[i];
 			m_matCam2VW[i] = NULL;
 		}
+	}
+	if (m_pFGList != NULL)
+	{
+		delete m_pFGList;
+		m_pFGList = NULL;
 	}
 }
 
@@ -90,7 +96,11 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			}
 		}
 	}
-	
+	else if (m_pInputPins.size() >= NUMCAM+1 && m_pInputPins[NUMCAM] == pReceivePin)
+	{
+		hr = ReceiveTouchResult(pSample, pReceivePin);
+		SendARLayoutStartegyData();
+	}
 	return S_OK;
 }
 
@@ -253,12 +263,38 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	return S_OK;
 }
 
+HRESULT AR2WarpController::ReceiveTouchResult(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	CAutoLock lck(&m_csFGList);
+	CMediaSample* pCSample = (CMediaSample*)pSample;
+	ForegroundRegion* pTouchResult = NULL;
+	pCSample->GetPointer((BYTE**)&pTouchResult);
+	if (m_pFGList != NULL)
+	{
+		delete m_pFGList;
+		m_pFGList = NULL;
+	}
+	m_pFGList = new ForegroundRegion();
+	if (pTouchResult->numForeground <= 0)
+	{
+		m_pFGList->foregroundRects = NULL;
+		m_pFGList->numForeground = 0;
+	}
+	else
+	{
+		m_pFGList->foregroundRects = new fRECT[pTouchResult->numForeground];
+		m_pFGList->numForeground = pTouchResult->numForeground;
+		memcpy((void*)m_pFGList->foregroundRects, (void*)pTouchResult->foregroundRects, 
+			sizeof(fRECT)* pTouchResult->numForeground);
 
+	}
+	return S_OK;
+}
 
 HRESULT AR2WarpController::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 3 || m_pOutputPins.size() < 4) {
+	if (m_pInputPins.size() < (NUMCAM + 1) || m_pOutputPins.size() < 4) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -287,6 +323,11 @@ HRESULT AR2WarpController::CreatePins()
 			&hr,               // Result code
 			L"AR result2");      // Pin name
 		//  Can't fail
+		CMuxTransformInputPin* pInput3 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"touch result");      // Pin name
+		//  Can't fail
 
 		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("Transform output pin"),
 			this,            // Owner filter
@@ -310,11 +351,13 @@ HRESULT AR2WarpController::CreatePins()
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
 		m_pInputPins.push_back(pInput2);
+		m_pInputPins.push_back(pInput3);
 
 		m_pOutputPins.push_back(pOutput0);
 		m_pOutputPins.push_back(pOutput1);
 		m_pOutputPins.push_back(pOutput2);
 		m_pOutputPins.push_back(pOutput3);
+
 	}
 	return S_OK;
 }
@@ -332,6 +375,14 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 	if (bARResult)
 	{
 		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ARResult))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
+	if (((CMuxTransformInputPin*)pPin) == m_pInputPins.at(NUMCAM) )
+	{
+		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
 		{
 			return E_INVALIDARG;
 		}
@@ -608,7 +659,20 @@ bool AR2WarpController::SendARLayoutStartegyData()
 		return S_FALSE;
 	}
 	ARLayoutStartegyData* pData = new ARLayoutStartegyData();
+	//////ForeGround Area///////////////
+	{
+		CAutoLock lck(&m_csFGList);
+		if (m_pFGList != NULL && m_pFGList->numForeground > 0)
+		{
+			pData->numFingers = m_pFGList->numForeground;
+			pData->fingerRects = new fRECT[pData->numFingers];
+			memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
+			memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
+				sizeof(fRECT)*pData->numFingers);
+		}
+	}
 
+	//////Camera looking Area///////////
 	for (int i =0; i < NUMCAM; i++)
 	{
 		if (m_matCam2VW[i] == NULL)
@@ -617,9 +681,10 @@ bool AR2WarpController::SendARLayoutStartegyData()
 	}
 	pData->camViews = new fRECT[NUMCAM];
 	memset((void*)pData->camViews, 0, sizeof(fRECT)*pData->numCamView);
-
+	
 	for (int i =0; i < NUMCAM; i++)
 	{
+		CAutoLock lck(&(m_csMatCam2VW[i]));
 		if (m_matCam2VW[i] == NULL)
 			continue;
 		D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
@@ -638,9 +703,9 @@ bool AR2WarpController::SendARLayoutStartegyData()
 		pData->camViews[i].right = max(max(max(lt.x, lb.x), rb.x), rt.x);
 		pData->camViews[i].top = min(min(min(lt.y, lb.y), rb.y), rt.y); 
 		pData->camViews[i].bottom = max(max(max(lt.y, lb.y), rb.y), rt.y); 
-		
-
 	}
+	
+	////////////////////////////
 	pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
 	WCHAR str[MAX_PATH];
 	

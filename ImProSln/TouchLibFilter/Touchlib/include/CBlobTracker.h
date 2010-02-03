@@ -137,7 +137,8 @@ namespace touchlib
 		void findBlobs(BwImage &img);
 		void trackBlobs();
 		void gatherEvents();
-
+		std::vector<CvRect>* GetForeground()
+		{	return &foregroundLists;	};
 	private:
 		inline void permute2(int k);
 		inline bool checkValid(int start);
@@ -160,7 +161,7 @@ namespace touchlib
 		std::vector<std::vector<CFinger> > history;
 		std::vector<CBlob> blobList;
 		std::vector<CFinger> current;
-
+		std::vector<CvRect> foregroundLists;
 #ifdef WIN32
 #pragma warning( default : 4251 )
 #endif
