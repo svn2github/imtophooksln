@@ -268,33 +268,41 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 
 	HRESULT hr = S_OK;
 	BYTE* pInData = NULL;
-	
+	BYTE* pOutData = NULL;
 	int numDetected = 0;
 	ARMarkerInfo* markinfos = NULL;
 
 	hr = pIn->GetPointer(&pInData);
 	if (FAILED(hr))
 		return hr;
-
+	hr = pOut->GetPointer(&pOutData);
+	if (FAILED(hr))
+		return hr;
 
 	GUID guidSubType = *pInType->Subtype();
 	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pInType->pbFormat;
 	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 	IplImage* img = NULL;
+	IplImage* imgOut = NULL;
+
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 	{
 		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
+		imgOut = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 3);
 	}
 	else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32))
 	{
 		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
+		imgOut = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
 	}
 
 	img->imageData = (char*)pInData;
-	cvFlip(img, NULL, 0);
+	imgOut->imageData = (char*)pOutData;
+	cvCopy(img, imgOut);
+	cvFlip(imgOut, NULL, 0);
 	if (m_ARTracker != NULL)
 	{
-		numDetected = m_ARTracker->calc(pInData);
+		numDetected = m_ARTracker->calc(pOutData);
 		if (numDetected > 0)
 		{
 			CAutoLock lck(&m_csARTracker);
@@ -345,7 +353,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	}
 	if (m_bDrawTag)
 	{
-		CopyInputImage2InputTexture(pIn, pInType, false);
+		CopyInputImage2InputTexture(pOut, pOutType, false);
 		SetRenderTarget();
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
@@ -355,13 +363,17 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	}
 	else
 	{
-		cvFlip(img, NULL, 0);
-		
+		cvFlip(imgOut, NULL, 0);
 	}
 	if (img != NULL)
 	{
 		cvReleaseImageHeader(&img);
 		img = NULL;
+	}
+	if (imgOut != NULL)
+	{
+		cvReleaseImageHeader(&imgOut);
+		imgOut = NULL;
 	}
 	if (markinfos != NULL)
 	{
