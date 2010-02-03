@@ -10,10 +10,6 @@
 
 using namespace std;
 /*
-#pragma comment(lib, "cv.lib")
-#pragma comment(lib, "highgui.lib")
-#pragma comment(lib, "cxcore.lib")
-#pragma comment(lib, "cvaux.lib")
 */
 
 class BackGroundMapping{
@@ -37,6 +33,8 @@ public:
 	IplImage*backgroundImg;
 	IplImage*resultImg;
 	IplImage*foregroundImg;
+	IplImage*binarySrc;
+
 	IplConvKernel* kernelElement;
 
 	int BGthreshold;

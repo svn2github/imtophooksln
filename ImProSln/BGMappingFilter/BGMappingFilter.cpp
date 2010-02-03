@@ -157,9 +157,8 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	pSample->GetPointer(&backgroundByteData);
 	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, 4);
 	backgroundtmp->imageData = (char*)backgroundByteData;
-	cvCopy(backgroundIplImg,backgroundtmp);
-	//BG->setBackground(backgroundIplImg);
-
+	cvResize(backgroundtmp,backgroundIplImg);
+	BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 	return S_OK;
 }
@@ -334,6 +333,8 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 
 		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
 		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
+		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
+
 		return S_OK;
 
 	}
@@ -356,7 +357,6 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		{
 			channel = 4;
 		}
-		backgroundIplImg = cvCreateImage(cvSize(layoutW, layoutH), 8, channel);
 		return S_OK;
 	}
 	return S_OK;
@@ -391,7 +391,7 @@ HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	cvReleaseImageHeader(&camtmp);	
 
 	foregroundIplImg = BG->getForeground(cameraInputIplImg);
-	memcpy(foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
+	memcpy (foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
 	return S_OK;
 }
 
@@ -412,8 +412,9 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputMT.GetSampleSize();
+		pProp->cbBuffer = inputMT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -427,21 +428,6 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 		}
 	}
 
-	else if (m_pOutputPins.size() >= 2 && m_pOutputPins[1] == pOutPin)
-	{
-		pProp->cBuffers = 1;
-
-		ALLOCATOR_PROPERTIES Actual;
-		hr = pAlloc->SetProperties(pProp,&Actual);
-		if (FAILED(hr)) {
-			return hr;
-		}
-		ASSERT( Actual.cBuffers == 1 );
-		if (pProp->cBuffers > Actual.cBuffers ||
-			pProp->cbBuffer > Actual.cbBuffer) {
-				return E_FAIL;
-		}
-	}
 	return NOERROR;
 }
 
@@ -461,6 +447,7 @@ HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inou
 	{
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
+		
 		*pMediaType = inputMT;
 		return S_OK;
 	}
