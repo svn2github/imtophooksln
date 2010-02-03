@@ -457,10 +457,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			camRects[i].right = min((float)1.0, max((float)0.0, camRects[i].right));
 			camRects[i].top = min((float)1.0, max((float)0.0, camRects[i].top));
 			camRects[i].bottom = min((float)1.0, max((float)0.0, camRects[i].bottom));
-			
 		}
-
-
 
 		for (int i = 0; i < numCamRect; i++) // for each cam view
 		{
