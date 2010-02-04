@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include "HomoWarpFilterApp.h"
 #include "HomoWarpFilter.h"
 #include "HomoWarpMFCPropertyPage.h"
 
@@ -10,7 +11,7 @@
 // CHomoWarpMFCPropertyPage dialog
 
 IMPLEMENT_DYNAMIC(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
-
+extern CHomoWarpFilterApp theApp;
 
 void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
@@ -20,6 +21,7 @@ void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edRT, m_edRT);
 	DDX_Control(pDX, IDC_edLB, m_edLB);
 	DDX_Control(pDX, IDC_edRB, m_edRB);
+	DDX_Control(pDX, IDC_EDPath, m_edPath);
 }
 
 
@@ -34,6 +36,9 @@ BEGIN_MESSAGE_MAP(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 	ON_EN_CHANGE(IDC_edRT, &CHomoWarpMFCPropertyPage::OnEnChangeedrt)
 	ON_EN_CHANGE(IDC_edLB, &CHomoWarpMFCPropertyPage::OnEnChangeedlb)
 	ON_EN_CHANGE(IDC_edRB, &CHomoWarpMFCPropertyPage::OnEnChangeedrb)
+	ON_BN_CLICKED(IDC_btnBrowse, &CHomoWarpMFCPropertyPage::OnBnClickedbtnbrowse)
+	ON_BN_CLICKED(IDC_BUTTON3, &CHomoWarpMFCPropertyPage::OnBnClickedButton3)
+	ON_BN_CLICKED(IDC_BTN_LOAD, &CHomoWarpMFCPropertyPage::OnBnClickedBtnLoad)
 END_MESSAGE_MAP()
 
 
@@ -264,7 +269,10 @@ HRESULT CHomoWarpMFCPropertyPage::OnActivate(void)
 		return S_OK;
 	}
 	::EnableWindow(m_Dlg, TRUE);
+	CString path;
+	path = theApp.GetProfileString(L"MySetting",L"HomoWarpConfigPath", L"");
 
+	m_edPath.SetWindowText(path);
 	m_slrLTx = ::GetDlgItem(m_Dlg, IDC_SLIDER_LTx);
 	m_slrLTy = ::GetDlgItem(m_Dlg, IDC_SLIDER_LTy);
 	m_slrLBx = ::GetDlgItem(m_Dlg, IDC_SLIDER_LBx);
@@ -357,4 +365,59 @@ void CHomoWarpMFCPropertyPage::OnEnChangeedlb()
 void CHomoWarpMFCPropertyPage::OnEnChangeedrb()
 {
 	SetDirty();
+}
+
+void CHomoWarpMFCPropertyPage::OnBnClickedbtnbrowse()
+{
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
+	OPENFILENAME openfn;
+	WCHAR cFname[256];
+	WCHAR szFilterOpn[]=TEXT("Config files (*.txt)\0*.txt\0All files (*.*)\0*.*\0\0");
+	DWORD nFilterIndex=1;
+	cFname[0]=0x00;
+	ZeroMemory(&openfn, sizeof(openfn));
+	openfn.hwndOwner=GetActiveWindow()->GetSafeHwnd();
+	openfn.lpstrFile=cFname;
+	openfn.nMaxFile=sizeof(cFname);
+	openfn.lStructSize=sizeof(openfn);
+	openfn.lpstrFilter=szFilterOpn; 
+	openfn.nFilterIndex=nFilterIndex;
+	//openfn.lpstrInitialDir=szCurDir;
+	openfn.Flags= OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
+	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
+	if (!hr)
+	{
+		return ;
+	}
+	m_edPath.SetWindowText(openfn.lpstrFile);
+}
+
+void CHomoWarpMFCPropertyPage::OnBnClickedButton3()
+{
+	CString path;
+
+	m_edPath.GetWindowText(path);
+	bool ret = m_pFilter->SaveConfigToFile((WCHAR*)(LPCWSTR)path);
+	if (!ret)
+	{
+		MessageBox(L"OpenFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"HomoWarpConfigPath",path);
+}
+
+void CHomoWarpMFCPropertyPage::OnBnClickedBtnLoad()
+{
+	CString path;
+	m_edPath.GetWindowText(path);
+	bool ret = m_pFilter->LoadConfigFromFile((WCHAR*)(LPCWSTR)path);
+	if (!ret)
+	{
+		MessageBox(L"LoadFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"HomoWarpConfigPath",path);
+	GetSetting();
 }

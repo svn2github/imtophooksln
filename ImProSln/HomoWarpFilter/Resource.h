@@ -16,8 +16,12 @@
 #define IDC_edLT                        7016
 #define IDC_edRT                        7017
 #define IDC_edLB                        7018
-#define IDC_edLB2                       7019
 #define IDC_edRB                        7019
+
+#define IDC_EDPath                      7020
+#define IDC_btnBrowse                   7021
+#define IDC_BTN_LOAD                    7022
+#define IDC_BUTTON3                     7023
 
 // Next default values for new objects
 // 
@@ -25,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        7001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         7017
+#define _APS_NEXT_CONTROL_VALUE         7024
 #define _APS_NEXT_SYMED_VALUE           7012
 #endif
 #endif

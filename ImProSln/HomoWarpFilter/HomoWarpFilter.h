@@ -47,6 +47,8 @@ public:
 
 	virtual bool GetIsFlipY() { return m_bFlipY;};
 	virtual bool SetIsFlipY(bool bFlipY){ m_bFlipY = bFlipY; return true;};
+	virtual bool SaveConfigToFile(WCHAR* path);
+	virtual bool LoadConfigFromFile(WCHAR* path);
 protected:
 	bool m_bFlipY;
 	CCritSec m_accessWarpMatCS;

@@ -569,3 +569,66 @@ CCritSec* HomoWarpFilter::GetReceiveCS(IPin* pPin)
 		return __super::GetReceiveCS(pPin);
 	}
 }
+
+bool HomoWarpFilter::SaveConfigToFile(WCHAR* path)
+{
+	CAutoLock lck(&m_accessWarpMatCS);
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	fwprintf_s(filestream, L"%f %f %f %f \n \
+							%f %f %f %f \n \
+							%f %f %f %f \n \
+							%f %f %f %f \n", 
+							m_matTTS.m[0][0], m_matTTS.m[0][1], m_matTTS.m[0][2], m_matTTS.m[0][3],
+							m_matTTS.m[1][0], m_matTTS.m[1][1], m_matTTS.m[1][2], m_matTTS.m[1][3],
+							m_matTTS.m[2][0], m_matTTS.m[2][1], m_matTTS.m[2][2], m_matTTS.m[2][3],
+							m_matTTS.m[3][0], m_matTTS.m[3][1], m_matTTS.m[3][2], m_matTTS.m[3][3]);
+	
+	fclose(filestream);
+	return true;
+}
+bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
+{
+	try
+	{
+		FILE* filestream = NULL;
+		_wfopen_s(&filestream, path, L"r");
+		if (filestream == NULL)
+		{
+			return false;
+		}
+		double mat[16] = {0};
+	
+		
+		
+		fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
+                                %lf %lf %lf %lf \n \
+							    %lf %lf %lf %lf \n \
+							    %lf %lf %lf %lf \n",
+								   &(mat[0]), &(mat[1]), &(mat[2]), &(mat[3]),
+								   &(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
+								   &(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
+								   &(mat[12]), &(mat[13]), &(mat[14]), &(mat[15])
+								   );
+		{
+			CAutoLock lck(&m_accessWarpMatCS);
+			for (int row=0; row < 4; row++)
+			{
+				for (int col = 0; col < 4; col++)
+				{
+					m_matTTS.m[row][col] = mat[row*4 + col];
+				}
+			}
+		}
+		fclose(filestream);
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return true;
+}

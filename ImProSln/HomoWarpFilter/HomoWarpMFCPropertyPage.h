@@ -35,7 +35,7 @@ protected:
 	HWND m_slrRTy;
 
 	static const int m_slrScale = 100;
-	static const int m_slrRangeScale = 5;
+	static const int m_slrRangeScale = 3;
 	void SetDirty();
 	bool GetSetting();
 	bool ApplySetting();
@@ -63,6 +63,7 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edRT;
 	CEdit m_edLB;
 	CEdit m_edRB;
+	CEdit m_edPath;
 	afx_msg void OnEnKillfocusedlt();
 	afx_msg void OnEnKillfocusedrt();
 	afx_msg void OnEnKillfocusedlb();
@@ -71,4 +72,7 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnEnChangeedrt();
 	afx_msg void OnEnChangeedlb();
 	afx_msg void OnEnChangeedrb();
+	afx_msg void OnBnClickedbtnbrowse();
+	afx_msg void OnBnClickedButton3();
+	afx_msg void OnBnClickedBtnLoad();
 };
