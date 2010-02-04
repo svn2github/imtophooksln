@@ -12,6 +12,7 @@
 
 IMPLEMENT_DYNAMIC(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 extern CHomoWarpFilterApp theApp;
+const float CHomoWarpMFCPropertyPage::m_slrRangeScale = 0.5;
 
 void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
@@ -299,7 +300,6 @@ HRESULT CHomoWarpMFCPropertyPage::OnApplyChanges(void)
 {
 	if (ApplySettingFromEdit())
 	{
-		GetSetting();
 		return S_OK;
 	}
 	else
@@ -326,25 +326,25 @@ void CHomoWarpMFCPropertyPage::OnBnClickedChkFlipy()
 void CHomoWarpMFCPropertyPage::OnEnKillfocusedlt()
 {
 	ApplySettingFromEdit();
-	GetSetting();
+	
 }
 
 void CHomoWarpMFCPropertyPage::OnEnKillfocusedrt()
 {
 	ApplySettingFromEdit();
-	GetSetting();
+	
 }
 
 void CHomoWarpMFCPropertyPage::OnEnKillfocusedlb()
 {
 	ApplySettingFromEdit();
-	GetSetting();
+	
 }
 
 void CHomoWarpMFCPropertyPage::OnEnKillfocusedrb()
 {
 	ApplySettingFromEdit();
-	GetSetting();
+	
 }
 
 void CHomoWarpMFCPropertyPage::OnEnChangeedlt()

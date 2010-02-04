@@ -35,7 +35,7 @@ protected:
 	HWND m_slrRTy;
 
 	static const int m_slrScale = 100;
-	static const int m_slrRangeScale = 3;
+	static const float m_slrRangeScale;
 	void SetDirty();
 	bool GetSetting();
 	bool ApplySetting();
