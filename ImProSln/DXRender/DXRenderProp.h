@@ -43,4 +43,6 @@ public:
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_DXRenderFilterProp;};
 	virtual int GetTitileResourceID() { return IDS_DXRenderFilterProp_Title;};
+	afx_msg void OnBnClickedCkhideborder();
+	CButton m_ckHideBorder;
 };

@@ -7,10 +7,12 @@ IMPLEMENT_DYNAMIC(DXRenderFilterProp, CMFCBasePropertyPage)
 void DXRenderFilterProp::DoDataExchange(CDataExchange* pDX)
 {
 	CMFCBasePropertyPage::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CKHideBorder, m_ckHideBorder);
 }
 
 
 BEGIN_MESSAGE_MAP(DXRenderFilterProp, CMFCBasePropertyPage)
+	ON_BN_CLICKED(IDC_CKHideBorder, &DXRenderFilterProp::OnBnClickedCkhideborder)
 END_MESSAGE_MAP()
 
 
@@ -36,6 +38,16 @@ DXRenderFilterProp::~DXRenderFilterProp()
 //override CBasePropertyPage Method
 HRESULT DXRenderFilterProp::OnConnect(IUnknown *pUnk)
 {
+	if (pUnk == NULL)
+	{
+		return E_POINTER;
+	}
+	if (m_pFilter == NULL)
+	{
+		pUnk->QueryInterface(IID_IDXRenderer, 
+			reinterpret_cast<void**>(&m_pFilter));
+		return S_OK;
+	}
 	return S_OK;
 }
 HRESULT DXRenderFilterProp::OnDisconnect(void)
@@ -48,6 +60,11 @@ BOOL DXRenderFilterProp::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, L
 }
 HRESULT DXRenderFilterProp::OnActivate(void)
 {
+	if (m_pFilter != NULL)
+	{
+		this->EnableWindow(TRUE);
+	}
+	
 	return S_OK;
 }
 HRESULT DXRenderFilterProp::OnApplyChanges(void)
@@ -67,4 +84,27 @@ CUnknown *WINAPI DXRenderFilterProp::CreateInstance(LPUNKNOWN punk, HRESULT *phr
 	}
 
 	return pNewObject;
+}
+void DXRenderFilterProp::OnBnClickedCkhideborder()
+{
+	if (m_pFilter == NULL)
+		return;
+	HWND hwnd = m_pFilter->GetDisplayWindow();
+	if (hwnd == 0)
+	{
+		return;
+	}
+	LONG wndStyle = GetWindowLong(hwnd, GWL_STYLE);
+	LONG newStyle = 0;
+	bool checked = m_ckHideBorder.GetCheck();
+	if (checked)
+	{
+		newStyle = WS_BORDER ^ wndStyle;
+		SetWindowLong(hwnd, GWL_STYLE, newStyle);
+	}
+	else
+	{
+		newStyle = WS_BORDER | wndStyle;
+		SetWindowLong(hwnd, GWL_STYLE, newStyle);
+	}
 }

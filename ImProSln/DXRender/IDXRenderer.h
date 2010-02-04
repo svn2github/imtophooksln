@@ -8,5 +8,5 @@ DEFINE_GUID(IID_IDXRenderer,
 MIDL_INTERFACE("5AE768BF-3EFB-418f-BFA4-4974586AC071")
 IDXRenderer: public IUnknown
 {
-	
+	virtual HWND GetDisplayWindow();
 };

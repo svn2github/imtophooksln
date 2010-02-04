@@ -129,3 +129,12 @@ BOOL DXRenderFilter::IsReadyCloseWindow()
 	}
 	return TRUE;
 }
+
+HWND DXRenderFilter::GetDisplayWindow()
+{
+	if( m_pD3DDisplay == NULL)
+	{
+		return 0;
+	}
+	return m_pD3DDisplay->GetDisplayWindow();
+}

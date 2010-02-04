@@ -41,4 +41,5 @@ public:
 public:
 	DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~DXRenderFilter();
+	virtual HWND GetDisplayWindow();
 };
