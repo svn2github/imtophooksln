@@ -334,7 +334,9 @@ bool ARLayoutDXFilter::initARMarkers()
 				idx++;
 				m_ARMarkers[idx].patt_id = idx;
 				m_ARMarkers[idx].visible = (level == 1);
-				m_ARMarkers[idx].width = markerWidth;					
+				m_ARMarkers[idx].width = markerWidth;	
+				m_ARMarkers[idx].center[0] = markerWidth*0.5;
+				m_ARMarkers[idx].center[1] = -markerWidth*0.5;
 				m_ARMarkers[idx].trans[0][0] = 1.0; m_ARMarkers[idx].trans[0][1] = 0.0; m_ARMarkers[idx].trans[0][2] = 0.0; m_ARMarkers[idx].trans[0][3] = 0 + m_ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
 				m_ARMarkers[idx].trans[1][0] = 0.0; m_ARMarkers[idx].trans[1][1] = 1.0; m_ARMarkers[idx].trans[1][2] = 0.0; m_ARMarkers[idx].trans[1][3] = 0 - m_ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);
 				m_ARMarkers[idx].trans[2][0] = 0.0; m_ARMarkers[idx].trans[2][1] = 0.0; m_ARMarkers[idx].trans[2][2] = 1.0; m_ARMarkers[idx].trans[2][3] = 0;	
@@ -370,8 +372,10 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 		{
 			double mat[3][4] = {0};
 			double width = 0;
+			double centerX = 0, centerY =0;
 			fwscanf_s(filestream, L"%d\n", &(m_ARMarkers[i].patt_id));
 			fwscanf_s(filestream, L"%d %lf \n", &(m_ARMarkers[i].visible), &width);
+			fwscanf_s(filestream, L"%lf %lf \n", &centerX, &centerY);
 			fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
 									%lf %lf %lf %lf \n \
 									%lf %lf %lf %lf \n",
@@ -380,6 +384,8 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 									&(mat[2][0]), &(mat[2][1]), &(mat[2][2]), &(mat[2][3])
 			);
 			m_ARMarkers[i].width = width;
+			m_ARMarkers[i].center[0] = centerX;
+			m_ARMarkers[i].center[1] = centerY;
 			if (width < m_minMarkerWidth)
 			{
 				m_minMarkerWidth = width;
@@ -415,6 +421,7 @@ bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
 	{
 		fwprintf_s(filestream, L"%d\n", m_ARMarkers[i].patt_id);
 		fwprintf_s(filestream, L"%d %f \n", m_ARMarkers[i].visible, m_ARMarkers[i].width);
+		fwprintf_s(filestream, L"%f %f \n", m_ARMarkers[i].center[0], m_ARMarkers[i].center[1]);
 		fwprintf_s(filestream, L"%f %f %f %f \n \
 					%f %f %f %f \n \
 					%f %f %f %f \n",

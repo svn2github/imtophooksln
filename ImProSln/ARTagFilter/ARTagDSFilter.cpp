@@ -555,8 +555,10 @@ HRESULT ARTagDSFilter::loadARConfigFromFile(WCHAR* path)
 		{
 			double mat[3][4] = {0};
 			double width = 0;
+			double centerX = 0, centerY = 0;
 			fwscanf_s(filestream, L"%d\n", &(ARMarkers[i].patt_id));
 			fwscanf_s(filestream, L"%d %lf \n", &(ARMarkers[i].visible), &width);
+			fwscanf_s(filestream, L"%lf %lf \n", &centerX, &centerY);
 			fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
 								   %lf %lf %lf %lf \n \
 								   %lf %lf %lf %lf \n",
@@ -565,7 +567,8 @@ HRESULT ARTagDSFilter::loadARConfigFromFile(WCHAR* path)
 								   &(mat[2][0]), &(mat[2][1]), &(mat[2][2]), &(mat[2][3])
 								   );
 			ARMarkers[i].width = width;
-			
+			ARMarkers[i].center[0] = centerX;
+			ARMarkers[i].center[1] = centerY;
 			for (int row = 0; row < 3; row ++)
 			{
 				for (int col = 0; col < 4; col++)
