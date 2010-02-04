@@ -41,7 +41,7 @@ protected:
 	HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT ChangeBG();
 protected:
-	virtual bool         IsAcceptedType(const CMediaType *pMT);
+	virtual bool  IsAcceptedType(const CMediaType *pMT);
 private:
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin);
@@ -65,6 +65,8 @@ private:
 	int cameraH ;
 	int layoutW ;
 	int layoutH ;
+	int camChannel;
+	int layoutChannel;
 
 
 };

@@ -4,13 +4,11 @@
 #include "highgui.h"
 #include <cvaux.h>
 #include "stdafx.h"
-#include <vector>
-#include <string>
-#include <iostream>
+//#include <vector>
+//#include <string>
+//#include <iostream>
 
 using namespace std;
-/*
-*/
 
 class BackGroundMapping{
 
@@ -20,7 +18,7 @@ public:
 	
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
-	void setBackground(IplImage* BGImg);   // input the ori LayoutImage
+	void setBackground(IplImage* BGImg);  
 	void setThreshold(int threshold);
 	int getThreshold();
 

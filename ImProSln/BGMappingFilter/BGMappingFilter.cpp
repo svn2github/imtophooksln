@@ -3,43 +3,22 @@
 #include "BGMappingFilterApp.h"
 #include "BGMappingProp.h"
 
-#define WIDTH 640
-#define HEIGHT 480
-
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
 { 
+	backgroundIplImg = NULL;
+	foregroundIplImg = NULL;
+	cameraInputIplImg = NULL;
 	
-	// set the calibration data of homo and mapping table
-	extern HMODULE GetModule();
-	WCHAR str[MAX_PATH] = {0};
-	HMODULE module = GetModule();
-	GetModuleFileName(module, str, MAX_PATH);
-	// Gets filename
-	WCHAR* pszFile = wcsrchr(str, '\\');
-	pszFile++;    // Moves on from \
-	// Get path
-	WCHAR szPath[MAX_PATH] = L"";
-	_tcsncat(szPath, str, pszFile - str);
-
-	char fileDir[100];
-	int size= wcslen(szPath);
-	char homoDir[100];
-	char mTableDir[100];
-
-	wcstombs(fileDir, szPath, size+1);
-	sprintf(homoDir,"%s\\BackgroundCaliData\\HomoMat.txt",fileDir) ;
-	sprintf(mTableDir,"%s\\BackgroundCaliData\\mTable.txt",fileDir) ;
-
-	BG = new BackGroundMapping(WIDTH,HEIGHT);
-	BG->loadHomo(homoDir,mTableDir);
-
 }
 BGMappingFilter::~BGMappingFilter()
 {
-	/*cvReleaseImage(&backgroundIplImg);
+	if(backgroundIplImg!= NULL)
+	cvReleaseImage(&backgroundIplImg);
+	if(foregroundIplImg!= NULL)
 	cvReleaseImage(&foregroundIplImg);
-	cvReleaseImage(&cameraInputIplImg);*/
+	if(cameraInputIplImg!= NULL)
+	cvReleaseImage(&cameraInputIplImg);
 
 }
 
@@ -155,9 +134,11 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 
 	BYTE* backgroundByteData;
 	pSample->GetPointer(&backgroundByteData);
-	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, 4);
+	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, camChannel);
 	backgroundtmp->imageData = (char*)backgroundByteData;
 	cvResize(backgroundtmp,backgroundIplImg);
+	
+	CAutoLock cAutoLockShared(&m_cSharedState);
 	BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 	return S_OK;
@@ -321,19 +302,42 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		cameraW = bitHeader.biWidth;
 		cameraH = bitHeader.biHeight;
         GUID guidSubType = inputMT.subtype;
-		int channel;
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
-			channel = 3;
+			camChannel = 3;
 		}
 		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
-			channel = 4;
+			camChannel = 4;
 		}
 
-		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
-		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
-		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, channel);
+		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
+		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
+		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
+
+		// set the calibration data of homo and mapping table
+		extern HMODULE GetModule();
+		WCHAR str[MAX_PATH] = {0};
+		HMODULE module = GetModule();
+		GetModuleFileName(module, str, MAX_PATH);
+		// Gets filename
+		WCHAR* pszFile = wcsrchr(str, '\\');
+		pszFile++;    // Moves on from \
+		// Get path
+		WCHAR szPath[MAX_PATH] = L"";
+		_tcsncat(szPath, str, pszFile - str);
+
+		char fileDir[100];
+		int size= wcslen(szPath);
+		char homoDir[100];
+		char mTableDir[100];
+
+		wcstombs(fileDir, szPath, size+1);
+		sprintf(homoDir,"%s\\BackgroundCaliData\\HomoMat.txt",fileDir) ;
+		sprintf(mTableDir,"%s\\BackgroundCaliData\\mTable.txt",fileDir) ;
+
+		BG = new BackGroundMapping(cameraW,cameraH);
+		BG->loadHomo(homoDir,mTableDir);
 
 		return S_OK;
 
@@ -346,17 +350,6 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		layoutW = bitHeader.biWidth;
 		layoutH = bitHeader.biHeight;
-
-		GUID guidSubType = inputMT.subtype;
-		int channel;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			channel = 3;
-		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			channel = 4;
-		}
 		return S_OK;
 	}
 	return S_OK;
@@ -384,12 +377,13 @@ HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	pIn->GetPointer(&cameraByteData);
 	pOut->GetPointer(&foregroundByteData);
 	cbData = pOut->GetSize();
-
-	IplImage* camtmp = cvCreateImageHeader(cvSize(cameraW, cameraH), 8, 4);
+    
+	IplImage* camtmp = cvCreateImageHeader(cvSize(cameraW, cameraH), 8, camChannel);
 	camtmp->imageData = (char*)cameraByteData;
 	cvCopy(camtmp,cameraInputIplImg);
 	cvReleaseImageHeader(&camtmp);	
-
+	
+	CAutoLock cAutoLockShared(&m_cSharedState);
 	foregroundIplImg = BG->getForeground(cameraInputIplImg);
 	memcpy (foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
 	return S_OK;

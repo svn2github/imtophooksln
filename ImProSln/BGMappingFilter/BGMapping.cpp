@@ -18,6 +18,8 @@ BackGroundMapping::~BackGroundMapping(){
 	cvReleaseImage(&mappingTable);
 	cvReleaseImage(&resultImg);
 	cvReleaseImage(&backgroundImg);
+	cvReleaseStructuringElement(&kernelElement);
+	cvReleaseImage(&binarySrc);
 }
 
 void BackGroundMapping::setBackground(IplImage *BGImg){
@@ -30,7 +32,6 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 		{
 			black = cvGet2D(mappingTable,i,j).val[0];
 			white = cvGet2D(mappingTable,i,j).val[1];	
-
 			if(cvGet2D(BGImg,i,j).val[0] < BLACK_VALUE){
 				cvSet2D(backgroundImg,i,j,cvScalar(black,black,black));
 			}
@@ -58,8 +59,8 @@ void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
 
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
-	cvCvtColor( srcImg, binarySrc, CV_RGB2GRAY);
-	cvWarpPerspective(binarySrc,resultImg,MatHomography);
+	cvCvtColor( srcImg, resultImg, CV_RGB2GRAY);
+	//cvWarpPerspective(binarySrc,resultImg,MatHomography);
 	cvSub(resultImg,backgroundImg,resultImg);
 	cvThreshold(resultImg,resultImg,BGthreshold,255,0);
 	cvCvtColor( resultImg, srcImg, CV_GRAY2RGBA);
