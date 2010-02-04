@@ -504,7 +504,7 @@ HRESULT MS3DDisplay::CreateD3DWindow(UINT winW, UINT winH)
 	{
 		if (m_hDisplayWnd == 0)
 		{
-			m_hDisplayWnd  = CreateWindowExW(NULL, L"D3DDisplayWnd", L"D3DDisplayWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			m_hDisplayWnd  = CreateWindowExW(WS_EX_APPWINDOW | WS_EX_TOOLWINDOW, L"D3DDisplayWnd", L"D3DDisplayWnd", WS_POPUPWINDOW | WS_THICKFRAME  ,
 				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
 			ShowWindow(m_hDisplayWnd, FALSE);
 		}
@@ -513,7 +513,7 @@ HRESULT MS3DDisplay::CreateD3DWindow(UINT winW, UINT winH)
 	{
 		if (m_hDisplayWnd  == 0)
 		{
-			m_hDisplayWnd  = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			m_hDisplayWnd  = CreateWindowExW(WS_EX_APPWINDOW | WS_EX_TOOLWINDOW, L"D3DWnd", L"D3DWnd", WS_POPUPWINDOW | WS_THICKFRAME ,
 				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
 			ShowWindow(m_hDisplayWnd , FALSE);
 		}

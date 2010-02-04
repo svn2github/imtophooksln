@@ -108,7 +108,7 @@ HRESULT D3DEnv::CreateD3DWindow(UINT winW, UINT winH, HWND& hwnd)
 	{
 		if (hwnd == 0)
 		{
-			hwnd = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			hwnd = CreateWindowExW(WS_EX_APPWINDOW, L"D3DWnd", L"D3DWnd", WS_OVERLAPPEDWINDOW,
 				CW_USEDEFAULT, 0, winW, winH, NULL, NULL, GetModule(), NULL);
 			ShowWindow(hwnd, FALSE);
 		}
@@ -117,7 +117,7 @@ HRESULT D3DEnv::CreateD3DWindow(UINT winW, UINT winH, HWND& hwnd)
 	{
 		if (hwnd == 0)
 		{
-			hwnd = CreateWindowExW(NULL, L"D3DWnd", L"D3DWnd", WS_EX_TOPMOST |/* WS_POPUP |*/ WS_OVERLAPPEDWINDOW,
+			hwnd = CreateWindowExW(WS_EX_APPWINDOW, L"D3DWnd", L"D3DWnd", WS_OVERLAPPEDWINDOW,
 				CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, GetModule(), NULL);
 			ShowWindow(hwnd, FALSE);
 		}
