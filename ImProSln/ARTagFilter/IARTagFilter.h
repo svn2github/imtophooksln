@@ -33,4 +33,7 @@ public:
 	virtual int getPoseEstimator();
 	virtual bool getbDrawTag();
 	virtual bool setbDrawTag(bool v);
+
+	virtual bool setWorldBasisScale(double v[3]);
+	virtual bool getWorldBasisScale(double v[3]);
 };

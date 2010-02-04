@@ -13,6 +13,9 @@ m_pARProperty(0)
 	m_hWndXSize = 0;
 	m_hWndYSize = 0;
 	m_hWndLoad = 0;
+	m_edXaxis = 0;
+	m_edYaxis = 0;
+	m_edZaxis = 0;
 }
 
 ARTagCameraSettingPage::~ARTagCameraSettingPage()
@@ -89,6 +92,16 @@ bool ARTagCameraSettingPage::GetSetting()
 		swprintf_s(tmpStr, MAX_PATH, L"%.2f", mat[i]);
 		SetWindowText(m_hWndMat[i], tmpStr);
 	}
+	double v[3];
+	m_pARProperty->getWorldBasisScale(v);
+	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[0]);
+	SetWindowText(m_edXaxis, tmpStr);
+	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[1]);
+	SetWindowText(m_edYaxis, tmpStr);
+	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[2]);
+	SetWindowText(m_edZaxis, tmpStr);
+
+
 	return true;
 }
 HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
@@ -101,9 +114,19 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 	int xsize, ysize;
 	double mat[16] = {0};
 	double dist_factor[4] = {0};
+	double basisscale[3] = {0};
 	WCHAR tmpStr[MAX_PATH];
 	try
 	{
+		GetWindowText(m_edXaxis, tmpStr, MAX_PATH);
+		swscanf_s(tmpStr, L"%lf", &(basisscale[0]));
+
+		GetWindowText(m_edYaxis, tmpStr, MAX_PATH);
+		swscanf_s(tmpStr, L"%lf", &(basisscale[1]));
+
+		GetWindowText(m_edZaxis, tmpStr, MAX_PATH);
+		swscanf_s(tmpStr, L"%lf", &(basisscale[2]));
+
 
 		GetWindowText(m_hWndXSize, tmpStr, MAX_PATH);
 		swscanf_s(tmpStr, L"%d", &xsize);
@@ -130,7 +153,7 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 		return E_FAIL;
 	}
 	m_pARProperty->setCamera(xsize, ysize, mat, dist_factor, 1.0, 1000.0);
-
+	m_pARProperty->setWorldBasisScale(basisscale);
 	swprintf_s(tmpStr, L"%.5f %.5f %.5f %.5f", dist_factor[0], dist_factor[1], dist_factor[2], dist_factor[3]);
 	theApp.WriteProfileString(L"Camera Setting", L"dist_Factor", tmpStr);
 	swprintf_s(tmpStr, L"%.5f %.5f %.5f %.5f \
@@ -231,7 +254,8 @@ BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 				cmd == IDC_Mat00 || cmd == IDC_Mat01 || cmd == IDC_Mat02 || cmd == IDC_Mat03 || 
 				cmd == IDC_Mat10 || cmd == IDC_Mat11 || cmd == IDC_Mat12 || cmd == IDC_Mat13 || 
 				cmd == IDC_Mat20 || cmd == IDC_Mat21 || cmd == IDC_Mat22 || cmd == IDC_Mat23 || 
-				cmd == IDC_Mat30 || cmd == IDC_Mat31 || cmd == IDC_Mat32 || cmd == IDC_Mat33 )) 
+				cmd == IDC_Mat30 || cmd == IDC_Mat31 || cmd == IDC_Mat32 || cmd == IDC_Mat33 ||
+				cmd == IDC_edXaxis || cmd == IDC_edYaxis || cmd == IDC_edZaxis )) 
 			{
 				SetDirty();
 				return 1;
@@ -289,6 +313,11 @@ HRESULT ARTagCameraSettingPage::OnActivate(void)
 	m_hWndMat[15] = GetDlgItem(m_Dlg, IDC_Mat33);
 
 	m_hWndLoad = GetDlgItem(m_Dlg, IDC_BTN_Load);
+
+	m_edXaxis = GetDlgItem(m_Dlg, IDC_edXaxis);
+	m_edYaxis = GetDlgItem(m_Dlg, IDC_edYaxis);
+	m_edZaxis = GetDlgItem(m_Dlg, IDC_edZaxis);
+
 	GetSetting();
 
 	return NOERROR;

@@ -25,6 +25,9 @@ protected:
 	HWND m_hWndXSize;
 	HWND m_hWndYSize;
 	HWND m_hWndLoad;
+	HWND m_edXaxis;
+	HWND m_edYaxis;
+	HWND m_edZaxis;
 	void SetDirty();
 	bool GetSetting();
 	HRESULT ApplyCameraSetting();
@@ -58,6 +61,7 @@ protected:
 
 	HWND m_txtConfThreshold;
 	HWND m_slrConfThreshold;
+
 
 	static const int m_BorderWScale = 1000;
 	static const int m_ConfScale = 100;

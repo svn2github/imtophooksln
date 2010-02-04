@@ -72,6 +72,29 @@ AR_TEMPL_TRACKER::arGetTransMatCont(ARMarkerInfo *marker_info, ARFloat prev_conv
     return err1;
 }
 
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::getBasisTransMatrix(ARFloat nMatrix[3][3]) 
+{ 
+	for (int row = 0; row < 3; row++)
+	{
+		for (int col = 0; col < 3; col++)
+		{
+			nMatrix[row][col] = m_worldbasisMat[row][col];
+		}
+	}
+	return true;
+}
+
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::setBasisTransMatrix(ARFloat nMatrix[3][3]) 
+{ 
+	for (int row = 0; row < 3; row++)
+	{
+		for (int col = 0; col < 3; col++)
+		{
+			m_worldbasisMat[row][col] = nMatrix[row][col];
+		}
+	}
+	return true;
+}
 
 AR_TEMPL_FUNC ARFloat
 AR_TEMPL_TRACKER::arGetTransMatContSub(ARMarkerInfo *marker_info, ARFloat prev_conv[3][4], ARFloat center[2], ARFloat width, ARFloat conv[3][4])

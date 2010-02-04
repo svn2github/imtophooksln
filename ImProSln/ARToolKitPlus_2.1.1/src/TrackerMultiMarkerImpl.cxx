@@ -51,6 +51,16 @@ ARMM_TEMPL_FUNC
 ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 {
 	this->logger = NULL;
+	for (int row = 0; row < 3; row++)
+	{
+		for (int col =0; col < 3; col++)
+		{
+			if (row == col)
+				m_worldbasisMat[row][col] = 1;
+			else
+				m_worldbasisMat[row][col] = 0;
+		}
+	}
 
 	this->screenWidth = nWidth;
 	this->screenHeight = nHeight;

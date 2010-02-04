@@ -62,13 +62,17 @@ public:
 	virtual bool getbDrawTag();
 	virtual bool setbDrawTag(bool v);
 	virtual bool IsReady();
-
+	virtual bool setWorldBasisScale(double v[3]);
+	virtual bool getWorldBasisScale(double v[3]);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc);
 private:
 	HRESULT VariantFromString(PCWSTR wszValue, VARIANT &Variant);
 protected:
 	
 	//
+	CCritSec m_csWorldBasisScale;
+	double m_WorldBasisScale[3];
+
 	bool			 m_bDrawTag;
 	CallbackFuncPtr  m_pCallback;
 	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;

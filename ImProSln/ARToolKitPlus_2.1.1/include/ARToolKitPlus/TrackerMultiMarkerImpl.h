@@ -119,7 +119,8 @@ public:
 	*/
 	virtual void getARMatrix(ARFloat nMatrix[3][4]) const;
 
-
+	virtual bool getBasisTransMatrix(ARFloat nMatrix[3][3]) {  return AR_TEMPL_TRACKER::getBasisTransMatrix(nMatrix);  }
+	virtual bool setBasisTransMatrix(ARFloat nMatrix[3][3]) {  return AR_TEMPL_TRACKER::setBasisTransMatrix(nMatrix);  }
 	//
 	// reimplement TrackerImpl into TrackerSingleMarker interface
 	//
@@ -190,7 +191,6 @@ public:
 protected:
 	int				numDetected;
 	bool			useDetectLite;
-
 	ARMultiMarkerInfoT  *config;
 
 	int				detectedMarkerIDs[AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS];

@@ -155,7 +155,7 @@
 
 
 // constants influencing accuracy of arGetTransMat(...)
-#define   AR_GET_TRANS_MAT_MAX_LOOP_COUNT         5
+#define   AR_GET_TRANS_MAT_MAX_LOOP_COUNT         10
 #define   AR_GET_TRANS_MAT_MAX_FIT_ERROR          1.0
 // criterium for arGetTransMatCont(...) to call 
 // arGetTransMat(...) instead

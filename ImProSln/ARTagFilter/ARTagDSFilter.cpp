@@ -26,7 +26,8 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_ARTracker = NULL;
 	m_pCallback = NULL;
 	m_bDrawTag = true;
-
+	for (int i =0; i< 3; i++)
+		m_WorldBasisScale[i] = 1.0; 
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
@@ -93,7 +94,11 @@ HRESULT ARTagDSFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 		IMediaSample * pOutSample = NULL;
 		// If no output to deliver to then no point sending us data
 		hr = InitializeOutputSample(pSample, pReceivePin, m_pOutputPins[0], &pOutSample);
-
+		if (pOutSample == NULL)
+		{	
+			m_bSampleSkipped = TRUE;
+			return NOERROR;
+		}
 		hr = Transform(pSample, pOutSample);
 
 		// Stop the clock and log it (if PERF is defined)
@@ -959,7 +964,32 @@ bool ARTagDSFilter::IsReady()
 	}
 	return true;
 }
-
+bool ARTagDSFilter::setWorldBasisScale(double v[3])
+{
+	CAutoLock lck(&m_csWorldBasisScale);
+	for (int i =0; i< 3; i++)
+	{
+		m_WorldBasisScale[i] = v[i];
+	}
+	if (m_ARTracker != NULL)
+	{
+		ARFloat tranMat[3][3];
+		tranMat[0][0] = m_WorldBasisScale[0]; tranMat[0][1] = 0.0;  tranMat[0][2] = 0.0;
+		tranMat[1][0] = 0.0; tranMat[1][1] = m_WorldBasisScale[1];  tranMat[1][2] = 0.0;
+		tranMat[2][0] = 0.0; tranMat[2][1] = 0.0;  tranMat[2][2] = m_WorldBasisScale[2];
+		m_ARTracker->setBasisTransMatrix(tranMat);
+	}
+	return true;
+}
+bool ARTagDSFilter::getWorldBasisScale(double v[3])
+{
+	CAutoLock lck(&m_csWorldBasisScale);
+	for (int i =0; i< 3; i++)
+	{
+		v[i] = m_WorldBasisScale[i];
+	}
+	return true;
+}
 BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc)
 {
 	m_pCallback = pfunc;
@@ -983,6 +1013,13 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 		m_ARTracker = NULL;
 	}
 	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 32>(width, height);
+	
+	ARFloat tranMat[3][3];
+	tranMat[0][0] = m_WorldBasisScale[0]; tranMat[0][1] = 0.0;  tranMat[0][2] = 0.0;
+	tranMat[1][0] = 0.0; tranMat[1][1] = m_WorldBasisScale[1];  tranMat[1][2] = 0.0;
+	tranMat[2][0] = 0.0; tranMat[2][1] = 0.0;  tranMat[2][2] = m_WorldBasisScale[2];
+	m_ARTracker->setBasisTransMatrix(tranMat);
+
 	GUID guidSubType = *inputMT->Subtype();
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 	{

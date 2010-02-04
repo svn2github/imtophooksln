@@ -152,7 +152,8 @@ public:
 	virtual ARFloat arGetTransMat(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4]);
 
 	virtual ARFloat arGetTransMatCont(ARMarkerInfo *marker_info, ARFloat prev_conv[3][4], ARFloat center[2], ARFloat width, ARFloat conv[3][4]);
-
+	virtual bool getBasisTransMatrix(ARFloat nMatrix[3][3]);
+	virtual bool setBasisTransMatrix(ARFloat nMatrix[3][3]);
 	// RPP integration -- [t.pintaric]
 	virtual ARFloat rppMultiGetTransMat(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
 	virtual ARFloat rppGetTransMat(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4]);
@@ -617,7 +618,7 @@ protected:
 	int        arImXsize, arImYsize;
 	int        arTemplateMatchingMode;
 	int        arMatchingPCAMode;
-
+	double          m_worldbasisMat[3][3];
 	ARUint8*   arImageL;
 
 	MARKER_MODE		markerMode;
