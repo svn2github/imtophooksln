@@ -145,7 +145,7 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_hHookRecMsgWnd = 0;
 	RegisterHookWndClass(GetModule());
 	CreateHookWindow(320, 240); // size doesn't matter
-	HRESULT hr = initD3D();
+	HRESULT hr = initD3D(1024, 768);
 	if (SUCCEEDED(hr))
 	{
 		HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
