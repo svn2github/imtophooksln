@@ -1,8 +1,11 @@
 #pragma once
 #include "MFCBasePropertyPage.h"
+
 #include "resource.h"
 #include "afxwin.h"
 // CHomoWarpMFCPropertyPage dialog
+DEFINE_GUID(CLSID_HomoWarpFilterPropertyPage, 
+			0xf3dbd46e, 0x12c6, 0x4652, 0x9a, 0x2e, 0x6, 0x3a, 0xc6, 0x23, 0xe8, 0x46);
 
 class CHomoWarpMFCPropertyPage : public CMFCBasePropertyPage
 {
@@ -31,15 +34,13 @@ protected:
 	HWND m_slrRTx;
 	HWND m_slrRTy;
 
-	HWND m_txtLT;
-	HWND m_txtLB;
-	HWND m_txtRB;
-	HWND m_txtRT;
 	static const int m_slrScale = 100;
+	static const int m_slrRangeScale = 5;
 	void SetDirty();
 	bool GetSetting();
 	bool ApplySetting();
 	bool updateSliderTxt();
+	bool ApplySettingFromEdit();
 public:
 	// Dialog Data
 	enum {IDD = IDD_HomoWarpPropertyPage};
@@ -58,4 +59,16 @@ public: //inherit from CMFCBaseProperty Page
 	
 	CButton m_ckFlipY;
 	afx_msg void OnBnClickedChkFlipy();
+	CEdit m_edLT;
+	CEdit m_edRT;
+	CEdit m_edLB;
+	CEdit m_edRB;
+	afx_msg void OnEnKillfocusedlt();
+	afx_msg void OnEnKillfocusedrt();
+	afx_msg void OnEnKillfocusedlb();
+	afx_msg void OnEnKillfocusedrb();
+	afx_msg void OnEnChangeedlt();
+	afx_msg void OnEnChangeedrt();
+	afx_msg void OnEnChangeedlb();
+	afx_msg void OnEnChangeedrb();
 };

@@ -143,21 +143,14 @@ BEGIN
     CONTROL         "",IDC_SLIDER_RBx,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,120,84,85,13
     CONTROL         "",IDC_SLIDER_RBy,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,120,97,85,13
     LTEXT           "LT:",IDC_STATIC,29,65,11,11
-    LTEXT           "Static",IDC_txtLT,43,65,51,8
     LTEXT           "LB:",IDC_STATIC,29,119,11,11
-    LTEXT           "Static",IDC_txtLB,43,119,51,8
     LTEXT           "RT:",IDC_STATIC,142,66,11,11
-    LTEXT           "Static",IDC_txtRT,156,66,51,8
     LTEXT           "RB:",IDC_STATIC,142,119,11,11
-    LTEXT           "Static",IDC_txtRB,156,119,51,8
     CONTROL         "FlipY",IDC_CHK_FlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,29,14,31,10
-END
-
-IDD_HomoWarpMFCPropertyPage DIALOGEX 0, 0, 235, 156
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Property Page"
-FONT 8, "MS Shell Dlg", 400, 0, 0x0
-BEGIN
+    EDITTEXT        IDC_edLT,41,62,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edRT,155,63,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edLB,41,117,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edRB,156,116,40,14,ES_AUTOHSCROLL
 END
 
 
@@ -178,14 +171,6 @@ BEGIN
         VERTGUIDE, 104
         VERTGUIDE, 120
         VERTGUIDE, 142
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 149
-    END
-
-    IDD_HomoWarpMFCPropertyPage, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 228
         TOPMARGIN, 7
         BOTTOMMARGIN, 149
     END

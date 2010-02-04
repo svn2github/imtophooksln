@@ -4,5 +4,4 @@
 #include <initguid.h>
 #include "combase.h"
 #include "HomoWarpFilter.h"
-#include "HomoWarpFilterProp.h"
 #include "HomoWarpMFCPropertyPage.h"

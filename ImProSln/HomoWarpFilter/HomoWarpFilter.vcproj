@@ -208,10 +208,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\HomoWarpFilterProp.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\HomoWarpFilterReg.cpp"
 				>
 			</File>
@@ -255,10 +251,6 @@
 			</File>
 			<File
 				RelativePath=".\HomoWarpFilterApp.h"
-				>
-			</File>
-			<File
-				RelativePath=".\HomoWarpFilterProp.h"
 				>
 			</File>
 			<File

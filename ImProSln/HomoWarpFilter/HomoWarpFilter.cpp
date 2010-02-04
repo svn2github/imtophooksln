@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "HomoWarpFilter.h"
-#include "HomoWarpFilterProp.h"
+#include "HomoWarpMFCPropertyPage.h"
 #include "HomoWarpFilterApp.h"
 #include "cv.h"
 #include "MyMediaSample.h"
