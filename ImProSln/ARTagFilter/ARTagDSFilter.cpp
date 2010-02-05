@@ -361,7 +361,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		CopyInputImage2InputTexture(pOut, pOutType, false);
 		SetRenderTarget();
 		m_pD3DDisplay->SetTexture(m_pInTexture);
-		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected);
+		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected, bitHeader.biWidth, bitHeader.biHeight );
 		ResetRenderTarget();
 		CopyRenderTarget2OutputTexture();
 		CopyOutputTexture2OutputData(pOut, pOutType, true);

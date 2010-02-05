@@ -30,7 +30,7 @@ protected:
 	LPD3DXFONT m_pD3DFont;
 public:
 
-	virtual BOOL Render(ARMarkerInfo* markinfos, int numMarkinfo);
+	virtual BOOL Render(ARMarkerInfo* markinfos, int numMarkinfo, int imgW, int imgH);
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);

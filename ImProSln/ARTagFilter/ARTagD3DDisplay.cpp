@@ -153,13 +153,16 @@ ARTagD3DDisplay::~ARTagD3DDisplay(void)
 	}
 }
 
-BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo)
+BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo, int imageW, int imageH)
 {
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
 	HRESULT hr;
-	
+	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
+	D3DSURFACE_DESC rtDesc;
+	m_pDevice->GetRenderTarget(0, &pRenderTarget );
+	pRenderTarget->GetDesc(&rtDesc);
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
 
@@ -183,7 +186,12 @@ BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo)
 			}
 			pts[4].x = markinfos[i].vertex[0][0];
 			pts[4].y = markinfos[i].vertex[0][1];
-			
+			for (int k =0; k< 5; k++)
+			{
+				pts[k].x *= rtDesc.Width / (float)imageW;
+				pts[k].x *= rtDesc.Height / (float)imageH;
+			}
+
 			m_pD3DLine->Draw(pts, 5, D3DCOLOR_ARGB(255, 255,0,0));
 			swprintf_s(str, MAX_PATH, L"%d\0", markinfos[i].id);
 			if (m_pD3DFont != NULL)
@@ -197,7 +205,11 @@ BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo)
 	}
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
-
+	if (pRenderTarget != NULL)
+	{
+		pRenderTarget->Release();
+		pRenderTarget = NULL;
+	}
 	return TRUE;
 }
 
