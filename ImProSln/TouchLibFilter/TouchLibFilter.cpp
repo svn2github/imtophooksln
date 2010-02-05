@@ -9,6 +9,7 @@
 #include "MyMediaSample.h"
 #include "d3dx9.h"
 #include "highgui.h"
+#include "BackgroundFilter.h"
 TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("TouchLib Filter"), 0, CLSID_TouchLibFilter)
 { 
@@ -432,10 +433,11 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	pOut->GetPointer(&pOutData);
 	pSrc->imageData = (char*)pInData;
 	pDest->imageData = (char*)pOutData;
-	
-	m_pTouchScreen->processOnce(pSrc);
-	m_pTouchScreen->getEvents();
-	
+	{
+		CAutoLock lck(&m_csTouchScreen);
+		m_pTouchScreen->processOnce(pSrc);
+		m_pTouchScreen->getEvents();
+	}
 	
 	cvCopy(pSrc, pDest);
 
@@ -653,4 +655,24 @@ int TouchLibFilter::GetPort()
 bool TouchLibFilter::IsTouchReady()
 {
 	return (m_pTouchScreen != NULL);
+}
+bool TouchLibFilter::ClearBackground()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_bgLabel == "null")
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	std::list<Filter*> bgFilter = m_pTouchScreen->findFiltersPtr(m_bgLabel);
+	if (bgFilter.size() <= 0 )
+	{
+		return false;
+	}
+	((BackgroundFilter*)*bgFilter.begin())->clearBackground();
+
+	return true;
 }

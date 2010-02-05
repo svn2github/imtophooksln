@@ -64,6 +64,7 @@ protected:
 	CMuxTransformInputPin* GetConnectedInputPin();
 	vector<ITouchListener*> m_listenerList;
 	CCritSec m_csListenerList;
+	CCritSec m_csTouchScreen;
 	OSCSender m_oscSender;
 protected:
 	bool IsAcceptedType(const CMediaType *pmt);
@@ -78,4 +79,7 @@ public:
 	virtual bool GetIPAddress(string& outIpAddress);
 	virtual int GetPort();
 	virtual bool IsTouchReady();
+
+	virtual bool ClearBackground();
+
 };

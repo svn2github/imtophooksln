@@ -21,4 +21,6 @@ public:
 	virtual bool GetIPAddress(string& outIpAddress);
 	virtual int GetPort();
 	virtual bool IsTouchReady();
+	virtual bool ClearBackground();
+
 };

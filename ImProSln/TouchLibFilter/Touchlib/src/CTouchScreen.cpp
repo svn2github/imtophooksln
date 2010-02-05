@@ -605,6 +605,17 @@ std::list<std::string> CTouchScreen::findFilters(const char * type)
 	return filters;																						// and return the list
 }
 
+std::list<Filter*> CTouchScreen::findFiltersPtr(string label)
+{
+	std::list<Filter*> filters;																		// Make a list
+	for(std::vector<Filter*>::iterator iter = filterChain.begin();iter!=filterChain.end();iter++){		// and for each Filter
+		if((*iter)->getName() == label){															// if the type is the one sought
+			filters.push_back(*iter);											// add the name to the list
+		}
+	}
+	return filters;
+}
+
 std::string CTouchScreen::findFirstFilter(const char * type)
 {
 	std::string filter;

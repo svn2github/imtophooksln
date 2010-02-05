@@ -219,3 +219,13 @@ void BackgroundFilter::clearMask()
 		cvSet(mask,cvScalar(0,0,0));
 	recapture = true;
 }
+
+bool BackgroundFilter::clearBackground()
+{
+	if (reference != NULL)
+	{
+		cvReleaseImage(&reference);
+		reference = NULL;
+	}
+	return true;
+}

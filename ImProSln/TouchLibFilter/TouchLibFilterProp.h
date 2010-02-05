@@ -64,4 +64,5 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edIP;
 	CEdit m_edPort;
 	afx_msg void OnBnClickedBtnconnect();
+	afx_msg void OnBnClickedBtnClearBG();
 };

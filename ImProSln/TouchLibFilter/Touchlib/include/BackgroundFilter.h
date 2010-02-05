@@ -19,7 +19,7 @@ public:
 	virtual void showOutput(bool value, int windowx, int windowy);
 	void setMask(void *aPoints,int xRes, int yRes);
 	void clearMask();
-
+	bool clearBackground();
 private:
 	bool recapture;
 	IplImage* reference;

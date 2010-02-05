@@ -144,6 +144,7 @@ BEGIN
     LTEXT           "IP:",IDC_STATIC,26,122,10,8
     EDITTEXT        IDC_EDIT3,46,136,63,13,ES_AUTOHSCROLL
     LTEXT           "port:",IDC_STATIC,22,137,17,12
+    PUSHBUTTON      "Clear BG",IDC_btnClearBg,111,84,50,14
 END
 
 

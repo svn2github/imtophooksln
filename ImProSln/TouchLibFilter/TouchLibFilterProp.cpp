@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_CKSHOWMSG, &TouchLibPropPage::OnBnClickedCkshowmsg)
 	ON_BN_CLICKED(IDC_CKShowConfig, &TouchLibPropPage::OnBnClickedCkshowconfig)
 	ON_BN_CLICKED(IDC_BTNCONNECT, &TouchLibPropPage::OnBnClickedBtnconnect)
+	ON_BN_CLICKED(IDC_btnClearBg, &TouchLibPropPage::OnBnClickedBtnClearBG)
 END_MESSAGE_MAP()
 
 
@@ -235,4 +236,13 @@ void TouchLibPropPage::OnBnClickedBtnconnect()
 		m_pFilter->ConnectOSC(strAddressIP, port);
 	}
 	GetSetting();
+}
+void TouchLibPropPage::OnBnClickedBtnClearBG()
+{
+	if (m_pFilter == NULL)
+	{
+		return ;
+	}
+	m_pFilter->ClearBackground();
+	return;
 }

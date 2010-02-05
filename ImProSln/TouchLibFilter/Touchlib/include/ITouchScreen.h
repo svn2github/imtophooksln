@@ -4,7 +4,7 @@
 #include "ITouchListener.h"
 #include "ITouchEvent.h"
 #include "IBlobTracker.h"
-
+#include "TouchlibFilter.h"
 #include "Image.h"
 #include "vector2d.h"
 #include "mesh2d.h"
@@ -40,7 +40,8 @@ namespace touchlib
 
 		//! find instances of filters in the chain
 		virtual std::list<std::string> findFilters(const char *type) = 0;
-
+		
+		virtual std::list<Filter*> findFiltersPtr(string label) = 0;
 		//! find first instance of a filter in the chain
 		virtual std::string findFirstFilter(const char * type) = 0;
 
