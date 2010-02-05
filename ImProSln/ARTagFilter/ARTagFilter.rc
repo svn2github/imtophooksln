@@ -68,10 +68,7 @@ END
 // HTML
 //
 
-IDR_HTML_ARTAGPROPERTYDIALOG HTML                    "ARTagPropertyDialog.htm"
-IDR_HTML_ARTAGPROPERTYDLG1 HTML                    "html_art.htm"
-IDR_HTML_ARTAGPROPERTYDIALOG1 HTML                    "htm00001.htm"
-IDR_HTML_ARTAGPROPERTYDLG HTML                    "ARTagPropertyDlg.htm"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

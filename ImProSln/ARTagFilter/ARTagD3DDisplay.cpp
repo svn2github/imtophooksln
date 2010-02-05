@@ -177,20 +177,16 @@ BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo, int image
 			RECT rect; rect.left = 100000; rect.right = 0; rect.top = 100000; rect.bottom = 0;
 			for (int j =0; j < 4; j++)
 			{
-				pts[j].x = markinfos[i].vertex[j][0];
-				pts[j].y = markinfos[i].vertex[j][1];
+				pts[j].x = markinfos[i].vertex[j][0]*rtDesc.Width / (float)imageW;
+				pts[j].y = markinfos[i].vertex[j][1]*rtDesc.Height / (float)imageH;
 				rect.left = min(rect.left, pts[j].x);
 				rect.right = max(rect.right, pts[j].x);
 				rect.top = min(rect.top, pts[j].y);
 				rect.bottom = max(rect.bottom, pts[j].y);
 			}
-			pts[4].x = markinfos[i].vertex[0][0];
-			pts[4].y = markinfos[i].vertex[0][1];
-			for (int k =0; k< 5; k++)
-			{
-				pts[k].x *= rtDesc.Width / (float)imageW;
-				pts[k].x *= rtDesc.Height / (float)imageH;
-			}
+			pts[4].x = markinfos[i].vertex[0][0]*rtDesc.Width / (float)imageW;
+			pts[4].y = markinfos[i].vertex[0][1]*rtDesc.Height / (float)imageH;
+			
 
 			m_pD3DLine->Draw(pts, 5, D3DCOLOR_ARGB(255, 255,0,0));
 			swprintf_s(str, MAX_PATH, L"%d\0", markinfos[i].id);
