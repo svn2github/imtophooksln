@@ -50,6 +50,12 @@ HRESULT DXRenderFilter::CheckMediaType(const CMediaType *pmt)
 	GUID guidSubType = *pmt->Subtype();
 	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
 	{
+		VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)pmt->Format();
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		if (bitHeader.biCompression)
+		{
+			return E_FAIL;
+		}
 		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			return S_OK;

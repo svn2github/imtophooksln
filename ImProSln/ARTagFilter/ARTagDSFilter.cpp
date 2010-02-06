@@ -466,7 +466,12 @@ HRESULT ARTagDSFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 bool ARTagDSFilter::IsAcceptedType(const CMediaType *pmt)
 {
 	GUID guidSubType = *pmt->Subtype();
-
+	VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)pmt->Format();
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	if (bitHeader.biCompression)
+	{
+		return false;
+	}
 	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
 	{
 		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
