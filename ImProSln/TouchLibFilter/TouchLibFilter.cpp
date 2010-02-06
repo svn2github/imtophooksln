@@ -320,6 +320,12 @@ bool TouchLibFilter::IsAcceptedType(const CMediaType *pmt)
 
 	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
 	{
+		VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)pmt->Format();
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		if (bitHeader.biCompression)
+		{
+			return false;
+		}
 		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			return true;
