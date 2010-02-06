@@ -6,7 +6,7 @@
 #include "combase.h"
 #include "CMuxTransformFilter.h"
 #include "TouchScreenDevice.h"
-#include "OSCSender.h"
+#include "..\OSCSender\OSCSender.h"
 using namespace touchlib;
 
 // {F982AA58-0213-4235-B342-314D853D5CEE}
@@ -65,7 +65,7 @@ protected:
 	vector<ITouchListener*> m_listenerList;
 	CCritSec m_csListenerList;
 	CCritSec m_csTouchScreen;
-	OSCSender m_oscSender;
+	OSCSender* m_oscSender;
 protected:
 	bool IsAcceptedType(const CMediaType *pmt);
 public:

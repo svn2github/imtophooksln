@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories="..\OSCSender\oscPack;..\TouchLibFilter\Touchlib\include;.\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib OSCSender.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
+				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
 				ModuleDefinitionFile=".\AR2WarpController.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

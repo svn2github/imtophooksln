@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "TouchLibFilter.h"
-
 #include "stdafx.h"
 #include "TouchLibFilter.h"
 #include "TouchLibFilterProp.h"
@@ -19,10 +18,16 @@ TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 	m_scalerLabel = "null";
 	m_rectifyLabel = "null";
 	m_pTouchScreen = NULL;
+	m_oscSender = OSCSender::GetOSCSender();
 }
 TouchLibFilter::~TouchLibFilter()
 {
 	DestoryTouchScreen();
+	if (m_oscSender != NULL)
+	{
+		m_oscSender->Release();
+		m_oscSender = NULL;
+	}
 }
 
 CUnknown *WINAPI TouchLibFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -371,7 +376,7 @@ bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundR
 		m_pTouchScreen->setParameter(m_bgLabel, "capture", "");
 	}
 	m_pTouchScreen->registerListener((ITouchListener*)this);
-	registerListener(&m_oscSender);
+	registerListener(m_oscSender);
 	
 	return true;
 }
@@ -627,30 +632,30 @@ void TouchLibFilter::fingerUp(TouchData data)
 
 bool TouchLibFilter::IsOSCConnected()
 {
-	return m_oscSender.isConnected();
+	return m_oscSender->isConnected();
 }
 bool TouchLibFilter::ConnectOSC(string ipaddress, int port)
 {
-	if (m_oscSender.isConnected())
+	if (m_oscSender->isConnected())
 	{
 		return false;
 	}
-	m_oscSender.connectSocket(ipaddress, port);
+	m_oscSender->connectSocket(ipaddress, port);
 	return true;
 }
 bool TouchLibFilter::DisConnectOSC()
 {
-	m_oscSender.disConnectSocket();
+	m_oscSender->disConnectSocket();
 	return true;
 }
 bool TouchLibFilter::GetIPAddress(string& outIpAddress)
 {
-	outIpAddress = m_oscSender.m_ipAddress;
+	outIpAddress = m_oscSender->m_ipAddress;
 	return true;
 }
 int TouchLibFilter::GetPort()
 {
-	return m_oscSender.m_port;
+	return m_oscSender->m_port;
 }
 bool TouchLibFilter::IsTouchReady()
 {

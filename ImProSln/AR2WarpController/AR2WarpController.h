@@ -6,7 +6,7 @@
 #include "MyMediaSample.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "pointTrans.h"
-
+#include "..\OSCSender\OSCSender.h"
 using namespace ARToolKitPlus;
 
 #define NUMCAM 3
@@ -49,6 +49,8 @@ protected:
 	CCritSec m_csFGList;
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
 	D3DXMATRIX* m_matPro2VW[NUMCAM];
+	OSCSender* m_pOSCSender;
+
 
 	ForegroundRegion* m_pFGList;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
@@ -56,7 +58,7 @@ protected:
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	virtual bool SendWarpConfig(int camIDx);
 	virtual bool SendARLayoutStartegyData();
-	
+	virtual bool SendBoundingBox2OSCSender();
 	// function for projector coordinate to virtual world
 	
 	ProjectorTrans2World* projCoord ;

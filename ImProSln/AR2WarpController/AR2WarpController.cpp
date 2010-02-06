@@ -17,7 +17,7 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 		m_matPro2VW[i] = NULL;
 	}
 	m_pFGList = NULL;
-
+	m_pOSCSender = OSCSender::GetOSCSender();
 	extern HMODULE GetModule();
 	WCHAR str[MAX_PATH] = {0};
 	HMODULE module = GetModule();
@@ -55,6 +55,11 @@ AR2WarpController::~AR2WarpController()
 	{
 		delete m_pFGList;
 		m_pFGList = NULL;
+	}
+	if (m_pOSCSender != NULL)
+	{
+		m_pOSCSender->Release();
+		m_pOSCSender = NULL;
 	}
 }
 
@@ -792,6 +797,16 @@ bool AR2WarpController::SendARLayoutStartegyData()
 
 	return true;
 }
+bool AR2WarpController::SendBoundingBox2OSCSender()
+{
+	if (m_pOSCSender == NULL || m_pOSCSender->isConnected() == false)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 IPin* AR2WarpController::GetARResultPin(int idx)
 {
 	if (idx < 0 || idx > NUMCAM)

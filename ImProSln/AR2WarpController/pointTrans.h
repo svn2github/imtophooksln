@@ -7,10 +7,10 @@
 
 using namespace std;
 
-#pragma comment(lib, "cv.lib")
-#pragma comment(lib, "highgui.lib")
-#pragma comment(lib, "cxcore.lib")
-#pragma comment(lib, "cvaux.lib")
+#pragma comment(lib, "cv200.lib")
+#pragma comment(lib, "highgui200.lib")
+#pragma comment(lib, "cxcore200.lib")
+#pragma comment(lib, "cvaux200.lib")
 
 
 
