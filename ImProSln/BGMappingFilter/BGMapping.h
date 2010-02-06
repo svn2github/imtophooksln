@@ -30,6 +30,7 @@ public:
 	IplImage*mappingTable;
 	IplImage*backgroundImg;
 	IplImage*resultImg;
+	IplImage*result4CImg;
 	IplImage*foregroundImg;
 	IplImage*binarySrc;
 	IplImage*binaryResult;

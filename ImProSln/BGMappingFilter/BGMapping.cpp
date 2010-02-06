@@ -7,7 +7,8 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel){
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	binaryResult = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
-	resultImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,imgChannel);
+	resultImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	result4CImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,4);
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
 	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -65,9 +66,9 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	//cvWarpPerspective(binarySrc,resultImg,MatHomography);
 	cvSub(resultImg,backgroundImg,resultImg);
 	cvThreshold(binaryResult,binaryResult,BGthreshold,255,0);
-	cvCvtColor( binaryResult, resultImg, CV_GRAY2RGBA);
+	cvCvtColor( binaryResult, result4CImg, CV_GRAY2RGBA);
 
-	return resultImg;
+	return result4CImg;
 }
 
 
