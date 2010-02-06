@@ -97,7 +97,7 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 		return S_FALSE;
 	}
 	HRESULT hr = S_OK;
-
+	CAutoLock lck(&m_csInTexture);
 	GUID guidSubType = pInMediaType->subtype;
 
 	LPDIRECT3DSURFACE9 pInSurface = NULL;
@@ -257,8 +257,11 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 {		
 	CopyInputImage2InputTexture(pIn, pInType, bFlipY);
 	SetRenderTarget();
-	m_pD3DDisplay->SetTexture(m_pInTexture);
-	m_pD3DDisplay->Render();
+	{
+		CAutoLock lck(&m_csInTexture);
+		m_pD3DDisplay->SetTexture(m_pInTexture);
+		m_pD3DDisplay->Render();
+	}
 	ResetRenderTarget();
 	CopyRenderTarget2OutputTexture();	
 	CopyOutputTexture2OutputData(pOut, pOutType, true);

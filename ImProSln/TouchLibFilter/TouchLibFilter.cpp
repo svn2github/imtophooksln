@@ -1,7 +1,5 @@
 #include "stdafx.h"
 #include "TouchLibFilter.h"
-#include "stdafx.h"
-#include "TouchLibFilter.h"
 #include "TouchLibFilterProp.h"
 #include "TouchLibFilterApp.h"
 #include "cv.h"
