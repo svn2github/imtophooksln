@@ -3,6 +3,7 @@
 #include "MFCBasePropertyPage.h"
 #include "streams.h"
 #include "resource.h"
+#include "afxwin.h"
 // {A3A24F60-5604-46f2-B6CA-B23F24E5E052}
 DEFINE_GUID(CLSID_AR2WarpControllerPropertyPage, 
 			0xa3a24f60, 0x5604, 0x46f2, 0xb6, 0xca, 0xb2, 0x3f, 0x24, 0xe5, 0xe0, 0x52);
@@ -26,6 +27,7 @@ protected:
 
 protected:
 	IAR2WarpController *m_pFilter;
+	bool GetSetting();
 public:
 	// Dialog Data
 	enum {IDD = IDD_AR2WarpControllerPropertyPage};
@@ -41,4 +43,9 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_AR2WarpControllerPropertyPage;}
 	virtual int GetTitileResourceID() { return IDS_AR2WarpControllerTitle;}
 
+	CEdit m_edIP;
+	CEdit m_edPort;
+	CButton m_btnConnect;
+
+	afx_msg void OnBnClickedBtnconnect();
 };

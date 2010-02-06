@@ -42,6 +42,13 @@ public:
 public:
 	AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~AR2WarpController();
+	virtual bool IsOSCConnected();
+	virtual bool ConnectOSC(string ipaddress, int port);
+	virtual bool DisConnectOSC();
+	virtual bool GetIPAddress(string& outIpAddress);
+	virtual int GetPort();
+
+
 protected:
 	double  m_RANSIC_Threshold;
 	CCritSec m_csMatCam2VW[NUMCAM];

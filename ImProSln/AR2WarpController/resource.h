@@ -4,6 +4,10 @@
 //
 #define IDD_AR2WarpControllerPropertyPage 107
 #define IDS_AR2WarpControllerTitle      11000
+#define IDC_BTNCONNECT                  16005
+#define IDC_IP                          16006
+#define IDC_EDIT3                       16007
+#define IDC_Port                        16007
 
 // Next default values for new objects
 // 

@@ -835,3 +835,32 @@ IPin* AR2WarpController::GetARLayoutPin()
 {
 	return m_pOutputPins[NUMCAM];
 }
+
+
+bool AR2WarpController::IsOSCConnected()
+{
+	return m_pOSCSender->isConnected();
+}
+bool AR2WarpController::ConnectOSC(string ipaddress, int port)
+{
+	if (m_pOSCSender->isConnected())
+	{
+		return false;
+	}
+	m_pOSCSender->connectSocket(ipaddress, port);
+	return true;
+}
+bool AR2WarpController::DisConnectOSC()
+{
+	m_pOSCSender->disConnectSocket();
+	return true;
+}
+bool AR2WarpController::GetIPAddress(string& outIpAddress)
+{
+	outIpAddress = m_pOSCSender->m_ipAddress;
+	return true;
+}
+int AR2WarpController::GetPort()
+{
+	return m_pOSCSender->m_port;
+}

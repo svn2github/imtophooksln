@@ -264,6 +264,8 @@ void OSCSender::sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2])
 	p << osc::BeginMessage( "/tuio/originalPts" ) << "set" << id << orgPt[0][0] << orgPt[0][1]
 			<< orgPt[1][0] << orgPt[1][1] << orgPt[2][0] << orgPt[2][1] << orgPt[3][0] << orgPt[3][1] << osc::EndMessage;
 	p << osc::EndBundle;
+	if(p.IsReady())
+		m_transmitSocket->Send( p.Data(), p.Size() );
 }
 
 void OSCSender::clearFingers()
