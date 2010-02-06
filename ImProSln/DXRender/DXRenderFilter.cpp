@@ -4,6 +4,7 @@
 #include "DXRenderApp.h"
 #include "MyMediaSample.h"
 #include "DXRenderDisplay.h"
+#include "CMuxTransformFilter.h"
 DXRenderFilter::DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CBaseRenderer(CLSID_DXRenderFilter, NAME("DXRender Filter"), pOuter, phr)
 { 
@@ -46,7 +47,21 @@ HRESULT DXRenderFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 
 HRESULT DXRenderFilter::CheckMediaType(const CMediaType *pmt)
 {
-	if (( IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && IsEqualGUID(*pmt->Subtype(), GUID_D3DXTEXTURE9_POINTER)))
+	GUID guidSubType = *pmt->Subtype();
+	if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video)) 
+	{
+		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			return S_OK;
+		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) ||
+			IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			return S_OK;
+		}
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
 	{
 		return S_OK;
 	}
@@ -61,8 +76,19 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 {
 	if (m_pD3DDisplay == NULL)
 	{
-		D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) m_InputMT.pbFormat;
-		initD3D(desc->Width, desc->Height);
+		CMediaType mt = m_InputMT;
+		if (IsEqualGUID(*mt.FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC))
+		{	
+			D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) mt.pbFormat;
+			initD3D(desc->Width, desc->Height);
+		}
+		else if (IsEqualGUID(*mt.FormatType(), FORMAT_VideoInfo))
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			initD3D(bitHeader.biWidth, bitHeader.biHeight);
+		} 
+
 	}
 	m_pD3DDisplay->ShowDisplayWnd(TRUE);
 	return __super::CompleteConnect(pReceivePin);
