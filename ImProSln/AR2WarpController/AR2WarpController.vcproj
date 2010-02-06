@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\pointTrans.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -256,6 +260,10 @@
 			</File>
 			<File
 				RelativePath=".\IAR2WarpController.h"
+				>
+			</File>
+			<File
+				RelativePath=".\pointTrans.h"
 				>
 			</File>
 			<File

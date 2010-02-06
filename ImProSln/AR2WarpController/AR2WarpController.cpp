@@ -5,6 +5,8 @@
 #include <d3dx9math.h>
 #include "cv.h"
 #include "MyARTagMediaSample.h"
+
+
 AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
 { 
@@ -12,6 +14,7 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	for (int i=0; i < NUMCAM; i++)
 	{
 		m_matCam2VW[i] = NULL;
+		m_matPro2VW[i] = NULL;
 	}
 	m_pFGList = NULL;
 }
@@ -23,6 +26,11 @@ AR2WarpController::~AR2WarpController()
 		{
 			delete m_matCam2VW[i];
 			m_matCam2VW[i] = NULL;
+		}
+		if (m_matPro2VW[i] != NULL)
+		{
+			delete m_matPro2VW[i];
+			m_matPro2VW[i] = NULL;
 		}
 	}
 	if (m_pFGList != NULL)
@@ -229,6 +237,14 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 			delete m_matCam2VW[idx];
 			m_matCam2VW[idx] = NULL;
 		}
+
+		CAutoLock lck(&m_csMatPro2VW[idx]); // there is no marker detected.
+		if (m_matPro2VW[idx] != NULL)
+		{
+			delete m_matPro2VW[idx];
+			m_matPro2VW[idx] = NULL;
+		}
+
 		free(t);
 		free(d);
 		return S_FALSE;
@@ -238,6 +254,29 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 
 	cvPt = cvMat(nValidDetected*4, 2, CV_32F, d); //t: virtual space, d: camera space
 	dstPt = cvMat(nValidDetected*4, 2, CV_32F, t);
+	
+	GetProjHomo(&cvPt,&dstPt);
+	{
+		CAutoLock lck(&m_csMatPro2VW[idx]);
+		if (m_matPro2VW[idx] == NULL)
+		{
+			m_matPro2VW[idx] = new D3DXMATRIX();
+		}
+		D3DXMatrixIdentity(m_matPro2VW[idx]);
+		m_matPro2VW[idx]->_11 = projCoord->proHomoMat.data.fl[0*3 + 0];
+		m_matPro2VW[idx]->_21 = projCoord->proHomoMat.data.fl[0*3 + 1];
+		m_matPro2VW[idx]->_31 = projCoord->proHomoMat.data.fl[0*3 + 2];
+
+		m_matPro2VW[idx]->_12 = projCoord->proHomoMat.data.fl[1*3 + 0];
+		m_matPro2VW[idx]->_22 = projCoord->proHomoMat.data.fl[1*3 + 1];
+		m_matPro2VW[idx]->_32 = projCoord->proHomoMat.data.fl[1*3 + 2];
+
+		m_matPro2VW[idx]->_13 = projCoord->proHomoMat.data.fl[2*3 + 0];
+		m_matPro2VW[idx]->_23 = projCoord->proHomoMat.data.fl[2*3 + 1];
+		m_matPro2VW[idx]->_33 = projCoord->proHomoMat.data.fl[2*3 + 2];
+
+	}
+	
 	cvFindHomography(&cvPt, &dstPt, &mat, CV_RANSAC, m_RANSIC_Threshold); // camera to virtual space
 	{
 		CAutoLock lck(&m_csMatCam2VW[idx]);
@@ -262,6 +301,13 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	free(d);
 	return S_OK;
 }
+
+HRESULT AR2WarpController ::GetProjHomo(CvMat* camPoints, CvMat* worldPoints){
+	projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
+	projCoord->getProjHomo();
+	return S_OK;
+}
+
 
 HRESULT AR2WarpController::ReceiveTouchResult(IMediaSample *pSample, const IPin* pReceivePin)
 {
@@ -626,10 +672,15 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 	}
 	WarpConfigData sendData; 
 	{
-		CAutoLock lck(&m_csMatCam2VW[camIdx]);
+		/*CAutoLock lck(&m_csMatCam2VW[camIdx]);
 		for (int row =0; row < 4; row++)
 			for (int col =0; col < 4; col++)
-				sendData.warpMat[row][col] = m_matCam2VW[camIdx]->m[row][col];
+				sendData.warpMat[row][col] = m_matCam2VW[camIdx]->m[row][col];*/
+
+		CAutoLock lck(&m_csMatPro2VW[camIdx]);
+		for (int row =0; row < 4; row++)
+			for (int col =0; col < 4; col++)
+				sendData.warpMat[row][col] = m_matPro2VW[camIdx]->m[row][col];
 	}
 	IMemAllocator* pAllocator = m_pOutputPins[0]->GetAllocator();
 	CMediaSample* pSendSample = NULL;
@@ -671,7 +722,6 @@ bool AR2WarpController::SendARLayoutStartegyData()
 				sizeof(fRECT)*pData->numFingers);
 		}
 	}
-
 	//////Camera looking Area///////////
 	for (int i =0; i < NUMCAM; i++)
 	{

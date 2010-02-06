@@ -336,7 +336,7 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		sprintf(homoDir,"%s\\BackgroundCaliData\\HomoMat.txt",fileDir) ;
 		sprintf(mTableDir,"%s\\BackgroundCaliData\\mTable.txt",fileDir) ;
 
-		BG = new BackGroundMapping(cameraW,cameraH);
+		BG = new BackGroundMapping(cameraW,cameraH,camChannel);
 		BG->loadHomo(homoDir,mTableDir);
 
 		return S_OK;

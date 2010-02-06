@@ -2,8 +2,11 @@
 #include "IAR2WarpController.h"
 #include "CMuxTransformFilter.h"
 #include <d3dx9.h>
+#include "cv.h"
 #include "MyMediaSample.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
+#include "pointTrans.h"
+
 using namespace ARToolKitPlus;
 
 #define NUMCAM 3
@@ -34,20 +37,30 @@ public:
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
+
+
 public:
 	AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~AR2WarpController();
 protected:
 	double  m_RANSIC_Threshold;
 	CCritSec m_csMatCam2VW[NUMCAM];
+	CCritSec m_csMatPro2VW[NUMCAM];
 	CCritSec m_csFGList;
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
+	D3DXMATRIX* m_matPro2VW[NUMCAM];
+
 	ForegroundRegion* m_pFGList;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
 	virtual bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	virtual bool SendWarpConfig(int camIDx);
 	virtual bool SendARLayoutStartegyData();
+	
+	// function for projector coordinate to virtual world
+	
+	ProjectorTrans2World* projCoord ;
+	virtual HRESULT GetProjHomo(CvMat* camPoints, CvMat* worldPoints); 
 
 	IPin* GetARResultPin(int idx);
 	IPin* GetWarpConfigPin(int idx);

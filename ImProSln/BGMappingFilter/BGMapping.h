@@ -13,7 +13,7 @@ using namespace std;
 class BackGroundMapping{
 
 public:
-	BackGroundMapping(int w , int h);
+	BackGroundMapping(int w , int h , int imgChannel);
 	~BackGroundMapping();
 	
 	void loadHomo(char* homoName , char* mTableName);
@@ -32,6 +32,7 @@ public:
 	IplImage*resultImg;
 	IplImage*foregroundImg;
 	IplImage*binarySrc;
+	IplImage*binaryResult;
 
 	IplConvKernel* kernelElement;
 
