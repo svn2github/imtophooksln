@@ -1,0 +1,6 @@
+%YAML:1.0
+ProDisto: !!opencv-matrix
+   rows: 4
+   cols: 1
+   dt: f
+   data: [ 0.20444000, -0.34744999, 0.01028000, 0.02623000 ]

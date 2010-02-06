@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "pointTrans.h"
 
 ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char* fileDir){
@@ -69,15 +70,15 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 void ProjectorTrans2World::loadCalibParam(char* fileDir){
 
 	char Dir[100];
-	sprintf(Dir,"%s\\BackgroundCaliData\\ProDisto.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\ProDisto.txt",fileDir) ;
 	proDisto = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\BackgroundCaliData\\CamDisto.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\CamDisto.txt",fileDir) ;
 	camDisto = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\BackgroundCaliData\\ProIntrinsic.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\ProIntrinsic.txt",fileDir) ;
 	proIntrinsic = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\BackgroundCaliData\\CamIntrinsic.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\CamIntrinsic.txt",fileDir) ;
 	camIntrinsic = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\BackgroundCaliData\\pro2CamExtrinsic.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\pro2CamExtrinsic.txt",fileDir) ;
 	pro2CamExtrinsic = (CvMat*)cvLoad(Dir);
 
 }

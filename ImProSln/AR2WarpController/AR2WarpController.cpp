@@ -17,6 +17,24 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 		m_matPro2VW[i] = NULL;
 	}
 	m_pFGList = NULL;
+
+	extern HMODULE GetModule();
+	WCHAR str[MAX_PATH] = {0};
+	HMODULE module = GetModule();
+	GetModuleFileName(module, str, MAX_PATH);
+	// Gets filename
+	WCHAR* pszFile = wcsrchr(str, '\\');
+	pszFile++;    // Moves on from \
+	// Get path
+	WCHAR szPath[MAX_PATH] = L"";
+	_tcsncat(szPath, str, pszFile - str);
+
+	char fileDir[100];
+	int size= wcslen(szPath);
+	
+	wcstombs(fileDir, szPath, size+1);
+
+	projCoord = new  ProjectorTrans2World(800,600,fileDir);
 }
 AR2WarpController::~AR2WarpController()
 {
@@ -238,7 +256,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 			m_matCam2VW[idx] = NULL;
 		}
 
-		CAutoLock lck(&m_csMatPro2VW[idx]); // there is no marker detected.
+		CAutoLock proLck(&m_csMatPro2VW[idx]); // there is no marker detected.
 		if (m_matPro2VW[idx] != NULL)
 		{
 			delete m_matPro2VW[idx];
@@ -263,17 +281,17 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 			m_matPro2VW[idx] = new D3DXMATRIX();
 		}
 		D3DXMatrixIdentity(m_matPro2VW[idx]);
-		m_matPro2VW[idx]->_11 = projCoord->proHomoMat.data.fl[0*3 + 0];
-		m_matPro2VW[idx]->_21 = projCoord->proHomoMat.data.fl[0*3 + 1];
-		m_matPro2VW[idx]->_31 = projCoord->proHomoMat.data.fl[0*3 + 2];
+		m_matPro2VW[idx]->_11 = projCoord->proHomoMat->data.fl[0*3 + 0];
+		m_matPro2VW[idx]->_21 = projCoord->proHomoMat->data.fl[0*3 + 1];
+		m_matPro2VW[idx]->_31 = projCoord->proHomoMat->data.fl[0*3 + 2];
 
-		m_matPro2VW[idx]->_12 = projCoord->proHomoMat.data.fl[1*3 + 0];
-		m_matPro2VW[idx]->_22 = projCoord->proHomoMat.data.fl[1*3 + 1];
-		m_matPro2VW[idx]->_32 = projCoord->proHomoMat.data.fl[1*3 + 2];
+		m_matPro2VW[idx]->_12 = projCoord->proHomoMat->data.fl[1*3 + 0];
+		m_matPro2VW[idx]->_22 = projCoord->proHomoMat->data.fl[1*3 + 1];
+		m_matPro2VW[idx]->_32 = projCoord->proHomoMat->data.fl[1*3 + 2];
 
-		m_matPro2VW[idx]->_13 = projCoord->proHomoMat.data.fl[2*3 + 0];
-		m_matPro2VW[idx]->_23 = projCoord->proHomoMat.data.fl[2*3 + 1];
-		m_matPro2VW[idx]->_33 = projCoord->proHomoMat.data.fl[2*3 + 2];
+		m_matPro2VW[idx]->_13 = projCoord->proHomoMat->data.fl[2*3 + 0];
+		m_matPro2VW[idx]->_23 = projCoord->proHomoMat->data.fl[2*3 + 1];
+		m_matPro2VW[idx]->_33 = projCoord->proHomoMat->data.fl[2*3 + 2];
 
 	}
 	

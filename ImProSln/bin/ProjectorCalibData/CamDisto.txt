@@ -1,0 +1,7 @@
+%YAML:1.0
+CamDisto: !!opencv-matrix
+   rows: 4
+   cols: 1
+   dt: f
+   data: [ -7.28000002e-003, -0.12953000, -1.01999997e-003,
+       -5.61999995e-003 ]
