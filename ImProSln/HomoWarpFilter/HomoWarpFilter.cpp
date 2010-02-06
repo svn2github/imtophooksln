@@ -9,6 +9,7 @@ HomoWarpFilter::HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 { 
 	D3DXMatrixIdentity(&m_matTTS);
 	m_bFlipY = true;
+	
 }
 HomoWarpFilter::~HomoWarpFilter()
 {
@@ -631,4 +632,12 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 		return false;
 	}
 	return true;
+}
+LPDIRECT3DTEXTURE9 HomoWarpFilter::GetInTexture()
+{
+	return m_pInTexture;
+}
+CCritSec* HomoWarpFilter::GetCSInTexture()
+{
+	return &m_csInTexture;
 }

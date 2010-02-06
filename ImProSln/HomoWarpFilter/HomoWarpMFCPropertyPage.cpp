@@ -8,11 +8,13 @@
 
 #include "DSMacro.h"
 #include "resource.h"
+#include "cv.h"
+#include "highgui.h"
 // CHomoWarpMFCPropertyPage dialog
 
 IMPLEMENT_DYNAMIC(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 extern CHomoWarpFilterApp theApp;
-const float CHomoWarpMFCPropertyPage::m_slrRangeScale = 0.5;
+const float CHomoWarpMFCPropertyPage::m_slrRangeScale = 2;
 
 void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 {
@@ -40,6 +42,7 @@ BEGIN_MESSAGE_MAP(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnBrowse, &CHomoWarpMFCPropertyPage::OnBnClickedbtnbrowse)
 	ON_BN_CLICKED(IDC_BUTTON3, &CHomoWarpMFCPropertyPage::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BTN_LOAD, &CHomoWarpMFCPropertyPage::OnBnClickedBtnLoad)
+	ON_BN_CLICKED(IDC_btnEditWnd, &CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd)
 END_MESSAGE_MAP()
 
 
@@ -58,6 +61,7 @@ m_pFilter(0)
 	m_slrRBy = 0;
 	m_slrRTx = 0;
 	m_slrRTy = 0;
+	m_pEditImage = NULL;
 
 }
 
@@ -67,6 +71,11 @@ CHomoWarpMFCPropertyPage::~CHomoWarpMFCPropertyPage()
 	{
 		m_pFilter->Release();
 		m_pFilter = NULL;
+	}
+	if (m_pEditImage != NULL)
+	{
+		cvReleaseImage(&m_pEditImage);
+		m_pEditImage = NULL;
 	}
 }
 
@@ -420,4 +429,106 @@ void CHomoWarpMFCPropertyPage::OnBnClickedBtnLoad()
 	}
 	theApp.WriteProfileString(L"MySetting",L"HomoWarpConfigPath",path);
 	GetSetting();
+}
+
+void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
+{
+	if (m_pFilter == NULL)
+		return;
+	LPDIRECT3DTEXTURE9 pTexture = m_pFilter->GetInTexture();
+	CCritSec* csInTexture = m_pFilter->GetCSInTexture();
+	CAutoLock lck(csInTexture);
+	LPDIRECT3DSURFACE9 pSurface = NULL;
+	if (pTexture == NULL)
+		return; 
+	pTexture->GetSurfaceLevel(0, &pSurface);
+	D3DSURFACE_DESC desc;
+	pSurface->GetDesc(&desc);
+	D3DLOCKED_RECT rect;
+	pSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+	IplImage* imgIn = NULL;
+	imgIn = cvCreateImageHeader(cvSize(desc.Width, desc.Height),8, 4);
+	imgIn->imageData = (char*)rect.pBits;
+	if (m_pEditImage == NULL)
+	{
+		m_pEditImage = cvCreateImage(cvSize(desc.Width, desc.Height),8, 4);
+	}
+	cvCopy(imgIn, m_pEditImage);
+	
+	cvShowImage("HomoWarp Edit", m_pEditImage);
+	cvSetMouseCallback( "HomoWarp Edit", MouseCallback, this);
+
+	pSurface->UnlockRect();
+	if (pSurface != NULL)
+	{
+		pSurface->Release();
+		pSurface = NULL;
+	}
+
+}
+
+void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flags, void* param)
+{
+	CHomoWarpMFCPropertyPage* pInst = (CHomoWarpMFCPropertyPage*)param;
+	if (eventID == CV_EVENT_LBUTTONUP)
+	{
+		D3DXVECTOR2 pt(x, y);
+		pt.x = (pt.x /(float) pInst->m_pEditImage->width);
+		pt.y = (pt.y /(float) pInst->m_pEditImage->height);
+		pInst->m_editWarpPt.push_back(pt);
+		cvDrawCircle(pInst->m_pEditImage, cvPoint(x, y), 5, cvScalar(255,0,0));
+		cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
+		if (pInst->m_editWarpPt.size() >= 4)
+		{
+			pInst->SetWarpByEditPts();
+			pInst->m_editWarpPt.clear();
+			cvDestroyWindow("HomoWarp Edit");
+		}
+	}
+
+	return;
+}
+
+bool CHomoWarpMFCPropertyPage::SetWarpByEditPts()
+{
+	if (m_editWarpPt.size() < 4)
+	{
+		return false;
+	}
+	float fromPt[] = { 0, 0,
+		0, 1,
+		1, 1,
+		1, 0};
+
+	float toPt[] = { m_editWarpPt[0].x, m_editWarpPt[0].y,
+		m_editWarpPt[1].x, m_editWarpPt[1].y,
+		m_editWarpPt[2].x, m_editWarpPt[2].y,
+		m_editWarpPt[3].x, m_editWarpPt[3].y,
+	};
+	float s[] = {0,0,0,
+		0,0,0,
+		0,0,0};
+
+
+	CvMat cvFromPt = cvMat(4, 2, CV_32F, fromPt);
+	CvMat cvToPt = cvMat(4, 2, CV_32F, toPt);
+	CvMat cvMatHomo = cvMat(3,3, CV_32F, s);
+	cvFindHomography(&cvFromPt, &cvToPt, &cvMatHomo);
+	D3DXMATRIX matHomo;
+	D3DXMatrixIdentity(&matHomo);
+
+	matHomo._11 = cvMatHomo.data.fl[0*3 + 0];
+	matHomo._21 = cvMatHomo.data.fl[0*3 + 1];
+	matHomo._31 = cvMatHomo.data.fl[0*3 + 2];
+
+	matHomo._12 = cvMatHomo.data.fl[1*3 + 0];
+	matHomo._22 = cvMatHomo.data.fl[1*3 + 1];
+	matHomo._32 = cvMatHomo.data.fl[1*3 + 2];
+
+	matHomo._13 = cvMatHomo.data.fl[2*3 + 0];
+	matHomo._23 = cvMatHomo.data.fl[2*3 + 1];
+	matHomo._33 = cvMatHomo.data.fl[2*3 + 2];
+	m_pFilter->SetWarpMatrix(matHomo);
+	GetSetting();
+	return true;
 }

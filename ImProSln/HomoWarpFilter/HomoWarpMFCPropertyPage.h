@@ -3,6 +3,7 @@
 
 #include "resource.h"
 #include "afxwin.h"
+#include "cv.h"
 // CHomoWarpMFCPropertyPage dialog
 DEFINE_GUID(CLSID_HomoWarpFilterPropertyPage, 
 			0xf3dbd46e, 0x12c6, 0x4652, 0x9a, 0x2e, 0x6, 0x3a, 0xc6, 0x23, 0xe8, 0x46);
@@ -25,6 +26,7 @@ protected:
 
 protected:
 	IHomoWarpFilter *m_pFilter;
+	IplImage* m_pEditImage;
 	HWND m_slrLTx;
 	HWND m_slrLTy;
 	HWND m_slrLBx;
@@ -75,4 +77,8 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnbrowse();
 	afx_msg void OnBnClickedButton3();
 	afx_msg void OnBnClickedBtnLoad();
+	afx_msg void OnBnClickedbtneditwnd();
+	bool SetWarpByEditPts();
+	static void MouseCallback(int event, int x, int y, int flags, void* param);
+	vector<D3DXVECTOR2> m_editWarpPt;
 };

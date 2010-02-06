@@ -49,7 +49,10 @@ public:
 	virtual bool SetIsFlipY(bool bFlipY){ m_bFlipY = bFlipY; return true;};
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
+	virtual LPDIRECT3DTEXTURE9 GetInTexture();
+	virtual CCritSec* GetCSInTexture();
 protected:
+	
 	bool m_bFlipY;
 	CCritSec m_accessWarpMatCS;
 	D3DXMATRIX m_matTTS;
