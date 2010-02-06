@@ -249,6 +249,23 @@ void OSCSender::frame()
 	}
 }
 
+void OSCSender::sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2])
+{
+	if(!m_transmitSocket)
+		return;
+
+	// send update messages..
+
+	char buffer[OUTPUT_BUFFER_SIZE];
+	osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
+	p.Clear();
+	p << osc::BeginBundle();
+	p << osc::BeginMessage( "/tuio/BoundingBox" ) << "set" << id << rect[0] << rect[1] << rect[2] << rect[3]  << osc::EndMessage;
+	p << osc::BeginMessage( "/tuio/originalPts" ) << "set" << id << orgPt[0][0] << orgPt[0][1]
+			<< orgPt[1][0] << orgPt[1][1] << orgPt[2][0] << orgPt[2][1] << orgPt[3][0] << orgPt[3][1] << osc::EndMessage;
+	p << osc::EndBundle;
+}
+
 void OSCSender::clearFingers()
 {
 	m_fingerList.clear();

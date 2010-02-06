@@ -35,6 +35,8 @@ public:
 	void frame();
 	void clearFingers();
 
+	void sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2]);
+
 public:
 	string m_ipAddress;
 	int m_port;

@@ -125,6 +125,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 			{
 				SendARLayoutStartegyData();
 			}
+			SendBoundingBox2OSCSender();
 		}
 	}
 	else if (m_pInputPins.size() >= NUMCAM+1 && m_pInputPins[NUMCAM] == pReceivePin)
@@ -803,7 +804,18 @@ bool AR2WarpController::SendBoundingBox2OSCSender()
 	{
 		return false;
 	}
-
+	//for testing
+	for (int i=0; i< NUMCAM; i++)
+	{
+		if (m_matCam2VW[i] == NULL)
+		{
+			continue;
+		}
+		float orgPt[4][2] = { {0.5, 0.25}, {0.25, 0.5}, {0.5, 0.75}, {0.75, 0.5}};
+		float rect[4] = {0.25,0.25,0.75,0.75};
+			
+		m_pOSCSender->sendHighResBoundingBox(i, rect, orgPt);
+	}
 	return true;
 }
 
