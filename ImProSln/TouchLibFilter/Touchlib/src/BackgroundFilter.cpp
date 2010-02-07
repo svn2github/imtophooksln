@@ -112,10 +112,10 @@ void BackgroundFilter::kernel()
 		}
 
 		//cvAdd(reference,mask,reference);
-		if(updateThreshold != 0)
+		/*if(updateThreshold != 0)
 		{
 			cvSubS(reference, cvScalar(updateThreshold,updateThreshold,updateThreshold), reference);
-		}
+		}*/
 
 		
 		recapture = false;
@@ -169,7 +169,7 @@ void BackgroundFilter::kernel()
 		currentRow = 0;
 #endif
 	// destination = source-reference
-	cvSub(source, reference, destination);
+	cvSubS(source,cvScalar(updateThreshold, updateThreshold, updateThreshold), reference, destination);
 
 /*
 

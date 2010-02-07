@@ -17,6 +17,7 @@ TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 	m_rectifyLabel = "null";
 	m_pTouchScreen = NULL;
 	m_oscSender = OSCSender::GetOSCSender();
+
 }
 TouchLibFilter::~TouchLibFilter()
 {
