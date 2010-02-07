@@ -9,7 +9,7 @@
 #include "ARTagD3DDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
-
+#include "cv.h"
 DEFINE_GUID(CLSID_ARTagDSFilter, 
 			0x889c4fa1, 0xfb51, 0x4118, 0x80, 0xb8, 0xc0, 0x3f, 0x51, 0x4a, 0xab, 0x3);
 
@@ -84,6 +84,7 @@ protected:
 	virtual HRESULT DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		IMediaSample *pOut, const CMediaType* pOutType);
 	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
+	HRESULT DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo);
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();

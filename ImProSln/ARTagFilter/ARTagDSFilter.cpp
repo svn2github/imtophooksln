@@ -265,7 +265,44 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	}
 	return S_OK;
 }
+HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo)
+{
+	if (img == NULL)
+	{
+		return S_FALSE;
+	}
+	CvPoint pts[4];
+	CvPoint center;
+	center.x = 0; center.y = 0;
 
+	char str[MAX_PATH];
+	for (int i=0; i < numMarkinfo; i++)
+	{
+		RECT rect; rect.left = 100000; rect.right = 0; rect.top = 100000; rect.bottom = 0;
+		for (int j =0; j < 4; j++)
+		{
+			pts[j].x = markinfos[i].vertex[j][0];
+			pts[j].y = markinfos[i].vertex[j][1];
+			rect.left = min((float)rect.left, (float)pts[j].x);
+			rect.right = max((float)rect.right, (float)pts[j].x);
+			rect.top = min((float)rect.top, (float)pts[j].y);
+			rect.bottom = max((float)rect.bottom, (float)pts[j].y);
+		}
+		
+		center.x = (rect.left +rect.right) /2;
+		center.y = (rect.bottom + rect.top )/2;
+		int PolyVertexNumber[1]={4};
+		for (int i =0; i<4; i++)
+		{
+			cvDrawLine(img, pts[i%4], pts[(i+1)%4], cvScalar(0,0,255));
+		}
+		sprintf_s(str, MAX_PATH, "%d\0", markinfos[i].id);
+		cvPutText(img,str, center, &cvFont(1), cvScalar(0,0,255) );
+	}
+	
+	
+	return S_OK;
+}
 
 HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 								   IMediaSample *pOut, const CMediaType* pOutType )
@@ -358,6 +395,9 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	}
 	if (m_bDrawTag)
 	{
+		DrawARTag(imgOut, markinfos, numDetected);
+		
+		/*
 		CopyInputImage2InputTexture(pOut, pOutType, false);
 		SetRenderTarget();
 		m_pD3DDisplay->SetTexture(m_pInTexture);
@@ -365,11 +405,9 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		ResetRenderTarget();
 		CopyRenderTarget2OutputTexture();
 		CopyOutputTexture2OutputData(pOut, pOutType, true);
+		*/
 	}
-	else
-	{
-		cvFlip(imgOut, NULL, 0);
-	}
+	cvFlip(imgOut, NULL, 0);
 	if (img != NULL)
 	{
 		cvReleaseImageHeader(&img);
