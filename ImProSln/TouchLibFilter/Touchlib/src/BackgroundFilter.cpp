@@ -169,8 +169,11 @@ void BackgroundFilter::kernel()
 		currentRow = 0;
 #endif
 	// destination = source-reference
-	cvSubS(source,cvScalar(updateThreshold, updateThreshold, updateThreshold), reference, destination);
-
+	cvSub(source, reference, destination);
+	if (updateThreshold != 0)
+	{
+		cvSubS(destination, cvScalar(updateThreshold, updateThreshold, updateThreshold),destination );
+	}
 /*
 
 	*/
