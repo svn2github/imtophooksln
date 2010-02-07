@@ -65,4 +65,6 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edPort;
 	afx_msg void OnBnClickedBtnconnect();
 	afx_msg void OnBnClickedBtnClearBG();
+	afx_msg void OnBnClickedckbegintrack();
+	CButton m_ckBeginTrack;
 };

@@ -193,7 +193,6 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, false);
 		}
-		m_pTouchScreen->beginTracking();
 	}
 	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pMyPin)
 	{
@@ -209,7 +208,6 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, true);
 		}
-		m_pTouchScreen->beginTracking();
 	}
 	return S_OK;
 }
@@ -684,5 +682,28 @@ bool TouchLibFilter::ClearBackground()
 	}
 	((BackgroundFilter*)*bgFilter.begin())->clearBackground();
 
+	return true;
+}
+
+bool TouchLibFilter::setStartTracking(bool bStart)
+{
+	if (m_pTouchScreen == NULL)
+		return false;
+	if (bStart)
+		m_pTouchScreen->beginTracking();
+	else
+	{
+		m_pTouchScreen->endTracking();
+	}
+	return true;
+}
+bool TouchLibFilter::getStartTracking(bool& bStart)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		bStart = false;
+		return false;
+	}
+	bStart = m_pTouchScreen->isTracking();
 	return true;
 }

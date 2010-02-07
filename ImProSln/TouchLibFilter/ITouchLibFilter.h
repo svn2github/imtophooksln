@@ -22,5 +22,6 @@ public:
 	virtual int GetPort();
 	virtual bool IsTouchReady();
 	virtual bool ClearBackground();
-
+	virtual bool setStartTracking(bool bStart);
+	virtual bool getStartTracking(bool& bStart);
 };

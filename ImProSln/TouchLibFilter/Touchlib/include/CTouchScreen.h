@@ -8,7 +8,7 @@
 #include "mesh2d.h"
 #include "IBlobTracker.h"
 #include "cv.h"
-
+#include "CBlobTracker.h"
 #include <vector>
 
 namespace touchlib
@@ -99,7 +99,8 @@ namespace touchlib
 
 		// start the processing and video capturing
 		virtual void beginTracking() { bTracking = true; };
-
+		virtual void endTracking() { bTracking = false; setBlobTracker(new CBlobTracker());};
+		virtual bool isTracking(){ return bTracking;};
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
 		virtual IplImage* getFilterImage(int step);

@@ -16,6 +16,7 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BTNCONNECT, m_btnConnect);
 	DDX_Control(pDX, IDC_EDIT2, m_edIP);
 	DDX_Control(pDX, IDC_EDIT3, m_edPort);
+	DDX_Control(pDX, IDC_ckBeginTrack, m_ckBeginTrack);
 }
 
 
@@ -25,6 +26,7 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_CKShowConfig, &TouchLibPropPage::OnBnClickedCkshowconfig)
 	ON_BN_CLICKED(IDC_BTNCONNECT, &TouchLibPropPage::OnBnClickedBtnconnect)
 	ON_BN_CLICKED(IDC_btnClearBg, &TouchLibPropPage::OnBnClickedBtnClearBG)
+	ON_BN_CLICKED(IDC_ckBeginTrack, &TouchLibPropPage::OnBnClickedckbegintrack)
 END_MESSAGE_MAP()
 
 
@@ -195,7 +197,9 @@ bool TouchLibPropPage::GetSetting()
 	port = m_pFilter->GetPort();
 	swprintf(str, MAX_PATH, L"%d", port);
 	m_edPort.SetWindowText(str);
-
+	bool bStartTracking = false;
+	m_pFilter->getStartTracking(bStartTracking);
+	m_ckBeginTrack.SetCheck(bStartTracking);
 	if (m_pFilter->IsOSCConnected())
 	{
 		m_edIP.EnableWindow(FALSE);
@@ -244,5 +248,15 @@ void TouchLibPropPage::OnBnClickedBtnClearBG()
 		return ;
 	}
 	m_pFilter->ClearBackground();
+	return;
+}
+void TouchLibPropPage::OnBnClickedckbegintrack()
+{
+	if (m_pFilter == NULL)
+	{
+		return;
+	}
+	int bCk = m_ckBeginTrack.GetCheck();
+	m_pFilter->setStartTracking(bCk);
 	return;
 }

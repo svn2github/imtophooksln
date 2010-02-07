@@ -90,7 +90,8 @@ namespace touchlib
 
 		// start the processing and video capturing
 		virtual void beginTracking() = 0;
-
+		virtual void endTracking() = 0;
+		virtual bool isTracking() = 0;
 		/**
 		 * Sets the blob tracker.
 		 */
