@@ -1067,12 +1067,14 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	
 	ARMultiEachMarkerInfoT* ARMarkers = NULL;
 	int numMarker = 0;
-
-	int numLevel = 3;
+	float markerBits = 8;
+	float borderBits = 2;
+	float WidthBits = 80;
+	int numLevel = 2;
 	for (int level = 1; level <= numLevel; level++)
 	{
-		float markerWidth = 8.0/40.0/level;
-		int numX = 1.0  / (markerWidth + 2.0/40.0/level);
+		float markerWidth = markerBits/WidthBits/level;
+		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
 		int numY = numX;
 		numMarker += numX * numY;
 
@@ -1084,9 +1086,9 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	int idx = -1;
 	for (int level = 1; level <= numLevel; level++)
 	{
-		float markerWidth = 8.0/40.0/level;
+		float markerWidth = markerBits/WidthBits/level;
 		
-		int numX = 1.0  / (markerWidth + 2.0/40.0/level);
+		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
 		int numY = numX;
 		for (int i = 0; i < numY; i++)
 		{
@@ -1098,8 +1100,8 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 				ARMarkers[idx].width = markerWidth;	
 				ARMarkers[idx].center[0] = markerWidth * 0.5;
 				ARMarkers[idx].center[1] = -markerWidth * 0.5;
-				ARMarkers[idx].trans[0][0] = 1.0; ARMarkers[idx].trans[0][1] = 0.0; ARMarkers[idx].trans[0][2] = 0.0; ARMarkers[idx].trans[0][3] = 0 + ARMarkers[idx].width*j + markerWidth/8.0*(2*j+1);
-				ARMarkers[idx].trans[1][0] = 0.0; ARMarkers[idx].trans[1][1] = 1.0; ARMarkers[idx].trans[1][2] = 0.0; ARMarkers[idx].trans[1][3] = 0 - ARMarkers[idx].width*i - markerWidth/8.0*(2*i+1);
+				ARMarkers[idx].trans[0][0] = 1.0; ARMarkers[idx].trans[0][1] = 0.0; ARMarkers[idx].trans[0][2] = 0.0; ARMarkers[idx].trans[0][3] = 0 + ARMarkers[idx].width*j + markerWidth/markerBits*(2*j+1);
+				ARMarkers[idx].trans[1][0] = 0.0; ARMarkers[idx].trans[1][1] = 1.0; ARMarkers[idx].trans[1][2] = 0.0; ARMarkers[idx].trans[1][3] = 0 - ARMarkers[idx].width*i - markerWidth/markerBits*(2*i+1);
 				ARMarkers[idx].trans[2][0] = 0.0; ARMarkers[idx].trans[2][1] = 0.0; ARMarkers[idx].trans[2][2] = 1.0; ARMarkers[idx].trans[2][3] = 0;	
 			}
 		}
