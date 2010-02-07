@@ -38,6 +38,7 @@ CTouchScreen::CTouchScreen()
 	// Initialize BwImage frame
 	frame = 0;
 	pTrackingFrame = NULL;
+	bDrawFinger = false;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -97,6 +98,7 @@ CTouchScreen::CTouchScreen(float cw, float ch)
 	// Initialize BwImage frame
 	frame = 0;
 	pTrackingFrame = NULL;
+	bDrawFinger = false;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -330,7 +332,6 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 		
 		if(bTracking == true)		// If we are currently tracking blobs
 		{
-			
 			if (pTrackingFrame == NULL)
 			{
 				pTrackingFrame = cvCloneImage(output);
@@ -338,10 +339,16 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 			cvCopyImage(output, pTrackingFrame);
 			frame = pTrackingFrame;
 			//printf("Tracking 1\n");
-			
+			OutputDebugString(L"@@@@@ findBlobs  ------->\n");
 			tracker->findBlobs(frame);		// Locate the blobs
-			
+			OutputDebugString(L"@@@@@ findBlobs  <-------\n");
+			OutputDebugString(L"@@@@@ trackBlobs  ------->\n");
 			tracker->trackBlobs();			// and update their location
+			OutputDebugString(L"@@@@@ trackBlobs  <-------\n");
+			if (bDrawFinger)
+			{
+				tracker->drawFingers(pSrc);
+			}
 
 #ifdef WIN32
 			DWORD dw = WaitForSingleObject(eventListMutex, INFINITE);
@@ -355,7 +362,9 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 			else 		// Locking the mutex succeeds
 			{
 				//printf("Tracking 2\n");
+				OutputDebugString(L"@@@@@ tracker->gatherEvents()  ------->\n");
 				tracker->gatherEvents();			// then find out which blobs are new and track the old blob's movement
+				OutputDebugString(L"@@@@@ tracker->gatherEvents()  <-------\n");
 				ReleaseMutex(eventListMutex);		// and unlock the mutex
 			}
 #else
@@ -375,6 +384,7 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 	}
 	return true;
 }
+
 bool CTouchScreen::process()
 {
 	// The main event loop for this CTouchScreen instance

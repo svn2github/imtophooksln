@@ -96,6 +96,8 @@ namespace touchlib
 		 * Sets the blob tracker.
 		 */
 		virtual void setBlobTracker(IBlobTracker* blobTracker) = 0;
+		virtual bool setDrawFingers(bool bDraw) = 0;
+		virtual bool getDrawFingers() = 0;
 	};
 
 }

@@ -67,4 +67,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedBtnClearBG();
 	afx_msg void OnBnClickedckbegintrack();
 	CButton m_ckBeginTrack;
+	afx_msg void OnBnClickedckdrawfinger();
+	CButton m_ckDrawFinger;
 };

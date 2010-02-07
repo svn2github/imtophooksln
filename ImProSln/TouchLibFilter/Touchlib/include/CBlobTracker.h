@@ -139,6 +139,8 @@ namespace touchlib
 		void gatherEvents();
 		std::vector<CvRect>* GetForeground()
 		{	return &foregroundLists;	};
+		bool drawFingers(IplImage* img);
+
 	private:
 		inline void permute2(int k);
 		inline bool checkValid(int start);

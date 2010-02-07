@@ -101,6 +101,10 @@ namespace touchlib
 		virtual void beginTracking() { bTracking = true; };
 		virtual void endTracking() { bTracking = false; setBlobTracker(new CBlobTracker());};
 		virtual bool isTracking(){ return bTracking;};
+
+		virtual bool setDrawFingers(bool bDraw) { bDrawFinger = bDraw; return true;};
+		virtual bool getDrawFingers() { return bDrawFinger;};
+
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
 		virtual IplImage* getFilterImage(int step);
@@ -150,7 +154,7 @@ namespace touchlib
 
 		bool bCalibrating;		
 		int calibrationStep;
-
+		bool bDrawFinger;
 
 #ifdef WIN32
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html
@@ -158,7 +162,7 @@ namespace touchlib
 		IplImage* pTrackingFrame;
 		BwImage frame;
 		BwImage labelImg;
-
+		
 		int reject_distance_threshold;
 		int reject_min_dimension;
 		int reject_max_dimension;

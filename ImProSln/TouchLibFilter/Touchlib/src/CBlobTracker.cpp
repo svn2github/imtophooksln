@@ -489,7 +489,24 @@ void CBlobTracker::gatherEvents()
 		}
 	}
 }
-
+bool CBlobTracker::drawFingers(IplImage* img)
+{
+	if (img == NULL)
+	{
+		return false;
+	}
+	float x =0, y = 0, width = 0, height = 0;
+	for (int i =0; i< current.size(); i++)
+	{
+		x = current[i].box.getCenter().X ;
+		y = current[i].box.getCenter().Y ;
+		width = current[i].box.getWidth();
+		height = current[i].box.getHeight();
+		cvDrawRect(img, cvPoint(x - 0.5*width, y-0.5*height), 
+			cvPoint(x+ 0.5*width, y+0.5*height), cvScalar(0, 0, 255));
+	}
+	return true;
+}
 inline void CBlobTracker::permute2(int start)
 {  
   if (start == ids.size()) 

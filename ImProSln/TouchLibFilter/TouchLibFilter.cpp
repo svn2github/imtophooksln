@@ -707,3 +707,20 @@ bool TouchLibFilter::getStartTracking(bool& bStart)
 	bStart = m_pTouchScreen->isTracking();
 	return true;
 }
+
+bool TouchLibFilter::getDrawFingers()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	return m_pTouchScreen->getDrawFingers();
+}
+bool TouchLibFilter::setDrawFingers(bool drawing)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	return m_pTouchScreen->setDrawFingers(drawing);
+}

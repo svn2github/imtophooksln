@@ -146,6 +146,7 @@ BEGIN
     LTEXT           "port:",IDC_STATIC,22,161,17,12
     PUSHBUTTON      "Clear BG",IDC_btnClearBg,111,84,50,14
     CONTROL         "Begin Track",IDC_ckBeginTrack,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,109,50,10
+    CONTROL         "Draw Fingers",IDC_ckDrawFinger,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,120,58,10
 END
 
 

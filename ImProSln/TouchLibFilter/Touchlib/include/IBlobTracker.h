@@ -27,7 +27,7 @@ public:
 
 	void registerListener(ITouchListener *listener);
 	void setup(int r_dist, int r_min_dim, int r_max_dim, int g_frames, float minimumDisplacementThreshold);
-
+	virtual bool drawFingers(IplImage* img) = 0;
 public:
 	static const float DEFAULT_MINIMUM_DISPLACEMENT_THRESHOLD;
 

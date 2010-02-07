@@ -84,4 +84,6 @@ public:
 	virtual bool setStartTracking(bool bStart);
 	virtual bool getStartTracking(bool& bStart);
 
+	virtual bool getDrawFingers();
+	virtual bool setDrawFingers(bool drawing);
 };
