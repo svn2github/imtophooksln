@@ -19,15 +19,21 @@ package
 		private var maskBmp:Bitmap;
 		private var invFilter:ColorMatrixFilter = genInvFilter();
 //		private var invTransform:ColorTransform = new ColorTransform(0,0,0,0,0,0,0,255);	
+
+		//-------------------------------------- DEBUG VARS			
+//		private var DEBUG:Boolean;				
 		
 		public function ViewportControl(smap:MapViewport, cx:Number, cy:Number, w:Number, h:Number)
 		{
 			super();
+
+//			DEBUG = $DEBUG;
 			
 			this.theMap = smap;
 			this.w = w;
 			this.h = h;
-						
+			setViewport(cx, cy, w, h);
+							
 			// draw handle			
 			handle.graphics.beginFill(0xffffff, 0.5);
 			handle.graphics.drawRect(-handleSize/2, -handleSize/2, handleSize, handleSize);
@@ -56,9 +62,7 @@ package
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, tiltIt);
 			
 			this.addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
-			this.addEventListener(TouchEvent.MOUSE_UP, touchDropIt);
-			
-			setViewport(cx, cy, w, h);
+				this.addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
 			
 //			maskBmp = new Bitmap();			
 //			addChild(maskBmp);			
@@ -116,6 +120,7 @@ package
 			if(event.target == handle){
 				w = Math.abs(handle.x)*2 + handleSize;
 				h = Math.abs(handle.y)*2 + handleSize;
+					
 				updateControl();
 			}
 			theMap.update();

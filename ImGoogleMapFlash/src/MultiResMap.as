@@ -12,6 +12,7 @@ package
 	import flash.events.Event;
 	import flash.geom.Point;
 	import flash.text.TextField;
+	import flash.utils.Dictionary;
 	
 	public class MultiResMap extends Sprite 
 	{		
@@ -26,38 +27,52 @@ package
 		private var ruler:Sprite = new Sprite();
 		private var zoomText:TextField = new TextField(); 
 		
-		private var viewports:Array = new Array();
-		private var geControls:Array = new Array();		
-		 		
-		public function MultiResMap(x:Number, y:Number, width:Number, height:Number)
+		private var geControlDict:Dictionary = new Dictionary();		
+		private var viewportDict:Dictionary = new Dictionary();				
+
+		//-------------------------------------- DEBUG VARS			
+		private var DEBUG:Boolean;				
+		 
+		public function MultiResMap(x:Number, y:Number, width:Number, height:Number, $DEBUG:Boolean = true)
 		{
+			DEBUG = $DEBUG;
+			
 			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExRcR7IumtuiL9gAiOhCPfe14dC1HBSpTjOFiyNExylutyalkkjAIFFIZw";
 			map.setSize(new Point(width, height));			
 			map.addEventListener(MapEvent.MAP_READY, onMapReady);
 			map.addEventListener(MapZoomEvent.ZOOM_CHANGED, onMapZoom);
 			map.addEventListener(MapMoveEvent.MOVE_STEP, onMapMove);						
 			addChild(map);
-
-			ruler.graphics.beginFill(0x0000ff, 1);			
-			ruler.graphics.drawRect(map.x, map.height/2, map.width, 1);
-			ruler.graphics.drawRect(map.width/2, map.y, 1, map.height);
-			ruler.graphics.endFill();
-			addChild(ruler);			
+			
+			if(DEBUG){
+				ruler.graphics.beginFill(0x0000ff, 1);			
+				ruler.graphics.drawRect(map.x, map.height/2, map.width, 1);
+				ruler.graphics.drawRect(map.width/2, map.y, 1, map.height);
+				ruler.graphics.endFill();
+				addChild(ruler);							
+			}
 		}
 		
-		public function addViewport(x:Number, y:Number, width:Number, height:Number):MapViewport{			
- 			var viewport:MapViewport = new MapViewport(map, x, y, width, height);
-			addChild(viewport);
-			addChild(viewport.viewport);
-			viewports.push(viewport);
+		public function addViewport(id:String, x:Number, y:Number, width:Number, height:Number):MapViewport{			
+ 			var viewport:MapViewport = new MapViewport(map, x, y, width, height, DEBUG);
+			addChild(viewport);			
+			viewportDict[id] = viewport;
+			
+			if(DEBUG)
+				addChild(viewport.viewport);	
+				
 			return viewport;
 		}
 		
-		public function addGeControl(x:Number, y:Number):GEControl{
+		public function addGeControl(id:String, x:Number, y:Number):GEControl{
 			var geControl:GEControl = new GEControl(map);
-			addChild(geControl);
-			geControls.push(geControl);
+			addChild(geControl);			
+			geControlDict[id] = geControl;
 			return geControl;
+		}
+		
+		public function getViewport (id:String):MapViewport{
+			return viewportDict[id];
 		}
 		
 		public function getMapWidth():Number{
@@ -85,22 +100,19 @@ package
 		private function onMapZoom(event:MapZoomEvent):void{
 			var zoom:Number = (event.currentTarget as Map).getZoom();
 			zoomText.text = ""+zoom;
-			
-			for each (var viewport:MapViewport in viewports) 
+						
+			for each (var viewport:MapViewport in viewportDict) 
                 viewport.update();            			
 		}
 	
 		private function onMapMove(event:MapMoveEvent):void{
 			//var latlng:LatLng = (event.currentTarget as Map).getCenter();		  
-			for each (var viewport:MapViewport in viewports) 
+			for each (var viewport:MapViewport in viewportDict) 
                 viewport.update();
                 
-			for each (var geControl:GEControl in geControls) 
-                geControl.update();
-                          
+			for each (var geControl:GEControl in geControlDict) 
+                geControl.update();                          
 		}
-
-
 			
 //	    private function onMap2Ready(event:Event):void {	    	
 //	    	map3.setCenter(new LatLng(40.736072,-73.992062), 1);

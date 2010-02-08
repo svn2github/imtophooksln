@@ -42,8 +42,8 @@ package
 		private var TYPE_BUTTON:Sprite;
 		private var TYPE_INDEX:Number = 0;
 				
-		public function MapViewport(parentMap:Map, screenX:Number, screenY:Number, screenWidth:Number, screenHeight:Number, 
-								vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100, $DEBUG:Boolean = true)
+		public function MapViewport(parentMap:Map, screenX:Number, screenY:Number, screenWidth:Number, screenHeight:Number, $DEBUG:Boolean = true, 
+								vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100)
 		{
 			super();
 			
@@ -70,18 +70,13 @@ package
 		        childMap.setInitOptions(mapOptions);					
 			});			
 			mapPanel.addChild(childMap);
-
-			ruler.graphics.clear();
-			ruler.graphics.beginFill(0x0000ff, 1);			
-			ruler.graphics.drawRect(0, childMap.height/2, childMap.width, 1);
-			ruler.graphics.drawRect(childMap.width/2, 0, 1, childMap.height);
-			ruler.graphics.endFill();
-			mapPanel.addChild(ruler);
+			
 						
 			addChild(mapPanel);
 			mapPanel.scaleX = 1;
 			mapPanel.scaleY = 1;
 			
+
 			viewport = new ViewportControl(this, vpCx, vpCy, vpWidth, vpHeight);
 			
 			// for mask
@@ -98,40 +93,42 @@ package
 			
 			if(DEBUG)
 			{
-				activateDebugMode();					
-			} 
-			
+				ruler.graphics.clear();
+				ruler.graphics.beginFill(0x0000ff, 1);			
+				ruler.graphics.drawRect(0, childMap.height/2, childMap.width, 1);
+				ruler.graphics.drawRect(childMap.width/2, 0, 1, childMap.height);
+				ruler.graphics.endFill();
+				mapPanel.addChild(ruler);
+
+	  			var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
+				DEBUG_TEXT = new TextField();       
+				DEBUG_TEXT.defaultTextFormat = format;
+				DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
+				DEBUG_TEXT.background = true;	
+				DEBUG_TEXT.backgroundColor = 0x000000;	
+				DEBUG_TEXT.border = true;	
+				DEBUG_TEXT.borderColor = 0x333333;							
+				DEBUG_TEXT.x = 85;
+				DEBUG_TEXT.y = 25;
+				DEBUG_TEXT.text = "DEBUG_TEXT";
+				this.addChild( DEBUG_TEXT );						
+	//			this.setChildIndex(DEBUG_TEXT, this.numChildren-1);
+				
+				TYPE_BUTTON = new Sprite();
+				TYPE_BUTTON.x = 60; 
+				TYPE_BUTTON.y = 25;
+				TYPE_BUTTON.graphics.beginFill(0x0000ff);
+				TYPE_BUTTON.graphics.drawRect(0, 0, 20, 20);
+				TYPE_BUTTON.graphics.endFill();
+				TYPE_BUTTON.alpha = 0.85;
+				TYPE_BUTTON.addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent):void{
+					childMap.setMapType(MapType.DEFAULT_MAP_TYPES[(++TYPE_INDEX)%4]);
+				});
+				this.addChild( TYPE_BUTTON );						
+	//			this.setChildIndex(TYPE_BUTTON, this.numChildren-1);
+			} 			
 		}
-		
-		private function activateDebugMode():void{
-  			var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
-			DEBUG_TEXT = new TextField();       
-			DEBUG_TEXT.defaultTextFormat = format;
-			DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
-			DEBUG_TEXT.background = true;	
-			DEBUG_TEXT.backgroundColor = 0x000000;	
-			DEBUG_TEXT.border = true;	
-			DEBUG_TEXT.borderColor = 0x333333;							
-			DEBUG_TEXT.x = 85;
-			DEBUG_TEXT.y = 25;
-			DEBUG_TEXT.text = "DEBUG_TEXT";
-			this.addChild( DEBUG_TEXT );						
-//			this.setChildIndex(DEBUG_TEXT, this.numChildren-1);
-			
-			TYPE_BUTTON = new Sprite();
-			TYPE_BUTTON.x = 60; 
-			TYPE_BUTTON.y = 25;
-			TYPE_BUTTON.graphics.beginFill(0x0000ff);
-			TYPE_BUTTON.graphics.drawRect(0, 0, 20, 20);
-			TYPE_BUTTON.graphics.endFill();
-			TYPE_BUTTON.alpha = 0.85;
-			TYPE_BUTTON.addEventListener(MouseEvent.MOUSE_UP, function(e:MouseEvent):void{
-				childMap.setMapType(MapType.DEFAULT_MAP_TYPES[(++TYPE_INDEX)%4]);
-			});
-			this.addChild( TYPE_BUTTON );						
-//			this.setChildIndex(TYPE_BUTTON, this.numChildren-1);
-		}
-		
+				
 		public function setViewport(cx:Number, cy:Number, w:Number, h:Number):void{
 			viewport.setViewport(cx, cy, w, h);
 		}
@@ -145,9 +142,10 @@ package
 		
 		public function update():void{
 			updateMap();
-			updateRuler();
 			
 			if(DEBUG){
+				updateRuler();
+				
 				DEBUG_TEXT.text = 
 				" zoom: " + childMap.getZoom() + 
 				"\n pitch: " + childMap.getAttitude().pitch;

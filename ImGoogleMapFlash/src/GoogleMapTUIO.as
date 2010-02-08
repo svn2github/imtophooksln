@@ -1,19 +1,15 @@
 package {
 	
-	import app.core.canvas.RippleCanvas;
-	
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.ui.Keyboard;
 		
 	[SWF(width=1366, height=500, frameRate=24, backgroundColor=0xEB7F00)]
 	public class GoogleMapTUIO extends Sprite
-	{
-		private var subobj:RippleCanvas;
-		
+	{		
 		private var stageWidth:Number = 1366;
 		private var stageHeight:Number = 500;
-		private var movieURL:String;
+		private var multiResMap:MultiResMap;			
 		
 		public function GoogleMapTUIO()
 		{									
@@ -30,13 +26,23 @@ package {
 			//把要做的事寫在這兒  
 			//這樣就可以確保 stage 屬性一定有值
 			
+			var numOfView:Number = 3;
+			
 			// add high-resolution views
-			var multiResMap:MultiResMap = new MultiResMap(0, 0, stageWidth/3, stageHeight);
-			(multiResMap.addViewport(stageWidth/3, 0, stageWidth/3, stageHeight)).viewport.x = 120;
-			(multiResMap.addViewport(2*stageWidth/3, 0, stageWidth/3, stageHeight)).viewport.x = 230;
+			multiResMap = new MultiResMap(0, 0, stageWidth/numOfView, stageHeight, true);
+			
+			var tableLamp:MapViewport = (multiResMap.addViewport("TableLamp", stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
+			tableLamp.viewport.x = multiResMap.getMapWidth()/2;
+			tableLamp.viewport.y = multiResMap.getMapHeight()/2;
+			
+			var handLamp:MapViewport = (multiResMap.addViewport("HandLamp", 2*stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
+			handLamp.viewport.x = multiResMap.getMapWidth()/2;			
+
+
+
 			
 			// add ge delegate control
-			var geControl:GEControl = multiResMap.addGeControl(150, 150);
+			var geControl:GEControl = multiResMap.addGeControl("GE1", 150, 150);
 			geControl.x = geControl.y = 150;
 			
 			addChild(multiResMap);
@@ -83,7 +89,9 @@ package {
 		private function hresPosChange(e:Event):void{
 			
 			var he:HResEvent = e as HResEvent;
-			trace(he.ID + ": " + he.regionX + ", "+ he.regionY + ", "+ he.regionWidth + ", "+ he.regionHeight); 
+			trace(he.ID + ": " + he.regionX + ", "+ he.regionY + ", "+ he.regionWidth + ", "+ he.regionHeight);
+			
+				
 		}
 	}
 }
