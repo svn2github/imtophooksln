@@ -19,7 +19,7 @@ public:
 
 	// ----  pure virtual functions  -----------------------------------------
 
-	virtual void findBlobs(BwImage& frame) = 0;
+	virtual bool findBlobs(BwImage& frame) = 0;
 	virtual void trackBlobs() = 0;
 	virtual void gatherEvents() = 0;
 	virtual std::vector<CvRect>* GetForeground() = 0;

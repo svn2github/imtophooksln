@@ -339,12 +339,10 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 			cvCopyImage(output, pTrackingFrame);
 			frame = pTrackingFrame;
 			//printf("Tracking 1\n");
-			OutputDebugString(L"@@@@@ findBlobs  ------->\n");
+
 			tracker->findBlobs(frame);		// Locate the blobs
-			OutputDebugString(L"@@@@@ findBlobs  <-------\n");
-			OutputDebugString(L"@@@@@ trackBlobs  ------->\n");
 			tracker->trackBlobs();			// and update their location
-			OutputDebugString(L"@@@@@ trackBlobs  <-------\n");
+
 			if (bDrawFinger)
 			{
 				tracker->drawFingers(pSrc);
@@ -362,9 +360,9 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 			else 		// Locking the mutex succeeds
 			{
 				//printf("Tracking 2\n");
-				OutputDebugString(L"@@@@@ tracker->gatherEvents()  ------->\n");
+				
 				tracker->gatherEvents();			// then find out which blobs are new and track the old blob's movement
-				OutputDebugString(L"@@@@@ tracker->gatherEvents()  <-------\n");
+			
 				ReleaseMutex(eventListMutex);		// and unlock the mutex
 			}
 #else

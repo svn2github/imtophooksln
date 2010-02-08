@@ -15,7 +15,7 @@
 
 
 #define HISTORY_FRAMES	10
-
+#define MAX_NUMFINGER 12
 // a finger is a blob with an ID and prediction info
 // CFinger should be able to accept a CBlob as a constructor
 
@@ -134,7 +134,7 @@ namespace touchlib
 	public:
 		CBlobTracker();
 
-		void findBlobs(BwImage &img);
+		bool findBlobs(BwImage &img);
 		void trackBlobs();
 		void gatherEvents();
 		std::vector<CvRect>* GetForeground()

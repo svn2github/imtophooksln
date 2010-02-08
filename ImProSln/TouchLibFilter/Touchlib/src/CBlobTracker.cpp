@@ -68,9 +68,12 @@ unsigned int getTag(CvSeq *curCont, int level=0)
 
 	return sum;
 }
+bool SortBlobByArea(const CBlob& d1, const CBlob& d2)
+{
+	return d1.area > d2.area;
+}
 
-
-void CBlobTracker::findBlobs(BwImage &img)
+bool CBlobTracker::findBlobs(BwImage &img)
 {
 
 	blobList.clear();
@@ -244,7 +247,14 @@ void CBlobTracker::findBlobs(BwImage &img)
 	//pressure
 	//cvReleaseImage(&origImg);
 	cvReleaseMemStorage(&storage);
-
+	if (blobList.size() > MAX_NUMFINGER)
+	{
+		std::sort(blobList.begin(), blobList.end(), SortBlobByArea );
+		while(blobList.size() > MAX_NUMFINGER)
+			blobList.pop_back();
+		return false;
+	}
+	return true;
 }
 
 //////////////////////////////////////////
