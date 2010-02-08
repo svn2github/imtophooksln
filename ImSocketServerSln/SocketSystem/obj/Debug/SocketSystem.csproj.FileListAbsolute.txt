@@ -1,0 +1,15 @@
+D:\Document\[MY] Program\Lab Projects\macball\複製 -[C#]MacBall_SocketSystem\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\macball\複製 -[C#]MacBall_SocketSystem\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\macball\複製 -[C#]MacBall_SocketSystem\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\macball\複製 -[C#]MacBall_SocketSystem\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\macball\複製 -[C#]MacBall_SocketSystem\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\ResolveAssemblyReference.cache
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\ResolveAssemblyReference.cache
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\bin\Debug\SocketSystem.exe
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\bin\Debug\SocketSystem.pdb
+D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Debug\ResolveAssemblyReference.cache

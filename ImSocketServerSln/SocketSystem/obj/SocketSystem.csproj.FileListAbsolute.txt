@@ -1,0 +1,10 @@
+C:\Documents and Settings\魯夫\桌面\MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.exe
+C:\Documents and Settings\魯夫\桌面\MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.pdb
+C:\Documents and Settings\魯夫\桌面\MacBall_SocketSystem\SocketSystem\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\魯夫\桌面\MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.exe
+C:\Documents and Settings\魯夫\桌面\MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.pdb
+C:\Documents and Settings\魯夫\桌面\水晶球開發版本\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.exe
+C:\Documents and Settings\魯夫\桌面\水晶球開發版本\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\SocketSystem.pdb
+C:\Documents and Settings\魯夫\桌面\水晶球開發版本\[C#]MacBall_SocketSystem\SocketSystem\obj\Debug\ResolveAssemblyReference.cache
+C:\Documents and Settings\魯夫\桌面\水晶球開發版本\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.exe
+C:\Documents and Settings\魯夫\桌面\水晶球開發版本\[C#]MacBall_SocketSystem\SocketSystem\bin\Debug\SocketSystem.pdb
