@@ -79,8 +79,6 @@ Camera* CameraFactory::createCamera(int xsize, int ysize, double* mat, double* d
 	}
 	for (int i = 0; i < 4; i++)
 	{
-		if (dist_factor[i] == NULL)
-			return NULL;
 		c_ptr->dist_factor[i] = dist_factor[i];
 	}
 	return c_ptr;

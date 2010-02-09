@@ -31,6 +31,7 @@ protected:
 	void SetDirty();
 	bool GetSetting();
 	HRESULT ApplyCameraSetting();
+	bool WriteProfileSetting();
 public:
 	ARTagCameraSettingPage(IUnknown *pUnk);
 	~ARTagCameraSettingPage();

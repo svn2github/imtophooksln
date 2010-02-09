@@ -154,6 +154,17 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 	}
 	m_pARProperty->setCamera(xsize, ysize, mat, dist_factor, 1.0, 1000.0);
 	m_pARProperty->setWorldBasisScale(basisscale);
+	WriteProfileSetting();
+}
+
+bool ARTagCameraSettingPage::WriteProfileSetting()
+{
+	int xsize, ysize;
+	double mat[16] = {0};
+	double dist_factor[4] = {0};
+	m_pARProperty->getCamera(xsize, ysize, mat, dist_factor);
+	
+	WCHAR tmpStr[MAX_PATH];
 	swprintf_s(tmpStr, L"%.5f %.5f %.5f %.5f", dist_factor[0], dist_factor[1], dist_factor[2], dist_factor[3]);
 	theApp.WriteProfileString(L"Camera Setting", L"dist_Factor", tmpStr);
 	swprintf_s(tmpStr, L"%.5f %.5f %.5f %.5f \
@@ -165,6 +176,7 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 						mat[8], mat[9],  mat[10], mat[11],
 						mat[12], mat[13], mat[14],  mat[15]);
 	theApp.WriteProfileString(L"Camera Setting", L"mat", tmpStr);
+	return true;
 }
 BOOL ARTagCameraSettingPage::OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg = FALSE)
 {
@@ -267,6 +279,7 @@ BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 				if (pFileName != NULL)
 				{
 					m_pARProperty->loadCameraFromXMLFile(pFileName);
+					WriteProfileSetting();
 					GetSetting();
 				}
 			}
