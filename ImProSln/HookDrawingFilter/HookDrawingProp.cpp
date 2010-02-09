@@ -176,7 +176,7 @@ void HookDrawingPropPage::OnBnClickedButton4()
 	BOOL hr = DetourCreateProcessWithDllW(NULL, (LPWSTR)(LPCWSTR)path,
 		NULL, NULL, TRUE, dwFlags, NULL, NULL,
 		&m_si, &m_pi, mbsDetourDLLPath, mbsDllName, NULL);
-	Sleep(1000);
+	Sleep(2000);
 	if (hr )
 	{
 		theApp.WriteProfileString(L"MySetting",L"CreateProcPath",path);
