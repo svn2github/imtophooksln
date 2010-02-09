@@ -4,11 +4,11 @@ package {
 	import flash.events.*;
 	import flash.ui.Keyboard;
 		
-	[SWF(width=1366, height=500, frameRate=24, backgroundColor=0xEB7F00)]
+	[SWF(width=1024, height=768, frameRate=24, backgroundColor=0xEB7F00)]
 	public class GoogleMapTUIO extends Sprite
 	{		
-		private var stageWidth:Number = 1366;
-		private var stageHeight:Number = 500;
+		private var stageWidth:Number = 1024;
+		private var stageHeight:Number = 768;
 		private var multiResMap:MultiResMap;			
 		
 		public function GoogleMapTUIO()
@@ -26,7 +26,7 @@ package {
 			//把要做的事寫在這兒  
 			//這樣就可以確保 stage 屬性一定有值
 			
-			var numOfView:Number = 3;
+			var numOfView:Number = 2;
 			
 			// add high-resolution views
 			multiResMap = new MultiResMap(0, 0, stageWidth/numOfView, stageHeight, true);
@@ -35,8 +35,8 @@ package {
 			tableLamp.viewport.x = multiResMap.getMapWidth()/2;
 			tableLamp.viewport.y = multiResMap.getMapHeight()/2;
 			
-			var handLamp:MapViewport = (multiResMap.addViewport("HandLamp", 2*stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
-			handLamp.viewport.x = multiResMap.getMapWidth()/2;			
+//			var handLamp:MapViewport = (multiResMap.addViewport("HandLamp", 2*stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
+//			handLamp.viewport.x = multiResMap.getMapWidth()/2;			
 
 
 

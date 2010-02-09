@@ -49,6 +49,10 @@ package flash.events {
 		private static var ID_ARRAY:Array; 		
 		private static var EVENT_ARRAY:Array;		
 		private static var OBJECT_ARRAY:Array;		
+		//--------------------------------------		
+		private static var IMID_ARRAY:Array; 		
+		private static var IMEVENT_ARRAY:Array;		
+		private static var IMOBJECT_ARRAY:Array;		
 		//--------------------------------------
 		private static var SWIPE_THRESHOLD:Number = 1000;
 		private static var HOLD_THRESHOLD:Number = 4000;
@@ -81,6 +85,12 @@ package flash.events {
 			OBJECT_ARRAY = new Array();
 			ID_ARRAY = new Array();
 			EVENT_ARRAY = new Array();
+			
+			//
+			IMOBJECT_ARRAY = new Array();
+			IMID_ARRAY = new Array();
+			IMEVENT_ARRAY = new Array();
+			
 			
 			if(DEBUG)
 			{
@@ -150,6 +160,19 @@ package flash.events {
 			}
 			return null;
 		}
+		
+
+		public static function getImproObjectById(id:Number):IMObject
+		{
+			for(var i:int=0; i<OBJECT_ARRAY.length; i++)
+			{
+				if(IMOBJECT_ARRAY[i].ID == id)
+				{
+					return IMOBJECT_ARRAY[i];
+				}
+			}
+			return null;
+		}				
 //---------------------------------------------------------------------------------------------------------------------------------------------
 		public static function startSocket(e:Event):void
 		{ 
@@ -407,24 +430,40 @@ package flash.events {
 					var type:String;	
 					if(node.@NAME == "/imPro/HResChange")
 					{
-						var rx:Number, 
-							ry:Number,
-							rw:Number,
-							rh:Number;
+						var rx1:Number, 
+							ry1:Number,
+							rx2:Number,
+							ry2:Number;
 						
 						try 
 						{
 							id = node.ARGUMENT[1].@VALUE;
-							rx = Number(node.ARGUMENT[2].@VALUE) * W;
-							ry = Number(node.ARGUMENT[3].@VALUE) *  STAGE.stageHeight;
-							rw = Number(node.ARGUMENT[4].@VALUE);
-							rh = Number(node.ARGUMENT[5].@VALUE);								
+							rx1 = Number(node.ARGUMENT[2].@VALUE) * W;
+							ry1 = Number(node.ARGUMENT[3].@VALUE) *  STAGE.stageHeight;
+							rx2 = Number(node.ARGUMENT[4].@VALUE);
+							ry2 = Number(node.ARGUMENT[5].@VALUE);								
 						} catch (e:Error)
 						{
 							trace("imPro: Error Parsing TUIO XML");
 						}
 						
-						tuioobj.TUIO_OBJECT.dispatchEvent(new HResEvent(HResEvent.POSE_CHANGE, true, false, rx, ry, rw, rh, id, 0));						
+						var imObj:IMObject = getImproObjectById(id);
+						if(imObj == null)
+						{
+							imObj = new IMObject("BoundingBox", id, rx1, ry1, rx2, ry2, -1);
+//							STAGE.addChild(tuioobj.TUIO_CURSOR);								
+							IMOBJECT_ARRAY.push(imObj);
+							imObj.notifyCreated();
+						} else {
+							imObj.rx1 = rx1;
+							imObj.ry1 = ry1;
+							imObj.rx2 = rx2;
+							imObj.ry2 = ry2;							
+						}
+						
+//						imObj
+						imObj.notifyMoved();
+						//imObj.TUIO_OBJECT.dispatchEvent(new HResEvent(HResEvent.POSE_CHANGE, true, false, rx, ry, rw, rh, id, 0));						
 					}
 				}
 			}
@@ -436,6 +475,7 @@ package flash.events {
 				DEBUG_TEXT.text = "";
 				DEBUG_TEXT.visible = false;
 			}	
+			
 			for (var i:int=0; i<OBJECT_ARRAY.length; i++ )
 			{	
 				if(OBJECT_ARRAY[i].TUIO_ALIVE == false)
