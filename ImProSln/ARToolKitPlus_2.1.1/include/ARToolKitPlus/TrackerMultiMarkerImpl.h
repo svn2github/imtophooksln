@@ -119,8 +119,8 @@ public:
 	*/
 	virtual void getARMatrix(ARFloat nMatrix[3][4]) const;
 
-	virtual bool getBasisTransMatrix(ARFloat nMatrix[3][3]) {  return AR_TEMPL_TRACKER::getBasisTransMatrix(nMatrix);  }
-	virtual bool setBasisTransMatrix(ARFloat nMatrix[3][3]) {  return AR_TEMPL_TRACKER::setBasisTransMatrix(nMatrix);  }
+	virtual bool getBasisScale(ARFloat basisScale[3]) {  return AR_TEMPL_TRACKER::getBasisScale(basisScale);  }
+	virtual bool setBasisScale(ARFloat basisScale[3]);
 	//
 	// reimplement TrackerImpl into TrackerSingleMarker interface
 	//

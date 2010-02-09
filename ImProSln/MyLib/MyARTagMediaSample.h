@@ -15,6 +15,7 @@ public:
 	const ARMarkerInfo* m_pDetectedMarks;
 	const double* m_matARView;
 	const double* m_matARProj;
+	double m_basisScale[3];
 	int m_screenW;
 	int m_screenH; 
 public:

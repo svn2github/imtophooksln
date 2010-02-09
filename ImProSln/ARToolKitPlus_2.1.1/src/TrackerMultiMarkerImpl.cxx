@@ -51,16 +51,9 @@ ARMM_TEMPL_FUNC
 ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 {
 	this->logger = NULL;
-	for (int row = 0; row < 3; row++)
-	{
-		for (int col =0; col < 3; col++)
-		{
-			if (row == col)
-				m_worldbasisMat[row][col] = 1;
-			else
-				m_worldbasisMat[row][col] = 0;
-		}
-	}
+	for (int i =0; i <3; i++)
+		m_basisScale[i] = 1;
+
 
 	this->screenWidth = nWidth;
 	this->screenHeight = nHeight;
@@ -152,14 +145,14 @@ ARMM_TEMPL_TRACKER::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 	ARFloat wpos3d[4][2];
 	for( int i = 0; i < numMarker; i++ ) 
 	{
-		wpos3d[0][0] = marker[i].center[0] - marker[i].width*0.5f;
-		wpos3d[0][1] = marker[i].center[1] + marker[i].width*0.5f;
-		wpos3d[1][0] = marker[i].center[0] + marker[i].width*0.5f;
-		wpos3d[1][1] = marker[i].center[1] + marker[i].width*0.5f;
-		wpos3d[2][0] = marker[i].center[0] + marker[i].width*0.5f;
-		wpos3d[2][1] = marker[i].center[1] - marker[i].width*0.5f;
-		wpos3d[3][0] = marker[i].center[0] - marker[i].width*0.5f;
-		wpos3d[3][1] = marker[i].center[1] - marker[i].width*0.5f;
+		wpos3d[0][0] = (marker[i].center[0] - marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[0][1] = (marker[i].center[1] + marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[1][0] = (marker[i].center[0] + marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[1][1] = (marker[i].center[1] + marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[2][0] = (marker[i].center[0] + marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[2][1] = (marker[i].center[1] - marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[3][0] = (marker[i].center[0] - marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[3][1] = (marker[i].center[1] - marker[i].width*0.5f)*m_basisScale[1];
 		for( int j = 0; j < 4; j++ ) {
 			marker[i].pos3d[j][0] = marker[i].trans[0][0] * wpos3d[j][0]
 			+ marker[i].trans[0][1] * wpos3d[j][1]
@@ -174,7 +167,45 @@ ARMM_TEMPL_TRACKER::setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker)
 	}
 	return true;
 }
-	
+
+ARMM_TEMPL_FUNC bool
+ARMM_TEMPL_TRACKER::setBasisScale(ARFloat basisScale[3])
+{
+	for (int i =0; i<3; i++)
+	{
+		m_basisScale[i] = basisScale[i];
+	}
+	if (config == NULL)
+	{
+		return true;
+	}
+	ARMultiMarkerInfoT* cfg = config;
+	ARMultiEachMarkerInfoT* marker = cfg->marker;
+	ARFloat wpos3d[4][2];
+	for( int i = 0; i < cfg->marker_num; i++ ) 
+	{
+		wpos3d[0][0] = (marker[i].center[0] - marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[0][1] = (marker[i].center[1] + marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[1][0] = (marker[i].center[0] + marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[1][1] = (marker[i].center[1] + marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[2][0] = (marker[i].center[0] + marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[2][1] = (marker[i].center[1] - marker[i].width*0.5f)*m_basisScale[1];
+		wpos3d[3][0] = (marker[i].center[0] - marker[i].width*0.5f)*m_basisScale[0];
+		wpos3d[3][1] = (marker[i].center[1] - marker[i].width*0.5f)*m_basisScale[1];
+		for( int j = 0; j < 4; j++ ) {
+			marker[i].pos3d[j][0] = marker[i].trans[0][0] * wpos3d[j][0]
+			+ marker[i].trans[0][1] * wpos3d[j][1]
+			+ marker[i].trans[0][3];
+			marker[i].pos3d[j][1] = marker[i].trans[1][0] * wpos3d[j][0]
+			+ marker[i].trans[1][1] * wpos3d[j][1]
+			+ marker[i].trans[1][3];
+			marker[i].pos3d[j][2] = marker[i].trans[2][0] * wpos3d[j][0]
+			+ marker[i].trans[2][1] * wpos3d[j][1]
+			+ marker[i].trans[2][3];
+		}
+	}
+	return true;
+}
 ARMM_TEMPL_FUNC int
 ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
 {

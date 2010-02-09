@@ -1,5 +1,6 @@
 #include "MyARTagMediaSample.h"
 
+
 ARTagResultData::ARTagResultData(const ARMultiMarkerInfoT* pMarkerConfig, const int nDetected,
 								 const ARMarkerInfo* pDetectedMarks, const double* matARView, const double* matARProj)
 								 : m_pMarkerConfig(pMarkerConfig), m_nDetected(nDetected), 
@@ -7,6 +8,7 @@ ARTagResultData::ARTagResultData(const ARMultiMarkerInfoT* pMarkerConfig, const 
 {
 	m_screenW = 0;
 	m_screenH = 0; 
+	m_basisScale[0] = 1.0; m_basisScale[1] = 1.0; m_basisScale[2] = 1.0;
 }
 ARTagResultData::~ARTagResultData()
 {

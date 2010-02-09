@@ -72,27 +72,22 @@ AR_TEMPL_TRACKER::arGetTransMatCont(ARMarkerInfo *marker_info, ARFloat prev_conv
     return err1;
 }
 
-AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::getBasisTransMatrix(ARFloat nMatrix[3][3]) 
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::getBasisScale(ARFloat basisScale[3]) 
 { 
-	for (int row = 0; row < 3; row++)
+	for (int i = 0; i < 3; i++)
 	{
-		for (int col = 0; col < 3; col++)
-		{
-			nMatrix[row][col] = m_worldbasisMat[row][col];
-		}
+		basisScale[i] = m_basisScale[i];
 	}
 	return true;
 }
 
-AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::setBasisTransMatrix(ARFloat nMatrix[3][3]) 
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::setBasisScale(ARFloat basisScale[3]) 
 { 
-	for (int row = 0; row < 3; row++)
+	for (int i =0; i<3; i++)
 	{
-		for (int col = 0; col < 3; col++)
-		{
-			m_worldbasisMat[row][col] = nMatrix[row][col];
-		}
+		m_basisScale[i] = basisScale[i];
 	}
+	
 	return true;
 }
 
@@ -121,14 +116,14 @@ AR_TEMPL_TRACKER::arGetTransMatContSub(ARMarkerInfo *marker_info, ARFloat prev_c
     ppos2d[2][1] = marker_info->vertex[(6-dir)%4][1];
     ppos2d[3][0] = marker_info->vertex[(7-dir)%4][0];
     ppos2d[3][1] = marker_info->vertex[(7-dir)%4][1];
-	ppos3d[0][0] = center[0] - width*(ARFloat)0.5;
-	ppos3d[0][1] = center[1] + width*(ARFloat)0.5;
-	ppos3d[1][0] = center[0] + width*(ARFloat)0.5;
-	ppos3d[1][1] = center[1] + width*(ARFloat)0.5;
-	ppos3d[2][0] = center[0] + width*(ARFloat)0.5;
-	ppos3d[2][1] = center[1] - width*(ARFloat)0.5;
-	ppos3d[3][0] = center[0] - width*(ARFloat)0.5;
-	ppos3d[3][1] = center[1] - width*(ARFloat)0.5;
+	ppos3d[0][0] = (center[0] - width*(ARFloat)0.5 ) *  m_basisScale[0];
+	ppos3d[0][1] = (center[1] + width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[1][0] = (center[0] + width*(ARFloat)0.5 ) *  m_basisScale[0];
+	ppos3d[1][1] = (center[1] + width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[2][0] = (center[0] + width*(ARFloat)0.5 ) *  m_basisScale[0];
+	ppos3d[2][1] = (center[1] - width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[3][0] = (center[0] - width*(ARFloat)0.5 ) *  m_basisScale[0];
+	ppos3d[3][1] = (center[1] - width*(ARFloat)0.5 ) *  m_basisScale[1];
 
     for( i = 0; i < AR_GET_TRANS_MAT_MAX_LOOP_COUNT; i++ ) {
         err = arGetTransMat3( rot, ppos2d, ppos3d, 4, conv, arCamera);

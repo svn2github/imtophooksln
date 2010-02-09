@@ -202,27 +202,6 @@ AR_TEMPL_TRACKER::arGetRot( ARFloat a, ARFloat b, ARFloat c, ARFloat rot[3][3] )
     rot[2][0] = -cosa*sinb*cosc-sina*sinb*sinc;
     rot[2][1] = cosa*sinb*sinc-sina*sinb*cosc;
     rot[2][2] = cosb;
-	double newRot[3][3];
-	for (int r =0; r< 3; r++)
-	{
-		for (int c =0; c< 3; c++)
-		{
-			double tmp = 0;
-			for (int k = 0; k< 3; k++)
-			{
-				tmp += rot[r][k]*m_worldbasisMat[k][c];
-			}
-			newRot[r][c] = tmp;
-		}
-	}
-	for (int r =0; r< 3; r++)
-	{
-		for (int c =0; c< 3; c++)
-		{
-			rot[r][c] = newRot[r][c];
-		}
-	}
-
 
 #if CHECK_CALC
     for(i=0;i<3;i++) w[i] = rot[i][2];
@@ -348,26 +327,6 @@ AR_TEMPL_TRACKER::arGetInitRot( ARMarkerInfo *marker_info, ARFloat cpara[3][4], 
     wdir[2][1] /= w;
     wdir[2][2] /= w;
 
-	double newRot[3][3];
-	for (int r =0; r< 3; r++)
-	{
-		for (int c =0; c< 3; c++)
-		{
-			double tmp = 0;
-			for (int k = 0; k< 3; k++)
-			{
-				tmp += rot[r][k]*m_worldbasisMat[k][c];
-			}
-			newRot[r][c] = tmp;
-		}
-	}
-	for (int r =0; r< 3; r++)
-	{
-		for (int c =0; c< 3; c++)
-		{
-			rot[r][c] = newRot[r][c];
-		}
-	}
 
 /*
     if( wdir[2][2] < 0 ) {

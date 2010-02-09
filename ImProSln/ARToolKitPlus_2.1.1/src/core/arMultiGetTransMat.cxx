@@ -230,14 +230,14 @@ AR_TEMPL_TRACKER::verify_markers(ARMarkerInfo *marker_info, int marker_num, ARMu
 
     for( i = 0; i < config->marker_num; i++ ) {
 		arUtilMatMul(config->trans, config->marker[i].trans, wtrans);
-        pos3d[0][0] = config->marker[i].center[0] - config->marker[i].width*0.5f;
-        pos3d[0][1] = config->marker[i].center[1] + config->marker[i].width*0.5f;
-        pos3d[1][0] = config->marker[i].center[0] + config->marker[i].width*0.5f;
-        pos3d[1][1] = config->marker[i].center[1] + config->marker[i].width*0.5f;
-        pos3d[2][0] = config->marker[i].center[0] + config->marker[i].width*0.5f;
-        pos3d[2][1] = config->marker[i].center[1] - config->marker[i].width*0.5f;
-        pos3d[3][0] = config->marker[i].center[0] - config->marker[i].width*0.5f;
-        pos3d[3][1] = config->marker[i].center[1] - config->marker[i].width*0.5f;
+        pos3d[0][0] = (config->marker[i].center[0] - config->marker[i].width*0.5f) *  m_basisScale[0];
+        pos3d[0][1] = (config->marker[i].center[1] + config->marker[i].width*0.5f) *  m_basisScale[1];
+        pos3d[1][0] = (config->marker[i].center[0] + config->marker[i].width*0.5f) *  m_basisScale[0];
+        pos3d[1][1] = (config->marker[i].center[1] + config->marker[i].width*0.5f) *  m_basisScale[1];
+        pos3d[2][0] = (config->marker[i].center[0] + config->marker[i].width*0.5f) *  m_basisScale[0];
+        pos3d[2][1] = (config->marker[i].center[1] - config->marker[i].width*0.5f) *  m_basisScale[1];
+        pos3d[3][0] = (config->marker[i].center[0] - config->marker[i].width*0.5f) *  m_basisScale[0];
+        pos3d[3][1] = (config->marker[i].center[1] - config->marker[i].width*0.5f) *  m_basisScale[1];
         for( j = 0; j < 4; j++ ) {
             wx = wtrans[0][0] * pos3d[j][0]
                + wtrans[0][1] * pos3d[j][1]

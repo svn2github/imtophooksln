@@ -86,18 +86,18 @@ AR_TEMPL_TRACKER::rppGetTransMat(ARMarkerInfo *marker_info, ARFloat center[2], A
     ppos2d[3][1] = marker_info->vertex[(7-dir)%4][1];
 	ppos2d[3][2] = iprts_z;
 
-	ppos3d[0][0] = center[0] - width*(ARFloat)0.5;
-    ppos3d[0][1] = center[1] + width*(ARFloat)0.5;
-	ppos3d[0][2] = model_z;
-    ppos3d[1][0] = center[0] + width*(ARFloat)0.5;
-    ppos3d[1][1] = center[1] + width*(ARFloat)0.5;
-	ppos3d[1][2] = model_z;
-    ppos3d[2][0] = center[0] + width*(ARFloat)0.5;
-    ppos3d[2][1] = center[1] - width*(ARFloat)0.5;
-	ppos3d[2][2] = model_z;
-    ppos3d[3][0] = center[0] - width*(ARFloat)0.5;
-    ppos3d[3][1] = center[1] - width*(ARFloat)0.5;
-	ppos3d[3][2] = model_z;
+	ppos3d[0][0] = (center[0] - width*(ARFloat)0.5 ) *  m_basisScale[0];
+    ppos3d[0][1] = (center[1] + width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[0][2] = (model_z ) *  m_basisScale[2];
+    ppos3d[1][0] = (center[0] + width*(ARFloat)0.5 ) *  m_basisScale[0];
+    ppos3d[1][1] = (center[1] + width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[1][2] = (model_z ) *  m_basisScale[2];
+    ppos3d[2][0] = (center[0] + width*(ARFloat)0.5 ) *  m_basisScale[0];
+    ppos3d[2][1] = (center[1] - width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[2][2] = (model_z ) *  m_basisScale[2];
+    ppos3d[3][0] = (center[0] - width*(ARFloat)0.5 ) *  m_basisScale[0];
+    ppos3d[3][1] = (center[1] - width*(ARFloat)0.5 ) *  m_basisScale[1];
+	ppos3d[3][2] = (model_z ) *  m_basisScale[2];
 
 	const rpp_float cc[2] = {arCamera->mat[0][2],arCamera->mat[1][2]};
 	const rpp_float fc[2] = {arCamera->mat[0][0],arCamera->mat[1][1]};

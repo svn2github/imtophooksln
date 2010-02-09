@@ -368,6 +368,11 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 					matARView, matARProj);
 				pARTagResult->m_screenW = bitHeader.biWidth;
 				pARTagResult->m_screenH = bitHeader.biHeight;
+				ARFloat basisScale[3] = {1, 1, 1};
+				m_ARTracker->getBasisScale(basisScale);
+				pARTagResult->m_basisScale[0] =  basisScale[0];
+				pARTagResult->m_basisScale[1] =  basisScale[1];
+				pARTagResult->m_basisScale[2] =  basisScale[2];
 
 				IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
 				CMediaSample* pSample = NULL;
@@ -1016,11 +1021,7 @@ bool ARTagDSFilter::setWorldBasisScale(double v[3])
 	}
 	if (m_ARTracker != NULL)
 	{
-		ARFloat tranMat[3][3];
-		tranMat[0][0] = m_WorldBasisScale[0]; tranMat[0][1] = 0.0;  tranMat[0][2] = 0.0;
-		tranMat[1][0] = 0.0; tranMat[1][1] = m_WorldBasisScale[1];  tranMat[1][2] = 0.0;
-		tranMat[2][0] = 0.0; tranMat[2][1] = 0.0;  tranMat[2][2] = m_WorldBasisScale[2];
-		m_ARTracker->setBasisTransMatrix(tranMat);
+		m_ARTracker->setBasisScale(m_WorldBasisScale);
 	}
 	return true;
 }
@@ -1057,11 +1058,7 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	}
 	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 32>(width, height);
 	
-	ARFloat tranMat[3][3];
-	tranMat[0][0] = m_WorldBasisScale[0]; tranMat[0][1] = 0.0;  tranMat[0][2] = 0.0;
-	tranMat[1][0] = 0.0; tranMat[1][1] = m_WorldBasisScale[1];  tranMat[1][2] = 0.0;
-	tranMat[2][0] = 0.0; tranMat[2][1] = 0.0;  tranMat[2][2] = m_WorldBasisScale[2];
-	m_ARTracker->setBasisTransMatrix(tranMat);
+	m_ARTracker->setBasisScale(m_WorldBasisScale);
 
 	GUID guidSubType = *inputMT->Subtype();
 	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
