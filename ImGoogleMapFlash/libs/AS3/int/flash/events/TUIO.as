@@ -422,13 +422,14 @@ package flash.events {
 				}
 			}
 			
-			
+
 			for each(node in msg.MESSAGE)
 			{
 				if(node.ARGUMENT[0])
 				{
 					var type:String;	
-					if(node.@NAME == "/imPro/HResChange")
+//					if(node.@NAME == "/tuio/HResChange")
+					if(node.@NAME == "/tuio/BoundingBox")
 					{
 						var rx1:Number, 
 							ry1:Number,
@@ -467,7 +468,7 @@ package flash.events {
 					}
 				}
 			}
-
+		
 			
 			
 			if(DEBUG)
