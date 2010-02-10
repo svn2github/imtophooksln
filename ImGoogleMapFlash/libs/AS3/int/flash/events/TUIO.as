@@ -135,6 +135,17 @@ package flash.events {
 				tmpObj.addListener(reciever);				
 			}
 		}
+		
+		public static function addIMObjectListener(reciever:Object):void
+		{
+//			var tmpObj:IMObject = getIMObjectById(id);			
+//			if(tmpObj)
+//			{
+//				tmpObj.addListener(reciever);				
+//			}
+//			tmpObj.addListener(reciever);
+			IMObject.addListener(reciever);			
+		}		
 //---------------------------------------------------------------------------------------------------------------------------------------------
 		public static function removeObjectListener(id:Number, reciever:Object):void
 		{
@@ -143,6 +154,16 @@ package flash.events {
 			{
 				tmpObj.removeListener(reciever);				
 			}
+		}
+		
+		public static function removeIMObjectListener(reciever:Object):void
+		{
+//			var tmpObj:IMObject = getIMObjectById(id);			
+//			if(tmpObj)
+//			{
+//				tmpObj.removeListener(reciever);				
+//			}
+			IMObject.removeListener(reciever);
 		}		
 //---------------------------------------------------------------------------------------------------------------------------------------------
 		public static function getObjectById(id:Number):TUIOObject
@@ -162,9 +183,9 @@ package flash.events {
 		}
 		
 
-		public static function getImproObjectById(id:Number):IMObject
+		public static function getIMObjectById(id:Number):IMObject
 		{
-			for(var i:int=0; i<OBJECT_ARRAY.length; i++)
+			for(var i:int=0; i<IMOBJECT_ARRAY.length; i++)
 			{
 				if(IMOBJECT_ARRAY[i].ID == id)
 				{
@@ -422,53 +443,85 @@ package flash.events {
 				}
 			}
 			
-
+			
 			for each(node in msg.MESSAGE)
 			{
-				if(node.ARGUMENT[0])
 				{
-					var type:String;	
-//					if(node.@NAME == "/tuio/HResChange")
 					if(node.@NAME == "/tuio/BoundingBox")
 					{
-						var rx1:Number, 
-							ry1:Number,
-							rx2:Number,
-							ry2:Number;
-						
-						try 
-						{
-							id = node.ARGUMENT[1].@VALUE;
-							rx1 = Number(node.ARGUMENT[2].@VALUE) * W;
-							ry1 = Number(node.ARGUMENT[3].@VALUE) *  STAGE.stageHeight;
-							rx2 = Number(node.ARGUMENT[4].@VALUE);
-							ry2 = Number(node.ARGUMENT[5].@VALUE);								
-						} catch (e:Error)
-						{
-							trace("imPro: Error Parsing TUIO XML");
+						type = node.ARGUMENT[0].@VALUE;				
+						if(type == "set"){
+							
+							var rx1:Number, 
+								ry1:Number,
+								rx2:Number,
+								ry2:Number;
+							
+							try 
+							{
+								id = node.ARGUMENT[1].@VALUE;
+								rx1 = Number(node.ARGUMENT[2].@VALUE);
+								ry1 = Number(node.ARGUMENT[3].@VALUE);
+								rx2 = Number(node.ARGUMENT[4].@VALUE);
+								ry2 = Number(node.ARGUMENT[5].@VALUE);								
+							} catch (e:Error)
+							{
+								trace("imPro: Error Parsing TUIO XML");
+							}
+							
+							var imObj:IMObject = getIMObjectById(id);
+							if(imObj == null)
+							{
+								imObj = new IMObject("BoundingBox", id, rx1, ry1, rx2, ry2, -1);
+	//							STAGE.addChild(tuioobj.TUIO_CURSOR);								
+								IMOBJECT_ARRAY.push(imObj);
+								imObj.notifyCreated();
+							} else {
+								imObj.rx1 = rx1;
+								imObj.ry1 = ry1;
+								imObj.rx2 = rx2;
+								imObj.ry2 = ry2;							
+							}
+							
+							imObj.notifyMoved();
+							//imObj.TUIO_OBJECT.dispatchEvent(new HResEvent(HResEvent.POSE_CHANGE, true, false, rx, ry, rw, rh, id, 0));						
+						}				
+					}
+					else if(node.@NAME == "/tuio/originalPts"){
+						type = node.ARGUMENT[0].@VALUE;				
+						if(type == "set"){
+							
+							var px1:Number,	py1:Number,
+								px2:Number,	py2:Number,
+								px3:Number,	py3:Number,
+								px4:Number,	py4:Number;
+							
+							try 
+							{
+								id = node.ARGUMENT[1].@VALUE;
+								px1 = Number(node.ARGUMENT[2].@VALUE);
+								py1 = Number(node.ARGUMENT[3].@VALUE);
+								px2 = Number(node.ARGUMENT[4].@VALUE);
+								py2 = Number(node.ARGUMENT[5].@VALUE);
+								px3 = Number(node.ARGUMENT[6].@VALUE);
+								py3 = Number(node.ARGUMENT[7].@VALUE);
+								px4 = Number(node.ARGUMENT[8].@VALUE);
+								py4 = Number(node.ARGUMENT[9].@VALUE);
+								
+							} catch (e:Error)
+							{
+								trace("imPro: Error Parsing TUIO XML");
+							}
+							
+							var imObj:IMObject = getIMObjectById(id);
+							if(imObj != null){
+								imObj.setOrignialPts(px1, py1, px2, py2, px3, py3, px4, py4);
+							}
 						}
-						
-						var imObj:IMObject = getImproObjectById(id);
-						if(imObj == null)
-						{
-							imObj = new IMObject("BoundingBox", id, rx1, ry1, rx2, ry2, -1);
-//							STAGE.addChild(tuioobj.TUIO_CURSOR);								
-							IMOBJECT_ARRAY.push(imObj);
-							imObj.notifyCreated();
-						} else {
-							imObj.rx1 = rx1;
-							imObj.ry1 = ry1;
-							imObj.rx2 = rx2;
-							imObj.ry2 = ry2;							
-						}
-						
-//						imObj
-						imObj.notifyMoved();
-						//imObj.TUIO_OBJECT.dispatchEvent(new HResEvent(HResEvent.POSE_CHANGE, true, false, rx, ry, rw, rh, id, 0));						
 					}
 				}
 			}
-		
+
 			
 			
 			if(DEBUG)
