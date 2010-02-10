@@ -63,7 +63,7 @@ public:
 	virtual bool IsReady();
 	virtual bool setWorldBasisScale(double v[3]);
 	virtual bool getWorldBasisScale(double v[3]);
-	virtual BOOL SetCallback(CallbackFuncPtr pfunc);
+	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]);
 private:
 	HRESULT VariantFromString(PCWSTR wszValue, VARIANT &Variant);
 protected:
@@ -74,6 +74,9 @@ protected:
 
 	bool			 m_bDrawTag;
 	CallbackFuncPtr  m_pCallback;
+	int m_callbackArgc;
+	void** m_callbackArgv;
+
 	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;
 	CCritSec m_csARTracker;
 	bool             IsAcceptedType(const CMediaType *pMT);

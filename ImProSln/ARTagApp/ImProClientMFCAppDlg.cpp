@@ -121,7 +121,11 @@ void CImProClientMFCAppDlg::OnBnClickedBtncapturecam()
 	m_pDSCam = new ARTagCameraDS();
 	ret = m_pDSCam->OpenCamera(0, false, 640, 480);
 	ret = m_pDSCam->SetVideoWindow(m_hWndCaptureWnd);
+	void* argv[1] = {(void*)this};
+	m_pDSCam->SetARCallback(this->ARTagCallback, 1, argv);
 	
+
+
 	m_btnCaptureCam.EnableWindow(FALSE);
 	m_btnStopCapture.EnableWindow(TRUE);
 
@@ -214,4 +218,12 @@ void CImProClientMFCAppDlg::OnBnClickedbtnstop()
 	m_btnPlay.EnableWindow(TRUE);
 	m_btnPause.EnableWindow(FALSE);
 	m_btnStop.EnableWindow(FALSE);
+}
+
+BOOL CImProClientMFCAppDlg::ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[])
+{
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"@@@@@ Got ARCallback!! numDetected = %d\n ", numDetected  );
+	OutputDebugStringW(str);
+	return TRUE;
 }

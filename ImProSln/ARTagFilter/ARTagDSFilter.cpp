@@ -26,6 +26,8 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
 	m_pCallback = NULL;
+	m_callbackArgc = 0;
+	m_callbackArgv = NULL;
 	m_bDrawTag = true;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
@@ -364,7 +366,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 			
 			if (m_pCallback != NULL)
 			{
-				m_pCallback(numDetected, markinfos, matARView, matARProj);
+				m_pCallback(numDetected, markinfos, matARView, matARProj, m_callbackArgc, m_callbackArgv);
 			}
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{
@@ -1050,9 +1052,11 @@ bool ARTagDSFilter::getWorldBasisScale(double v[3])
 	}
 	return true;
 }
-BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc)
+BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[])
 {
 	m_pCallback = pfunc;
+	m_callbackArgc = argc;
+	m_callbackArgv = argv;
 	return TRUE;
 }
 MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
