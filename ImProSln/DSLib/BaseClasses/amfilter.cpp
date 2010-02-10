@@ -45,6 +45,7 @@ STDAPI CreateMemoryAllocator(__deref_out IMemAllocator **ppAllocator)
                             CLSCTX_INPROC_SERVER,
                             IID_IMemAllocator,
                             (void **)ppAllocator);
+
 }
 
 //  Put this one here rather than in ctlutil.cpp to avoid linking
@@ -2575,7 +2576,11 @@ HRESULT
 CBaseOutputPin::DecideAllocator(IMemInputPin *pPin, __deref_out IMemAllocator **ppAlloc)
 {
     HRESULT hr = NOERROR;
-    *ppAlloc = NULL;
+	if ((*ppAlloc) != NULL)
+	{
+		(*ppAlloc)->Release();
+		*ppAlloc = NULL;
+	}
 
     // get downstream prop request
     // the derived class may modify this in DecideBufferSize, but
@@ -2594,7 +2599,7 @@ CBaseOutputPin::DecideAllocator(IMemInputPin *pPin, __deref_out IMemAllocator **
     }
 
     /* Try the allocator provided by the input pin */
-
+	/*
     hr = pPin->GetAllocator(ppAlloc);
     if (SUCCEEDED(hr)) {
 
@@ -2606,14 +2611,14 @@ CBaseOutputPin::DecideAllocator(IMemInputPin *pPin, __deref_out IMemAllocator **
             }
         }
     }
-
+	*/
     /* If the GetAllocator failed we may not have an interface */
-
+	/*
     if (*ppAlloc) {
         (*ppAlloc)->Release();
         *ppAlloc = NULL;
-    }
-
+    }*/
+	
     /* Try the output pin's allocator by the same method */
 
     hr = InitAllocator(ppAlloc);
@@ -2907,6 +2912,7 @@ CBaseInputPin::NotifyAllocator(
 
     if (pOldAllocator != NULL) {
         pOldAllocator->Release();
+		pOldAllocator = NULL;
     }
 
     // the readonly flag indicates whether samples from this allocator should

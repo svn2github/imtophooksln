@@ -44,6 +44,7 @@ ARTagDSFilter::~ARTagDSFilter()
 		delete[] m_callbackArgv;
 		m_callbackArgv = NULL;
 	}
+
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
@@ -1061,7 +1062,13 @@ BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[])
 {
 	m_pCallback = pfunc;
 	m_callbackArgc = argc;
-	m_callbackArgv = argv;
+	if (this->m_callbackArgv != NULL)
+	{
+		delete[] m_callbackArgv;
+		m_callbackArgv = NULL;
+	}
+	m_callbackArgv = new void*[argc];
+	memcpy(m_callbackArgv, argv, sizeof(void*)*argc);
 	return TRUE;
 }
 MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)

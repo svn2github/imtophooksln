@@ -9,6 +9,7 @@ D3DTransformFilterBase::D3DTransformFilterBase()
 	m_pOutTexture = NULL;
 	m_pInTexture = NULL;
 	m_pRenderTarget = NULL;
+	m_pBackupRenderTarget = NULL;
 }
 
 D3DTransformFilterBase::~D3DTransformFilterBase()
@@ -34,11 +35,11 @@ HRESULT D3DTransformFilterBase::ReleaseD3D()
 		m_pOutTexture->Release();
 		m_pOutTexture = NULL;
 	}
-	/*if (m_pOutTextureSample != NULL)
+	if (m_pBackupRenderTarget != NULL)
 	{
-		m_pOutTextureSample->Release();
-		m_pOutTextureSample = NULL;
-	}*/
+		m_pBackupRenderTarget->Release();
+		m_pBackupRenderTarget = NULL;
+	}
 	__super::ReleaseD3D();
 	return S_OK;
 }
