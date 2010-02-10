@@ -21,17 +21,23 @@ package {
 		   else addEventListener(Event.ADDED_TO_STAGE , init);  			
 		}
 
-		private function init(e:Event):void {  
+		private function init(e:Event):void {
 			removeEventListener(Event.ADDED_TO_STAGE, init);  
 			//把要做的事寫在這兒  
 			//這樣就可以確保 stage 屬性一定有值
+			
+			//Connect to FLOSC to recieve touch input
+//			TUIO.init( this, 'localhost', 3000, '', true, multiResMap.getMapWidth(), multiResMap.getMapHeight());
+//			TUIO2.init(this, 'localhost', 3000, '', true);
+			TUIO.init(this, 'localhost', 3000, '', true);
+
 			
 			var numOfView:Number = 2;
 			
 			// add high-resolution views
 			multiResMap = new MultiResMap(0, 0, stageWidth/numOfView, stageHeight, true);
 			
-			var tableLamp:MapViewport = (multiResMap.addViewport("TableLamp", stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
+			var tableLamp:MapViewport = (multiResMap.addViewport(0, stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
 			tableLamp.viewport.x = multiResMap.getMapWidth()/2;
 			tableLamp.viewport.y = multiResMap.getMapHeight()/2;
 			
@@ -47,15 +53,10 @@ package {
 			
 			addChild(multiResMap);
 						
-			//Connect to FLOSC to recieve touch input
-//			TUIO.init( this, 'localhost', 3000, '', true, multiResMap.getMapWidth(), multiResMap.getMapHeight());
-//			TUIO2.init(this, 'localhost', 3000, '', true);
-			TUIO.init(this, 'localhost', 3000, '', true);
-			
+		
 			//add stage listener 
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
 			stage.addEventListener(TouchEvent.CLICK, touchDown);
-			stage.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
 			  
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, function(e:KeyboardEvent):void{
 				if(e.keyCode == Keyboard.LEFT)
@@ -86,12 +87,5 @@ package {
 			trace("touchDown");
 		}				
 		
-		private function hresPosChange(e:Event):void{
-			
-			var he:HResEvent = e as HResEvent;
-			trace(he.ID + ": " + he.regionX + ", "+ he.regionY + ", "+ he.regionWidth + ", "+ he.regionHeight);
-			
-				
-		}
 	}
 }

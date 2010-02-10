@@ -128,7 +128,14 @@ package
 	//			this.setChildIndex(TYPE_BUTTON, this.numChildren-1);
 			} 			
 		}
-				
+		
+		public function setViewportBound(rx1:Number, ry1:Number, rx2:Number, ry2:Number):void{
+			viewport.setViewportBound(rx1, ry1, rx2, ry2);
+		}
+		public function setViewportOriPts(pt1:Point, pt2:Point, pt3:Point, pt4:Point):void{
+			viewport.setViewportOriPts(pt1, pt2, pt3, pt4);
+		}
+		
 		public function setViewport(cx:Number, cy:Number, w:Number, h:Number):void{
 			viewport.setViewport(cx, cy, w, h);
 		}

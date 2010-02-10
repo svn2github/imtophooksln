@@ -9,7 +9,7 @@ package
 	import com.google.maps.controls.NavigationControl;
 	
 	import flash.display.Sprite;
-	import flash.events.Event;
+	import flash.events.*;
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.utils.Dictionary;
@@ -44,6 +44,12 @@ package
 			map.addEventListener(MapMoveEvent.MOVE_STEP, onMapMove);						
 			addChild(map);
 			
+			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
+			
+			// add imObject listener
+			TUIO.addIMObjectListener(this);
+
+			
 			if(DEBUG){
 				ruler.graphics.beginFill(0x0000ff, 1);			
 				ruler.graphics.drawRect(map.x, map.height/2, map.width, 1);
@@ -52,8 +58,32 @@ package
 				addChild(ruler);							
 			}
 		}
+
+		private function hresPosChange(e:Event):void{
+			
+			var he:HResEvent = e as HResEvent;
+			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
+			
+			var sx1:Number = he.rx1 * map.width;
+			var sy1:Number = he.ry1 * map.height;
+			var sx2:Number = he.rx2 * map.width;
+			var sy2:Number = he.ry2 * map.height;
+			trace(">> " + sx1 + ", "+ sy1 + ", "+ sx2 + ", "+ sy2);
+			
+			he.oriPt1.x *= map.width;
+			he.oriPt1.y *= map.height;
+			he.oriPt2.x *= map.width;
+			he.oriPt2.y *= map.height;
+			he.oriPt3.x *= map.width;
+			he.oriPt3.y *= map.height;
+			he.oriPt4.x *= map.width;
+			he.oriPt4.y *= map.height;
+			
+			getViewport(he.ID).setViewportBound(sx1, sy1, sx2, sy2);			
+			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);			
+		}
 		
-		public function addViewport(id:String, x:Number, y:Number, width:Number, height:Number):MapViewport{			
+		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number):MapViewport{			
  			var viewport:MapViewport = new MapViewport(map, x, y, width, height, DEBUG);
 			addChild(viewport);			
 			viewportDict[id] = viewport;
@@ -71,7 +101,7 @@ package
 			return geControl;
 		}
 		
-		public function getViewport (id:String):MapViewport{
+		public function getViewport (id:Number):MapViewport{
 			return viewportDict[id];
 		}
 		

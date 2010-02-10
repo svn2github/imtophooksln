@@ -1,11 +1,11 @@
 package
 {
-	import flash.display.Bitmap;
+	import app.core.action.RotatableScalable;
+	
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.filters.ColorMatrixFilter;
-
-	import app.core.action.RotatableScalable;
+	import flash.geom.Point;
 	
 	public class ViewportControl extends RotatableScalable
 	{
@@ -16,8 +16,14 @@ package
 		private var handleSize:Number = 20;
 		private var w:Number;
 		private var h:Number;
-		private var maskBmp:Bitmap;
-		private var invFilter:ColorMatrixFilter = genInvFilter();
+		
+		private var oriPt1:Point = new Point();
+		private var oriPt2:Point = new Point();
+		private var oriPt3:Point = new Point();
+		private var oriPt4:Point = new Point();
+		
+//		private var maskBmp:Bitmap;
+//		private var invFilter:ColorMatrixFilter = genInvFilter();
 //		private var invTransform:ColorTransform = new ColorTransform(0,0,0,0,0,0,0,255);	
 
 		//-------------------------------------- DEBUG VARS			
@@ -62,7 +68,7 @@ package
 			this.addEventListener(MouseEvent.MOUSE_WHEEL, tiltIt);
 			
 			this.addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
-				this.addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
+			this.addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
 			
 //			maskBmp = new Bitmap();			
 //			addChild(maskBmp);			
@@ -90,6 +96,29 @@ package
 			handle.x = w/2-handleSize/2;
 			handle.y = h/2-handleSize/2;			
 			
+			updateControl();
+		}
+		
+		public function setViewportBound(rx1:Number, ry1:Number, rx2:Number, ry2:Number):void{
+			this.w = rx2-rx1;
+			this.h = ry2-ry1;
+			this.x = rx1 + this.w/2;
+			this.y = ry1 + this.h/2;
+			handle.x = w/2-handleSize/2;
+			handle.y = h/2-handleSize/2;			
+			
+			updateControl();
+		}
+		
+		public function setViewportOriPts(pt1:Point, pt2:Point, pt3:Point, pt4:Point):void{
+			oriPt1.x = pt1.x - this.x;
+			oriPt1.y = pt1.y - this.y;
+			oriPt2.x = pt2.x - this.x;
+			oriPt2.y = pt2.y - this.y;
+			oriPt3.x = pt3.x - this.x;
+			oriPt3.y = pt3.y - this.y;
+			oriPt4.x = pt4.x - this.x;
+			oriPt4.y = pt4.y - this.y;
 			updateControl();
 		}
 
@@ -146,7 +175,16 @@ package
 			this.graphics.lineTo(w/2, -h/2);
 			this.graphics.lineTo(w/2, h/2);			
 			this.graphics.lineTo(-w/2, h/2);
-			this.graphics.lineTo(-w/2, -h/2);			
+			this.graphics.lineTo(-w/2, -h/2);	
+			
+			// draw original points
+			this.graphics.lineStyle(1, 0xff0000);
+			this.graphics.moveTo(oriPt1.x, oriPt1.y);
+			this.graphics.lineTo(oriPt2.x, oriPt2.y);
+			this.graphics.lineTo(oriPt3.x, oriPt3.y);			
+			this.graphics.lineTo(oriPt4.x, oriPt4.y);
+			this.graphics.lineTo(oriPt1.x, oriPt1.y);				
+				
 		}
 
 		private function genInvFilter():ColorMatrixFilter{
