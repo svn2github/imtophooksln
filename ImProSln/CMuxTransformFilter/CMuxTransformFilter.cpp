@@ -423,7 +423,7 @@ HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const
 		, dwFlags
 		);
 	*ppOutSample = pOutSample;
-	DWORD szOutSample = pOutSample->GetSize();
+	
 	if (FAILED(hr)) {
 		return hr;
 	}

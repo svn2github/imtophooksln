@@ -41,12 +41,12 @@ BEGIN_MESSAGE_MAP(CImProClientMFCAppDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	//}}AFX_MSG_MAP
 	ON_BN_CLICKED(IDC_BtnCaptureCam, &CImProClientMFCAppDlg::OnBnClickedBtncapturecam)
-	ON_WM_DESTROY()
 	ON_BN_CLICKED(IDC_BtnStopCapture, &CImProClientMFCAppDlg::OnBnClickedBtnstopcapture)
 	ON_BN_CLICKED(IDC_SaveGraph, &CImProClientMFCAppDlg::OnBnClickedSavegraph)
 	ON_BN_CLICKED(IDC_btnPlay, &CImProClientMFCAppDlg::OnBnClickedbtnplay)
 	ON_BN_CLICKED(IDC_btnPause, &CImProClientMFCAppDlg::OnBnClickedbtnpause)
 	ON_BN_CLICKED(IDC_btnStop, &CImProClientMFCAppDlg::OnBnClickedbtnstop)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -141,16 +141,7 @@ void CImProClientMFCAppDlg::CaptureCallback(IplImage *frame)
 	OutputDebugStringW(L"@@@@@ CaptureCallBack!!!!!\n");
 }
 
-void CImProClientMFCAppDlg::OnDestroy()
-{
-	CDialog::OnDestroy();
 
-	if (m_pDSCam != NULL)
-	{
-		delete m_pDSCam;
-		m_pDSCam = NULL;
-	}
-}
 
 void CImProClientMFCAppDlg::OnBnClickedBtnstopcapture()
 {
@@ -226,4 +217,15 @@ BOOL CImProClientMFCAppDlg::ARTagCallback(int numDetected, const ARMarkerInfo* m
 	swprintf_s(str, MAX_PATH, L"@@@@@ Got ARCallback!! numDetected = %d\n ", numDetected  );
 	OutputDebugStringW(str);
 	return TRUE;
+}
+void CImProClientMFCAppDlg::OnDestroy()
+{
+	if (m_pDSCam != NULL)
+	{
+		m_pDSCam->Stop();
+		delete m_pDSCam;
+		m_pDSCam = NULL;
+	}
+	CDialog::OnDestroy();
+	
 }

@@ -39,6 +39,11 @@ ARTagDSFilter::~ARTagDSFilter()
 		delete m_ARTracker;
 		m_ARTracker = NULL;
 	}
+	if (m_callbackArgv != NULL)
+	{
+		delete[] m_callbackArgv;
+		m_callbackArgv = NULL;
+	}
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {

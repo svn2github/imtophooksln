@@ -36,7 +36,6 @@ public:
 
 public:
 	static void CaptureCallback(IplImage *frame);
-	afx_msg void OnDestroy();
 	afx_msg void OnBnClickedBtnstopcapture();
 	CButton m_btnCaptureCam;
 	CButton m_btnStopCapture;
@@ -51,4 +50,5 @@ public:
 	afx_msg void OnBnClickedbtnpause();
 	afx_msg void OnBnClickedbtnstop();
 	CButton m_btnSaveGraph;
+	afx_msg void OnDestroy();
 };
