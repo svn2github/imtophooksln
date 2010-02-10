@@ -90,6 +90,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OSCSender", "OSCSender\OSCSender.vcproj", "{A75AD00A-8438-4813-B39A-7D45F6ACB166}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARTagApp", "ARTagApp\ImProClientMFCApp.vcproj", "{A0E42261-1BEE-4D23-9179-C69372A7124A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C9B3398F-FE16-4E2E-85D4-FD189A55B74A} = {C9B3398F-FE16-4E2E-85D4-FD189A55B74A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

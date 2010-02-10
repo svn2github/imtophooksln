@@ -245,7 +245,10 @@ HRESULT TouchLibFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = inputMT.GetSampleSize();
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -262,7 +265,10 @@ HRESULT TouchLibFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(ForegroundRegion);
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {
@@ -551,7 +557,7 @@ HRESULT TouchLibFilter::SendForegroundSample()
 	}
 	HRESULT hr = S_OK;
 	vector<CvRect>* fgList = m_pTouchScreen->GetForeground();
-	IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
+	IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
 	CMediaSample* pSendSample = NULL;
 	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
 	if (pSendSample == NULL)

@@ -49,7 +49,8 @@ public:
 	// set the connection media type
 	virtual HRESULT SetMediaType(const CMediaType* mt);
 	// --- IMemInputPin -----
-
+	// Overwrite GetAllocator in order to trace the CMemAllocator
+	virtual STDMETHODIMP GetAllocator(__deref_out IMemAllocator ** ppAllocator);
 	// here's the next block of data from the stream.
 	// AddRef it yourself if you need to hold it beyond the end
 	// of this call.
@@ -139,8 +140,10 @@ public:
 
 	// Media type
 public:
+	virtual HRESULT DecideAllocator(IMemInputPin * pPin, __deref_out IMemAllocator ** pAlloc);
+	virtual HRESULT InitAllocator(IMemAllocator **ppAlloc);
+	virtual IMemAllocator* Allocator(){ return m_pAllocator;}
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
-	virtual IMemAllocator* GetAllocator() {return m_pAllocator;};
 };
 
 class CMuxTransformStream : public CAMThread, public CBaseOutputPin {

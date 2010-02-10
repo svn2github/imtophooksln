@@ -389,7 +389,8 @@ HRESULT CMuxTransformFilter::CompleteConnect(PIN_DIRECTION dir, const IPin* pMyP
 // Set up our output sample
 HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const IPin* pInputPin, const IPin* pOutputPin, __deref_out IMediaSample **ppOutSample )
 {
-	IMediaSample *pOutSample;
+	HRESULT hr = NULL;
+	IMediaSample *pOutSample = NULL;
 	CMuxTransformInputPin* pInPin = (CMuxTransformInputPin*) pInputPin;
 	CMuxTransformOutputPin* pOutPin = (CMuxTransformOutputPin*) pOutputPin;
 	// default - times are the same
@@ -403,9 +404,17 @@ HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const
 	if (!(pProps->dwSampleFlags & AM_SAMPLE_SPLICEPOINT)) {
 		dwFlags |= AM_GBF_NOTASYNCPOINT;
 	}
-
+	CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
+	VIDEOINFOHEADER *pvf = (VIDEOINFOHEADER *)mt.pbFormat;
+	BITMAPINFOHEADER bitHeader = pvf->bmiHeader;
 	ASSERT(pOutPin->m_pAllocator != NULL);
-	HRESULT hr = pOutPin->m_pAllocator->GetBuffer(
+
+	// whatever he returns, we assume prop is either all zeros
+	// or he has filled it out.
+
+	IMemAllocator* pAlloc = pOutPin->m_pAllocator;
+	
+	hr = pAlloc->GetBuffer(
 		&pOutSample
 		, pProps->dwSampleFlags & AM_SAMPLE_TIMEVALID ?
 		&pProps->tStart : NULL
@@ -414,6 +423,7 @@ HRESULT CMuxTransformFilter::InitializeOutputSample(IMediaSample *pSample, const
 		, dwFlags
 		);
 	*ppOutSample = pOutSample;
+	DWORD szOutSample = pOutSample->GetSize();
 	if (FAILED(hr)) {
 		return hr;
 	}
@@ -545,7 +555,24 @@ CMuxTransformInputPin::CheckMediaType(const CMediaType* pmt)
 
 
 // set the media type for this connection
-
+STDMETHODIMP CMuxTransformInputPin::GetAllocator(__deref_out IMemAllocator ** ppAllocator)
+{
+	CheckPointer(ppAllocator,E_POINTER);
+	ValidateReadWritePtr(ppAllocator,sizeof(IMemAllocator *));
+	CAutoLock cObjectLock(m_pLock);
+	HRESULT hr = S_OK;
+	if (m_pAllocator == NULL) {
+		m_pAllocator = new CMemAllocator(NAME("CMemAllocator"), NULL, &hr);
+		if (FAILED(hr)) {
+			return hr;
+		}
+	}
+	ASSERT(m_pAllocator != NULL);
+	*ppAllocator = m_pAllocator;
+	m_pAllocator->AddRef();
+	return NOERROR;
+	
+}
 HRESULT
 CMuxTransformInputPin::SetMediaType(const CMediaType* mtIn)
 {
@@ -831,9 +858,60 @@ CMuxTransformOutputPin::SetMediaType(const CMediaType* pmtOut)
 	}
 	return m_pTransformFilter->SetMediaType(PINDIR_OUTPUT, this, pmtOut);
 }
+HRESULT CMuxTransformOutputPin::DecideAllocator(IMemInputPin * pPin, __deref_out IMemAllocator ** ppAlloc)
+{
+	HRESULT hr = NOERROR;
+	*ppAlloc = NULL;
 
+	// get downstream prop request
+	// the derived class may modify this in DecideBufferSize, but
+	// we assume that he will consistently modify it the same way,
+	// so we only get it once
+	ALLOCATOR_PROPERTIES prop;
+	ZeroMemory(&prop, sizeof(prop));
+
+
+	hr = InitAllocator(ppAlloc);
+	if (SUCCEEDED(hr)) {
+
+		// note - the properties passed here are in the same
+		// structure as above and may have been modified by
+		// the previous call to DecideBufferSize
+		hr = DecideBufferSize(*ppAlloc, &prop);
+		if (SUCCEEDED(hr)) {
+			hr = pPin->NotifyAllocator(*ppAlloc, FALSE);
+			if (SUCCEEDED(hr)) {
+				return NOERROR;
+			}
+		}
+	}
+
+	/* Likewise we may not have an interface to release */
+
+	if (*ppAlloc) {
+		(*ppAlloc)->Release();
+		*ppAlloc = NULL;
+	}
+	return hr;
+}
 // pass the buffer size decision through to the main transform class
-
+HRESULT CMuxTransformOutputPin::InitAllocator(IMemAllocator **ppAllocator)
+{
+	CheckPointer(ppAllocator,E_POINTER);
+	ValidateReadWritePtr(ppAllocator,sizeof(IMemAllocator *));
+	CAutoLock cObjectLock(m_pLock);
+	HRESULT hr = S_OK;
+	if (m_pAllocator == NULL) {
+		m_pAllocator = new CMemAllocator(NAME("CMemAllocator"), NULL, &hr);
+		if (FAILED(hr)) {
+			return hr;
+		}
+	}
+	ASSERT(m_pAllocator != NULL);
+	*ppAllocator = m_pAllocator;
+	m_pAllocator->AddRef();
+	return NOERROR;
+}
 HRESULT
 CMuxTransformOutputPin::DecideBufferSize(
 									  IMemAllocator * pAllocator,

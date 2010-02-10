@@ -16,6 +16,7 @@
 #include "MyARTagMediaSample.h"
 #include "msxml2.h"
 #include <string.h>
+#include <winerror.h>
 
 using namespace ARToolKitPlus;
 extern CARTagFilterApp theApp;
@@ -261,6 +262,8 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	{
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		CMediaType outputMT = m_pOutputPins[0]->CurrentMediaType();
+		if (pIn->GetSize() != pOut->GetSize())
+			return S_FALSE;
 		return DoTransform(pIn, &inputMT, pOut, &outputMT);
 	}
 	return S_OK;
@@ -337,7 +340,8 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		img = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
 		imgOut = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, 4);
 	}
-
+	DWORD szIn = pIn->GetSize();
+	DWORD szOut = pOut->GetSize();
 	img->imageData = (char*)pInData;
 	imgOut->imageData = (char*)pOutData;
 	cvCopy(img, imgOut);
@@ -374,7 +378,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 				pARTagResult->m_basisScale[1] =  basisScale[1];
 				pARTagResult->m_basisScale[2] =  basisScale[2];
 
-				IMemAllocator* pAllocator = m_pOutputPins[1]->GetAllocator();
+				IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
 				CMediaSample* pSample = NULL;
 				
 				pAllocator->GetBuffer((IMediaSample**)&pSample, NULL, NULL, 0);
@@ -439,15 +443,21 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 	{
 		return S_FALSE;
 	}
-	CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
+	
 
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+		CMediaType mt = m_pOutputPins[0]->CurrentMediaType();
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputMT.GetSampleSize();
+		pProp->cbBuffer = mt.GetSampleSize();
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
+
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -459,11 +469,16 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 			pProp->cbBuffer > Actual.cbBuffer) {
 				return E_FAIL;
 		}
+		return NOERROR;
 	}
 	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(ARTagResultData);
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		ASSERT( Actual.cBuffers == 1 );
@@ -471,6 +486,7 @@ HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPi
 			pProp->cbBuffer > Actual.cbBuffer) {
 				return E_FAIL;
 		}
+		return NOERROR;
 	}
 	return NOERROR;
 }

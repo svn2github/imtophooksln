@@ -95,11 +95,13 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "ImProClientMFCApp"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    PUSHBUTTON      "Capture Cam",IDC_BtnCaptureCam,251,7,50,14
-    PUSHBUTTON      "Stop Capture",IDC_BtnStopCapture,251,26,50,14
+    PUSHBUTTON      "Open Cam",IDC_BtnCaptureCam,251,7,50,14
+    PUSHBUTTON      "Destory Cam",IDC_BtnStopCapture,251,26,50,14
     CONTROL         "",IDC_picCapturePreview,"Static",SS_BLACKFRAME,7,7,200,150
-    PUSHBUTTON      "Start Track",IDC_btnStartTrack,251,63,50,14
-    PUSHBUTTON      "Save Graph",IDC_SaveGraph,251,81,50,14
+    PUSHBUTTON      "Save Graph",IDC_SaveGraph,251,121,50,14,WS_DISABLED
+    PUSHBUTTON      "Play",IDC_btnPlay,251,58,50,14,WS_DISABLED
+    PUSHBUTTON      "Pause",IDC_btnPause,251,75,50,14,WS_DISABLED
+    PUSHBUTTON      "btnStop",IDC_btnStop,251,93,50,14,WS_DISABLED
 END
 
 

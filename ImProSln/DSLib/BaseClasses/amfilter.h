@@ -489,7 +489,7 @@ public:
     // IQualityControl methods
     //================================================================================
 
-    virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
+    STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 
     STDMETHODIMP SetSink(IQualityControl * piqc);
 
@@ -861,7 +861,7 @@ public:
 
     // return the allocator interface that this input pin
     // would like the output pin to use
-    STDMETHODIMP GetAllocator(__deref_out IMemAllocator ** ppAllocator);
+    virtual STDMETHODIMP GetAllocator(__deref_out IMemAllocator ** ppAllocator);
 
     // tell the input pin which allocator the output pin is actually
     // going to use.

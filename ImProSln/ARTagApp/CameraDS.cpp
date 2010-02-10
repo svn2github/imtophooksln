@@ -1,32 +1,5 @@
-//////////////////////////////////////////////////////////////////////
-// Video Capture using DirectShow
-// Author: Shiqi Yu (shiqi.yu@gmail.com)
-// Thanks to:
-//		HardyAI@OpenCV China
-//		flymanbox@OpenCV China (for his contribution to function CameraName, and frame width/height setting)
-// Last modification: April 9, 2009
-//////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////
-// 使用说明：
-//   1. 将CameraDS.h CameraDS.cpp以及目录DirectShow复制到你的项目中
-//   2. 菜单 Project->Settings->Settings for:(All configurations)->C/C++->Category(Preprocessor)->Additional include directories
-//      设置为 DirectShow/Include
-//   3. 菜单 Project->Settings->Settings for:(All configurations)->Link->Category(Input)->Additional library directories
-//      设置为 DirectShow/Lib
-//////////////////////////////////////////////////////////////////////
-
-// CameraDS.cpp: implementation of the CCameraDS class.
-//
-//////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "CameraDS.h"
-
-#pragma comment(lib,"Strmiids.lib") 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
 
 CCameraDS::CCameraDS()
 {
@@ -42,6 +15,14 @@ CCameraDS::CCameraDS()
 	m_pMediaEvent = NULL;
 	m_pSampleGrabberFilter = NULL;
 	m_pGraph = NULL;
+
+	m_pDeviceFilter = NULL;
+	m_pMediaControl = NULL;
+	m_pSampleGrabber = NULL;
+	m_pGrabberInput = NULL;
+	m_pGrabberOutput = NULL;
+	m_pCameraOutput = NULL;
+	m_pRenderInputPin = NULL;
 
 	CoInitialize(NULL);
 }
@@ -83,25 +64,64 @@ void CCameraDS::CloseCamera()
 
 bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
 {
-	
 	HRESULT hr = S_OK;
 
 	CoInitialize(NULL);
+
 	// Create the Filter Graph Manager.
-	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC,
-							IID_IGraphBuilder, (void **)&m_pGraph);
+	hr = CreateGraph((IGraphBuilder**)&m_pGraph);
+	hr = CreateFilters(nCamID, bDisplayProperties, nWidth, nHeight);
+	hr = ConnectGraph();
 
-	hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, 
-							IID_IBaseFilter, (LPVOID *)&m_pSampleGrabberFilter);
+	//m_pSampleGrabber->SetBufferSamples(TRUE);
+	//m_pSampleGrabber->SetOneShot(TRUE);
+   
 
+	AM_MEDIA_TYPE   mt;
+	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
+
+	hr = m_pSampleGrabber->GetConnectedMediaType(&mt);
+	if(FAILED(hr))
+		return false;
+
+	VIDEOINFOHEADER *videoHeader;
+	videoHeader = reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat);
+	m_nWidth = videoHeader->bmiHeader.biWidth;
+	m_nHeight = videoHeader->bmiHeader.biHeight;
+	m_bConnected = true;
+	MYFREEMEDIATYPE(mt);
+	return true;
+}
+HRESULT CCameraDS::ConnectGraph()
+{
+	HRESULT hr;
+	hr = m_pGraph->Connect(m_pCameraOutput, m_pGrabberInput);
+	if (FAILED(hr))
+		return hr;
+	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
+	return hr;
+}
+HRESULT CCameraDS::CreateGraph(IGraphBuilder** ppGraph)
+{
+	HRESULT hr;
+	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
+		IID_IGraphBuilder, (void **)ppGraph);
+	
 	hr = m_pGraph->QueryInterface(IID_IMediaControl, (void **) &m_pMediaControl);
 	hr = m_pGraph->QueryInterface(IID_IMediaEvent, (void **) &m_pMediaEvent);
 	hr = m_pGraph->QueryInterface(IID_IVideoWindow, (LPVOID *) &m_pVideoWindow);
+	return hr;
+}
+HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
+{
+	HRESULT hr;
+	hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, 
+		IID_IBaseFilter, (LPVOID *)&m_pSampleGrabberFilter);
 
 	hr = CoCreateInstance(CLSID_VideoRenderer, NULL, CLSCTX_INPROC_SERVER,
-							IID_IBaseFilter, (LPVOID*) &m_pRenderFilter);
+		IID_IBaseFilter, (LPVOID*) &m_pRenderFilter);
 
-	
+
 	hr = m_pGraph->AddFilter(m_pRenderFilter, L"Video Renderer");
 
 	hr = m_pSampleGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&m_pSampleGrabber);
@@ -114,15 +134,15 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 	hr = m_pSampleGrabber->SetMediaType(&mt);
 	MYFREEMEDIATYPE(mt);
 
-	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Grabber");
- 
+	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Sample Grabber");
+
 	// Bind Device Filter.  We know the device because the id was passed in
 	BindFilter(nCamID, &m_pDeviceFilter);
-	m_pGraph->AddFilter(m_pDeviceFilter, NULL);
+	m_pGraph->AddFilter(m_pDeviceFilter, L"Camera");
 
 	CComPtr<IEnumPins> pEnum;
 	m_pDeviceFilter->EnumPins(&pEnum);
- 
+
 	hr = pEnum->Reset();
 	hr = pEnum->Next(1, &m_pCameraOutput, NULL); 
 
@@ -141,7 +161,7 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 	m_pRenderFilter->EnumPins(&pEnum);
 	pEnum->Reset();
 	hr = pEnum->Next(1, &m_pRenderInputPin, NULL);
-
+	
 	//SetCrossBar();
 
 	if (bDisplayProperties) 
@@ -158,11 +178,11 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 			pPages->GetPages(&caGUID);
 
 			OleCreatePropertyFrame(NULL, 0, 0,
-						L"Property Sheet", 1,
-						(IUnknown **)&(m_pCameraOutput.p),
-						caGUID.cElems,
-						caGUID.pElems,
-						0, 0, NULL);
+				L"Property Sheet", 1,
+				(IUnknown **)&(m_pCameraOutput.p),
+				caGUID.cElems,
+				caGUID.pElems,
+				0, 0, NULL);
 			CoTaskMemFree(caGUID.pElems);
 			PinInfo.pFilter->Release();
 		}
@@ -174,21 +194,21 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 		// 加入由 lWidth和lHeight设置的摄像头的宽和高 的功能，默认320*240
 		// by flymanbox @2009-01-24
 		//////////////////////////////////////////////////////////////////////////////
-	   int _Width = nWidth, _Height = nHeight;
-	   IAMStreamConfig*   iconfig; 
-	   iconfig = NULL;
-	   hr = m_pCameraOutput->QueryInterface(IID_IAMStreamConfig,   (void**)&iconfig);   
-      
-	   AM_MEDIA_TYPE* pmt;    
-	   if(iconfig->GetFormat(&pmt) !=S_OK) 
-	   {
-		  //printf("GetFormat Failed ! \n");
-		  return   false;   
-	   }
-      
-	   VIDEOINFOHEADER*   phead;
-	   if ( pmt->formattype == FORMAT_VideoInfo)   
-	   {   
+		int _Width = nWidth, _Height = nHeight;
+		IAMStreamConfig*   iconfig; 
+		iconfig = NULL;
+		hr = m_pCameraOutput->QueryInterface(IID_IAMStreamConfig,   (void**)&iconfig);   
+
+		AM_MEDIA_TYPE* pmt;    
+		if(iconfig->GetFormat(&pmt) !=S_OK) 
+		{
+			//printf("GetFormat Failed ! \n");
+			return   false;   
+		}
+
+		VIDEOINFOHEADER*   phead;
+		if ( pmt->formattype == FORMAT_VideoInfo)   
+		{   
 			phead=( VIDEOINFOHEADER*)pmt->pbFormat;   
 			phead->bmiHeader.biWidth = _Width;   
 			phead->bmiHeader.biHeight = _Height;   
@@ -198,51 +218,13 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 			}
 
 		}   
-		
+
 		iconfig->Release();   
 		iconfig=NULL;   
 		MYFREEMEDIATYPE(*pmt);
 	}
-
-	hr = m_pGraph->Connect(m_pCameraOutput, m_pGrabberInput);
-	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
-	
-	if (FAILED(hr))
-	{
-		switch(hr)
-		{
-			case VFW_S_NOPREVIEWPIN :
-				break;
-			case E_FAIL :
-				break;
-			case E_INVALIDARG :
-				break;
-			case E_POINTER :
-				break;
-		}
-	}
-
-	m_pSampleGrabber->SetBufferSamples(TRUE);
-	//m_pSampleGrabber->SetOneShot(TRUE);
-    m_pMediaControl->Run();
-
-
-	hr = m_pSampleGrabber->GetConnectedMediaType(&mt);
-	if(FAILED(hr))
-		return false;
-
-
-
-	VIDEOINFOHEADER *videoHeader;
-	videoHeader = reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat);
-	m_nWidth = videoHeader->bmiHeader.biWidth;
-	m_nHeight = videoHeader->bmiHeader.biHeight;
-	m_bConnected = true;
-
-	pEnum = NULL;
-	return true;
+	return S_OK;
 }
-
 bool CCameraDS::SetVideoWindow(HWND hwnd)
 {
 	if (m_pVideoWindow == NULL)
@@ -445,7 +427,6 @@ IplImage* CCameraDS::QueryFrame()
 
 int CCameraDS::CameraCount()
 {
-
 	int count = 0;
  	CoInitialize(NULL);
 
@@ -527,3 +508,21 @@ int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize)
 	return 1;
 }
 
+HRESULT CCameraDS::Play()
+{
+	if (m_pMediaControl == NULL)
+		return S_FALSE;
+	return m_pMediaControl->Run();
+}
+HRESULT CCameraDS::Stop()
+{
+	if (m_pMediaControl == NULL)
+		return S_FALSE;
+	return m_pMediaControl->Stop();
+}
+HRESULT CCameraDS::Pause()
+{
+	if (m_pMediaControl == NULL)
+		return S_FALSE;
+	return m_pMediaControl->Pause();
+}

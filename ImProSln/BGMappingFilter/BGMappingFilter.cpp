@@ -409,7 +409,10 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = inputMT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {

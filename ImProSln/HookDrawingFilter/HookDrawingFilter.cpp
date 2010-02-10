@@ -353,7 +353,10 @@ HRESULT HookDrawingFilter::DecideBufferSize(
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {

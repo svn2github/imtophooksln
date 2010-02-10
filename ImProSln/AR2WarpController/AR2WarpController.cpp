@@ -506,7 +506,10 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(ARTagResultData);
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {
@@ -522,7 +525,10 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 	{
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = sizeof(ARTagResultData);
-
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {
@@ -706,7 +712,7 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 			for (int col =0; col < 4; col++)
 				sendData.warpMat[row][col] = m_matPro2VW[camIdx]->m[row][col];
 	}
-	IMemAllocator* pAllocator = m_pOutputPins[0]->GetAllocator();
+	IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
 	CMediaSample* pSendSample = NULL;
 
 	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
@@ -725,7 +731,7 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 }
 bool AR2WarpController::SendARLayoutStartegyData()
 {
-	IMemAllocator* pAllocator = m_pOutputPins[NUMCAM]->GetAllocator();
+	IMemAllocator* pAllocator = m_pOutputPins[NUMCAM]->Allocator();
 	CMediaSample* pSendSample = NULL;
 
 	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
