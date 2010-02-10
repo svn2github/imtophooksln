@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\common.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\pointTrans.cpp"
 				>
 			</File>
@@ -256,6 +260,10 @@
 			</File>
 			<File
 				RelativePath=".\AR2WarpControllerReg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\common.h"
 				>
 			</File>
 			<File

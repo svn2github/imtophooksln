@@ -13,6 +13,9 @@ using namespace std;
 #pragma comment(lib, "cvaux200.lib")
 
 
+#define CAMWIDTH 640
+#define CAMHEIGHT 480
+
 
 class ProjectorTrans2World{
 public :
@@ -64,8 +67,10 @@ public:
 	//float proj3DPoints[4][3];  
 	float projCorner[8];
 	float projHomo[3][3];
-	int ResWidth ;   // resolution width
-	int ResHeight;
+	int ProjResWidth ;   // resolution width
+	int ProjResHeight;
+	int tableWidth;
+	int tableHeight;
 
 
 
