@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;.\DXSDK 2005 June\Include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -70,7 +70,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="cv200.lib cxcore200.lib "
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)\OpenCV2.0\lib;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;.\DXSDK 2005 June\Lib\x86&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
