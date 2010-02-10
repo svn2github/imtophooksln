@@ -1,0 +1,277 @@
+<!--
+  Copyright (c) 2009 Google inc.
+
+  You are free to copy and use this sample.
+  License can be found here: http://code.google.com/apis/ajaxsearch/faq/#license
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Google Earth API Sample</title>
+    <script src="http://www.google.com/jsapi?key=ABQIAAAA1XbMiDxx_BTCY2_FkPh06RRaGTYH6UMl8mADNa0YKuWNNa8VNxQEerTAUcfkyrr6OwBovxn7TDAH5Q"></script>
+    <script type="text/javascript">
+    
+    var ge;
+    
+    google.load("earth", "1"); 
+    google.load("maps", "2");
+    
+    function init() {
+
+      map = new GMap2(document.getElementById('map3d'));
+      var mapui = map.getDefaultUI();
+//      mapui.maptypes.physical = false;
+      map.setUI(mapui);      
+      
+      // add 'Earth' as one of the map types
+      map.addMapType(G_SATELLITE_3D_MAP);
+      map.removeMapType(G_SATELLITE_MAP);
+      map.removeMapType(G_HYBRID_MAP);
+      
+      map.setCenter(new GLatLng(50,122), 2, G_SATELLITE_3D_MAP);
+      
+      map.getEarthInstance(function(theGe) {
+   
+        ge = theGe;
+   
+        // add a navigation control
+        ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);
+    
+        // add some layers
+        ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
+        ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
+        ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+        
+          
+        //setFlyToSpeed(ge.SPEED_TELEPORT);
+        //ge.setFlyToSpeed(0);
+        
+        //flyTo('Tokyo');
+      });
+      
+           
+      //flyTo('Tokyo');
+
+
+      
+      //setCenter(new GLatLng(37, -122), 12);
+//      flyTo(new GLatLng(37, -122), 12);
+//      zoomTo(14);
+
+
+      // do stuff with Earth
+//      map.getEarthInstance(function(ge) {
+//        doStuffWithEarth(ge);
+//      });    
+//      google.earth.createInstance('map3d', initCallback, failureCallback);    
+    }
+    
+//    function initCallback(instance) { 
+//    
+//      ge = instance;
+//      ge.getWindow().setVisibility(true);
+//      
+//      // add a navigation control
+//      ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);
+//    
+//      // add some layers
+//      ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
+//      ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
+//      ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+
+//      document.getElementById('installed-plugin-version').innerHTML = ge.getPluginVersion().toString();
+////      ge.setCenter(new GLatLng(37.4419, -122.1419), 13);
+//  
+//      //flyTo('Tokyo');
+//    }
+    
+//    function failureCallback(errorCode) {
+//    }
+
+    function test(msg)   
+    {   
+        alert(msg);   
+    }
+    
+    function setLatLng(lat, lng){
+      map.setCenter(new GLatLng(lat, lng));
+    }
+
+    function showBuildings() {
+      ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS_LOW_RESOLUTION, true);
+    }
+
+    function hideBuildings() {
+      ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS_LOW_RESOLUTION, false);
+    }
+
+    function flyTo(toLocation) {  // fly to the country
+     
+      var geocodeLocation = toLocation;
+      var geocoder = new google.maps.ClientGeocoder();
+      geocoder.getLatLng(geocodeLocation, function(point) {
+        if (point) {      
+        
+          var lookAt = ge.createLookAt('');
+          lookAt.set(point.y, point.x, 90, ge.ALTITUDE_RELATIVE_TO_GROUND, 0, 60, 20000);
+          ge.getView().setAbstractView(lookAt);
+                 
+        }
+        
+      });
+    }
+    
+    function setlocation(latitude,longitude){
+    
+        var Lat = latitude;
+        var Long = longitude;
+        
+        // Create a new LookAt
+        var lookAt = ge.createLookAt('');
+        // Set the position values
+        lookAt.setLatitude(Lat);
+        lookAt.setLongitude(Long);
+        lookAt.setRange(5000.0);  //default is 0.0
+        // Update the view in Google Earth
+        ge.getView().setAbstractView(lookAt);
+    
+    }
+    
+    function setLoc(){
+    
+        var a = 594;
+        var b = 265;
+        
+        // Create a new LookAt
+        var lookAt = ge.createLookAt('');
+        // Set the position values
+        lookAt.setLatitude(a);
+        lookAt.setLongitude(b);
+        lookAt.setRange(5000.0);  //default is 0.0
+        // Update the view in Google Earth
+        ge.getView().setAbstractView(lookAt);
+    
+    }
+    
+    
+    function buttonClick() {    
+      var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+      lookAt.setLatitude(lookAt.getLatitude() + 2);
+      lookAt.setLongitude(lookAt.getLongitude() + 20);
+      ge.getView().setAbstractView(lookAt);
+    }
+    
+     function tilt_up() {   
+      
+//      var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+//      camera.setTilt(camera.getTilt() + 1.0);
+//      //camera.setRoll(camera.getRoll() + 10.0);
+//      ge.getView().setAbstractView(camera);   
+      
+      var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+      lookAt.setTilt(lookAt.getTilt() - 5.0);
+      ge.getView().setAbstractView(lookAt);
+        
+    }
+    
+    
+    function tilt_down() {   
+      
+//      var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+//      camera.setTilt(camera.getTilt() - 1.0);
+//      //camera.setRoll(camera.getRoll() + 10.0);
+//      ge.getView().setAbstractView(camera);   
+      
+      var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+      lookAt.setTilt(lookAt.getTilt() + 5.0);
+      ge.getView().setAbstractView(lookAt);
+        
+    }
+    
+    function roll_right() {   
+      
+      var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+      //camera.setTilt(camera.getTilt() - 1.0);
+      camera.setRoll(camera.getRoll() + 5.0);
+      ge.getView().setAbstractView(camera);   
+      
+//      var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+//      lookAt.setTilt(lookAt.getTilt() + 5.0);
+//      //lookAt.setTilt(lookAt.getRoll() + 5.0);
+//      ge.getView().setAbstractView(lookAt);
+        
+    }
+    
+    function roll_left() {   
+      
+      var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+      //camera.setTilt(camera.getTilt() - 1.0);
+      camera.setRoll(camera.getRoll() - 5.0);
+      ge.getView().setAbstractView(camera); 
+      
+//      var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+//      lookAt.setTilt(lookAt.getTilt() + 5.0);
+//      //lookAt.setTilt(lookAt.getRoll() - 5.0);
+//      ge.getView().setAbstractView(lookAt);  
+//        
+    }
+    
+    function FinalView(latitude, longitude, heading, tilt, range) {   
+    
+        //省略相機移動的動畫    
+        //ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
+      
+        var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+        //lookAt.set(25, 121.5, 0, ge.ALTITUDE_RELATIVE_TO_GROUND,90,0,50000);
+        lookAt.set(latitude, longitude, 0, 
+                    ge.ALTITUDE_RELATIVE_TO_GROUND,heading,tilt,range);
+        ge.getView().setAbstractView(lookAt);  
+      
+//(double latitude, double longitude, double altitude, 
+//    KmlAltitudeModeEnum altitudeMode, double heading, double tilt, double range)
+        
+    }
+    
+        
+    function cameraView(latitude, longitude, altitude, heading, tilt, roll) { 
+   //   function cameraView() { 
+        
+        //省略相機移動的動畫    
+        ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
+      
+        var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+    
+        camera.set(latitude, longitude, altitude, 
+                    ge.ALTITUDE_RELATIVE_TO_GROUND,heading,tilt,roll);
+
+        //camera.set(25.033320,121.563484,300,ge.ALTITUDE_RELATIVE_TO_GROUND,75,33,30);
+    
+        ge.getView().setAbstractView(camera); 
+      
+    }
+    
+//    function flyTo(toPoint, zooom) {
+//        map.setCenter(toPoint, zooom);
+//    }
+    
+    function zoomTo(toZoom){
+        map.setCenter(map.getCenter(), toZoom);
+    }
+        
+    function setCenter(toLocation, toZoom) {
+      var geocodeLocation = toLocation;                
+      var geocoder = new google.maps.ClientGeocoder();
+      geocoder.getLatLng(geocodeLocation, function(point) {
+        if (point) {            
+            map.setCenter(point, toZoom);
+        }
+      });
+    }
+    
+    </script>
+  </head>
+  <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
+    <div id="map3d" style="width: 500px; height: 380px;"></div>
+  </body>
+</html>
