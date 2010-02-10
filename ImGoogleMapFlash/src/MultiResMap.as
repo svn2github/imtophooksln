@@ -49,7 +49,6 @@ package
 			// add imObject listener
 			TUIO.addIMObjectListener(this);
 
-			
 			if(DEBUG){
 				ruler.graphics.beginFill(0x0000ff, 1);			
 				ruler.graphics.drawRect(map.x, map.height/2, map.width, 1);
@@ -96,8 +95,11 @@ package
 		
 		public function addGeControl(id:String, x:Number, y:Number):GEControl{
 			var geControl:GEControl = new GEControl(map);
-			addChild(geControl);			
 			geControlDict[id] = geControl;
+
+			if(DEBUG)
+				addChild(geControl);		
+
 			return geControl;
 		}
 		

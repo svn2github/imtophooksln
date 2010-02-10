@@ -16,12 +16,7 @@ package
 		//public static var SERVRE_IP:String = "127.0.0.1";
 		public static var SERVRE_IP:String = "192.168.1.18";
 		public static var SERVRE_PORT:int = 5000;
-		
-		private var DEBUG:Boolean = true;
-		private var DEBUG_TEXT:TextField;		
-		
-		private var socket:XMLSocket;			
-		
+		private var socket:XMLSocket;					
 		private var parentMap:Map;
 		
 		private var lat:Number = 23.69781;
@@ -29,13 +24,17 @@ package
 		private var pitch:Number = 90;		
 		private var yaw:Number = 0;
 		private var roll:Number = 0;		
+
+		//-------------------------------------- DEBUG VARS
+		private var DEBUG:Boolean = true;
+		private var DEBUG_TEXT:TextField;		
 		
 		public function GEControl(parentMap:Map,  $DEBUG:Boolean = true)
 		{
 			super();
+			DEBUG = $DEBUG;
 			 
 			this.parentMap = parentMap;
-			DEBUG = $DEBUG;
 			
 			setupDraw();			
 			setupSocket();

@@ -32,8 +32,6 @@ package
 		public function ViewportControl(smap:MapViewport, cx:Number, cy:Number, w:Number, h:Number)
 		{
 			super();
-
-//			DEBUG = $DEBUG;
 			
 			this.theMap = smap;
 			this.w = w;

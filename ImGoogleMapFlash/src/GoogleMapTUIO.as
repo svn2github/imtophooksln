@@ -10,6 +10,9 @@ package {
 		private var stageWidth:Number = 1024;
 		private var stageHeight:Number = 768;
 		private var multiResMap:MultiResMap;			
+
+		//-------------------------------------- DEBUG VARS			
+		private var DEBUG:Boolean = true;				
 		
 		public function GoogleMapTUIO()
 		{									
@@ -29,13 +32,13 @@ package {
 			//Connect to FLOSC to recieve touch input
 //			TUIO.init( this, 'localhost', 3000, '', true, multiResMap.getMapWidth(), multiResMap.getMapHeight());
 //			TUIO2.init(this, 'localhost', 3000, '', true);
-			TUIO.init(this, 'localhost', 3000, '', true);
+			TUIO.init(this, 'localhost', 3000, '', DEBUG);
 
 			
 			var numOfView:Number = 2;
 			
 			// add high-resolution views
-			multiResMap = new MultiResMap(0, 0, stageWidth/numOfView, stageHeight, true);
+			multiResMap = new MultiResMap(0, 0, stageWidth/numOfView, stageHeight, DEBUG);
 			
 			var tableLamp:MapViewport = (multiResMap.addViewport(0, stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
 			tableLamp.viewport.x = multiResMap.getMapWidth()/2;
@@ -43,8 +46,6 @@ package {
 			
 //			var handLamp:MapViewport = (multiResMap.addViewport("HandLamp", 2*stageWidth/numOfView, 0, stageWidth/numOfView, stageHeight));
 //			handLamp.viewport.x = multiResMap.getMapWidth()/2;			
-
-
 
 			
 			// add ge delegate control

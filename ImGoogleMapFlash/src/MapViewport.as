@@ -8,11 +8,8 @@ package
 	import com.google.maps.MapOptions;
 	import com.google.maps.MapType;
 	import com.google.maps.View;
-	import com.google.maps.controls.NavigationControl;
 	import com.google.maps.geom.Attitude;
 	
-	import flash.display.Bitmap;
-	import flash.display.Loader;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -32,9 +29,11 @@ package
 		private var ruler:Sprite = new Sprite();
 		
 		private var mapPanel:Sprite = new Sprite();
-				
-		private var imgLoader:Loader;
-		private var maskBmp:Bitmap;
+		
+		private var mapReady:Boolean = false;
+		
+//		private var imgLoader:Loader;
+//		private var maskBmp:Bitmap;
 
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;				
@@ -61,6 +60,7 @@ package
 			childMap.addEventListener(MapEvent.MAP_READY, function(e:Event):void{
 				childMap.setCenter(parentMap.getCenter(), parentMap.getZoom()+2, MapType.NORMAL_MAP_TYPE);
 //				childMap.addControl(new NavigationControl());
+				mapReady = true;
 				update();
 			});
 			
@@ -70,26 +70,12 @@ package
 		        childMap.setInitOptions(mapOptions);					
 			});			
 			mapPanel.addChild(childMap);
-			
-						
+									
 			addChild(mapPanel);
 			mapPanel.scaleX = 1;
 			mapPanel.scaleY = 1;
-			
 
 			viewport = new ViewportControl(this, vpCx, vpCy, vpWidth, vpHeight);
-			
-			// for mask
-//			maskBmp = new Bitmap();			
-//			addChild(maskBmp);
-//		 	imgLoader = new Loader();
-//			imgLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, function(e:Event):void{
-//				maskBmp.bitmapData = (e.target.content as Bitmap).bitmapData.clone();
-//				maskBmp.width = screenWidth;
-//				maskBmp.height = screenHeight;
-//				viewport.setMask(maskBmp.bitmapData.clone());
-//			});
-//			imgLoader.load(new URLRequest("assets/mask/mask101.png"));
 			
 			if(DEBUG)
 			{
@@ -148,6 +134,10 @@ package
 		}
 		
 		public function update():void{
+			
+			if(!mapReady)
+				return;
+			
 			updateMap();
 			
 			if(DEBUG){
