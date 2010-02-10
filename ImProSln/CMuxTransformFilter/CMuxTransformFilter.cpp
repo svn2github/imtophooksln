@@ -125,6 +125,7 @@ HRESULT CMuxTransformFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
 	CheckPointer(ppPin,E_POINTER);
 	ValidateReadWritePtr(ppPin,sizeof(IPin *));
 	HRESULT hr = NOERROR;
+	hr = CreatePins();
 	for (int i =0; i < m_pInputPins.size(); i++)
 	{
 		if (wcscmp(m_pInputPins[i]->m_pName, Id) == 0)
