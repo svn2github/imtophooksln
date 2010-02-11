@@ -276,7 +276,7 @@ bool BGMappingFilter::IsAcceptedType(const CMediaType *pmt){
 }
 HRESULT BGMappingFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
+	if (m_pInputPins.size() ==  2 && m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
@@ -464,6 +464,8 @@ HRESULT BGMappingFilter::GetPages(CAUUID *pPages)
 }
 
 int BGMappingFilter::getBGThreshold(){
+	if(BG->BGthreshold == NULL)
+		return 0 ;
 	return BG->BGthreshold;
 }
 

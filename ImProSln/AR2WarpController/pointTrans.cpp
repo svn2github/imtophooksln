@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "common.h"
 #include "pointTrans.h"
+#include "common.h"
 
 ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char* fileDir){
 	
@@ -113,8 +113,10 @@ void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* obj
 
 	CvMat* camOriSizePoint = cvCreateMat(cvGetSize(cameraPoint).height,2,CV_32F);
 	for(int i = 0 ; i < cvGetSize(cameraPoint).height ; i++){
-		cvmSet(camOriSizePoint,i,0,cvmGet(cameraPoint,i,0)*CAMWIDTH);
-		cvmSet(camOriSizePoint,i,1,cvmGet(cameraPoint,i,1)*CAMHEIGHT);
+		_DPRINTF((L"cameraPoint %f %f ",cameraPoint->data.fl[i*2],cameraPoint->data.fl[i*2+1]));
+		cvmSet(camOriSizePoint,i,0,cvmGet(cameraPoint,i,0)*640);
+		cvmSet(camOriSizePoint,i,1,cvmGet(cameraPoint,i,1)*480);
+
 	}
 	cvFindExtrinsicCameraParams2(object3D,camOriSizePoint,camIntrinsic,camDisto,rotateTmp,transW2C);
     cvRodrigues2(rotateTmp,rotateW2C);
@@ -184,25 +186,49 @@ int* ProjectorTrans2World::getResolution(){
 void ProjectorTrans2World::getProjHomo(){
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
 	CvPoint3D32f projIn3D ;
+	
+	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;
 	for(int i = 0 ; i < 4 ; i ++){
 		proj2DPoint->data.fl[0] = projCorner[i*2];
 		proj2DPoint->data.fl[1] = projCorner[i*2+1];
 		proj2DPoint->data.fl[2] = 1;
 
 	    projIn3D = findPro3D(proj2DPoint);	
+		CvMat* imgPoint = cvCreateMat(4,2,CV_32F);
+		cvProjectPoints2(pro3DPoints,rotateTmp,transW2C,camIntrinsic,camDisto,imgPoint);
+		_DPRINTF((L"projOnImg %f %f ",imgPoint->data.fl[i*2],imgPoint->data.fl[i*2+1]));
 
-	    //cvmSet(pro3DPoints,i,0,projIn3D.x/tableWidth);
-		//cvmSet(pro3DPoints,i,1,projIn3D.y/tableHeight);
+		projIn3D.x = projIn3D.x/tableWidth ;
+		projIn3D.y = projIn3D.y/tableHeight ;
+
 		cvmSet(pro3DPoints,i,0,projIn3D.x);
 		cvmSet(pro3DPoints,i,1,projIn3D.y);
 		cvmSet(pro3DPoints,i,2,projIn3D.z);
-	}
-	
-	cvSave("pro3D.txt",pro3DPoints);
-	CvMat* imgPoint = cvCreateMat(4,2,CV_32F);
-	cvProjectPoints2(pro3DPoints,rotateTmp,transW2C,camIntrinsic,camDisto,imgPoint);
-	_DPRINTF((L"proj2D %f %f ",imgPoint->data.fl[0],imgPoint->data.fl[1]));
 
+		proj3DPoints[i][0] = projIn3D.x;
+		proj3DPoints[i][1] = projIn3D.y;
+
+		if(minX > projIn3D.x)
+			minX = projIn3D.x;
+
+	    if(maxX < projIn3D.x)
+			maxX = projIn3D.x;
+		
+		if(minY > projIn3D.y)
+			minY = projIn3D.y;
+
+	    if(maxY < projIn3D.y)
+			maxY = projIn3D.y;
+		_DPRINTF((L"proj3D %f %f ",pro3DPoints->data.fl[i*2],pro3DPoints->data.fl[i*2+1]));
+	}
+
+	projBox[0] = minX;
+	projBox[1] = minY;
+	projBox[2] = maxX;
+	projBox[3] = maxY;
+
+
+	
 	cvFindHomography(pro3DPoints,&projCornerMat,proHomoMat);
 	cvReleaseMat(&proj2DPoint);
 }

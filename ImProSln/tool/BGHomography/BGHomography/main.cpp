@@ -29,6 +29,7 @@ void main(){
 			cvCvtColor( frame, binary_img, CV_RGB2GRAY );
 			cvShowImage("Webcam",frame);
 			cvNamedWindow("bgCali");
+			cvMoveWindow("bgCali",1580,0);
 			if(whiteOK == false){
 				cvShowImage("bgCali",whiteBG);
 			}

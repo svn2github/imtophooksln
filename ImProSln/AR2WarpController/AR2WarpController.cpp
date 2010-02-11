@@ -279,7 +279,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	cvPt = cvMat(nValidDetected*4, 2, CV_32F, d); //t: virtual space, d: camera space
 	dstPt = cvMat(nValidDetected*4, 2, CV_32F, t);
 	
-	GetProjHomo(&cvPt,&dstPt);
+	GetProjCorner(&cvPt,&dstPt);
 	{
 		CAutoLock lck(&m_csMatPro2VW[idx]);
 		if (m_matPro2VW[idx] == NULL)
@@ -326,7 +326,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	return S_OK;
 }
 
-HRESULT AR2WarpController ::GetProjHomo(CvMat* camPoints, CvMat* worldPoints){
+HRESULT AR2WarpController ::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
 	projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
 	projCoord->getProjHomo();
 	return S_OK;
@@ -816,11 +816,8 @@ bool AR2WarpController::SendBoundingBox2OSCSender()
 		if (m_matCam2VW[i] == NULL)
 		{
 			continue;
-		}
-		float orgPt[4][2] = { {0.5, 0.25}, {0.25, 0.5}, {0.5, 0.75}, {0.75, 0.5}};
-		float rect[4] = {0.25,0.25,0.75,0.75};
-			
-		m_pOSCSender->sendHighResBoundingBox(i, rect, orgPt);
+		}			
+		m_pOSCSender->sendHighResBoundingBox(i, projCoord->projBox,projCoord->proj3DPoints);
 	}
 	return true;
 }

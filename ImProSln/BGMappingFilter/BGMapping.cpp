@@ -16,6 +16,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel){
 }
 
 BackGroundMapping::~BackGroundMapping(){
+	cvDestroyAllWindows();
 	cvReleaseMat(&MatHomography);
 	cvReleaseImage(&mappingTable);	
 	cvReleaseImage(&binaryResult);
@@ -64,6 +65,10 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
 	cvCvtColor( srcImg, binaryResult, CV_RGB2GRAY);
 	//cvWarpPerspective(binarySrc,resultImg,MatHomography);
+	cvShowImage("BG",backgroundImg);
+	cvShowImage("SRC",srcImg);
+	cvWaitKey(1);
+
 	cvSub(resultImg,backgroundImg,resultImg);
 	cvThreshold(binaryResult,binaryResult,BGthreshold,255,0);
 	cvCvtColor( binaryResult, result4CImg, CV_GRAY2RGBA);

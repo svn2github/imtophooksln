@@ -10,11 +10,6 @@
 
 using namespace std;
 
-#pragma comment(lib, "cv.lib")
-#pragma comment(lib, "highgui.lib")
-#pragma comment(lib, "cxcore.lib")
-#pragma comment(lib, "cvaux.lib")
-
 #define WIDTH 640
 #define HEIGHT 480
 

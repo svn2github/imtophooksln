@@ -64,15 +64,13 @@ public:
 	CvMat* proHomoMat;
 	CvMat projCornerMat;
 
-	//float proj3DPoints[4][3];  
+	float proj3DPoints[4][2];  
+	float projBox[4];
 	float projCorner[8];
 	float projHomo[3][3];
 	int ProjResWidth ;   // resolution width
 	int ProjResHeight;
 	int tableWidth;
 	int tableHeight;
-
-
-
 
 };

@@ -69,7 +69,7 @@ protected:
 	// function for projector coordinate to virtual world
 	
 	ProjectorTrans2World* projCoord ;
-	virtual HRESULT GetProjHomo(CvMat* camPoints, CvMat* worldPoints); 
+	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
 
 	IPin* GetARResultPin(int idx);
 	IPin* GetWarpConfigPin(int idx);
