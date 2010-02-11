@@ -3,13 +3,26 @@
 #define CCAMERA_H
 
 #define WIN32_LEAN_AND_MEAN
+
+#define __IDxtCompositor_INTERFACE_DEFINED__ 
+
+#define __IDxtAlphaSetter_INTERFACE_DEFINED__ 
+
+#define __IDxtJpeg_INTERFACE_DEFINED__ 
+
+#define __IDxtKey_INTERFACE_DEFINED__ 
+
+
+
+#include "oaidl.h"
+#include "ocidl.h"
+#include "amstream.h"
 #include <BaseTsd.h>
 #include <windows.h>
 #include <atlbase.h>
 #include "qedit.h"
 #include "dshow.h"
 #include "cv.h"
-
 #define MYFREEMEDIATYPE(mt)	{if ((mt).cbFormat != 0)		\
 					{CoTaskMemFree((PVOID)(mt).pbFormat);	\
 					(mt).cbFormat = 0;						\

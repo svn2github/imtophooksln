@@ -14,13 +14,22 @@
 #include <OpenGL/gl.h>
 #include <GLUT/glut.h>
 #endif
-#include <AR/gsub.h>
+#include "ARTagCameraDS.h"
+/*#include <AR/gsub.h>
 #include <AR/video.h>
 #include <AR/param.h>
-#include <AR/ar.h>
+#include <AR/ar.h>*/
 //#include "draw_object.h"
 #include <d3dx9math.h>
-
+#include <vcclr.h>
+using namespace System;
+using namespace System::ComponentModel;
+using namespace System::Collections;
+using namespace System::Windows::Forms;
+using namespace System::Data;
+using namespace System::Drawing;
+using namespace System::Timers;
+using namespace System::Net::Sockets;
 /* set up the video format globals */
 
 #ifdef _WIN32
@@ -72,7 +81,7 @@ bool getFstTag = false;
 int             xsize;
 int             ysize;
 int             thresh = 100;
-ARParam         cparam;
+//ARParam         cparam;
 int             outputMode = 0;
 
 int             mouse_ox;
@@ -88,17 +97,53 @@ double          target_center[2] = {0.5, 0.5};
 double          target_width = 1.0;
 //double          target_center[2] = {0, 0};
 //double          target_width = 80.0;
+namespace googleearth{
+	ref class Form1;
+};
+gcroot<googleearth::Form1^> g_formPtr = NULL;
+ARTagCameraDS* g_pARCam = NULL;
+
+bool arTimerTickFunc();
+bool animTimerTickFunc();
+
+BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[])
+{
+	arTimerTickFunc();
+	animTimerTickFunc();
+	return TRUE;
+}
+
+
+bool arTimerTickFunc()
+{
+	//mainLoop();	
+
+	// set target camera
+	tlatitude = latitude;
+	tlongitude = longitude;
+	taltitude = altitude;
+	theading = heading;
+	ttilt = tilt;
+	troll = roll;
+
+	if(!getFstTag){
+		clatitude = tlatitude;
+		clongitude = tlongitude;
+		caltitude = taltitude;
+		cheading = theading;
+		ctilt = ttilt;
+		croll = troll;
+
+		getFstTag = true;
+	}
+	return true;
+}
+
+
 
 namespace googleearth {
 
-	using namespace System;
-	using namespace System::ComponentModel;
-	using namespace System::Collections;
-	using namespace System::Windows::Forms;
-	using namespace System::Data;
-	using namespace System::Drawing;
-	using namespace System::Timers;
-	using namespace System::Net::Sockets;
+
 
 	//using namespace System::Windows::Forms::HtmlDocument;
 	/// <summary>
@@ -119,7 +164,7 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: static String^ ipAddress = "192.168.1.26";
 		private: static Int32 port = 5000;
-	private: System::Windows::Forms::Timer^  animTimer;
+	//private: System::Windows::Forms::Timer^  animTimer;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -135,8 +180,8 @@ namespace googleearth {
 			//
 			
 			//full screen mode
-			setFullScreen();			
-
+			//setFullScreen();			
+			g_formPtr = this;
 			setupBrowser();
 			
 			setupArtoolkit();
@@ -158,14 +203,24 @@ namespace googleearth {
 			this->webBrowser1->Navigate(URL);
 		}
 
-		private: System::Void setupArtoolkit(){
-			if( init() < 0 ) 
-				exit(0);
-			arVideoCapStart();
+		private: System::Void setupArtoolkit()
+				 {
+			//if( init() < 0 ) 
+			//	exit(0);
+			//arVideoCapStart();
 
-			this->arTimer->Start();
-			this->animTimer->Start();
-		}
+			//this->arTimer->Start();
+					 if (g_pARCam == NULL)
+					 {
+						g_pARCam = new ARTagCameraDS();			
+					 }
+					
+					 g_pARCam->OpenCamera(0,true);
+					
+					 g_pARCam->SetARCallback(ARTagCallback, 0, NULL);
+					 g_pARCam->Play();
+					 //this->animTimer->Start();
+				}
 		
 		private: System::Void setupSocket(){
 
@@ -469,186 +524,186 @@ namespace googleearth {
 			else	roll = -angle;
 
 		}
-
-void mainLoop(void)
-{
-	ARUint8         *dataPtr;
-    ARMarkerInfo    *marker_info;
-    int             marker_num;
-    int             j, k;
-
-    /* grab a vide frame */
-    if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
-        arUtilSleep(2);
-        return;
-    }
-
-    //glClearColor( 0.0, 0.0, 0.0, 0.0 );
-    //glClearDepth( 1.0 );
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    argDrawMode2D();
-    if( disp_mode ) {
-        argDispImage( dataPtr, 0, 0 );
-    }
-    else {
-        argDispImage( dataPtr, 1, 1 );
-    }
-
-    /* detect the markers in the video frame */
-    if( arDetectMarker(dataPtr, thresh, &marker_info, &marker_num) < 0 ) {
-        cleanup();
-        exit(0);
-    }
-    arVideoCapNext();
-
-    /* if the debug mode is on draw squares 
-       around the detected squares in the video image */
-    if( arDebug ) {
-        if( arImageProcMode == AR_IMAGE_PROC_IN_HALF )
-            argDispHalfImage( arImage, 2, 1 );
-        else
-            argDispImage( arImage, 2, 1);
-    }
-
-    /* check for object visibility */
-    k = -1;
-    for( j = 0; j < marker_num; j++ ) {
-        if( marker_info[j].id == target_id ) {
-            if( k == -1 ) k = j;
-            else {
-                if( marker_info[k].cf < marker_info[j].cf ) k = j;
-            }
-        }
-    }
-	if( k != -1 ) {
-        glDisable(GL_DEPTH_TEST);
-        switch( outputMode ) {
-            case 0:
-                getResultRaw( &marker_info[k] );
-                break;
-            case 1:
-                getResultQuat( &marker_info[k] );
-                break;
-        }
-    }
-
-    argSwapBuffers();
-}
-
-void getResultRaw( ARMarkerInfo *marker_info )
-{
-    double      target_trans[3][4];
-    double      cam_trans[3][4];
-    char        string[256];
-	double det = 0;
-
-	//cam_trans矩陣資料將camera的位置轉成世界座標 =>求出camera在tag座標系中的位置
-    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
-    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
-
-	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
-	camera._11 = cam_trans[0][0];
-	camera._12 = cam_trans[1][0]; 
-	camera._13 = cam_trans[2][0];
-	camera._14 = 0;
-	camera._21 = cam_trans[0][1];
-	camera._22 = cam_trans[1][1];
-	camera._23 = cam_trans[2][1];
-	camera._24 = 0;
-	camera._31 = cam_trans[0][2];
-	camera._32 = cam_trans[1][2];
-	camera._33 = cam_trans[2][2];
-	camera._34 = 0;
-	camera._41 = cam_trans[0][3];
-	camera._42 = cam_trans[1][3];
-	camera._43 = cam_trans[2][3];
-	camera._44 = 1;
-
-	//計算google earth中需要的各個參數
-	countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
-	countLookat();
-	countLookup();
-	countTilt();
-	countHeading();
-	countRoll();
-
-	longitude = google_earth_point.x;
-	latitude = google_earth_point.z;
-	altitude = google_earth_point.y;
-	altitude *= 111000;  //一度 = 111000 公尺
-	altitude *= altitude_scale;
-
-	sprintf(string," RAW: Cam Pos x: %f  y: %f  z: %f\n long:%f alt:%f lat:%f\n tilt:%f heading:%f roll:%f \n",
-		cam_trans[0][3], cam_trans[1][3], cam_trans[2][3],longitude,altitude,latitude,tilt,heading,roll);
-
-	return;
-}
-
-void getResultQuat( ARMarkerInfo *marker_info )
-{
-    double      target_trans[3][4];
-    double      cam_trans[3][4];
-    double      quat[4], pos[3];
-    char        string1[256];
-    char        string2[256];
-
-    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
-    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
-    if( arUtilMat2QuatPos(cam_trans, quat, pos) < 0 ) return;
-
-    sprintf(string1," QUAT: Pos x: %3.1f  y: %3.1f  z: %3.1f\n",
-            pos[0], pos[1], pos[2]);
-    sprintf(string2, "      Quat qx: %3.2f qy: %3.2f qz: %3.2f qw: %3.2f ",
-            quat[0], quat[1], quat[2], quat[3]);
-    strcat( string1, string2 );
-
-    return;
-}
-
-int init(void)
-{
-    char     cparaname[256];
-    char     pattname[256];
-    ARParam  wparam;
-
-    strcpy( cparaname, "Data/camera_para.dat" );
-    strcpy( pattname,  "Data/patt.hiro" );
-    
-    /* open the video path */
-    if( arVideoOpen( vconf ) < 0 ) exit(0);
-    /* find the size of the window */
-    if( arVideoInqSize(&xsize, &ysize) < 0 ) exit(0);
-    printf("Image size (x,y) = (%d,%d)\n", xsize, ysize);
-
-    /* set the initial camera parameters */
-    if( arParamLoad(cparaname, 1, &wparam) < 0 ) {
-       printf("Camera parameter load error !!\n");
-        exit(0);
-    }
-    arParamChangeSize( &wparam, xsize, ysize, &cparam );
-    arInitCparam( &cparam );
-    printf("*** Camera Parameter ***\n");
-    arParamDisp( &cparam );
-
-    /* open the graphics window */
-    argInit( &cparam, 1.0, 0, 2, 1, 0 );
-
-    if( (target_id = arLoadPatt(pattname)) < 0 ) {
-        printf("Target pattern load error!!\n");
-        exit(0);
-    }
-
-    arDebug = 0;
-
-    return 0;
-}			
-
-void cleanup(void)
-{
-    arVideoCapStop();
-    arVideoClose();
-    argCleanup();
-}
+//
+//void mainLoop(void)
+//{
+//	ARUint8         *dataPtr;
+//    ARMarkerInfo    *marker_info;
+//    int             marker_num;
+//    int             j, k;
+//
+//    /* grab a vide frame */
+//    if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
+//        arUtilSleep(2);
+//        return;
+//    }
+//
+//    //glClearColor( 0.0, 0.0, 0.0, 0.0 );
+//    //glClearDepth( 1.0 );
+//    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//    argDrawMode2D();
+//    if( disp_mode ) {
+//        argDispImage( dataPtr, 0, 0 );
+//    }
+//    else {
+//        argDispImage( dataPtr, 1, 1 );
+//    }
+//
+//    /* detect the markers in the video frame */
+//    if( arDetectMarker(dataPtr, thresh, &marker_info, &marker_num) < 0 ) {
+//        cleanup();
+//        exit(0);
+//    }
+//    arVideoCapNext();
+//
+//    /* if the debug mode is on draw squares 
+//       around the detected squares in the video image */
+//    if( arDebug ) {
+//        if( arImageProcMode == AR_IMAGE_PROC_IN_HALF )
+//            argDispHalfImage( arImage, 2, 1 );
+//        else
+//            argDispImage( arImage, 2, 1);
+//    }
+//
+//    /* check for object visibility */
+//    k = -1;
+//    for( j = 0; j < marker_num; j++ ) {
+//        if( marker_info[j].id == target_id ) {
+//            if( k == -1 ) k = j;
+//            else {
+//                if( marker_info[k].cf < marker_info[j].cf ) k = j;
+//            }
+//        }
+//    }
+//	if( k != -1 ) {
+//        glDisable(GL_DEPTH_TEST);
+//        switch( outputMode ) {
+//            case 0:
+//                getResultRaw( &marker_info[k] );
+//                break;
+//            case 1:
+//                getResultQuat( &marker_info[k] );
+//                break;
+//        }
+//    }
+//
+//    argSwapBuffers();
+//}
+//
+//void getResultRaw( ARMarkerInfo *marker_info )
+//{
+//    double      target_trans[3][4];
+//    double      cam_trans[3][4];
+//    char        string[256];
+//	double det = 0;
+//
+//	//cam_trans矩陣資料將camera的位置轉成世界座標 =>求出camera在tag座標系中的位置
+//    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
+//    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
+//
+//	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
+//	camera._11 = cam_trans[0][0];
+//	camera._12 = cam_trans[1][0]; 
+//	camera._13 = cam_trans[2][0];
+//	camera._14 = 0;
+//	camera._21 = cam_trans[0][1];
+//	camera._22 = cam_trans[1][1];
+//	camera._23 = cam_trans[2][1];
+//	camera._24 = 0;
+//	camera._31 = cam_trans[0][2];
+//	camera._32 = cam_trans[1][2];
+//	camera._33 = cam_trans[2][2];
+//	camera._34 = 0;
+//	camera._41 = cam_trans[0][3];
+//	camera._42 = cam_trans[1][3];
+//	camera._43 = cam_trans[2][3];
+//	camera._44 = 1;
+//
+//	//計算google earth中需要的各個參數
+//	countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
+//	countLookat();
+//	countLookup();
+//	countTilt();
+//	countHeading();
+//	countRoll();
+//
+//	longitude = google_earth_point.x;
+//	latitude = google_earth_point.z;
+//	altitude = google_earth_point.y;
+//	altitude *= 111000;  //一度 = 111000 公尺
+//	altitude *= altitude_scale;
+//
+//	sprintf(string," RAW: Cam Pos x: %f  y: %f  z: %f\n long:%f alt:%f lat:%f\n tilt:%f heading:%f roll:%f \n",
+//		cam_trans[0][3], cam_trans[1][3], cam_trans[2][3],longitude,altitude,latitude,tilt,heading,roll);
+//
+//	return;
+//}
+//
+//void getResultQuat( ARMarkerInfo *marker_info )
+//{
+//    double      target_trans[3][4];
+//    double      cam_trans[3][4];
+//    double      quat[4], pos[3];
+//    char        string1[256];
+//    char        string2[256];
+//
+//    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
+//    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
+//    if( arUtilMat2QuatPos(cam_trans, quat, pos) < 0 ) return;
+//
+//    sprintf(string1," QUAT: Pos x: %3.1f  y: %3.1f  z: %3.1f\n",
+//            pos[0], pos[1], pos[2]);
+//    sprintf(string2, "      Quat qx: %3.2f qy: %3.2f qz: %3.2f qw: %3.2f ",
+//            quat[0], quat[1], quat[2], quat[3]);
+//    strcat( string1, string2 );
+//
+//    return;
+//}
+//
+//int init(void)
+//{
+//    char     cparaname[256];
+//    char     pattname[256];
+//    ARParam  wparam;
+//
+//    strcpy( cparaname, "Data/camera_para.dat" );
+//    strcpy( pattname,  "Data/patt.hiro" );
+//    
+//    /* open the video path */
+//    if( arVideoOpen( vconf ) < 0 ) exit(0);
+//    /* find the size of the window */
+//    if( arVideoInqSize(&xsize, &ysize) < 0 ) exit(0);
+//    printf("Image size (x,y) = (%d,%d)\n", xsize, ysize);
+//
+//    /* set the initial camera parameters */
+//    if( arParamLoad(cparaname, 1, &wparam) < 0 ) {
+//       printf("Camera parameter load error !!\n");
+//        exit(0);
+//    }
+//    arParamChangeSize( &wparam, xsize, ysize, &cparam );
+//    arInitCparam( &cparam );
+//    printf("*** Camera Parameter ***\n");
+//    arParamDisp( &cparam );
+//
+//    /* open the graphics window */
+//    argInit( &cparam, 1.0, 0, 2, 1, 0 );
+//
+//    if( (target_id = arLoadPatt(pattname)) < 0 ) {
+//        printf("Target pattern load error!!\n");
+//        exit(0);
+//    }
+//
+//    arDebug = 0;
+//
+//    return 0;
+//}			
+//
+//void cleanup(void)
+//{
+//    arVideoCapStop();
+//    arVideoClose();
+//    argCleanup();
+//}
 
 	protected:
 		/// <summary>
@@ -660,10 +715,16 @@ void cleanup(void)
 			{
 				delete components;
 			}
+			if (g_pARCam != NULL)
+			{
+				g_pARCam->Stop();
+				delete g_pARCam;
+				g_pARCam = NULL;
+			}
 		}
 
-	private: System::Windows::Forms::WebBrowser^  webBrowser1;
-	private: System::Windows::Forms::Timer^  arTimer;
+	public: System::Windows::Forms::WebBrowser^  webBrowser1;
+	//private: System::Windows::Forms::Timer^  arTimer;
 	private: System::ComponentModel::IContainer^  components;
 	private: static int temp = 300;
 
@@ -683,8 +744,8 @@ void cleanup(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
-			this->arTimer = (gcnew System::Windows::Forms::Timer(this->components));
-			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			//this->arTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			//this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -698,13 +759,13 @@ void cleanup(void)
 			// 
 			// arTimer
 			// 
-			this->arTimer->Interval = 30;
-			this->arTimer->Tick += gcnew System::EventHandler(this, &Form1::arTimer_Tick);
-			// 
-			// animTimer
-			// 
-			this->animTimer->Interval = 30;
-			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
+			//this->arTimer->Interval = 30;
+			//this->arTimer->Tick += gcnew System::EventHandler(this, &Form1::arTimer_Tick);
+			//// 
+			//// animTimer
+			//// 
+			//this->animTimer->Interval = 30;
+			//this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
 			// Form1
 			// 
@@ -738,13 +799,13 @@ void cleanup(void)
 	
 private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) 
 		 {
-			 this->arTimer->Start();
+			 //this->arTimer->Start();
 		 }
 
 
 		private: System::Void arTimer_Tick(System::Object^  sender, System::EventArgs^  e) 
 		{
-			 mainLoop();	
+			 //mainLoop();	
 			 
 			 // set target camera
 			 tlatitude = latitude;
@@ -824,4 +885,40 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 		}
 };
 }
+
+
+bool animTimerTickFunc()
+{
+	try
+	{
+		if(!getFstTag)
+			return false;
+
+		 double alpha = 0.2;
+		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
+		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
+		 caltitude = caltitude*alpha + taltitude*(1-alpha);
+		 cheading = cheading*alpha +  + theading*(1-alpha);
+		 ctilt = ctilt*alpha + ttilt*(1-alpha);
+		 croll = croll*alpha + troll*(1-alpha);
+
+		 array<Object^>^ parameter = gcnew array<Object^>(6); 
+		 parameter[0] = clatitude;
+		 parameter[1] = clongitude;
+		 parameter[2] = caltitude;
+		 parameter[3] = cheading;
+		 parameter[4] = ctilt;
+		 parameter[5] = croll;
+
+		g_formPtr->webBrowser1->Document->InvokeScript("cameraView",parameter);
+	}
+
+	catch (System::Exception^ e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 

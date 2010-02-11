@@ -5,6 +5,7 @@
 
 using namespace googleearth;
 
+
 [STAThreadAttribute]
 int main(array<System::String ^> ^args)
 {
@@ -15,4 +16,9 @@ int main(array<System::String ^> ^args)
 	// 建立主視窗並執行
 	Application::Run(gcnew Form1());
 	return 0;
+}
+
+INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+{
+	return main(nullptr);
 }

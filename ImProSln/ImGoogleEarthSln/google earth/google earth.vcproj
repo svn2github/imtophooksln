@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\MyLib&quot;;..\DSVL\src;..\include;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;;&quot;..\..\ARTagApp\DXSDK 2005 June\Include&quot;;&quot;$(SolutionDir)\ARTagFilter&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;..\..\ARTagFilter;..\..\OpenCV2.0\include\opencv;..\DSVL\src;..\include;..\..\MyLib"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
@@ -60,14 +60,13 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="cv200.lib cxcore200.lib strmbasd.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib"
+				AdditionalDependencies="strmbasd_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;..\DSVL\lib;..\lib;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;;&quot;..\..\ARTagApp\DXSDK 2005 June\Lib\x86&quot;"
-				IgnoreDefaultLibraryNames="LIBCMTD.lib"
+				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
-				EntryPointSymbol="main"
+				EntryPointSymbol=""
 				TargetMachine="1"
 			/>
 			<Tool
@@ -266,7 +265,7 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="ARCameraDS"
+			Name="ARTag"
 			>
 			<File
 				RelativePath="..\..\MyLib\ARTagCameraDS.cpp"

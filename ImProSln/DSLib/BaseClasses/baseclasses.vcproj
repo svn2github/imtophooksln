@@ -172,7 +172,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="."
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				RuntimeLibrary="3"
+				DebugInformationFormat="4"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -185,6 +187,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="strmiids.lib"
 				OutputFile="$(OutDir)\strmbasd_mdd.lib"
 			/>
 			<Tool
