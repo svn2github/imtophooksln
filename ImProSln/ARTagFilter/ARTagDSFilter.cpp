@@ -808,7 +808,7 @@ HRESULT ARTagDSFilter::loadCameraFromXMLFile(WCHAR* filename)
 		mat[4*2 + 2] = 1;
 		mat[4*3 + 3] = 1;
 		mat[4*0 + 2] = *center_x;
-		mat[4*1 + 2] = *center_x;
+		mat[4*1 + 2] = *center_y;
 		double distfactor[4] = { *dist_factor[0], *dist_factor[1], 
 			*dist_factor[2], *dist_factor[3]};
 

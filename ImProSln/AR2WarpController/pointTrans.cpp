@@ -2,6 +2,7 @@
 #include "pointTrans.h"
 #include "common.h"
 
+
 ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char* fileDir){
 	
 	// init the mat for camera and projector parameters 
@@ -30,13 +31,13 @@ ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char*
 
 	ProjResHeight = projHeight;
 	ProjResWidth = projWidth;
-	tableHeight = 190;
-	tableWidth = 190;
+	tableHeight = 380;
+	tableWidth = 380;
 
 	rotateW2C = cvCreateMat( 3, 3, CV_32F);
 	transW2C = cvCreateMat( 3, 1, CV_32F);
-	rotateTmp = cvCreateMat( 3, 1, CV_32F);
-	pro3DPoints = cvCreateMat(4,3,CV_32F);
+	rotateRodrigues = cvCreateMat( 3, 1, CV_32F);
+	pro3DPointsMat = cvCreateMat(4,3,CV_32F);
 	proHomoMat = cvCreateMat( 3, 3, CV_32F);
 	 
 	setResolution(projWidth,projHeight);
@@ -68,7 +69,7 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 	cvReleaseMat(& targetPoint);
 	cvReleaseMat(& proVector) ;
 	cvReleaseMat(& proVectorInWorld);
-	cvReleaseMat(& pro3DPoints);
+	cvReleaseMat(& pro3DPointsMat);
 	cvReleaseMat(& proHomoMat);
 }
 
@@ -76,16 +77,56 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 void ProjectorTrans2World::loadCalibParam(char* fileDir){
 
 	char Dir[100];
-	sprintf(Dir,"%s\\ProjectorCalibData\\ProDisto.txt",fileDir) ;
-	proDisto = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\ProjectorCalibData\\CamDisto.txt",fileDir) ;
-	camDisto = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\ProjectorCalibData\\ProIntrinsic.txt",fileDir) ;
-	proIntrinsic = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\ProjectorCalibData\\CamIntrinsic.txt",fileDir) ;
-	camIntrinsic = (CvMat*)cvLoad(Dir);
-	sprintf(Dir,"%s\\ProjectorCalibData\\pro2CamExtrinsic.txt",fileDir) ;
-	pro2CamExtrinsic = (CvMat*)cvLoad(Dir);
+	sprintf(Dir,"%s\\ProjectorCalibData\\caliPara.txt",fileDir) ;
+
+	fstream file ;
+	char temp ;
+	float value ;
+	string s ;
+	file.open( Dir , ios::in ) ;   // count the number of line in txt 
+
+	getline(file,s) ;
+
+	for(int i = 0 ; i < 3 ; i ++){
+		for(int j = 0 ; j < 3 ; j ++){
+			file >> value ;
+			cvmSet(camIntrinsic,i,j , value) ;
+		}
+	}
+	getline(file,s) ;  // for change line
+	getline(file,s) ;
+
+	for( int  j = 0 ; j < 4 ; j ++){
+		file >> value ;
+		cvmSet(camDisto,j,0 , value) ;
+	}
+
+	getline(file,s) ;
+	getline(file,s) ;
+
+	for(int i = 0 ; i < 3 ; i ++){
+		for(int j = 0 ; j < 3 ; j ++){
+			file >> value ;
+			cvmSet(proIntrinsic,i,j , value) ;
+		}
+	}
+	getline(file,s) ;
+	getline(file,s) ;
+
+	for( int  j = 0 ; j < 4 ; j ++){
+		file >> value ;
+		cvmSet(proDisto,j,0 , value) ;
+	}
+
+	getline(file,s) ;
+	getline(file,s) ;
+
+	for(int i = 0 ; i < 4 ; i ++){
+		for(int j = 0 ; j < 4 ; j ++){
+			file >> value ;
+			cvmSet(pro2CamExtrinsic,i,j , value) ;
+		}
+	}
 
 }
 void ProjectorTrans2World::buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat){
@@ -113,15 +154,13 @@ void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* obj
 
 	CvMat* camOriSizePoint = cvCreateMat(cvGetSize(cameraPoint).height,2,CV_32F);
 	for(int i = 0 ; i < cvGetSize(cameraPoint).height ; i++){
-		_DPRINTF((L"cameraPoint %f %f ",cameraPoint->data.fl[i*2],cameraPoint->data.fl[i*2+1]));
 		cvmSet(camOriSizePoint,i,0,cvmGet(cameraPoint,i,0)*640);
-		cvmSet(camOriSizePoint,i,1,cvmGet(cameraPoint,i,1)*480);
-
+		cvmSet(camOriSizePoint,i,1,(cvmGet(cameraPoint,i,1)*480)); 
 	}
-	cvFindExtrinsicCameraParams2(object3D,camOriSizePoint,camIntrinsic,camDisto,rotateTmp,transW2C);
-    cvRodrigues2(rotateTmp,rotateW2C);
-
+	cvFindExtrinsicCameraParams2(object3D,camOriSizePoint,camIntrinsic,camDisto,rotateRodrigues,transW2C);
+	cvRodrigues2(rotateRodrigues,rotateW2C);
 	buildExtrinsicMat(rotateW2C,transW2C,world2CamExtrinsic);
+
 	findPro2WorldExtrinsic();
 
 	cvReleaseMat(&object3D);
@@ -187,7 +226,7 @@ void ProjectorTrans2World::getProjHomo(){
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
 	CvPoint3D32f projIn3D ;
 	
-	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;
+	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;  // for finding box
 	for(int i = 0 ; i < 4 ; i ++){
 		proj2DPoint->data.fl[0] = projCorner[i*2];
 		proj2DPoint->data.fl[1] = projCorner[i*2+1];
@@ -195,15 +234,13 @@ void ProjectorTrans2World::getProjHomo(){
 
 	    projIn3D = findPro3D(proj2DPoint);	
 		CvMat* imgPoint = cvCreateMat(4,2,CV_32F);
-		cvProjectPoints2(pro3DPoints,rotateTmp,transW2C,camIntrinsic,camDisto,imgPoint);
-		_DPRINTF((L"projOnImg %f %f ",imgPoint->data.fl[i*2],imgPoint->data.fl[i*2+1]));
+
+		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
+		cvmSet(pro3DPointsMat,i,1,projIn3D.y);
+		cvmSet(pro3DPointsMat,i,2,projIn3D.z);
 
 		projIn3D.x = projIn3D.x/tableWidth ;
 		projIn3D.y = projIn3D.y/tableHeight ;
-
-		cvmSet(pro3DPoints,i,0,projIn3D.x);
-		cvmSet(pro3DPoints,i,1,projIn3D.y);
-		cvmSet(pro3DPoints,i,2,projIn3D.z);
 
 		proj3DPoints[i][0] = projIn3D.x;
 		proj3DPoints[i][1] = projIn3D.y;
@@ -219,7 +256,6 @@ void ProjectorTrans2World::getProjHomo(){
 
 	    if(maxY < projIn3D.y)
 			maxY = projIn3D.y;
-		_DPRINTF((L"proj3D %f %f ",pro3DPoints->data.fl[i*2],pro3DPoints->data.fl[i*2+1]));
 	}
 
 	projBox[0] = minX;
@@ -227,8 +263,6 @@ void ProjectorTrans2World::getProjHomo(){
 	projBox[2] = maxX;
 	projBox[3] = maxY;
 
-
-	
-	cvFindHomography(pro3DPoints,&projCornerMat,proHomoMat);
+	cvFindHomography(pro3DPointsMat,&projCornerMat,proHomoMat);
 	cvReleaseMat(&proj2DPoint);
 }

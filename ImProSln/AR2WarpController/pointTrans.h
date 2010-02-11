@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -12,10 +13,8 @@ using namespace std;
 #pragma comment(lib, "cxcore200.lib")
 #pragma comment(lib, "cvaux200.lib")
 
-
 #define CAMWIDTH 640
 #define CAMHEIGHT 480
-
 
 class ProjectorTrans2World{
 public :
@@ -54,13 +53,13 @@ public:
 
 	CvMat* rotateW2C;
 	CvMat* transW2C ;
-	CvMat* rotateTmp ;
+	CvMat* rotateRodrigues ;
 
 	// for findPro3D
 	CvMat* targetPoint;
 	CvMat* proVector ;
 	CvMat* proVectorInWorld;
-	CvMat* pro3DPoints;
+	CvMat* pro3DPointsMat;
 	CvMat* proHomoMat;
 	CvMat projCornerMat;
 
