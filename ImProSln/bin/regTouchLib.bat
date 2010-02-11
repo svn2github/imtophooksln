@@ -1,1 +1,1 @@
-regsvr32 TouchLibFilter.dll
+regsvr32  TouchLibFilter.dll
