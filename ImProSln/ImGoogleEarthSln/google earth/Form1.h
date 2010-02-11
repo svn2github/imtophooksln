@@ -22,6 +22,7 @@
 //#include "draw_object.h"
 #include <d3dx9math.h>
 #include <vcclr.h>
+#include "Streams.h"
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;
@@ -46,6 +47,7 @@ D3DXVECTOR3 origin_lookup;  //原始的camera up vector
 D3DXVECTOR3 google_earth_point;
 D3DXMATRIX camera;
 
+CCritSec g_State;
 double LeftTopLong = 121.564422;
 double LeftTopLat = 25.033828;
 double LeftDownLong = 121.564423;
@@ -102,21 +104,24 @@ namespace googleearth{
 };
 gcroot<googleearth::Form1^> g_formPtr = NULL;
 ARTagCameraDS* g_pARCam = NULL;
-
+bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
 bool arTimerTickFunc();
 bool animTimerTickFunc();
 
-BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[])
+BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
+	CAutoLock lck(&g_State);
+
+	computeNeedData(numDetected, markinfos, config, matView, matProj, argc, argv);	
 	arTimerTickFunc();
-	animTimerTickFunc();
+	//animTimerTickFunc();
 	return TRUE;
 }
 
 
 bool arTimerTickFunc()
 {
-	//mainLoop();	
+	
 
 	// set target camera
 	tlatitude = latitude;
@@ -133,7 +138,14 @@ bool arTimerTickFunc()
 		cheading = theading;
 		ctilt = ttilt;
 		croll = troll;
-
+		double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
+		for (int i =0; i<6; i++)
+		{
+			if (Double::IsNaN(para[i]))
+			{
+				int test = 0;
+			}
+		}
 		getFstTag = true;
 	}
 	return true;
@@ -164,7 +176,7 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: static String^ ipAddress = "192.168.1.26";
 		private: static Int32 port = 5000;
-	//private: System::Windows::Forms::Timer^  animTimer;
+	private: System::Windows::Forms::Timer^  animTimer;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -219,7 +231,7 @@ namespace googleearth {
 					
 					 g_pARCam->SetARCallback(ARTagCallback, 0, NULL);
 					 g_pARCam->Play();
-					 //this->animTimer->Start();
+					 this->animTimer->Start();
 				}
 		
 		private: System::Void setupSocket(){
@@ -322,7 +334,7 @@ namespace googleearth {
 		}
 
 		//計算camera在tag座標系中的位置(tag左下角為(0,0))
-		void countLoc(double x,double y,double z)
+		public: void countLoc(double x,double y,double z)
 		{
 			D3DXMATRIX Transform;
 
@@ -378,7 +390,7 @@ namespace googleearth {
 		}
 
 		//計算lookat的向量(camera看的方向)
-		void countLookat(void)
+		public: void countLookat(void)
 		{
 			D3DXVECTOR3 lookat000;
 			D3DXVECTOR3 lookat001;
@@ -402,7 +414,7 @@ namespace googleearth {
 
 		//計算lookat的垂直向量
 		//計算lookat的垂直向量
-		void countLookup(void)
+		public: void countLookup(void)
 		{
 			D3DXVECTOR3 lookup000;
 			D3DXVECTOR3 lookup010;
@@ -431,7 +443,7 @@ namespace googleearth {
 		}
 
 		//用z軸的向量與lookat的向量求夾角算出tilt的值
-		void countTilt(void)
+		public: void countTilt(void)
 		{
 			D3DXVECTOR3 normal;
 
@@ -453,7 +465,7 @@ namespace googleearth {
 		}	
 
 		//用y軸的向量與lookat的xy向量求夾角來計算heading的值
-		void countHeading(void)
+		public: void countHeading(void)
 		{
 			D3DXVECTOR3 yaxis;
 			D3DXVECTOR3 lookatXY;
@@ -479,7 +491,10 @@ namespace googleearth {
 			D3DXVec3Cross(&result,&yaxis,&lookatXY);
 
 			dist_lookatXY = (double)sqrt( (double)pow((double)lookatXY.x,2)+(double)pow((double)lookatXY.y,2)+(double)pow((double)lookatXY.z,2) );
-	
+			if (dist_lookatXY == 0)
+			{
+				return;
+			}
 			cosin = (double)D3DXVec3Dot(&lookat,&yaxis) / (double)dist_lookatXY; 
 			arcosin = acos(cosin);
 	
@@ -487,10 +502,13 @@ namespace googleearth {
 
 			if(result.z <= 0)	heading = angle;
 			else	heading = (double)360 - (double)angle;
-
+			if (Double::IsNaN(heading))
+			{
+				int test = 0 ;
+			}
 		}
 
-		void countRoll(void)
+		public: void countRoll(void)
 		{
 			D3DXVECTOR3 zaxis;
 			D3DXVECTOR3 axis3;
@@ -516,13 +534,21 @@ namespace googleearth {
 			dist_origin_lookup = (double)sqrt( (double)pow((double)origin_lookup.x,2)+(double)pow((double)origin_lookup.y,2)+(double)pow((double)origin_lookup.z,2) );
 
 			cosin = (double)D3DXVec3Dot(&lookup,&origin_lookup) / (double)dist_lookup*(double)dist_origin_lookup; 
-			arcosin = acos(cosin);
-	
-			angle = (double)180*(double)arcosin / (double)PI;
-
+			if (cosin <-1 || cosin > 1)
+			{
+				return;
+			}
+			else
+			{
+				arcosin = acos(cosin);
+				angle = (double)180*(double)arcosin / (double)PI;
+			}
 			if(result.x * lookat.x <= 0 || result.y * lookat.y <=0)	roll = angle;
 			else	roll = -angle;
-
+			if (Double::IsNaN(roll))
+			{
+				int test = 0;
+			}
 		}
 //
 //void mainLoop(void)
@@ -745,7 +771,7 @@ namespace googleearth {
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			//this->arTimer = (gcnew System::Windows::Forms::Timer(this->components));
-			//this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -764,8 +790,8 @@ namespace googleearth {
 			//// 
 			//// animTimer
 			//// 
-			//this->animTimer->Interval = 30;
-			//this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
+			this->animTimer->Interval = 30;
+			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
 			// Form1
 			// 
@@ -828,7 +854,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 		}
 
 		private: System::Void animTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
-			
+			CAutoLock lck(&g_State);
 			if(!getFstTag)
 				return;
 			 
@@ -845,7 +871,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 			 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 			 clongitude = clongitude*alpha + tlongitude*(1-alpha);
 			 caltitude = caltitude*alpha + taltitude*(1-alpha);
-			 cheading = cheading*alpha +  + theading*(1-alpha);
+			 cheading = cheading*alpha + theading*(1-alpha);
 			 ctilt = ctilt*alpha + ttilt*(1-alpha);
  			 croll = croll*alpha + troll*(1-alpha);
 
@@ -861,13 +887,21 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 			 */ 
 
 			 array<Object^>^ parameter = gcnew array<Object^>(6); 
+			
 			 parameter[0] = clatitude;
 			 parameter[1] = clongitude;
 			 parameter[2] = caltitude;
 			 parameter[3] = cheading;
 			 parameter[4] = ctilt;
 			 parameter[5] = croll;
-
+			 double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
+			 for (int i =0; i<6; i++)
+			 {
+				 if (Double::IsNaN(para[i]))
+				 {
+					 return ;
+				 }
+			 }
 			 webBrowser1->Document->InvokeScript("cameraView",parameter);
 		}
 
@@ -898,7 +932,7 @@ bool animTimerTickFunc()
 		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
 		 caltitude = caltitude*alpha + taltitude*(1-alpha);
-		 cheading = cheading*alpha +  + theading*(1-alpha);
+		 cheading = cheading*alpha + theading*(1-alpha);
 		 ctilt = ctilt*alpha + ttilt*(1-alpha);
 		 croll = croll*alpha + troll*(1-alpha);
 
@@ -909,8 +943,8 @@ bool animTimerTickFunc()
 		 parameter[3] = cheading;
 		 parameter[4] = ctilt;
 		 parameter[5] = croll;
-
-		g_formPtr->webBrowser1->Document->InvokeScript("cameraView",parameter);
+		 System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
+		 browser->Document->InvokeScript("cameraView",parameter);
 	}
 
 	catch (System::Exception^ e)
@@ -922,3 +956,75 @@ bool animTimerTickFunc()
 }
 
 
+bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
+{
+	
+	double      target_trans[3][4];
+	double      cam_trans[3][4];
+	char        string[256];
+	double det = 0;
+	D3DXMATRIX d3dTarget_trans, d3d_camTrans;
+	D3DXMatrixIdentity(&d3dTarget_trans);
+	D3DXMatrixIdentity(&d3d_camTrans);
+	for (int row = 0; row < 3; row ++)
+	{
+		for (int col =0; col < 4; col++)
+		{
+			target_trans[row][col] = config->trans[row][col];
+			d3dTarget_trans.m[col][row] = config->trans[row][col];
+		}
+	}
+	D3DXMatrixInverse(&d3d_camTrans, NULL, &d3dTarget_trans);
+	for (int row = 0; row < 3; row ++)
+	{
+		for (int col =0; col < 4; col++)
+		{
+			cam_trans[row][col] = d3d_camTrans.m[col][row];
+
+		}
+	}
+	WCHAR str[MAX_PATH] = {0};
+	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
+	swprintf_s(str, MAX_PATH, L"@@@@@ target_tran: %.2f, %.2f, %.2f, %.2f \n",target_trans[0][0], target_trans[0][1], target_trans[0][2], target_trans[0][3]);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@@              %.2f, %.2f, %.2f, %.2f \n",target_trans[1][0], target_trans[1][1], target_trans[1][2], target_trans[1][3]);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@@              %.2f, %.2f, %.2f, %.2f \n",target_trans[2][0], target_trans[2][1], target_trans[2][2], target_trans[2][3]);
+	OutputDebugStringW(str);
+	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
+	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
+	camera._11 = cam_trans[0][0];
+	camera._12 = cam_trans[1][0]; 
+	camera._13 = cam_trans[2][0];
+	camera._14 = 0;
+	camera._21 = cam_trans[0][1];
+	camera._22 = cam_trans[1][1];
+	camera._23 = cam_trans[2][1];
+	camera._24 = 0;
+	camera._31 = cam_trans[0][2];
+	camera._32 = cam_trans[1][2];
+	camera._33 = cam_trans[2][2];
+	camera._34 = 0;
+	camera._41 = cam_trans[0][3];
+	camera._42 = cam_trans[1][3];
+	camera._43 = cam_trans[2][3];
+	camera._44 = 1;
+
+	//計算google earth中需要的各個參數
+	g_formPtr->countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
+	g_formPtr->countLookat();
+	g_formPtr->countLookup();
+	g_formPtr->countTilt();
+	g_formPtr->countHeading();
+	g_formPtr->countRoll();
+
+	longitude = google_earth_point.x;
+	latitude = google_earth_point.z;
+	altitude = google_earth_point.y;
+	altitude *= 111000;  //一度 = 111000 公尺
+	altitude *= altitude_scale;
+
+	sprintf(string," RAW: Cam Pos x: %f  y: %f  z: %f\n long:%f alt:%f lat:%f\n tilt:%f heading:%f roll:%f \n",
+		cam_trans[0][3], cam_trans[1][3], cam_trans[2][3],longitude,altitude,latitude,tilt,heading,roll);
+	return true;
+}
