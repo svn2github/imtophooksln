@@ -46,7 +46,11 @@ public:
 	virtual HRESULT GetWarpMatrix(D3DXMATRIX& mat);
 
 	virtual bool GetIsFlipY() { return m_bFlipY;};
-	virtual bool SetIsFlipY(bool bFlipY){ m_bFlipY = bFlipY; return true;};
+	virtual bool SetIsFlipY(bool bFlipY) { m_bFlipY = bFlipY; return true;};
+
+	virtual bool GetIsInvWarp();
+	virtual bool SetIsInvWarp(bool bInv);
+
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
 	virtual LPDIRECT3DTEXTURE9 GetInTexture();
@@ -54,8 +58,10 @@ public:
 protected:
 	
 	bool m_bFlipY;
+	bool m_bInvTTS;
 	CCritSec m_accessWarpMatCS;
 	D3DXMATRIX m_matTTS;
+	D3DXMATRIX m_InvmatTTS;
 	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);
 	HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 	CCritSec* GetReceiveCS(IPin* pPin);

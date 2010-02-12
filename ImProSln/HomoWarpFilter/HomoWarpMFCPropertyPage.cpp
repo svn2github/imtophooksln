@@ -25,6 +25,7 @@ void CHomoWarpMFCPropertyPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edLB, m_edLB);
 	DDX_Control(pDX, IDC_edRB, m_edRB);
 	DDX_Control(pDX, IDC_EDPath, m_edPath);
+	DDX_Control(pDX, IDC_CKInvWarp, m_ckInvWarp);
 }
 
 
@@ -43,6 +44,7 @@ BEGIN_MESSAGE_MAP(CHomoWarpMFCPropertyPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON3, &CHomoWarpMFCPropertyPage::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BTN_LOAD, &CHomoWarpMFCPropertyPage::OnBnClickedBtnLoad)
 	ON_BN_CLICKED(IDC_btnEditWnd, &CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd)
+	ON_BN_CLICKED(IDC_CKInvWarp, &CHomoWarpMFCPropertyPage::OnBnClickedCkinvwarp)
 END_MESSAGE_MAP()
 
 
@@ -154,6 +156,7 @@ bool CHomoWarpMFCPropertyPage::GetSetting()
 	::SLIDER_SetPos(m_slrRTy, (int)(RTy * m_slrScale));
 	
 	m_ckFlipY.SetCheck(m_pFilter->GetIsFlipY());
+	m_ckInvWarp.SetCheck(m_pFilter->GetIsInvWarp());
 	updateSliderTxt();
 	return true;
 }
@@ -574,4 +577,10 @@ bool CHomoWarpMFCPropertyPage::GetEditPtsByWarpMatrix()
 		m_editWarpPt[i].y = pt[i].y;
 	}
 	return true;
+}
+void CHomoWarpMFCPropertyPage::OnBnClickedCkinvwarp()
+{
+	if (m_pFilter == NULL)
+		return;
+	m_pFilter->SetIsInvWarp(m_ckInvWarp.GetCheck());
 }

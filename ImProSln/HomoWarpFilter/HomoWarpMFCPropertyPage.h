@@ -85,4 +85,6 @@ public: //inherit from CMFCBaseProperty Page
 	D3DXVECTOR2 m_editWarpPt[4];
 	int m_currEditIdx;;
 	int m_bEditing;
+	CButton m_ckInvWarp;
+	afx_msg void OnBnClickedCkinvwarp();
 };

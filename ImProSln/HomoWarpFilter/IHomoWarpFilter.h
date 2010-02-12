@@ -19,6 +19,9 @@ public:
 
 	virtual bool GetIsFlipY();
 	virtual bool SetIsFlipY(bool bFlipY);
+	virtual bool GetIsInvWarp();
+	virtual bool SetIsInvWarp(bool bInv);
+
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
 

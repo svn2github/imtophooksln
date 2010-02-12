@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文 (台灣) resources
+// Chinese (Taiwan) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 #ifdef _WIN32
@@ -73,12 +73,12 @@ BEGIN
     IDS_HomoWarpPropertyDlg_Title "Homo Warp Setting"
 END
 
-#endif    // 中文 (台灣) resources
+#endif    // Chinese (Taiwan) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英文 (美國) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -156,6 +156,7 @@ BEGIN
     PUSHBUTTON      "Load",IDC_BTN_LOAD,159,164,50,14
     PUSHBUTTON      "Save",IDC_BUTTON3,92,164,50,14
     PUSHBUTTON      "Edit Wnd",IDC_btnEditWnd,29,164,50,14
+    CONTROL         "Inv Warp",IDC_CKInvWarp,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,120,15,46,10
 END
 
 
@@ -183,7 +184,7 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // 英文 (美國) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

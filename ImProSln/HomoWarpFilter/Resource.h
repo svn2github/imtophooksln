@@ -23,6 +23,8 @@
 #define IDC_BUTTON3                     7023
 #define IDC_BUTTON1                     7024
 #define IDC_btnEditWnd                  7024
+#define IDC_CHECK1                      7025
+#define IDC_CKInvWarp                   7025
 
 // Next default values for new objects
 // 
@@ -30,7 +32,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        7001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         7025
+#define _APS_NEXT_CONTROL_VALUE         7026
 #define _APS_NEXT_SYMED_VALUE           7012
 #endif
 #endif

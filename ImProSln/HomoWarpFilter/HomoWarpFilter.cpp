@@ -8,8 +8,9 @@ HomoWarpFilter::HomoWarpFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 : CMuxTransformFilter(NAME("HomoWarp Filter"), 0, CLSID_HomoWarpFilter)
 { 
 	D3DXMatrixIdentity(&m_matTTS);
+	D3DXMatrixIdentity(&m_InvmatTTS);
 	m_bFlipY = true;
-	
+	m_bInvTTS = false;
 }
 HomoWarpFilter::~HomoWarpFilter()
 {
@@ -332,9 +333,17 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			return S_FALSE;
 		}
 		
-		D3DXMATRIX matWarp;
-		GetWarpMatrix(matWarp);
-		((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&matWarp);
+		{
+			CAutoLock lck(&m_accessWarpMatCS);
+			if (m_bInvTTS)
+			{
+				((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_InvmatTTS);
+			}
+			else
+			{
+				((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS);
+			}
+		}
 		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType(), m_bFlipY);
 	}
 	return S_OK;
@@ -534,6 +543,7 @@ HRESULT HomoWarpFilter::SetWarpVertex(float LTx, float LTy, float LBx, float LBy
 	D3DXVECTOR2 v4(RBx, RBy);
 	CAutoLock autolock(&m_accessWarpMatCS);
 	m_matTTS = ComputeTTS(v1, v2, v3, v4);
+	D3DXMatrixInverse(&m_InvmatTTS, NULL, &m_matTTS);
 	return S_OK;
 }
 HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float& LBy, 
@@ -564,14 +574,27 @@ HRESULT HomoWarpFilter::SetWarpMatrix(const D3DXMATRIX& mat)
 {
 	CAutoLock autolock(&m_accessWarpMatCS);
 	m_matTTS = mat;
+	D3DXMatrixInverse(&m_InvmatTTS, NULL, &m_matTTS);
 	return S_OK;
 }
 HRESULT HomoWarpFilter::GetWarpMatrix(D3DXMATRIX& mat)
 {
 	CAutoLock autolock(&m_accessWarpMatCS);
 	mat = m_matTTS;
+	D3DXMatrixInverse(&m_InvmatTTS, NULL, &m_matTTS);
 	return S_OK;
 }
+
+bool HomoWarpFilter::GetIsInvWarp()
+{
+	return m_bInvTTS;
+}
+bool HomoWarpFilter::SetIsInvWarp(bool bInv)
+{
+	m_bInvTTS = bInv;
+	return true;
+}
+
 CCritSec* HomoWarpFilter::GetReceiveCS(IPin* pPin)
 {
 	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
@@ -639,6 +662,7 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 			}
 		}
 		fclose(filestream);
+		D3DXMatrixInverse(&m_InvmatTTS, NULL, &m_matTTS);
 	}
 	catch (exception e)
 	{
