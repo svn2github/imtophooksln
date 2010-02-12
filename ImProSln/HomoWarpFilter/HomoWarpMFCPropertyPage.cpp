@@ -470,6 +470,7 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 	}
 	cvCopy(imgIn, m_pEditImage);
 	cvCopy(m_pEditImage, m_pEditImage_bk);
+	cvNamedWindow("HomoWarp Edit", 0);
 	cvShowImage("HomoWarp Edit", m_pEditImage);
 	cvSetMouseCallback( "HomoWarp Edit", MouseCallback, this);
 	GetEditPtsByWarpMatrix();
@@ -486,10 +487,9 @@ void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flag
 {
 	CHomoWarpMFCPropertyPage* pInst = (CHomoWarpMFCPropertyPage*)param;
 	HWND Hwnd = (HWND)cvGetWindowHandle("HomoWarp Edit");
-	RECT winRect;
-	::GetClientRect(Hwnd, &winRect);
-	int w = winRect.right - winRect.left;
-	int h = winRect.bottom - winRect.top;
+
+	int w = pInst->m_pEditImage->width;
+	int h = pInst->m_pEditImage->height;
 	if (eventID == CV_EVENT_RBUTTONUP)
 	{
 		pInst->m_currEditIdx = (pInst->m_currEditIdx + 1) % 4;
