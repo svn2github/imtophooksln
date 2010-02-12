@@ -372,7 +372,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 			
 			if (m_pCallback != NULL)
 			{
-				m_pCallback(numDetected, markinfos, matARView, matARProj, m_callbackArgc, m_callbackArgv);
+				m_pCallback(numDetected, markinfos, markerConfig, matARView, matARProj, m_callbackArgc, m_callbackArgv);
 			}
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{

@@ -27,7 +27,7 @@ sampler2D g_Sampler = sampler_state {
 
 float4 mainPS(VSOUT vin) : COLOR {
 	float4 uv = mul(float4(vin.UV , 1.0, 1.0), g_matTexTransform );
-	
+	uv.y = 1 - uv.y;
 	uv.x /= uv.z;
 	uv.y /= uv.z;
 	uv.z = 1;
