@@ -31,7 +31,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtncapturecam();
-	static BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[]);
+	static BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
 
 
 public:

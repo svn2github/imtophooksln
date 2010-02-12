@@ -22,7 +22,7 @@ MIDL_INTERFACE("E47942DF-B438-4d85-A9EC-7B5655E68DFD")
 IARTagFilter: public IUnknown
 {
 public:
-	typedef BOOL (__stdcall* CallbackFuncPtr)(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[]);
+	typedef BOOL (__stdcall* CallbackFuncPtr)(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]);
 
 	virtual bool IsReady();

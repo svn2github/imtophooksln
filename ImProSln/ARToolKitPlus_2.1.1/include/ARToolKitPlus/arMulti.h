@@ -70,6 +70,7 @@ typedef struct {
     int                     prevF;
 /*---*/
     ARFloat                  transR[3][4];
+	double                   cvTrans[4][4];                   
 } ARMultiMarkerInfoT;
 
 

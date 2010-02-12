@@ -321,9 +321,12 @@ public:
 
 
 	virtual ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
-
+	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
 
 protected:
+	bool buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat);
+	bool findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* objectPoint, CvMat* camExtrin);
+	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	bool checkPixelFormat();
 
 	void checkImageBuffer();

@@ -211,7 +211,7 @@ void CImProClientMFCAppDlg::OnBnClickedbtnstop()
 	m_btnStop.EnableWindow(FALSE);
 }
 
-BOOL CImProClientMFCAppDlg::ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const double* matView, const double* matProj, int argc, void* argv[])
+BOOL CImProClientMFCAppDlg::ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
 	WCHAR str[MAX_PATH];
 	swprintf_s(str, MAX_PATH, L"@@@@@ Got ARCallback!! numDetected = %d\n ", numDetected  );

@@ -181,7 +181,7 @@ public:
 	ARFloat calcOpenGLMatrixFromMarker(ARMarkerInfo* nMarkerInfo, ARFloat nPatternCenter[2], ARFloat nPatternSize, ARFloat *nOpenGLMatrix)  {  return AR_TEMPL_TRACKER::calcOpenGLMatrixFromMarker(nMarkerInfo, nPatternCenter, nPatternSize, nOpenGLMatrix);  }
 	ARFloat executeSingleMarkerPoseEstimator(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4])  {  return AR_TEMPL_TRACKER::executeSingleMarkerPoseEstimator(marker_info, center, width, conv);  }
 	ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config)  {  return AR_TEMPL_TRACKER::executeMultiMarkerPoseEstimator(marker_info, marker_num, config);  }
-
+	bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config)  {  return AR_TEMPL_TRACKER::executeCVPoseEstimator(marker_info, marker_num, config);  }
 	static void* operator new(size_t size);
 
 	static void operator delete(void *rawMemory);

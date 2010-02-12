@@ -589,6 +589,201 @@ AR_TEMPL_TRACKER::executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int
 	return -1.0f;
 }
 
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts)
+{
+	if (pMarker == NULL)
+	{
+		return false;
+	}
+	if (vts != NULL)
+	{
+		delete [] vts;
+		vts = NULL;
+	}
+	vts = new D3DXVECTOR3[4];
+	vts[0] = D3DXVECTOR3(0,0,0); 
+	vts[1] = D3DXVECTOR3(0, -pMarker->width, 0);
+	vts[2] = D3DXVECTOR3(pMarker->width, -pMarker->width, 0);
+	vts[3] = D3DXVECTOR3(pMarker->width, 0, 0);
+
+	D3DXMATRIX matMark;
+	D3DXMatrixIdentity(&matMark);
+
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&vts[i], &vts[i], &matMark);
+	}
+	return true;
+}
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat){
+
+	for(int i = 0 ; i <3 ; i ++){
+		for(int j = 0 ; j <3 ; j ++){
+			cvmSet(dstExtrinsicMat,i,j,cvmGet(rotation,i,j));
+		}
+		cvmSet(dstExtrinsicMat,i,3,cvmGet(translate,i,0));
+	}
+	for(int i = 0 ; i < 3 ; i ++){
+		cvmSet(dstExtrinsicMat,3,i,0);
+	}
+	cvmSet(dstExtrinsicMat,3,3,1);
+	return true;
+}
+
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* object3D, CvMat* camExtrin){
+	float intriMat[9] = {1,0,0, 0,1,0, 0,0,1};
+	float dist_factor[4] = { this->arCamera->dist_factor[0], this->arCamera->dist_factor[1], this->arCamera->dist_factor[2], this->arCamera->dist_factor[3]};
+	float tranV[3] = {0, 0, 0 };
+	float rotV[3] = {0, 0, 0};
+	float rotW2C[9] = {1,0,0, 0,1,0 ,0,0,1};
+	for (int row = 0; row <3; row++)
+	{
+		for (int col =0; col < 3; col++)
+		{
+			intriMat[3*row + col] = this->arCamera->mat[row][col];
+		}
+	}
+	CvMat camIntrinsic = cvMat(3, 3, CV_32F, (void*)intriMat);
+	CvMat camDisto = cvMat(4, 1, CV_32F, (void*)dist_factor);
+	CvMat transW2C = cvMat(3, 1, CV_32F, tranV);
+	CvMat rotateTmp = cvMat(3, 1, CV_32F, rotV);
+	CvMat rotateW2C = cvMat(3, 3, CV_32F, rotW2C);
+	cvFindExtrinsicCameraParams2(object3D, cameraPoint, &camIntrinsic, &camDisto, &rotateTmp, &transW2C);
+	cvRodrigues2(&rotateTmp, &rotateW2C);
+
+	buildExtrinsicMat(&rotateW2C, &transW2C, camExtrin);
+	return true;
+}
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detectedMarkers, int nDetected, ARMultiMarkerInfoT *config)
+{
+	float w = this->screenWidth;
+	float h = this->screenHeight;
+	
+	WCHAR str[MAX_PATH];
+
+	float s[] = {0,0,0,
+		0,0,0,
+		0,0,0};
+	CvMat mat = cvMat(3,3, CV_32F, &s);
+
+	float* pt2d = (float*)malloc(4*2*nDetected*sizeof(float));
+	float* pos3d = (float*)malloc(4*3*nDetected*sizeof(float));
+	int nValidDetected = 0;
+
+	memset(pt2d,0,4*2*nDetected*sizeof(float));
+	memset(pos3d,0,4*3*nDetected*sizeof(float));
+	for (int i = 0; i< nDetected; i++)
+	{
+		ARMultiEachMarkerInfoT* pcfgMarker = NULL;
+		for (int j =0; j< config->marker_num; j++)
+		{
+			if (config->marker[j].patt_id == detectedMarkers[i].id)
+			{
+				pcfgMarker = &(config->marker[j]);
+				break;
+			}	
+		}
+		if (pcfgMarker == NULL)
+		{
+			continue;
+		}
+
+		const ARFloat* arV[4]= {NULL};
+
+		switch (detectedMarkers[i].dir)
+		{
+		case 0:
+			arV[0] = detectedMarkers[i].vertex[2];
+			arV[1] = detectedMarkers[i].vertex[3];
+			arV[2] = detectedMarkers[i].vertex[0];
+			arV[3] = detectedMarkers[i].vertex[1];
+			break;
+		case 1:
+			arV[0] = detectedMarkers[i].vertex[1];
+			arV[1] = detectedMarkers[i].vertex[2];
+			arV[2] = detectedMarkers[i].vertex[3];
+			arV[3] = detectedMarkers[i].vertex[0];
+			break;
+		case 2:
+			arV[0] = detectedMarkers[i].vertex[0];
+			arV[1] = detectedMarkers[i].vertex[1];
+			arV[2] = detectedMarkers[i].vertex[2];
+			arV[3] = detectedMarkers[i].vertex[3];
+			break;
+		case 3:
+			arV[0] = detectedMarkers[i].vertex[3];
+			arV[1] = detectedMarkers[i].vertex[0];
+			arV[2] = detectedMarkers[i].vertex[1];
+			arV[3] = detectedMarkers[i].vertex[2];
+			break;
+		default:
+			continue;
+			break;
+		}
+
+		D3DXVECTOR3* pt3d = NULL;
+		ARTag2World3D(pcfgMarker, pt3d);
+		if (pt3d == NULL)
+		{
+			continue;
+		}
+		D3DXVECTOR3 pt3d_rev[4];
+		pt3d_rev[0] = pt3d[0];
+		pt3d_rev[1] = pt3d[3];
+		pt3d_rev[2] = pt3d[2];
+		pt3d_rev[3] = pt3d[1];
+		nValidDetected++;
+
+		pt2d[4*2*(nValidDetected-1) + 0] = arV[0][0];  pt2d[4*2*(nValidDetected-1) + 1] = arV[0][1];
+		pt2d[4*2*(nValidDetected-1) + 2] = arV[1][0];  pt2d[4*2*(nValidDetected-1) + 3] = arV[1][1];
+		pt2d[4*2*(nValidDetected-1) + 4] = arV[2][0];  pt2d[4*2*(nValidDetected-1) + 5] = arV[2][1];
+		pt2d[4*2*(nValidDetected-1) + 6] = arV[3][0];  pt2d[4*2*(nValidDetected-1) + 7] = arV[3][1];
+
+
+		pos3d[4*3*(nValidDetected-1) + 0] = pt3d_rev[0].x;  pos3d[4*3*(nValidDetected-1) + 1] = pt3d_rev[0].y;  pos3d[4*3*(nValidDetected-1) + 2] = pt3d_rev[0].z;
+		pos3d[4*3*(nValidDetected-1) + 3] = pt3d_rev[1].x;  pos3d[4*3*(nValidDetected-1) + 4] = pt3d_rev[1].y;  pos3d[4*3*(nValidDetected-1) + 5] = pt3d_rev[1].z;
+		pos3d[4*3*(nValidDetected-1) + 6] = pt3d_rev[2].x;  pos3d[4*3*(nValidDetected-1) + 7] = pt3d_rev[2].y;  pos3d[4*3*(nValidDetected-1) + 8] = pt3d_rev[2].z;
+		pos3d[4*3*(nValidDetected-1) + 9] = pt3d_rev[3].x;  pos3d[4*3*(nValidDetected-1) + 10] = pt3d_rev[3].y;  pos3d[4*3*(nValidDetected-1) + 11] = pt3d_rev[3].z;
+
+		delete [] pt3d;
+		pt3d = NULL;
+	}
+	if (nValidDetected < 1)
+	{
+		free(pt2d);
+		free(pos3d);
+		return false;
+	}
+	CvMat cvPt2D;
+	CvMat cv3DPts;
+	CvMat camExtrin;
+	float tmp[16] = {1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1};
+	cvPt2D = cvMat(nValidDetected*4, 2, CV_32F, pt2d); //t: virtual space, d: camera space
+	cv3DPts = cvMat(nValidDetected*4, 3, CV_32F, pos3d);
+	camExtrin = cvMat(4, 4, CV_32F, tmp);
+	findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin);
+	for (int row =0; row <4; row++)
+	{
+		for (int col =0; col < 4; col++)
+		{
+			config->cvTrans[row][col] = cvmGet(&camExtrin, row, col);
+		}
+	}
+	
+	free(pt2d);
+	free(pos3d);
+
+
+	return true;
+}
 
 
 AR_TEMPL_FUNC void

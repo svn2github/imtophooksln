@@ -970,8 +970,8 @@ bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMu
 	{
 		for (int col =0; col < 4; col++)
 		{
-			target_trans[row][col] = config->trans[row][col];
-			d3dTarget_trans.m[col][row] = config->trans[row][col];
+			target_trans[row][col] = config->cvTrans[row][col];
+			d3dTarget_trans.m[col][row] = config->cvTrans[row][col];
 		}
 	}
 	D3DXMatrixInverse(&d3d_camTrans, NULL, &d3dTarget_trans);
