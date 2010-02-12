@@ -5,6 +5,10 @@ class DXRenderDisplay :
 	public MS3DDisplay
 {	
 public:
+	bool m_bFlipX;
+	bool m_bFlipY;
+	
+public:
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);

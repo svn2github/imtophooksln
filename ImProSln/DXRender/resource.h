@@ -5,6 +5,9 @@
 #define IDD_DXRenderFilterProp          107
 #define IDS_DXRenderFilterProp_Title    12000
 #define IDC_CKHideBorder                12000
+#define IDC_CK_FlipY                    12001
+#define IDC_CK_FlipY2                   12002
+#define IDC_CK_FlipX                    12002
 
 // Next default values for new objects
 // 
@@ -12,7 +15,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        12001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         12001
+#define _APS_NEXT_CONTROL_VALUE         12002
 #define _APS_NEXT_SYMED_VALUE           12000
 #endif
 #endif

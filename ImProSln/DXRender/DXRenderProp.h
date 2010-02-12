@@ -27,6 +27,7 @@ protected:
 
 protected:
 	IDXRenderer *m_pFilter;
+	bool GetSetting();
 
 public:
 	// Dialog Data
@@ -45,4 +46,8 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetTitileResourceID() { return IDS_DXRenderFilterProp_Title;};
 	afx_msg void OnBnClickedCkhideborder();
 	CButton m_ckHideBorder;
+	CButton m_ckFlipX;
+	CButton m_ckFlipY;
+	afx_msg void OnBnClickedCkFlipx();
+	afx_msg void OnBnClickedCkFlipy();
 };

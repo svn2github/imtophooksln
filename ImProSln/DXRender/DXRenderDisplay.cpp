@@ -4,12 +4,14 @@
 DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 : MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
-
+	m_bFlipX = false;
+	m_bFlipY = false;
 }
 DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
 : MS3DDisplay(pDevice, rtWidth, rtHeight)
 {
-	
+	m_bFlipX = false;
+	m_bFlipY = false;
 }
 
 
@@ -38,7 +40,8 @@ BOOL DXRenderDisplay::Render()
 	{
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
 		hr = pEffect->SetTechnique("technique0");
-
+		pEffect->SetBool("bFlipX", m_bFlipX);
+		pEffect->SetBool("bFlipY", m_bFlipY);
 		hr = pEffect->Begin(&cPasses, 0);
 		for (iPass = 0; iPass < cPasses; iPass++)
 		{

@@ -338,6 +338,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath="..\fx\DXRenderer.fx"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>

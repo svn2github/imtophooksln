@@ -170,3 +170,34 @@ HWND DXRenderFilter::GetDisplayWindow()
 	}
 	return m_pD3DDisplay->GetDisplayWindow();
 }
+
+bool DXRenderFilter::GetFlipX()
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipX;
+}
+bool DXRenderFilter::SetFlipX(bool v)
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipX = v;
+	return true;
+}
+bool DXRenderFilter::GetFlipY()
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY;
+}
+bool DXRenderFilter::SetFlipY(bool v)
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY = v;
+	return true;
+}

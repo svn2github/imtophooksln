@@ -15,7 +15,9 @@ class DXRenderFilter :
 	public ISpecifyPropertyPages, public D3DTransformFilterBase
 {
 protected:
+	CCritSec m_csDisplayState;
 	CMediaType m_InputMT;
+
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 
@@ -42,4 +44,9 @@ public:
 	DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~DXRenderFilter();
 	virtual HWND GetDisplayWindow();
+
+	virtual bool GetFlipX();
+	virtual bool SetFlipX(bool v);
+	virtual bool GetFlipY();
+	virtual bool SetFlipY(bool v);
 };

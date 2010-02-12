@@ -1,4 +1,7 @@
 
+bool bFlipX = false;
+bool bFlipY = false;
+
 float4x4 g_matTexTransform   
 <
 	string UIWidget="matTTS";
@@ -27,7 +30,14 @@ sampler2D g_Sampler = sampler_state {
 
 float4 mainPS(VSOUT vin) : COLOR {
 	float4 uv = mul(float4(vin.UV , 1.0, 1.0), g_matTexTransform );
-	uv.y = 1 - uv.y;
+	if (bFlipY)
+	{
+		uv.y = 1 - uv.y;
+	}
+	if (bFlipX)
+	{
+		uv.x = 1 - uv.x;
+	}	
 	uv.x /= uv.z;
 	uv.y /= uv.z;
 	uv.z = 1;
