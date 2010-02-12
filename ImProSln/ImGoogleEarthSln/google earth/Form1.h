@@ -983,15 +983,7 @@ bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMu
 
 		}
 	}
-	WCHAR str[MAX_PATH] = {0};
-	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
-	swprintf_s(str, MAX_PATH, L"@@@@@ target_tran: %.2f, %.2f, %.2f, %.2f \n",target_trans[0][0], target_trans[0][1], target_trans[0][2], target_trans[0][3]);
-	OutputDebugStringW(str);
-	swprintf_s(str, MAX_PATH, L"@@@@@              %.2f, %.2f, %.2f, %.2f \n",target_trans[1][0], target_trans[1][1], target_trans[1][2], target_trans[1][3]);
-	OutputDebugStringW(str);
-	swprintf_s(str, MAX_PATH, L"@@@@@              %.2f, %.2f, %.2f, %.2f \n",target_trans[2][0], target_trans[2][1], target_trans[2][2], target_trans[2][3]);
-	OutputDebugStringW(str);
-	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");	
+
 	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
 	camera._11 = cam_trans[0][0];
 	camera._12 = cam_trans[1][0]; 
