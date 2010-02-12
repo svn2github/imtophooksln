@@ -18,7 +18,7 @@ using namespace std;
 
 class ProjectorTrans2World{
 public :
-	ProjectorTrans2World(int width, int height ,char* fileDir);
+	ProjectorTrans2World(int tableW, int tableH ,char* fileDir);
 	~ProjectorTrans2World() ;
 	void findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* objectPoint);
 	void findPro2WorldExtrinsic();
@@ -27,9 +27,10 @@ public :
 	// combine rotation matrix and translation matrix into a 4*4 extrinsic matrix
 	void buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat);
 	CvPoint3D32f findPro3D(CvMat* pointMat);
-	void setResolution(int width , int height);
-	int* getResolution();
+	void setTableSize(int width , int height);
+	int* getTableSize();
 	void getProjHomo();
+	void initProjRes(int width, int height);
 	CvPoint2D32f findPro3DcvPoint(CvPoint point);
 
 
@@ -56,7 +57,6 @@ public:
 	CvMat* rotateRodrigues ;
 
 	// for findPro3D
-	CvMat* targetPoint;
 	CvMat* proVector ;
 	CvMat* proVectorInWorld;
 	CvMat* pro3DPointsMat;

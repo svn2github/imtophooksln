@@ -66,10 +66,12 @@ protected:
 	virtual bool SendWarpConfig(int camIDx);
 	virtual bool SendARLayoutStartegyData();
 	virtual bool SendBoundingBox2OSCSender();
-	// function for projector coordinate to virtual world
-	
+
+	// function for projector coordinate to virtual world	
 	ProjectorTrans2World* projCoord ;
 	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
+	virtual int tableHeight;
+	virtual int tableWidth;
 
 	IPin* GetARResultPin(int idx);
 	IPin* GetWarpConfigPin(int idx);

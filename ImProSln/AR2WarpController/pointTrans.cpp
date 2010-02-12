@@ -3,7 +3,7 @@
 #include "common.h"
 
 
-ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char* fileDir){
+ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
 	
 	// init the mat for camera and projector parameters 
 	proIntrinsic = cvCreateMat(3,3,CV_32F) ;
@@ -25,14 +25,13 @@ ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char*
 	cvSetZero(oriProPos);
 	oriProPos->data.fl[3] = 1 ;  
 
-    targetPoint = cvCreateMat(3,1,CV_32F);
 	proVector = cvCreateMat(3,1,CV_32F);
 	proVectorInWorld = cvCreateMat(3,1,CV_32F);
 
-	ProjResHeight = projHeight;
-	ProjResWidth = projWidth;
-	tableHeight = 380;
-	tableWidth = 380;
+	//ProjResHeight = projHeight;
+	//ProjResWidth = projWidth;
+	tableHeight = tableH;
+	tableWidth = tableW;
 
 	rotateW2C = cvCreateMat( 3, 3, CV_32F);
 	transW2C = cvCreateMat( 3, 1, CV_32F);
@@ -40,7 +39,7 @@ ProjectorTrans2World::ProjectorTrans2World(int projWidth , int projHeight ,char*
 	pro3DPointsMat = cvCreateMat(4,3,CV_32F);
 	proHomoMat = cvCreateMat( 3, 3, CV_32F);
 	 
-	setResolution(projWidth,projHeight);
+	initProjRes(800,600);
 	loadCalibParam(fileDir);	 
 	cvInvert(pro2CamExtrinsic,pro2CamExtrinsic,CV_SVD);
 	cvInvert(proIntrinsic,invProIntrinsic,CV_SVD);
@@ -66,7 +65,6 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 	cvReleaseMat(& objectPoint);
 	cvReleaseMat(& oriProPos);
 
-	cvReleaseMat(& targetPoint);
 	cvReleaseMat(& proVector) ;
 	cvReleaseMat(& proVectorInWorld);
 	cvReleaseMat(& pro3DPointsMat);
@@ -198,9 +196,8 @@ CvPoint3D32f ProjectorTrans2World:: findPro3D(CvMat* pointMat){
 	return proIn3D;
 }
 
-void ProjectorTrans2World::setResolution(int width , int height){
-
-    projCorner[0] = 0 ;
+void ProjectorTrans2World::initProjRes(int width, int height){
+	projCorner[0] = 0 ;
 	projCorner[1] = 0 ;
 	projCorner[2] = width ;
 	projCorner[3] = 0 ;
@@ -215,7 +212,14 @@ void ProjectorTrans2World::setResolution(int width , int height){
 	ProjResHeight = height;
 
 }
-int* ProjectorTrans2World::getResolution(){
+void ProjectorTrans2World::setTableSize(int TableW , int TableH){
+
+   
+
+
+
+}
+int* ProjectorTrans2World::getTableSize(){
 	int res[2];
 	res[0] = ProjResWidth;
 	res[1] = ProjResHeight;
@@ -233,7 +237,6 @@ void ProjectorTrans2World::getProjHomo(){
 		proj2DPoint->data.fl[2] = 1;
 
 	    projIn3D = findPro3D(proj2DPoint);	
-		CvMat* imgPoint = cvCreateMat(4,2,CV_32F);
 
 		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
 		cvmSet(pro3DPointsMat,i,1,projIn3D.y);

@@ -33,8 +33,10 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	int size= wcslen(szPath);
 	
 	wcstombs(fileDir, szPath, size+1);
+	tableWidth = 380;
+	tableHeight = 380;
 
-	projCoord = new  ProjectorTrans2World(800,600,fileDir);
+	projCoord = new  ProjectorTrans2World(tableWidth,tableHeight,fileDir);
 }
 AR2WarpController::~AR2WarpController()
 {
