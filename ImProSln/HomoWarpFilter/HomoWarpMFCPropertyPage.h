@@ -27,6 +27,7 @@ protected:
 protected:
 	IHomoWarpFilter *m_pFilter;
 	IplImage* m_pEditImage;
+	IplImage* m_pEditImage_bk;
 	HWND m_slrLTx;
 	HWND m_slrLTy;
 	HWND m_slrLBx;
@@ -79,6 +80,9 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedBtnLoad();
 	afx_msg void OnBnClickedbtneditwnd();
 	bool SetWarpByEditPts();
+	bool GetEditPtsByWarpMatrix();
 	static void MouseCallback(int event, int x, int y, int flags, void* param);
-	vector<D3DXVECTOR2> m_editWarpPt;
+	D3DXVECTOR2 m_editWarpPt[4];
+	int m_currEditIdx;;
+	int m_bEditing;
 };

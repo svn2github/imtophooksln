@@ -62,7 +62,13 @@ m_pFilter(0)
 	m_slrRTx = 0;
 	m_slrRTy = 0;
 	m_pEditImage = NULL;
-
+	m_pEditImage_bk = NULL;
+	m_editWarpPt[0] = D3DXVECTOR2(0,0);
+	m_editWarpPt[1] = D3DXVECTOR2(0,1);
+	m_editWarpPt[2] = D3DXVECTOR2(1,1);
+	m_editWarpPt[3] = D3DXVECTOR2(1,0);
+	m_currEditIdx = 0;
+	m_bEditing = false;
 }
 
 CHomoWarpMFCPropertyPage::~CHomoWarpMFCPropertyPage()
@@ -76,6 +82,11 @@ CHomoWarpMFCPropertyPage::~CHomoWarpMFCPropertyPage()
 	{
 		cvReleaseImage(&m_pEditImage);
 		m_pEditImage = NULL;
+	}
+	if (m_pEditImage_bk != NULL)
+	{
+		cvReleaseImage(&m_pEditImage_bk);
+		m_pEditImage_bk = NULL;
 	}
 }
 
@@ -452,12 +463,13 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 	if (m_pEditImage == NULL)
 	{
 		m_pEditImage = cvCreateImage(cvSize(desc.Width, desc.Height),8, 4);
+		m_pEditImage_bk = cvCreateImage(cvSize(desc.Width, desc.Height),8, 4);
 	}
 	cvCopy(imgIn, m_pEditImage);
-	
+	cvCopy(m_pEditImage, m_pEditImage_bk);
 	cvShowImage("HomoWarp Edit", m_pEditImage);
 	cvSetMouseCallback( "HomoWarp Edit", MouseCallback, this);
-
+	GetEditPtsByWarpMatrix();
 	pSurface->UnlockRect();
 	if (pSurface != NULL)
 	{
@@ -470,31 +482,46 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flags, void* param)
 {
 	CHomoWarpMFCPropertyPage* pInst = (CHomoWarpMFCPropertyPage*)param;
-	if (eventID == CV_EVENT_LBUTTONUP)
+	/*HWND* pHwnd = (HWND*)cvGetWindowHandle("HomoWarp Edit");
+	RECT winRect;
+	::GetWindowRect(*pHwnd, &winRect);
+	int w = winRect.right - winRect.left;
+	int h = winRect.bottom - winRect.top;*/
+	if (eventID == CV_EVENT_RBUTTONUP)
+	{
+		pInst->m_currEditIdx = (pInst->m_currEditIdx + 1) % 4;
+	}
+	else if (eventID == CV_EVENT_LBUTTONDOWN)
+	{
+		pInst->m_bEditing = true;
+	}
+	else if (eventID == CV_EVENT_LBUTTONUP)
+	{
+		pInst->m_bEditing = false;
+
+
+	}
+	else if (eventID == CV_EVENT_MOUSEMOVE && pInst->m_bEditing == true)
 	{
 		D3DXVECTOR2 pt(x, y);
 		pt.x = (pt.x /(float) pInst->m_pEditImage->width);
 		pt.y = (pt.y /(float) pInst->m_pEditImage->height);
-		pInst->m_editWarpPt.push_back(pt);
-		cvDrawCircle(pInst->m_pEditImage, cvPoint(x, y), 5, cvScalar(255,0,0));
-		cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
-		if (pInst->m_editWarpPt.size() >= 4)
+		pInst->m_editWarpPt[pInst->m_currEditIdx] = pt;
+		cvCopy(pInst->m_pEditImage_bk, pInst->m_pEditImage);
+		for (int i =0; i<4; i++)
 		{
-			pInst->SetWarpByEditPts();
-			pInst->m_editWarpPt.clear();
-			cvDestroyWindow("HomoWarp Edit");
+			int drawX = pInst->m_editWarpPt[i].x*pInst->m_pEditImage->width;
+			int drawY = pInst->m_editWarpPt[i].y*pInst->m_pEditImage->height;
+			cvDrawCircle(pInst->m_pEditImage, cvPoint(drawX, drawY), 5, cvScalar(255,0,0));
+			cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
 		}
+		pInst->SetWarpByEditPts();
 	}
-
 	return;
 }
 
 bool CHomoWarpMFCPropertyPage::SetWarpByEditPts()
 {
-	if (m_editWarpPt.size() < 4)
-	{
-		return false;
-	}
 	float fromPt[] = { 0, 0,
 		0, 1,
 		1, 1,
@@ -530,5 +557,21 @@ bool CHomoWarpMFCPropertyPage::SetWarpByEditPts()
 	matHomo._33 = cvMatHomo.data.fl[2*3 + 2];
 	m_pFilter->SetWarpMatrix(matHomo);
 	GetSetting();
+	return true;
+}
+
+bool CHomoWarpMFCPropertyPage::GetEditPtsByWarpMatrix()
+{
+	D3DXMATRIX warpMat, invWarpMat;
+	m_pFilter->GetWarpMatrix(warpMat);
+	D3DXMatrixInverse(&invWarpMat, NULL, &warpMat);
+	D3DXVECTOR4 pt[4] = {D3DXVECTOR4(0,0,1,1), D3DXVECTOR4(0,1,1,1), D3DXVECTOR4(1,1,1,1), D3DXVECTOR4(1,0,1,1)};
+	for (int i =0; i<4; i++)
+	{
+		D3DXVec4Transform(&(pt[i]), &(pt[i]), &invWarpMat);
+		pt[i] /= pt[i].z;
+		m_editWarpPt[i].x = pt[i].x;
+		m_editWarpPt[i].y = pt[i].y;
+	}
 	return true;
 }
