@@ -513,8 +513,8 @@ void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flag
 			int drawX = pInst->m_editWarpPt[i].x*pInst->m_pEditImage->width;
 			int drawY = pInst->m_editWarpPt[i].y*pInst->m_pEditImage->height;
 			cvDrawCircle(pInst->m_pEditImage, cvPoint(drawX, drawY), 5, cvScalar(255,0,0));
-			cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
 		}
+		cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
 		pInst->SetWarpByEditPts();
 	}
 	return;
