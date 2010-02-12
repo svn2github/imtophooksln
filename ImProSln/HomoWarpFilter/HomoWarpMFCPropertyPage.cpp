@@ -482,11 +482,11 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flags, void* param)
 {
 	CHomoWarpMFCPropertyPage* pInst = (CHomoWarpMFCPropertyPage*)param;
-	/*HWND* pHwnd = (HWND*)cvGetWindowHandle("HomoWarp Edit");
+	HWND Hwnd = (HWND)cvGetWindowHandle("HomoWarp Edit");
 	RECT winRect;
-	::GetWindowRect(*pHwnd, &winRect);
+	::GetClientRect(Hwnd, &winRect);
 	int w = winRect.right - winRect.left;
-	int h = winRect.bottom - winRect.top;*/
+	int h = winRect.bottom - winRect.top;
 	if (eventID == CV_EVENT_RBUTTONUP)
 	{
 		pInst->m_currEditIdx = (pInst->m_currEditIdx + 1) % 4;
@@ -504,8 +504,8 @@ void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flag
 	else if (eventID == CV_EVENT_MOUSEMOVE && pInst->m_bEditing == true)
 	{
 		D3DXVECTOR2 pt(x, y);
-		pt.x = (pt.x /(float) pInst->m_pEditImage->width);
-		pt.y = (pt.y /(float) pInst->m_pEditImage->height);
+		pt.x = (pt.x /(float)w);
+		pt.y = (pt.y /(float)h);
 		pInst->m_editWarpPt[pInst->m_currEditIdx] = pt;
 		cvCopy(pInst->m_pEditImage_bk, pInst->m_pEditImage);
 		for (int i =0; i<4; i++)
