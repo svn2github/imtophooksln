@@ -4,7 +4,31 @@
 
 // tableW and tableH is the real size of the table in mm 710 * 520
 ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
-	
+	pro2CamExtrinsic = NULL;
+	proIntrinsic = NULL;
+	camIntrinsic = NULL;
+	proDisto = NULL;
+	camDisto = NULL;;
+
+	invProIntrinsic = NULL;
+	pro2WorldRotation = NULL;
+
+	cam2WorldExtrinsic = NULL;
+	pro2WorldExtrinsic = NULL;
+	world2CamExtrinsic = NULL;
+	proPositionInWorld = NULL;
+	cameraPoint = NULL;
+	objectPoint = NULL;
+    oriProPos = NULL;
+
+	rotateW2C = NULL;
+	transW2C = NULL;
+	rotateRodrigues = NULL;
+
+	proVector = NULL ;
+	proVectorInWorld = NULL;
+	pro3DPointsMat = NULL;
+	proHomoMat = NULL;
 	// init the mat for camera and projector parameters 
 	proIntrinsic = cvCreateMat(3,3,CV_32F) ;
 	camIntrinsic=cvCreateMat(3,3,CV_32F);
@@ -46,7 +70,6 @@ ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDi
 }
 
 ProjectorTrans2World::~ProjectorTrans2World(){
-
 	cvReleaseMat(& proIntrinsic) ;
 	cvReleaseMat(& camIntrinsic);
 	cvReleaseMat(& camDisto);
@@ -69,6 +92,14 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 	cvReleaseMat(& proVectorInWorld);
 	cvReleaseMat(& pro3DPointsMat);
 	cvReleaseMat(& proHomoMat);
+
+	if (rotateW2C != NULL)
+		cvReleaseMat(&rotateW2C);
+	if (transW2C != NULL)
+		cvReleaseMat(&transW2C);
+	if (rotateRodrigues != NULL)
+		cvReleaseMat(&rotateRodrigues);
+
 }
 
 
@@ -125,6 +156,7 @@ void ProjectorTrans2World::loadCalibParam(char* fileDir){
 			cvmSet(pro2CamExtrinsic,i,j , value) ;
 		}
 	}
+	file.close();
 
 }
 void ProjectorTrans2World::buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat){

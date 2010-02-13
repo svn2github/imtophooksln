@@ -21,8 +21,8 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_pOSCSender = OSCSender::GetOSCSender();
 
 	m_pAllInst.push_back(this);
-
-
+	
+	
 	extern HMODULE GetModule();
 	WCHAR str[MAX_PATH] = {0};
 	HMODULE module = GetModule();
@@ -40,8 +40,9 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	wcstombs(fileDir, szPath, size+1);
 	tableWidth = 380;
 	tableHeight = 380;
-
+	projCoord = NULL;
 	projCoord = new  ProjectorTrans2World(tableWidth,tableHeight,fileDir);
+	
 }
 AR2WarpController::~AR2WarpController()
 {
@@ -72,6 +73,11 @@ AR2WarpController::~AR2WarpController()
 	if (iter != m_pAllInst.end())
 	{
 		m_pAllInst.erase(iter);
+	}
+	if (projCoord != NULL)
+	{
+		delete projCoord;
+		projCoord = NULL;
 	}
 }
 

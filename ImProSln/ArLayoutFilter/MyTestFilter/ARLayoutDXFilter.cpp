@@ -120,7 +120,9 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 	{
 		return S_FALSE;
 	}
+	OutputDebugStringW(L"@@@@@@@@ DecideLayout ------>\n");
 	DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
+	OutputDebugStringW(L"@@@@@@@@ DecideLayout <------\n");
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
