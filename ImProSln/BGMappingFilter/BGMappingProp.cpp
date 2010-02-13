@@ -14,6 +14,8 @@ IMPLEMENT_DYNAMIC(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
 BEGIN_MESSAGE_MAP(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
+	ON_BN_CLICKED(IDC_BUTTON1, &CBGMappingPorpertyPage::OnBnClickedButton1)
+	ON_EN_CHANGE(IDC_EDIT_WHITE, &CBGMappingPorpertyPage::OnEnChangeEditWhite)
 END_MESSAGE_MAP()
 
 
@@ -111,13 +113,13 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	{
 		return false;
 	}
-
 	m_pFilter->setBGThreshold(::SLIDER_GetPos(m_threshold));
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
 	m_pFilter->setWhiteValue(::SLIDER_GetPos(m_whiteValue));
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
 	m_pFilter->setBlackValue(::SLIDER_GetPos(m_blackValue));
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
+	
 }
 
 
@@ -172,3 +174,43 @@ void CBGMappingPorpertyPage::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResu
 }
 
 
+
+void CBGMappingPorpertyPage::OnBnClickedButton1()
+{
+
+	extern HMODULE GetModule();
+	WCHAR str[MAX_PATH] = {0};
+	HMODULE module = GetModule();
+	GetModuleFileName(module, str, MAX_PATH);
+	// Gets filename
+	WCHAR* pszFile = wcsrchr(str, '\\');
+	pszFile++;    // Moves on from \
+	// Get path
+	WCHAR szPath[MAX_PATH] = L"";
+	_tcsncat(szPath, str, pszFile - str);
+
+	char fileDir[100];
+	int size= wcslen(szPath);
+
+	wcstombs(fileDir, szPath, size+1);
+	
+	char Dir[100];
+	sprintf(Dir,"%s\\ProjectorCalibData\\adjustValue.txt",fileDir) ;
+
+	FILE  * pFile ;
+	pFile = fopen(Dir,"w");
+
+	fprintf(pFile ,"[ %d %d %d ] \n",m_pFilter->getBGThreshold() , m_pFilter->getBlackValue(),m_pFilter->getWhiteValue());  // threshold , blackvalue , whiteValue
+
+	fclose(pFile);
+}
+
+void CBGMappingPorpertyPage::OnEnChangeEditWhite()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CMFCBasePropertyPage::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+}

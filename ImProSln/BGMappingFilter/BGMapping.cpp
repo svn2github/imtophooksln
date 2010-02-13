@@ -4,10 +4,21 @@
 #define BLACK_VALUE 10
 
 
-BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel){
-	BGthreshold = 70;
-	BlackValue = 10;
-	WhiteValue = 5 ;
+BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel,char* fileDir){
+
+	BGthreshold = 0;
+	BlackValue = 0;
+	WhiteValue = 0 ;
+
+	char settingFile[100];
+
+	sprintf(settingFile,"%s\\ProjectorCalibData\\adjustValue.txt",fileDir) ;
+
+	FILE  * pFile ;
+	pFile = fopen(settingFile,"r");
+	fscanf(pFile ,"[ %d %d %d ] \n",&BGthreshold , &BlackValue,&WhiteValue);  // threshold , blackvalue , whiteValue
+
+
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	binaryResult = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);

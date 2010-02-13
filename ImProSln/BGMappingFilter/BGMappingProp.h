@@ -46,6 +46,7 @@ public:
 	HWND m_Btxt;
 	HWND m_whiteValue;
 	HWND m_Wtxt;
+	FILE* saveFile;
 
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
@@ -53,4 +54,6 @@ public: //inherit from CMFCBaseProperty Page
 	
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 
+	afx_msg void OnBnClickedButton1();
+	afx_msg void OnEnChangeEditWhite();
 };

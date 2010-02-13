@@ -11,7 +11,7 @@ using namespace std;
 class BackGroundMapping{
 
 public:
-	BackGroundMapping(int w , int h , int imgChannel);
+	BackGroundMapping(int w , int h , int imgChannel,char* fileDir);
 	~BackGroundMapping();
 	
 	void loadHomo(char* homoName , char* mTableName);

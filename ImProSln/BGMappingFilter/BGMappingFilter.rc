@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文 (台灣) resources
+// Chinese (Taiwan) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 #ifdef _WIN32
@@ -73,12 +73,12 @@ BEGIN
     IDS_BGMappingPropertyPageTitle "BackgroundMapping"
 END
 
-#endif    // 中文 (台灣) resources
+#endif    // Chinese (Taiwan) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英文 (美國) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -153,18 +153,19 @@ IDD_BGMappingPropPage DIALOGEX 0, 0, 195, 127
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    CONTROL         "",IDC_Slider_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,34,100,15
-    EDITTEXT        IDC_ThresholdTxt,117,47,21,13,ES_AUTOHSCROLL
-    LTEXT           "Threshold",IDC_STATIC,32,37,38,12
-    CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,80,62,100,15
-    CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,86,100,15
-    EDITTEXT        IDC_EDIT_WHITE,114,74,20,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_BLACK,118,96,18,14,ES_AUTOHSCROLL
-    LTEXT           "WhiteValue",IDC_STATIC,29,64,40,13
-    LTEXT           "BlackValue",IDC_STATIC,30,90,44,12
+    CONTROL         "",IDC_Slider_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,24,100,15
+    EDITTEXT        IDC_ThresholdTxt,117,39,21,13,ES_AUTOHSCROLL
+    LTEXT           "Threshold",IDC_STATIC,32,26,38,12
+    CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,77,83,100,15
+    CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,51,100,15
+    EDITTEXT        IDC_EDIT_WHITE,118,95,21,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BLACK,118,69,21,12,ES_AUTOHSCROLL
+    LTEXT           "WhiteValue",IDC_STATIC,28,86,40,13
+    LTEXT           "BlackValue",IDC_STATIC,30,54,44,12
+    PUSHBUTTON      "Save",IDC_BUTTON1,153,105,26,15
 END
 
-#endif    // 英文 (美國) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
