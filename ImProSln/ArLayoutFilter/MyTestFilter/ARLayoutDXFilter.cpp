@@ -450,25 +450,39 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 {
 	CAutoLock lck(&m_csARMarker);
 	map<int, bool> decisionMap; // idx, visible, have decided?
-
+	vector<int> undecideIdx;
+	vector<fRECT> allMarkerRects;
+	
+	for (int idx = 0; idx < m_numMarker; idx++)
+	{
+		undecideIdx.push_back(idx);
+		fRECT markerRect;
+		GetARTag2DRect(&markerRect, &(m_ARMarkers[idx]));
+		allMarkerRects.push_back(markerRect);
+	}
+	
 	if (numFingerRects > 0 && fingerRects != NULL)
 	{
+		fRECT markerRect;
 		for (int i = 0; i < numFingerRects; i++)
 		{
-			for (int idx = 0; idx < m_numMarker; idx++)
+			for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 			{	
-				fRECT markerRect;
-				GetARTag2DRect(&markerRect, &(m_ARMarkers[idx]));
+				int idx = undecideIdx.at(iterIdx);		
+				markerRect = allMarkerRects[idx];
 				if (markerRect.IsIntersect(fingerRects[i]))
 				{
 					decisionMap[idx] = false;
+					undecideIdx.erase(undecideIdx.begin() + iterIdx);
+					iterIdx--;
 				}
 			}
+		
 		}
 	}
+	
 	if (numCamRect > 0 && camRects != NULL)
 	{
-
 		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
 		{
 			camRects[i].left = min((float)1.0, max((float)0.0, camRects[i].left));
@@ -486,14 +500,13 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 				continue;
 			}
 			float idealArea = max((float)(m_minMarkerWidth*m_minMarkerWidth*0.95), (float)camViewWidth/4 * camViewHeight/4);
-			
-			for (int idx = 0; idx < m_numMarker; idx++)
+			for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 			{
+				int idx = undecideIdx.at(iterIdx);
 				fRECT myRECT;
-				GetARTag2DRect(&myRECT, &(m_ARMarkers[idx]));
+				myRECT = allMarkerRects[idx];
 				float myArea = abs((myRECT.right - myRECT.left) * (myRECT.bottom - myRECT.top));
-				if ((myArea < idealArea) && myRECT.IsIntersect(camRects[i]) &&
-					decisionMap.find(idx) == decisionMap.end())  // in camview && area < ideaArea && not decided yet
+				if ((myArea < idealArea) && myRECT.IsIntersect(camRects[i]))  // in camview && area < ideaArea && not decided yet
 				{
 					bool bPlaceTaken = false;
 					
@@ -503,8 +516,8 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 						if (iter->second == false)
 							continue;
 
-						fRECT decidedRECT; ;
-						GetARTag2DRect(&decidedRECT, &(m_ARMarkers[iter->first]));
+						fRECT decidedRECT;
+						decidedRECT = allMarkerRects[iter->first];
 						if ( decidedRECT.IsIntersect(myRECT))
 						{
 							bPlaceTaken = true;
@@ -514,33 +527,35 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 					if (bPlaceTaken)
 					{
 						decisionMap[idx] = false;
+						undecideIdx.erase(undecideIdx.begin() + iterIdx);
+						iterIdx--;
 					}
 					else
 					{
 						decisionMap[idx] = true;
+						undecideIdx.erase(undecideIdx.begin() + iterIdx);
+						iterIdx--;
 					}
 				}
 			}
 		}
 	}
-	for (int idx = 0; idx < m_numMarker; idx++ ) // the left tag, if place didn't be taken, visible = true;
+	
+	for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 	{
-		if (decisionMap.find(idx) != decisionMap.end()) 
-		{
-			continue;
-		}
-
+		int idx = undecideIdx.at(iterIdx);
 		bool bPlaceTaken = false;
 		fRECT myRECT;
-		GetARTag2DRect(&myRECT, &(m_ARMarkers[idx]));
+		myRECT = allMarkerRects[idx];
 		for (map<int, bool>::iterator iter = decisionMap.begin(); 
 			iter != decisionMap.end(); iter++)
 		{
 			if (iter->second == false)
 				continue;
-			fRECT decidedRECT; ;
-			GetARTag2DRect(&decidedRECT, &(m_ARMarkers[iter->first]));
-			if ( decidedRECT.IsIntersect(myRECT))
+			fRECT decidedRECT;
+			decidedRECT = allMarkerRects[iter->first];
+			
+			if (decidedRECT.IsIntersect(myRECT))
 			{
 				bPlaceTaken = true;
 				break;
@@ -549,13 +564,17 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 		if (bPlaceTaken)
 		{
 			decisionMap[idx] = false;
+			undecideIdx.erase(undecideIdx.begin() + iterIdx);
+			iterIdx--;
 		}
 		else
 		{
 			decisionMap[idx] = true;
+			undecideIdx.erase(undecideIdx.begin() + iterIdx);
+			iterIdx--;
 		}
 	}
-
+	
 	for (map<int, bool>::iterator iter = decisionMap.begin(); 
 		iter != decisionMap.end(); iter++)
 	{
