@@ -135,6 +135,7 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	BYTE* backgroundByteData;
 	pSample->GetPointer(&backgroundByteData);
 	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, camChannel);
+
 	backgroundtmp->imageData = (char*)backgroundByteData;
 	cvResize(backgroundtmp,backgroundIplImg);
 	
@@ -252,7 +253,7 @@ HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pP
 			return E_INVALIDARG;
 		}
 		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
-			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
+			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype())))
 			return NOERROR;		
 	}
 	return E_FAIL;
@@ -306,10 +307,10 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		{
 			camChannel = 3;
 		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		/*else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			camChannel = 4;
-		}
+		}*/
 
 		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
 		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
@@ -471,5 +472,28 @@ int BGMappingFilter::getBGThreshold(){
 
 HRESULT BGMappingFilter::setBGThreshold(int BGthres){
 	BG->BGthreshold = BGthres;
+	return S_OK;
+}
+
+int BGMappingFilter::getBlackValue(){
+	if(BG->BlackValue == NULL)
+		return 0 ;
+	return BG->BlackValue;
+}
+
+HRESULT BGMappingFilter::setBlackValue(int bValue){
+	BG->BlackValue = bValue;
+	return S_OK;
+}
+
+
+int BGMappingFilter::getWhiteValue(){
+	if(BG->WhiteValue == NULL)
+		return 0 ;
+	return BG->WhiteValue;
+}
+
+HRESULT BGMappingFilter::setWhiteValue(int wValue){
+	BG->WhiteValue = wValue;
 	return S_OK;
 }

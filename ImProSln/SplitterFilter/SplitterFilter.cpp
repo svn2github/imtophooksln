@@ -364,7 +364,7 @@ HRESULT SplitterFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 		}
 	}
 
-	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pOutPin )
+	if (m_pOutputPins.size()>0 &&m_pStreamPins.size() > 0 && m_pStreamPins[0] == pOutPin )
 	{
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;

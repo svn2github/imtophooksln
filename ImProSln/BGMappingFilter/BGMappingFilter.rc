@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (Taiwan) resources
+// 中文 (台灣) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 #ifdef _WIN32
@@ -73,12 +73,12 @@ BEGIN
     IDS_BGMappingPropertyPageTitle "BackgroundMapping"
 END
 
-#endif    // Chinese (Taiwan) resources
+#endif    // 中文 (台灣) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// 英文 (美國) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -154,11 +154,17 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
     CONTROL         "",IDC_Slider_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,34,100,15
-    EDITTEXT        IDC_ThresholdTxt,118,54,21,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ThresholdTxt,117,47,21,13,ES_AUTOHSCROLL
     LTEXT           "Threshold",IDC_STATIC,32,37,38,12
+    CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,80,62,100,15
+    CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,86,100,15
+    EDITTEXT        IDC_EDIT_WHITE,114,74,20,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BLACK,118,96,18,14,ES_AUTOHSCROLL
+    LTEXT           "WhiteValue",IDC_STATIC,29,64,40,13
+    LTEXT           "BlackValue",IDC_STATIC,30,90,44,12
 END
 
-#endif    // English (U.S.) resources
+#endif    // 英文 (美國) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

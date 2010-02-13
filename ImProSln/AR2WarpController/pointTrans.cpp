@@ -2,7 +2,7 @@
 #include "pointTrans.h"
 #include "common.h"
 
-
+// tableW and tableH is the real size of the table in mm 710 * 520
 ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
 	
 	// init the mat for camera and projector parameters 
@@ -36,7 +36,7 @@ ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDi
 	rotateW2C = cvCreateMat( 3, 3, CV_32F);
 	transW2C = cvCreateMat( 3, 1, CV_32F);
 	rotateRodrigues = cvCreateMat( 3, 1, CV_32F);
-	pro3DPointsMat = cvCreateMat(4,3,CV_32F);
+	pro3DPointsMat = cvCreateMat(4,2,CV_32F);
 	proHomoMat = cvCreateMat( 3, 3, CV_32F);
 	 
 	initProjRes(800,600);
@@ -143,6 +143,7 @@ void ProjectorTrans2World::buildExtrinsicMat(CvMat* rotation, CvMat* translate, 
 
 void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* objectPoint){
 
+	// trans the point form normalize to real image size(pixel) and table size(mm) 
 	CvMat* object3D = cvCreateMat(cvGetSize(objectPoint).height,3,CV_32F);
 	for(int i = 0 ; i < cvGetSize(objectPoint).height ; i++){
 		cvmSet(object3D,i,0,cvmGet(objectPoint,i,0)*tableWidth);
@@ -181,8 +182,8 @@ void ProjectorTrans2World::findPro2WorldExtrinsic(){
 //find the four corners of projector's 3D position in world coordinate
 
 CvPoint3D32f ProjectorTrans2World:: findPro3D(CvMat* pointMat){
+	
 	CvPoint3D32f proIn3D ;
-
 	cvmMul(invProIntrinsic,pointMat,proVector);
 	cvmMul(pro2WorldRotation,proVector,proVectorInWorld);
 	cvmMul(pro2WorldExtrinsic,oriProPos,proPositionInWorld);
@@ -213,24 +214,21 @@ void ProjectorTrans2World::initProjRes(int width, int height){
 
 }
 void ProjectorTrans2World::setTableSize(int TableW , int TableH){
-
-   
-
-
-
+  tableHeight = TableH;
+  tableWidth = TableW;
 }
 int* ProjectorTrans2World::getTableSize(){
-	int res[2];
-	res[0] = ProjResWidth;
-	res[1] = ProjResHeight;
-	return res;
+	int tableSize[2];
+	tableSize[0] = tableWidth;
+	tableSize[1] = tableHeight;
+	return tableSize;
 }
 
 void ProjectorTrans2World::getProjHomo(){
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
 	CvPoint3D32f projIn3D ;
 	
-	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;  // for finding box
+	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;  // for finding bounding box
 	for(int i = 0 ; i < 4 ; i ++){
 		proj2DPoint->data.fl[0] = projCorner[i*2];
 		proj2DPoint->data.fl[1] = projCorner[i*2+1];
@@ -240,7 +238,6 @@ void ProjectorTrans2World::getProjHomo(){
 
 		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
 		cvmSet(pro3DPointsMat,i,1,projIn3D.y);
-		cvmSet(pro3DPointsMat,i,2,projIn3D.z);
 
 		projIn3D.x = projIn3D.x/tableWidth ;
 		projIn3D.y = projIn3D.y/tableHeight ;

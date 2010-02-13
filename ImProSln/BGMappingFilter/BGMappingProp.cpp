@@ -26,6 +26,10 @@ m_pFilter(0)
 {
 	m_threshold = 0 ;
 	m_txt = 0 ;
+	m_blackValue = 0 ;
+	m_Btxt = 0 ;
+	m_whiteValue = 0 ;
+	m_Wtxt = 0 ;
 }
 
 CBGMappingPorpertyPage::~CBGMappingPorpertyPage()
@@ -107,8 +111,13 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	{
 		return false;
 	}
+
 	m_pFilter->setBGThreshold(::SLIDER_GetPos(m_threshold));
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
+	m_pFilter->setWhiteValue(::SLIDER_GetPos(m_whiteValue));
+	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
+	m_pFilter->setBlackValue(::SLIDER_GetPos(m_blackValue));
+	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
 }
 
 
@@ -124,10 +133,23 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	::EnableWindow(m_Dlg, TRUE);
 	m_threshold = ::GetDlgItem(m_Dlg,IDC_Slider_Threshold);
 	m_txt = ::GetDlgItem(m_Dlg, IDC_ThresholdTxt);
+
+	m_whiteValue = ::GetDlgItem(m_Dlg,IDC_SLIDER_WHITE);
+	m_Wtxt = ::GetDlgItem(m_Dlg, IDC_EDIT_WHITE);
+	m_blackValue = ::GetDlgItem(m_Dlg,IDC_SLIDER_BLACK);
+	m_Btxt = ::GetDlgItem(m_Dlg, IDC_EDIT_BLACK);
 	
 	::SLIDER_SetRange(m_threshold, 0, 255);
 	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
+
+	::SLIDER_SetRange(m_blackValue, 0, 255);
+	::SLIDER_SetPos(m_blackValue,m_pFilter->getBlackValue());
+	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
+
+	::SLIDER_SetRange(m_whiteValue, 0, 255);
+	::SLIDER_SetPos(m_whiteValue,m_pFilter->getWhiteValue());
+	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
 	return S_OK;
 }
 

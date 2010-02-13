@@ -42,6 +42,11 @@ public:
 	HRESULT updateSliderTxt();
 	HWND m_threshold;
 	HWND m_txt;
+	HWND m_blackValue;
+	HWND m_Btxt;
+	HWND m_whiteValue;
+	HWND m_Wtxt;
+
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
 	virtual int GetTitileResourceID();

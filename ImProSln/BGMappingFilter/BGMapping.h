@@ -21,6 +21,10 @@ public:
 	void setBackground(IplImage* BGImg);  
 	void setThreshold(int threshold);
 	int getThreshold();
+	void setBlackValue(int bValue);
+	int getBlackValue();
+	void setWhiteValue(int wValue);
+	int getWhiteValue();
 
 public:
 	CvMat srcPoint;
@@ -38,6 +42,9 @@ public:
 	IplConvKernel* kernelElement;
 
 	int BGthreshold;
+	int BlackValue;
+	int WhiteValue;
+
 	bool isDilate;
 };
 #endif

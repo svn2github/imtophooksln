@@ -53,6 +53,10 @@ public:
 public:
 	virtual HRESULT setBGThreshold(int BGthres) ;
 	virtual int getBGThreshold();
+	virtual HRESULT setBlackValue(int bValue) ;
+	virtual int getBlackValue();
+	virtual HRESULT setWhiteValue(int wValue) ;
+	virtual int getWhiteValue();
 
 private:
 
