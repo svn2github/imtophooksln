@@ -5,7 +5,7 @@
 
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel){
-	BGthreshold = 70 ;
+	BGthreshold = 70;
 	BlackValue = 10;
 	WhiteValue = 5 ;
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
@@ -80,15 +80,35 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
 	}
 	cvCvtColor( resultImg, result4CImg, CV_GRAY2RGB);
-
+	findForegroundRect(resultImg);
 	return result4CImg;
 }
 
+void  BackGroundMapping::findForegroundRect(IplImage *FGImage){
+	CvMemStorage* storage = cvCreateMemStorage(0);
 
-int BackGroundMapping::getThreshold(){
-	return BGthreshold ;
+	CvSeq* cont = 0; 
+
+	cvFindContours( FGImage, storage, &cont, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+	foregroundLists.clear();
+	for( ; cont != 0; cont = cont->h_next )	{
+		int count = cont->total; // This is number point in contour
+		foregroundLists.push_back(cvContourBoundingRect(cont));
+
+		//cvDrawContours(FGImage, cont, CV_RGB(255,255,255), CV_RGB(255,255,255), 3, 2, CV_FILLED);
+		//cvShowImage("Contours",FGImage);
+		//cvWaitKey(1);
+	}
+
+	cvReleaseMemStorage(&storage);
 }
 
-void BackGroundMapping::setThreshold(int threshold){
-	BGthreshold = threshold;
-}
+
+
+//int BackGroundMapping::getThreshold(){
+//	return BGthreshold ;
+//}
+//
+//void BackGroundMapping::setThreshold(int threshold){
+//	BGthreshold = threshold;
+//}

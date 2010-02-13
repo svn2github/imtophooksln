@@ -2,6 +2,7 @@
 #include "BGMappingFilter.h"
 #include "BGMappingFilterApp.h"
 #include "BGMappingProp.h"
+#include "MyMediaSample.h"
 
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
@@ -83,6 +84,10 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 	MSR_START(m_idTransform);
 
 	hr = Transform(pSample, pOutSample);
+
+	if(hr){
+		SendForegroundRect();
+	}
 
 	// Stop the clock and log it (if PERF is defined)
 	MSR_STOP(m_idTransform);
@@ -226,10 +231,26 @@ HRESULT BGMappingFilter::CreatePins()
 			pInput1 = NULL;
 			return NULL;
 		}
+
+		CMuxTransformOutputPin* pOutputFG = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"FGConfig");   // Pin name
+		// Can't fail
+		ASSERT(SUCCEEDED(hr));
+		if (pOutputFG == NULL) {
+			delete pInput0;
+			pInput0 = NULL;
+			delete pInput1;
+			pInput1 = NULL;
+			delete pOutput;
+			return NULL;
+		}
 		
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
 		m_pOutputPins.push_back(pOutput);
+		m_pOutputPins.push_back(pOutputFG);
 	
 	}
 	return S_OK;
@@ -287,6 +308,15 @@ HRESULT BGMappingFilter::CheckOutputType( const CMediaType * pmt , const IPin* p
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
 		}		
+	}
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	{
+		CheckPointer(pmt, E_POINTER);
+		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
 	}
 
 	return E_FAIL;
@@ -426,6 +456,26 @@ HRESULT BGMappingFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOu
 		}
 	}
 
+	else if	(m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = sizeof(ForegroundRegion);
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+	}
+
 	return NOERROR;
 }
 
@@ -447,6 +497,15 @@ HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inou
 		long size = inputMT.GetSampleSize();
 		
 		*pMediaType = inputMT;
+		return S_OK;
+	}
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	{
+		CMediaType mt;
+		mt.SetType(&GUID_MyMediaSample);
+		mt.SetSubtype(&GUID_ForegroundRegion_Data);
+		mt.SetSampleSize(sizeof(ForegroundRegion));
+		*pMediaType = mt;
 		return S_OK;
 	}
 	return VFW_S_NO_MORE_ITEMS;
@@ -496,4 +555,51 @@ int BGMappingFilter::getWhiteValue(){
 HRESULT BGMappingFilter::setWhiteValue(int wValue){
 	BG->WhiteValue = wValue;
 	return S_OK;
+}
+
+HRESULT BGMappingFilter::SendForegroundRect(){
+	if (m_pOutputPins.size() <= 1 || !m_pOutputPins[1]->IsConnected())
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = S_OK;
+	vector<CvRect>* fgList = BG->GetForegroundRect();
+	IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
+	CMediaSample* pSendSample = NULL;
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) m_pInputPins[0]->CurrentMediaType().pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+
+	ForegroundRegion sendData;
+	if ( fgList->size() <= 0)
+	{
+		sendData.foregroundRects = NULL;
+		sendData.numForeground = 0;	
+	}
+	else
+	{
+		sendData.numForeground = fgList->size();
+		sendData.foregroundRects = new fRECT[fgList->size()];
+		memset((void*)sendData.foregroundRects, 0, fgList->size()*sizeof(fRECT));
+		for (int i =0; i< fgList->size(); i++)
+		{
+			sendData.foregroundRects[i].left = (float)fgList->at(i).x / (float)bitHeader.biWidth;
+			sendData.foregroundRects[i].top = (float)fgList->at(i).y / (float)bitHeader.biHeight;
+			sendData.foregroundRects[i].right = (fgList->at(i).x + fgList->at(i).width) /(float)bitHeader.biWidth;
+			sendData.foregroundRects[i].bottom = (fgList->at(i).y + fgList->at(i).height) /(float)bitHeader.biHeight;
+		}
+	}
+	hr = pSendSample->SetPointer((BYTE*)&sendData, sizeof(ForegroundRegion));
+	hr = m_pOutputPins[1]->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+	return S_OK;
+
 }

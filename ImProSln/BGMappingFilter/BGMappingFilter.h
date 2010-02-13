@@ -57,6 +57,8 @@ public:
 	virtual int getBlackValue();
 	virtual HRESULT setWhiteValue(int wValue) ;
 	virtual int getWhiteValue();
+	HRESULT SendForegroundRect();
+
 
 private:
 

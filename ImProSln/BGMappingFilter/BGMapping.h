@@ -4,9 +4,7 @@
 #include "highgui.h"
 #include <cvaux.h>
 #include "stdafx.h"
-//#include <vector>
-//#include <string>
-//#include <iostream>
+
 
 using namespace std;
 
@@ -19,12 +17,19 @@ public:
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
 	void setBackground(IplImage* BGImg);  
-	void setThreshold(int threshold);
+	/*void setThreshold(int threshold);
 	int getThreshold();
 	void setBlackValue(int bValue);
 	int getBlackValue();
 	void setWhiteValue(int wValue);
-	int getWhiteValue();
+	int getWhiteValue();*/
+
+public:
+	std::vector<CvRect> foregroundLists;
+	std::vector<CvRect>* GetForegroundRect()
+	{	return &foregroundLists;};
+	void findForegroundRect(IplImage* FGImage);
+
 
 public:
 	CvMat srcPoint;
