@@ -5,8 +5,6 @@
 #include "afxwin.h"
 #include "cv.h"
 // CHomoWarpMFCPropertyPage dialog
-DEFINE_GUID(CLSID_HomoWarpFilterPropertyPage, 
-			0xf3dbd46e, 0x12c6, 0x4652, 0x9a, 0x2e, 0x6, 0x3a, 0xc6, 0x23, 0xe8, 0x46);
 
 class CHomoWarpMFCPropertyPage : public CMFCBasePropertyPage
 {

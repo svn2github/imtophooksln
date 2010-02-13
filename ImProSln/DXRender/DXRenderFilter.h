@@ -5,9 +5,6 @@
 #include <initguid.h>
 #include "combase.h"
 #include "D3DTransformFilterBase.h"
-// {9CE5FC93-4F69-4498-94B7-9CF1D0C8CA15}
-DEFINE_GUID(CLSID_DXRenderFilter, 
-			0x9ce5fc93, 0x4f69, 0x4498, 0x94, 0xb7, 0x9c, 0xf1, 0xd0, 0xc8, 0xca, 0x15);
 
 
 class DXRenderFilter :

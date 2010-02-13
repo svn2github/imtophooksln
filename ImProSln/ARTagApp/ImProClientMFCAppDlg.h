@@ -6,6 +6,7 @@
 
 #include "afxwin.h"
 #include "ARTagCameraDS.h"
+#include "TestCamera.h"
 // CImProClientMFCAppDlg dialog
 class CImProClientMFCAppDlg : public CDialog
 {
@@ -41,7 +42,7 @@ public:
 	CButton m_btnStopCapture;
 	CStatic m_picCapturePreview;
 	CButton m_btnStartTrack;
-	ARTagCameraDS* m_pDSCam;
+	TestCamera* m_pDSCam;
 	afx_msg void OnBnClickedSavegraph();
 	CButton m_btnPlay;
 	CButton m_btnPause;

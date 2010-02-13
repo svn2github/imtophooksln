@@ -343,7 +343,9 @@ int CHomoWarpMFCPropertyPage::GetTitileResourceID()
 
 void CHomoWarpMFCPropertyPage::OnBnClickedChkFlipy()
 {
-	SetDirty();
+	if (m_pFilter == NULL)
+		return ;
+	m_pFilter->SetIsFlipY(m_ckFlipY.GetCheck());
 }
 
 void CHomoWarpMFCPropertyPage::OnEnKillfocusedlt()
@@ -487,7 +489,10 @@ void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flag
 {
 	CHomoWarpMFCPropertyPage* pInst = (CHomoWarpMFCPropertyPage*)param;
 	HWND Hwnd = (HWND)cvGetWindowHandle("HomoWarp Edit");
-
+	if (pInst == NULL || pInst->m_pEditImage == NULL)
+	{
+		return;
+	}
 	int w = pInst->m_pEditImage->width;
 	int h = pInst->m_pEditImage->height;
 	if (eventID == CV_EVENT_RBUTTONUP)

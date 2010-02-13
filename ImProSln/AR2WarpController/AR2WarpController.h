@@ -70,8 +70,8 @@ protected:
 	// function for projector coordinate to virtual world	
 	ProjectorTrans2World* projCoord ;
 	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
-	virtual int tableHeight;
-	virtual int tableWidth;
+	int tableHeight;
+	int tableWidth;
 
 	IPin* GetARResultPin(int idx);
 	IPin* GetWarpConfigPin(int idx);

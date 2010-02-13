@@ -1,36 +1,35 @@
 #pragma once
-
-// {D99B1E26-91D6-4c4e-B66F-71AAD8E601CC}
-
-#include "IDXRenderer.h"
+#include "IMaskFilter.h"
 #include "MFCBasePropertyPage.h"
+#include "streams.h"
 #include "resource.h"
 #include "afxwin.h"
 
 
-class DXRenderFilterProp : public CMFCBasePropertyPage
+
+class MaskFilterPropPage : public CMFCBasePropertyPage
 {
-	DECLARE_DYNAMIC(DXRenderFilterProp)
+	DECLARE_DYNAMIC(MaskFilterPropPage)
 
 public:
-	DXRenderFilterProp(IUnknown *pUnk);  // standard constructor
-	virtual ~DXRenderFilterProp();
+	MaskFilterPropPage(IUnknown *pUnk);  // standard constructor
+	virtual ~MaskFilterPropPage();
 
 	// Dialog Data
 
 
 protected:
+	virtual BOOL OnInitDialog();
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
 
 	DECLARE_MESSAGE_MAP()
 
 protected:
-	IDXRenderer *m_pFilter;
-	bool GetSetting();
+	IMaskFilter *m_pFilter;
 
 public:
 	// Dialog Data
-	enum {IDD = IDD_DXRenderFilterProp};
+	enum {IDD = IDD_MaskFilterPropPage};
 	//override CBasePropertyPage Method
 	virtual HRESULT OnConnect(IUnknown *pUnk);
 	virtual HRESULT OnDisconnect(void);
@@ -38,15 +37,10 @@ public:
 	virtual HRESULT OnActivate(void);
 	virtual HRESULT OnApplyChanges(void);
 
-	//
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 public: //inherit from CMFCBaseProperty Page
-	virtual int GetDialogResourceID() { return IDD_DXRenderFilterProp;};
-	virtual int GetTitileResourceID() { return IDS_DXRenderFilterProp_Title;};
-	afx_msg void OnBnClickedCkhideborder();
-	CButton m_ckHideBorder;
-	CButton m_ckFlipX;
-	CButton m_ckFlipY;
-	afx_msg void OnBnClickedCkFlipx();
-	afx_msg void OnBnClickedCkFlipy();
+	virtual int GetDialogResourceID() { return IDD_MaskFilterPropPage;}
+	virtual int GetTitileResourceID() { return IDS_MaskFilterPropPage_Title;}
+
+
 };

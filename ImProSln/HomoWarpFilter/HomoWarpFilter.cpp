@@ -263,7 +263,9 @@ HRESULT HomoWarpFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		if (*pmt->FormatType() != FORMAT_VideoInfo && 
+			*pmt->FormatType() != GUID_FORMATTYPE_D3DXTEXTURE9DESC) 
+		{
 			return E_INVALIDARG;
 		}
 
@@ -357,18 +359,14 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 	{
 		return S_FALSE;
 	}
-	CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
-	if (inputMT.Type() == NULL)
-	{
-		return S_FALSE;
-	}
+	
+
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		CMediaType mt = m_pOutputPins[0]->CurrentMediaType();
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputMT.GetSampleSize();
+		pProp->cbBuffer = mt.GetSampleSize();
 		if (pProp->cbAlign == 0)
 		{
 			pProp->cbAlign = 1;
@@ -388,8 +386,9 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 
 	else if (m_pOutputPins.size() >= 2 && m_pOutputPins[1] == pOutPin)
 	{
+		CMediaType mt = m_pOutputPins[1]->CurrentMediaType();
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
+		pProp->cbBuffer = mt.GetSampleSize();
 		if (pProp->cbAlign == 0)
 		{
 			pProp->cbAlign = 1;
@@ -624,7 +623,10 @@ bool HomoWarpFilter::SaveConfigToFile(WCHAR* path)
 							m_matTTS.m[1][0], m_matTTS.m[1][1], m_matTTS.m[1][2], m_matTTS.m[1][3],
 							m_matTTS.m[2][0], m_matTTS.m[2][1], m_matTTS.m[2][2], m_matTTS.m[2][3],
 							m_matTTS.m[3][0], m_matTTS.m[3][1], m_matTTS.m[3][2], m_matTTS.m[3][3]);
+	bool isFlipY = this->GetIsFlipY();
+	bool isInvWarp = this->GetIsInvWarp();
 	
+	fwprintf_s(filestream, L"%d %d \n", isFlipY, isInvWarp);
 	fclose(filestream);
 	return true;
 }
@@ -639,7 +641,8 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 			return false;
 		}
 		double mat[16] = {0};
-	
+		int isFlipY = 0;
+		int isInvWarp = 0;
 		
 		
 		fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
@@ -651,6 +654,7 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 								   &(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
 								   &(mat[12]), &(mat[13]), &(mat[14]), &(mat[15])
 								   );
+		fwscanf_s(filestream, L"%d %d \n", &isFlipY, &isInvWarp);
 		{
 			CAutoLock lck(&m_accessWarpMatCS);
 			for (int row=0; row < 4; row++)
@@ -661,6 +665,9 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 				}
 			}
 		}
+		m_bFlipY = isFlipY;
+		m_bInvTTS = isInvWarp;
+
 		fclose(filestream);
 		D3DXMatrixInverse(&m_InvmatTTS, NULL, &m_matTTS);
 	}

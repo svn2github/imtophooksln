@@ -5,6 +5,10 @@
 DEFINE_GUID(GUID_ARResult, 
 			0xd4989b9c, 0x752d, 0x4c2d, 0x8f, 0x7f, 0xd4, 0x40, 0x5, 0x70, 0xf4, 0x93);
 
+// {0FB35002-CD0B-46bd-ABE0-EDAA96F722EE}
+DEFINE_GUID(GUID_ARLayoutData, 
+			0xfb35002, 0xcd0b, 0x46bd, 0xab, 0xe0, 0xed, 0xaa, 0x96, 0xf7, 0x22, 0xee);
+
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 using namespace ARToolKitPlus;
 class ARTagResultData
@@ -23,4 +27,15 @@ public:
 	ARTagResultData(const ARMultiMarkerInfoT* pMarkerConfig, const int nDetected,
 		const ARMarkerInfo* pDetectedMarks, const double* matARView, const double* matARProj);
 	~ARTagResultData();
+};
+
+class ARLayoutConfigData
+{
+public:
+	ARMultiEachMarkerInfoT* m_ARMarkers;
+	int m_numMarker;
+	ARLayoutConfigData() : m_ARMarkers(NULL), m_numMarker(0)
+	{	}
+	~ARLayoutConfigData()
+	{	}
 };
