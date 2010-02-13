@@ -5,14 +5,22 @@
 MaskFilterDisplay::MaskFilterDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
 MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
+	m_pMaskTexture = NULL;
+	m_maskFlag = BlendMask;
 }
 MaskFilterDisplay::MaskFilterDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : 
 MS3DDisplay(pDevice, rtWidth, rtHeight)
 {
-
+	m_pMaskTexture = NULL;
+	m_maskFlag = BlendMask;
 }
 MaskFilterDisplay::~MaskFilterDisplay(void)
 {
+	if (m_pMaskTexture != NULL)
+	{
+		m_pMaskTexture->Release();
+		m_pMaskTexture = NULL;
+	}
 }
 
 BOOL MaskFilterDisplay::Render()
@@ -98,4 +106,40 @@ ID3DXEffect* MaskFilterDisplay::GetEffect()
 		}
 	}
 	return m_pEffect;
+}
+
+
+BOOL MaskFilterDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
+{
+	if (m_pDevice == NULL)
+	{
+		return FALSE;
+	}
+	if (m_pMaskTexture != NULL)
+	{
+		m_pMaskTexture->Release();
+		m_pMaskTexture = NULL;
+	}
+	HRESULT hr;
+	HWND desktop = GetDesktopWindow();
+	HDC dc = GetDC(desktop);
+	int screenW = GetDeviceCaps(dc, HORZRES);
+	int screenH = GetDeviceCaps(dc, VERTRES);
+	if (rtWidth == 0 || rtHeight == 0)
+	{
+		hr = D3DXCreateTexture(m_pDevice, screenW, screenH, 0, D3DUSAGE_RENDERTARGET ,
+			D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pMaskTexture);
+	}
+	else
+	{
+		hr = D3DXCreateTexture(m_pDevice, rtWidth, rtHeight, 0, D3DUSAGE_RENDERTARGET,
+			D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pMaskTexture);
+	}
+
+	if (FAILED(hr))
+	{
+		OutputDebugStringW(L"@@@@@ D3DXCreateTexture Failed in MaskFilterDisplay::CreateTexture()!! \n");
+		return FALSE;
+	}
+	return __super::CreateTexture(rtWidth, rtHeight);
 }
