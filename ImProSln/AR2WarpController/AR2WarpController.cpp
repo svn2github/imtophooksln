@@ -5,7 +5,8 @@
 #include <d3dx9math.h>
 #include "cv.h"
 #include "MyARTagMediaSample.h"
-
+#include "BoardCastOutputPin.h"
+vector<AR2WarpController*> AR2WarpController::m_pAllInst;
 
 AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("AR2WarpController"), 0, CLSID_AR2WarpController)
@@ -18,6 +19,10 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	}
 	m_pFGList = NULL;
 	m_pOSCSender = OSCSender::GetOSCSender();
+
+	m_pAllInst.push_back(this);
+
+
 	extern HMODULE GetModule();
 	WCHAR str[MAX_PATH] = {0};
 	HMODULE module = GetModule();
@@ -62,6 +67,11 @@ AR2WarpController::~AR2WarpController()
 	{
 		m_pOSCSender->Release();
 		m_pOSCSender = NULL;
+	}
+	vector<AR2WarpController*>::iterator iter = std::find(m_pAllInst.begin(),m_pAllInst.end(), this);
+	if (iter != m_pAllInst.end())
+	{
+		m_pAllInst.erase(iter);
 	}
 }
 
@@ -134,6 +144,11 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		hr = ReceiveTouchResult(pSample, pReceivePin);
 		SendARLayoutStartegyData();
+	}
+	else if (m_pInputPins.size() >= NUMCAM+2 && GetBoardCastInputPin() == pReceivePin)
+	{
+		hr = ReceiveTouchResult(pSample, pReceivePin);
+		SendARLayoutStartegyData(true);
 	}
 	return S_OK;
 }
@@ -401,6 +416,12 @@ HRESULT AR2WarpController::CreatePins()
 			L"touch result");      // Pin name
 		//  Can't fail
 
+		CMuxTransformInputPin* pInput4 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"boardcast Input");      // Pin name
+		//  Can't fail
+
 		CMuxTransformOutputPin* pOutput0 = new CMuxTransformOutputPin(NAME("Transform output pin"),
 			this,            // Owner filter
 			&hr,             // Result code
@@ -419,16 +440,24 @@ HRESULT AR2WarpController::CreatePins()
 			this,            // Owner filter
 			&hr,             // Result code
 			L"ARLayout config");   // Pin name
-		// Can't fail
+
+		CMuxTransformOutputPin* pOutput4 = new CBoardCastOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"boardcast out");   // Pin name
+
+
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
 		m_pInputPins.push_back(pInput2);
 		m_pInputPins.push_back(pInput3);
+		m_pInputPins.push_back(pInput4);
 
 		m_pOutputPins.push_back(pOutput0);
 		m_pOutputPins.push_back(pOutput1);
 		m_pOutputPins.push_back(pOutput2);
 		m_pOutputPins.push_back(pOutput3);
+		m_pOutputPins.push_back(pOutput4);
 
 	}
 	return S_OK;
@@ -453,6 +482,14 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 		return S_OK;
 	}
 	if (((CMuxTransformInputPin*)pPin) == m_pInputPins.at(NUMCAM) )
+	{
+		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
+	else if (((CMuxTransformInputPin*)pPin) == GetBoardCastInputPin())
 	{
 		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
 		{
@@ -489,6 +526,14 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 		}
 		return S_OK;
 	}
+	else if (pPin == GetBoardCastOutputPin())
+	{
+		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
 	return E_FAIL;
 }
 HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* pOutPin,
@@ -504,10 +549,12 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 			break;
 		}
 	}
-	if (bWarpConfigPin)
+	if (bWarpConfigPin || pOutPin == m_pOutputPins[NUMCAM] ||
+		pOutPin == GetBoardCastOutputPin())
 	{
+		CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = sizeof(ARTagResultData);
+		pProp->cbBuffer = mt.GetSampleSize();
 		if (pProp->cbAlign == 0)
 		{
 			pProp->cbAlign = 1;
@@ -521,25 +568,6 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 		if (pProp->cBuffers > Actual.cBuffers ||
 			pProp->cbBuffer > Actual.cbBuffer) {
 				return E_FAIL;
-		}
-	}
-	if (pOutPin == m_pOutputPins[NUMCAM])
-	{
-		pProp->cBuffers = 1;
-		pProp->cbBuffer = sizeof(ARTagResultData);
-		if (pProp->cbAlign == 0)
-		{
-			pProp->cbAlign = 1;
-		}
-		ALLOCATOR_PROPERTIES Actual;
-		hr = pAlloc->SetProperties(pProp,&Actual);
-		if (FAILED(hr)) {
-			return hr;
-		}
-		ASSERT( Actual.cBuffers == 1 );
-		if (pProp->cBuffers > Actual.cBuffers ||
-			pProp->cbBuffer > Actual.cbBuffer) {
-			return E_FAIL;
 		}
 	}
 	return S_OK;
@@ -579,7 +607,15 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 		*pMediaType = myMediaType;
 		return S_OK; // not implement yet.
 	}
-
+	else if(GetBoardCastOutputPin() == pOutPin)
+	{
+		CMediaType myMediaType;
+		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetSubtype(&GUID_ARLayoutStartegyData);
+		myMediaType.SetSampleSize(sizeof(ARLayoutStartegyData));
+		*pMediaType = myMediaType;
+		return S_OK; // not implement yet.
+	}
 	return VFW_S_NO_MORE_ITEMS;
 }
 HRESULT AR2WarpController::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
@@ -731,81 +767,172 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 	}
 	return true;
 }
-bool AR2WarpController::SendARLayoutStartegyData()
-{
-	IMemAllocator* pAllocator = m_pOutputPins[NUMCAM]->Allocator();
-	CMediaSample* pSendSample = NULL;
-
-	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
-	if (pSendSample == NULL)
+bool AR2WarpController::SendARLayoutStartegyData(bool bBoardCast)
+{	
+	if (!bBoardCast)
 	{
-		return S_FALSE;
-	}
-	ARLayoutStartegyData* pData = new ARLayoutStartegyData();
-	//////ForeGround Area///////////////
-	{
-		CAutoLock lck(&m_csFGList);
-		if (m_pFGList != NULL && m_pFGList->numForeground > 0)
+		IMemAllocator* pAllocator = NULL;
+		CMediaSample* pSendSample = NULL;
+		pAllocator = m_pOutputPins[NUMCAM]->Allocator();
+		if (pAllocator == NULL)
 		{
-			pData->numFingers = m_pFGList->numForeground;
-			pData->fingerRects = new fRECT[pData->numFingers];
-			memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
-			memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
-				sizeof(fRECT)*pData->numFingers);
+			return false;
+		}
+		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		if (pSendSample == NULL)
+		{
+			return S_FALSE;
+		}
+		ARLayoutStartegyData* pData = new ARLayoutStartegyData();
+		//////ForeGround Area///////////////
+		{
+			CAutoLock lck(&m_csFGList);
+			if (m_pFGList != NULL && m_pFGList->numForeground > 0)
+			{
+				pData->numFingers = m_pFGList->numForeground;
+				pData->fingerRects = new fRECT[pData->numFingers];
+				memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
+				memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
+					sizeof(fRECT)*pData->numFingers);
+			}
+		}
+		//////Camera looking Area///////////
+		for (int i =0; i < NUMCAM; i++)
+		{
+			if (m_matCam2VW[i] == NULL)
+				continue;
+			pData->numCamView++;
+		}
+		pData->camViews = new fRECT[NUMCAM];
+		memset((void*)pData->camViews, 0, sizeof(fRECT)*pData->numCamView);
+		
+		for (int i =0; i < NUMCAM; i++)
+		{
+			CAutoLock lck(&(m_csMatCam2VW[i]));
+			if (m_matCam2VW[i] == NULL)
+				continue;
+			D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
+
+			D3DXVec4Transform(&lt, &lt, m_matCam2VW[i]);
+			D3DXVec4Transform(&lb, &lb, m_matCam2VW[i]);
+			D3DXVec4Transform(&rb, &rb, m_matCam2VW[i]);
+			D3DXVec4Transform(&rt, &rt, m_matCam2VW[i]);
+
+			lt /= lt.z;
+			lb /= lb.z;
+			rb /= rb.z;
+			rt /= rt.z;
+
+			pData->camViews[i].left = min(min(min(lt.x, lb.x), rb.x), rt.x); 
+			pData->camViews[i].right = max(max(max(lt.x, lb.x), rb.x), rt.x);
+			pData->camViews[i].top = min(min(min(lt.y, lb.y), rb.y), rt.y); 
+			pData->camViews[i].bottom = max(max(max(lt.y, lb.y), rb.y), rt.y); 
+		}
+		
+		////////////////////////////
+		pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
+		WCHAR str[MAX_PATH];
+
+		m_pOutputPins[NUMCAM]->Deliver(pSendSample);
+		if (pSendSample != NULL)
+		{
+			pSendSample->Release();
+			pSendSample = NULL;
+		}
+
+		if (pData != NULL)
+		{
+			delete pData;
+			pData = NULL;
 		}
 	}
-	//////Camera looking Area///////////
-	for (int i =0; i < NUMCAM; i++)
+	else
 	{
-		if (m_matCam2VW[i] == NULL)
-			continue;
-		pData->numCamView++;
+		int nPins = 0;
+		CBoardCastOutputPin* ppPins[MAXNUMBOARDCAST] = {NULL};
+		GetOthersBoardCastOutputPin(ppPins, nPins, MAXNUMBOARDCAST);
+		for (int p =0; p<nPins; p++)
+		{
+			IMemAllocator* pAllocator = NULL;
+			CMediaSample* pSendSample = NULL;
+			pAllocator = ppPins[p]->Allocator();
+			if (pAllocator == NULL)
+			{
+				return false;
+			}
+			pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+			if (pSendSample == NULL)
+			{
+				return S_FALSE;
+			}
+			ARLayoutStartegyData* pData = new ARLayoutStartegyData();
+			//////ForeGround Area///////////////
+			{
+				CAutoLock lck(&m_csFGList);
+				if (m_pFGList != NULL && m_pFGList->numForeground > 0)
+				{
+					pData->numFingers = m_pFGList->numForeground;
+					pData->fingerRects = new fRECT[pData->numFingers];
+					memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
+					memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
+						sizeof(fRECT)*pData->numFingers);
+				}
+			}
+			//////Camera looking Area///////////
+			for (int i =0; i < NUMCAM; i++)
+			{
+				if (m_matCam2VW[i] == NULL)
+					continue;
+				pData->numCamView++;
+			}
+			pData->camViews = new fRECT[NUMCAM];
+			memset((void*)pData->camViews, 0, sizeof(fRECT)*pData->numCamView);
+
+			for (int i =0; i < NUMCAM; i++)
+			{
+				CAutoLock lck(&(m_csMatCam2VW[i]));
+				if (m_matCam2VW[i] == NULL)
+					continue;
+				D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
+
+				D3DXVec4Transform(&lt, &lt, m_matCam2VW[i]);
+				D3DXVec4Transform(&lb, &lb, m_matCam2VW[i]);
+				D3DXVec4Transform(&rb, &rb, m_matCam2VW[i]);
+				D3DXVec4Transform(&rt, &rt, m_matCam2VW[i]);
+
+				lt /= lt.z;
+				lb /= lb.z;
+				rb /= rb.z;
+				rt /= rt.z;
+
+				pData->camViews[i].left = min(min(min(lt.x, lb.x), rb.x), rt.x); 
+				pData->camViews[i].right = max(max(max(lt.x, lb.x), rb.x), rt.x);
+				pData->camViews[i].top = min(min(min(lt.y, lb.y), rb.y), rt.y); 
+				pData->camViews[i].bottom = max(max(max(lt.y, lb.y), rb.y), rt.y); 
+			}
+
+			////////////////////////////
+			pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
+			WCHAR str[MAX_PATH];
+		
+			ppPins[p]->Deliver(pSendSample);
+		
+			if (pSendSample != NULL)
+			{
+				pSendSample->Release();
+				pSendSample = NULL;
+			}
+
+			if (pData != NULL)
+			{
+				delete pData;
+				pData = NULL;
+			}
+		}
 	}
-	pData->camViews = new fRECT[NUMCAM];
-	memset((void*)pData->camViews, 0, sizeof(fRECT)*pData->numCamView);
-	
-	for (int i =0; i < NUMCAM; i++)
-	{
-		CAutoLock lck(&(m_csMatCam2VW[i]));
-		if (m_matCam2VW[i] == NULL)
-			continue;
-		D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
-
-		D3DXVec4Transform(&lt, &lt, m_matCam2VW[i]);
-		D3DXVec4Transform(&lb, &lb, m_matCam2VW[i]);
-		D3DXVec4Transform(&rb, &rb, m_matCam2VW[i]);
-		D3DXVec4Transform(&rt, &rt, m_matCam2VW[i]);
-
-		lt /= lt.z;
-		lb /= lb.z;
-		rb /= rb.z;
-		rt /= rt.z;
-
-		pData->camViews[i].left = min(min(min(lt.x, lb.x), rb.x), rt.x); 
-		pData->camViews[i].right = max(max(max(lt.x, lb.x), rb.x), rt.x);
-		pData->camViews[i].top = min(min(min(lt.y, lb.y), rb.y), rt.y); 
-		pData->camViews[i].bottom = max(max(max(lt.y, lb.y), rb.y), rt.y); 
-	}
-	
-	////////////////////////////
-	pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
-	WCHAR str[MAX_PATH];
-	
-	m_pOutputPins[NUMCAM]->Deliver(pSendSample);
-	if (pSendSample != NULL)
-	{
-		pSendSample->Release();
-		pSendSample = NULL;
-	}
-
-	if (pData != NULL)
-	{
-		delete pData;
-		pData = NULL;
-	}
-
 	return true;
 }
+
 bool AR2WarpController::SendBoundingBox2OSCSender()
 {
 	if (m_pOSCSender == NULL || m_pOSCSender->isConnected() == false)
@@ -868,4 +995,49 @@ bool AR2WarpController::GetIPAddress(string& outIpAddress)
 int AR2WarpController::GetPort()
 {
 	return m_pOSCSender->m_port;
+}
+
+CMuxTransformInputPin* AR2WarpController::GetBoardCastInputPin()
+{
+	if (m_pOutputPins.size() >= NUMCAM + 2)
+	{
+		return m_pInputPins[NUMCAM+1];
+	}
+	return NULL;
+}
+CBoardCastOutputPin* AR2WarpController::GetBoardCastOutputPin()
+{
+	if (m_pOutputPins.size() >= NUMCAM + 2)
+	{
+		return ((CBoardCastOutputPin*) m_pOutputPins[NUMCAM+1]);
+	}
+	return NULL;
+}
+
+bool AR2WarpController::GetOthersBoardCastInputPin(CMuxTransformInputPin** ppPin, int& nPin, int maxSize)
+{
+	nPin = 0;
+	for ( int i =0; i< m_pAllInst.size() && nPin < maxSize ;i++)
+	{
+		if (m_pAllInst[i] != this)
+		{
+			ppPin[nPin] = m_pAllInst[i]->GetBoardCastInputPin();
+			nPin++;
+		}
+	}
+	return true;
+}
+
+bool AR2WarpController::GetOthersBoardCastOutputPin(CBoardCastOutputPin** ppPin, int& nPin, int maxSize)
+{
+	nPin = 0;
+	for ( int i =0; i< m_pAllInst.size() && nPin < maxSize ;i++)
+	{
+		if (m_pAllInst[i] != this)
+		{
+			ppPin[nPin] = m_pAllInst[i]->GetBoardCastOutputPin();
+			nPin++;
+		}
+	}
+	return true;
 }

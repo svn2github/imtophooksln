@@ -8,9 +8,6 @@
 #include "ARTagLayout.h"
 #include "IARLayoutFilter.h"
 #include "CMuxTransformFilter.h"
-// {6B6AFF82-D374-40f5-9F77-C1652EB512CF}
-DEFINE_GUID(CLSID_ARLayoutFilter, 
-			0x6b6aff82, 0xd374, 0x40f5, 0x9f, 0x77, 0xc1, 0x65, 0x2e, 0xb5, 0x12, 0xcf);
 
 class ARLayoutFilter :
 	public CMuxTransformFilter, public IARLayoutFilter, ISpecifyPropertyPages

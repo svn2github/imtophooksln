@@ -5,9 +5,6 @@
 #include "streams.h"
 #include "resource.h"
 #include "afxwin.h"
-// {5CDCA877-D333-43f4-839F-C74ADDF9E188}
-DEFINE_GUID(CLSID_ARLayoutPropPage, 
-			0x5cdca877, 0xd333, 0x43f4, 0x83, 0x9f, 0xc7, 0x4a, 0xdd, 0xf9, 0xe1, 0x88);
 
 class ARLayoutDXPropPage : public CMFCBasePropertyPage
 {

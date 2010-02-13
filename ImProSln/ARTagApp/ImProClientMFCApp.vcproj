@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;;&quot;.\DXSDK 2005 June\Include&quot;;&quot;$(SolutionDir)\ARTagFilter&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;;&quot;.\DXSDK 2005 June\Include&quot;;&quot;$(SolutionDir)\ARTagFilter&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -216,10 +216,6 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<File
-				RelativePath=".\TestCamera.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -244,10 +240,6 @@
 			</File>
 			<File
 				RelativePath=".\targetver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TestCamera.h"
 				>
 			</File>
 		</Filter>
@@ -302,6 +294,14 @@
 			</File>
 			<File
 				RelativePath="..\MyLib\CameraDS.h"
+				>
+			</File>
+			<File
+				RelativePath=".\TestCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TestCamera.h"
 				>
 			</File>
 		</Filter>

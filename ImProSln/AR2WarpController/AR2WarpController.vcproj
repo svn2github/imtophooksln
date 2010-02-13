@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BoardCastOutputPin.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\common.cpp"
 				>
 			</File>
@@ -260,6 +264,10 @@
 			</File>
 			<File
 				RelativePath=".\AR2WarpControllerReg.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BoardCastOutputPin.h"
 				>
 			</File>
 			<File

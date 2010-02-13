@@ -351,12 +351,13 @@ protected:
 	virtual ID3DXEffect* GetEffect();
 	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
 	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
+	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 private:
 	HWND m_hDisplayWnd;
 	HANDLE m_hRenderThread;
 	BOOL InitDevice(IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0);
 	static BOOL _Run(void* _THIS);
-	BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
+
 
 public:
 	MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);

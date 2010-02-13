@@ -6,9 +6,6 @@
 #include "afxwin.h"
 // TouchLibPropPage dialog
 using namespace touchlib ;
-// {FBEAA4C2-1F38-4572-9F9E-54A9782EC777}
-DEFINE_GUID(CLSID_TouchLibPropPage, 
-			0xfbeaa4c2, 0x1f38, 0x4572, 0x9f, 0x9e, 0x54, 0xa9, 0x78, 0x2e, 0xc7, 0x77);
 
 class TouchLibPropPage : public CMFCBasePropertyPage, public ITouchListener
 {

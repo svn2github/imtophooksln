@@ -7,13 +7,13 @@
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "pointTrans.h"
 #include "..\OSCSender\OSCSender.h"
+#include <vector>
+#include "BoardCastOutputPin.h"
+using namespace std;
 using namespace ARToolKitPlus;
 
 #define NUMCAM 3
-// {F0272060-6BF7-4714-AB76-90FB089BB99A}
-DEFINE_GUID(CLSID_AR2WarpController, 
-			0xf0272060, 0x6bf7, 0x4714, 0xab, 0x76, 0x90, 0xfb, 0x8, 0x9b, 0xb9, 0x9a);
-
+#define MAXNUMBOARDCAST 20
 class AR2WarpController :
 	public CMuxTransformFilter, public IAR2WarpController, public ISpecifyPropertyPages
 {
@@ -28,6 +28,7 @@ public:
 	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveARResult(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveTouchResult(IMediaSample *pSample, const IPin* pReceivePin);
+
 	virtual HRESULT CreatePins();
 	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin);
 	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin);
@@ -48,6 +49,15 @@ public:
 	virtual bool GetIPAddress(string& outIpAddress);
 	virtual int GetPort();
 
+	///////////In order to make a circular connect/////////
+protected:
+	static vector<AR2WarpController*> m_pAllInst;
+public:
+	CMuxTransformInputPin* GetBoardCastInputPin();
+	CBoardCastOutputPin* GetBoardCastOutputPin();
+	bool GetOthersBoardCastInputPin(CMuxTransformInputPin** ppPin, int& nPin, int maxSize);
+	bool GetOthersBoardCastOutputPin(CBoardCastOutputPin** ppPin, int& nPin, int maxSize);
+/////////////////////////////////////////////////////////////
 
 protected:
 	double  m_RANSIC_Threshold;
@@ -64,7 +74,8 @@ protected:
 	virtual bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	virtual bool SendWarpConfig(int camIDx);
-	virtual bool SendARLayoutStartegyData();
+	virtual bool SendARLayoutStartegyData(bool bBoardCast = false);
+
 	virtual bool SendBoundingBox2OSCSender();
 
 	// function for projector coordinate to virtual world	

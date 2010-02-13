@@ -4,9 +4,6 @@
 #include "streams.h"
 #include "resource.h"
 #include "afxwin.h"
-// {A3A24F60-5604-46f2-B6CA-B23F24E5E052}
-DEFINE_GUID(CLSID_AR2WarpControllerPropertyPage, 
-			0xa3a24f60, 0x5604, 0x46f2, 0xb6, 0xca, 0xb2, 0x3f, 0x24, 0xe5, 0xe0, 0x52);
 
 
 class AR2WarpControllerPropertyPage : public CMFCBasePropertyPage

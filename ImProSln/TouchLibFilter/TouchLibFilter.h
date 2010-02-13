@@ -9,11 +9,6 @@
 #include "..\OSCSender\OSCSender.h"
 using namespace touchlib;
 
-// {F982AA58-0213-4235-B342-314D853D5CEE}
-DEFINE_GUID(CLSID_TouchLibFilter, 
-			0xf982aa58, 0x213, 0x4235, 0xb3, 0x42, 0x31, 0x4d, 0x85, 0x3d, 0x5c, 0xee);
-
-
 class TouchLibFilter :
 	public CMuxTransformFilter, public ITouchLibFilter,
 	public ISpecifyPropertyPages, public ITouchListener
