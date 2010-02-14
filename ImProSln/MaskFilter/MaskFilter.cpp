@@ -447,6 +447,64 @@ BOOL MaskFilter::GenerateMaskFromARLayoutFile(WCHAR* path)
 	CAutoLock lck(&m_csDisplayState);
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLayoutFile(path);
 }
+BOOL MaskFilter::GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix)
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromWarpMatrix(warpMat, numMatrix, 1.2);
+}
+BOOL MaskFilter::GenerateMaskFromWarpConfigFile(WCHAR* path)
+{
+	try
+	{
+		D3DXMATRIX matTTS;
+		FILE* filestream = NULL;
+		_wfopen_s(&filestream, path, L"r");
+		if (filestream == NULL)
+		{
+			return false;
+		}
+		double mat[16] = {0};
+		int isFlipY = 0;
+		int isInvWarp = 0;
+		fwscanf_s(filestream, L"%lf %lf %lf %lf \n \
+							   %lf %lf %lf %lf \n \
+							   %lf %lf %lf %lf \n \
+							   %lf %lf %lf %lf \n",
+							   &(mat[0]), &(mat[1]), &(mat[2]), &(mat[3]),
+							   &(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
+							   &(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
+							   &(mat[12]), &(mat[13]), &(mat[14]), &(mat[15])
+							   );
+		fwscanf_s(filestream, L"%d %d \n", &isFlipY, &isInvWarp);
+		
+			
+		for (int row=0; row < 4; row++)
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				matTTS.m[row][col] = mat[row*4 + col];
+			}
+		}
+		fclose(filestream);
+
+		GenerateMaskFromWarpMatrix(&matTTS, 1);
+	}
+	catch (exception e)
+	{
+		return false;
+	}
+	return TRUE;
+}
+BOOL MaskFilter::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale)
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromVertices(pts, numRects, fMaskScale);
+}
+
 
 BOOL MaskFilter::GetMaskFlipY()
 {

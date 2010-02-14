@@ -25,6 +25,9 @@ public:
 	virtual BOOL LoadMaskFromFile(WCHAR* path);
 	virtual BOOL GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig);
 	virtual BOOL GenerateMaskFromARLayoutFile(WCHAR* path);
+	virtual BOOL GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix);
+	virtual BOOL GenerateMaskFromWarpConfigFile(WCHAR* path);
+	virtual BOOL GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale);
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
 };

@@ -16,12 +16,15 @@ protected:
 	};
 	MaskFlag m_maskFlag;
 	LPDIRECT3DTEXTURE9 m_pMaskTexture;
+	LPDIRECT3DTEXTURE9 m_pMaskRectTexture;
 	bool m_bMaskFlipY;
 	MS3DPlane* m_pMarkerMesh;
+	MS3DPlane* m_pWarpMesh;
 	MSCamera* m_pMaskCamera;
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 	bool CreateMarkerMesh();
+	bool CreateWarpMesh();
 	BOOL GenerateARMarkinfo(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, ARMultiMarkerInfoT*& config);
 public:
 	MaskFilterDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
@@ -36,6 +39,9 @@ public:
 	virtual BOOL LoadMaskFromFile(WCHAR* path);
 	virtual BOOL GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMarkerConfig);
 	virtual BOOL GenerateMaskFromARLayoutFile(WCHAR* path);
+	virtual BOOL GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix, float fMaskScale = 1.2);
+	virtual BOOL GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale = 1.2);
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
+	
 };

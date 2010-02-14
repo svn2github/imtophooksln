@@ -22,6 +22,9 @@ void MaskFilterPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnBrowse2, m_btnARLayoutBrowse);
 	DDX_Control(pDX, IDC_btnLoadMask2, m_btnARLayoutLoad);
 	DDX_Control(pDX, IDC_ckMaskFlipY, m_ckMaskFlipY);
+	DDX_Control(pDX, IDC_EDIT3, m_edWarpPath);
+	DDX_Control(pDX, IDC_btnBrowse3, m_btnWarpBrowse);
+	DDX_Control(pDX, IDC_btnLoadMask3, m_btnWarpLoad);
 }
 BOOL MaskFilterPropPage::OnInitDialog()
 {
@@ -41,6 +44,9 @@ BEGIN_MESSAGE_MAP(MaskFilterPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnBrowse2, &MaskFilterPropPage::OnBnClickedbtnbrowse2)
 	ON_BN_CLICKED(IDC_btnLoadMask2, &MaskFilterPropPage::OnBnClickedbtnloadmask2)
 	ON_BN_CLICKED(IDC_ckMaskFlipY, &MaskFilterPropPage::OnBnClickedckmaskflipy)
+	ON_BN_CLICKED(IDC_btnBrowse3, &MaskFilterPropPage::OnBnClickedbtnbrowse3)
+	ON_BN_CLICKED(IDC_btnLoadMask3, &MaskFilterPropPage::OnBnClickedbtnloadmask3)
+	ON_BN_CLICKED(IDC_btnTest, &MaskFilterPropPage::OnBnClickedbtntest)
 END_MESSAGE_MAP()
 
 
@@ -103,6 +109,8 @@ HRESULT MaskFilterPropPage::OnActivate(void)
 	m_edPath.SetWindowText(path);
 	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromARLayoutPath",L"");
 	m_edARLayoutPath.SetWindowText(path);
+	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromWarpPath", L"");
+	m_edWarpPath.SetWindowText(path);
 	GetSetting();
 	return S_OK;
 }
@@ -265,4 +273,60 @@ void MaskFilterPropPage::OnBnClickedckmaskflipy()
 	if (m_pFilter == NULL)
 		return ;
 	m_pFilter->SetMaskFlipY(m_ckMaskFlipY.GetCheck());
+}
+
+void MaskFilterPropPage::OnBnClickedbtnbrowse3()
+{
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
+	OPENFILENAME openfn;
+	WCHAR cFname[256];
+	WCHAR szFilterOpn[]=TEXT("Warp Config \0*.txt\0All files (*.*)\0*.*\0\0");
+	DWORD nFilterIndex=1;
+	cFname[0]=0x00;
+	ZeroMemory(&openfn, sizeof(openfn));
+	openfn.hwndOwner=GetActiveWindow()->GetSafeHwnd();
+	openfn.lpstrFile=cFname;
+	openfn.nMaxFile=sizeof(cFname);
+	openfn.lStructSize=sizeof(openfn);
+	openfn.lpstrFilter=szFilterOpn; 
+	openfn.nFilterIndex=nFilterIndex;
+	//openfn.lpstrInitialDir=szCurDir;
+	openfn.Flags= OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
+	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
+	if (!hr)
+	{
+		return ;
+	}
+	m_edWarpPath.SetWindowText(openfn.lpstrFile);
+}
+
+void MaskFilterPropPage::OnBnClickedbtnloadmask3()
+{
+	CString path;
+	m_edWarpPath.GetWindowText(path);
+	bool ret = m_pFilter->GenerateMaskFromWarpConfigFile((WCHAR*)(LPCWSTR)path);
+	if (!ret)
+	{
+		MessageBox(L"LoadFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"LoadMaskFromWarpPath", path);
+}
+
+void MaskFilterPropPage::OnBnClickedbtntest()
+{
+	D3DXVECTOR2 pts[3][4];
+	pts[0][0] = D3DXVECTOR2(0.125, 0.125); pts[0][1] = D3DXVECTOR2(0.125, 0.25); 
+	pts[0][2] = D3DXVECTOR2(0.25, 0.25); pts[0][3] = D3DXVECTOR2(0.25, 0.125);
+
+	pts[1][0] = D3DXVECTOR2(0.625, 0.625); pts[1][1] = D3DXVECTOR2(0.625, 0.75); 
+	pts[1][2] = D3DXVECTOR2(0.75, 0.75); pts[1][3] = D3DXVECTOR2(0.75, 0.625);
+
+	pts[2][0] = D3DXVECTOR2(0.125, 0.625); pts[2][1] = D3DXVECTOR2(0.125, 0.75); 
+	pts[2][2] = D3DXVECTOR2(0.25, 0.75); pts[2][3] = D3DXVECTOR2(0.25, 0.625);
+
+
+	m_pFilter->GenerateMaskFromVertices(pts, 3, 2); 
 }

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "MaskFilterDisplay.h"
 
-
+extern HMODULE GetModule();
 MaskFilterDisplay::MaskFilterDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
 MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
@@ -9,7 +9,10 @@ MS3DDisplay(pD3D, rtWidth, rtHeight)
 	m_maskFlag = BlendMask;
 	m_pMarkerMesh = NULL;
 	m_bMaskFlipY = false;
+	m_pWarpMesh = NULL;
+	m_pMaskRectTexture = NULL;
 	CreateMarkerMesh();
+	CreateWarpMesh();
 	CreateTexture(0, 0);
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
@@ -23,7 +26,10 @@ MS3DDisplay(pDevice, rtWidth, rtHeight)
 	m_maskFlag = BlendMask;
 	m_pMarkerMesh = NULL;
 	m_bMaskFlipY = false;
+	m_pWarpMesh = NULL;
+	m_pMaskRectTexture = NULL;
 	CreateMarkerMesh();
+	CreateWarpMesh();
 	CreateTexture(0, 0);
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
@@ -42,10 +48,20 @@ MaskFilterDisplay::~MaskFilterDisplay(void)
 		delete m_pMarkerMesh;
 		m_pMarkerMesh = NULL;
 	}
+	if (m_pWarpMesh != NULL)
+	{
+		delete m_pWarpMesh;
+		m_pWarpMesh = NULL;
+	}
 	if (m_pMaskCamera != NULL)
 	{
 		delete m_pMaskCamera;
 		m_pMaskCamera = NULL;
+	}
+	if (m_pMaskRectTexture != NULL)
+	{
+		m_pMaskRectTexture->Release();
+		m_pMaskRectTexture = NULL;
 	}
 }
 
@@ -158,6 +174,21 @@ BOOL MaskFilterDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 		OutputDebugStringW(L"@@@@@ D3DXCreateTexture Failed in MaskFilterDisplay::CreateTexture()!! \n");
 		return FALSE;
 	}
+
+	WCHAR str[MAX_PATH] = {0};
+	HMODULE module = GetModule();
+	GetModuleFileName(module, str, MAX_PATH);
+	// Gets filename
+	WCHAR* pszFile = wcsrchr(str, '\\');
+	pszFile++;    // Moves on from \
+	// Get path
+	WCHAR szPath[MAX_PATH] = L"";
+	_tcsncat(szPath, str, pszFile - str);
+
+	swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\MaskRect.png", szPath);
+
+	hr = D3DXCreateTextureFromFile(m_pDevice, str, &m_pMaskRectTexture);
+
 	return __super::CreateTexture(rtWidth, rtHeight);
 }
 
@@ -299,7 +330,35 @@ bool MaskFilterDisplay::CreateMarkerMesh()
 	pVertices = NULL;
 	return true;
 }
+bool MaskFilterDisplay::CreateWarpMesh()
+{
+	m_pWarpMesh = new MS3DPlane(m_pDevice);
+	MSMeshBase::CUSTOMVERTEX* pVertices = new MSMeshBase::CUSTOMVERTEX[4];
 
+	pVertices[0].position = D3DXVECTOR3(0, 0, 0);
+	pVertices[1].position = D3DXVECTOR3(0, -1, 0);
+	pVertices[2].position = D3DXVECTOR3(1, -1, 0);
+	pVertices[3].position = D3DXVECTOR3(1, 0, 0);
+
+	pVertices[0].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[1].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[2].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[3].normal = D3DXVECTOR3(0, 0, -1);
+
+	pVertices[0].tu = 0;	pVertices[0].tv = 0;
+	pVertices[1].tu = 0;    pVertices[1].tv = 1;
+	pVertices[2].tu = 1;	pVertices[2].tv = 1;
+	pVertices[3].tu = 1;    pVertices[3].tv = 0;
+
+	for (int i=0; i < 4; i++)
+	{
+		m_pWarpMesh->SetVertex(i, pVertices[i]);
+	}
+
+	delete [] pVertices;
+	pVertices = NULL;
+	return true;
+}
 BOOL MaskFilterDisplay::GenerateMaskFromARLayoutFile(WCHAR* path)
 {
 	ARMultiEachMarkerInfoT* ARMarkers = NULL;
@@ -394,5 +453,210 @@ BOOL MaskFilterDisplay::GetMaskFlipY()
 BOOL MaskFilterDisplay::SetMaskFlipY(bool bFlipY)
 {
 	m_bMaskFlipY = bFlipY;
+	return TRUE;
+}
+
+BOOL MaskFilterDisplay::GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix, float fMaskScale)
+{
+	if (m_pDevice == NULL || m_pMaskRectTexture == NULL)
+	{
+		return FALSE;
+	}
+	if (warpMat == NULL)
+	{
+		return FALSE;
+	}
+	ID3DXEffect* pEffect = GetEffect();
+	if (pEffect == NULL)
+	{
+		return FALSE;
+	}
+	IDirect3DSurface9* pBackBuffer = NULL;
+	m_pDevice->GetRenderTarget(0,&pBackBuffer);
+	if ( pBackBuffer == NULL)
+	{
+		return FALSE;
+	}
+
+	IDirect3DSurface9* pMaskSurface = NULL;
+	m_pMaskTexture->GetSurfaceLevel(0, &pMaskSurface);
+	if (pMaskSurface == NULL)
+	{
+		pBackBuffer->Release();
+		pBackBuffer = NULL;
+		return FALSE;
+	}	
+
+	m_pDevice->SetRenderTarget(0, pMaskSurface);
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_ARGB(0, 255,255,255), 1.0f, 0);
+
+	HRESULT hr;
+	MSMeshBase::CUSTOMVERTEX* pVertices = new MSMeshBase::CUSTOMVERTEX[4];
+	pVertices[0].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[1].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[2].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[3].normal = D3DXVECTOR3(0, 0, -1);
+
+	pVertices[0].tu = 0;	pVertices[0].tv = 0;
+	pVertices[1].tu = 0;    pVertices[1].tv = 1;
+	pVertices[2].tu = 1;	pVertices[2].tv = 1;
+	pVertices[3].tu = 1;    pVertices[3].tv = 0;
+	
+	D3DXMATRIX matIdentity;
+	D3DXMatrixIdentity(&matIdentity);
+	UINT iPass, cPasses = 0;
+	m_pMaskCamera->CameraOn();
+	
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{	
+		for (int i =0; i< numMatrix; i++)
+		{
+			D3DXVECTOR4 v1(0.5 - 0.5*fMaskScale, 0.5 - 0.5*fMaskScale,1,1);
+			D3DXVECTOR4 v2(0.5 - 0.5*fMaskScale, 0.5 + 0.5*fMaskScale,1,1);
+			D3DXVECTOR4 v3(0.5 + 0.5*fMaskScale, 0.5 - 0.5*fMaskScale,1,1);
+			D3DXVECTOR4 v4(0.5 + 0.5*fMaskScale, 0.5 + 0.5*fMaskScale,1,1);
+			D3DXVec4Transform(&v1, &v1, &warpMat[i]);
+			D3DXVec4Transform(&v2, &v2, &warpMat[i]);
+			D3DXVec4Transform(&v3, &v3, &warpMat[i]);
+			D3DXVec4Transform(&v4, &v4, &warpMat[i]);
+			v1 /= v1.z; v2 /= v2.z; v3 /= v3.z; v4 /= v4.z;
+
+			pVertices[0].position = D3DXVECTOR3(v1.x, -v1.y, 0);
+			pVertices[1].position = D3DXVECTOR3(v2.x, -v2.y, 0);
+			pVertices[2].position = D3DXVECTOR3(v4.x, -v4.y, 0);
+			pVertices[3].position = D3DXVECTOR3(v3.x, -v3.y, 0);
+			for (int i=0; i < 4; i++)
+			{
+				m_pWarpMesh->SetVertex(i, pVertices[i]);
+			}
+			m_pWarpMesh->SetTransform(&matIdentity);
+			hr = pEffect->SetTexture("g_Texture", m_pMaskRectTexture);
+			hr = pEffect->SetTechnique("techniqueWarpMask");
+		
+			hr = pEffect->Begin(&cPasses, 0);
+			for (iPass = 0; iPass < cPasses; iPass++)
+			{
+				pEffect->BeginPass(iPass);	
+				m_pWarpMesh->Render();			
+				pEffect->EndPass();
+			}
+			hr = pEffect->End();
+		}
+		hr = m_pDevice->EndScene();
+		m_pDevice->Present(NULL,NULL,NULL,NULL);
+	}
+	m_pMaskCamera->CameraOff();
+	m_pDevice->SetRenderTarget(0, pBackBuffer);
+	pBackBuffer->Release();
+	pBackBuffer = NULL;
+	pMaskSurface->Release();
+	pMaskSurface = NULL;
+
+	delete [] pVertices;
+	pVertices = NULL;
+	
+	return TRUE;
+}
+
+BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale)
+{
+	if (m_pDevice == NULL || m_pMaskRectTexture == NULL)
+	{
+		return FALSE;
+	}
+	
+	ID3DXEffect* pEffect = GetEffect();
+	if (pEffect == NULL)
+	{
+		return FALSE;
+	}
+	IDirect3DSurface9* pBackBuffer = NULL;
+	m_pDevice->GetRenderTarget(0,&pBackBuffer);
+	if ( pBackBuffer == NULL)
+	{
+		return FALSE;
+	}
+
+	IDirect3DSurface9* pMaskSurface = NULL;
+	m_pMaskTexture->GetSurfaceLevel(0, &pMaskSurface);
+	if (pMaskSurface == NULL)
+	{
+		pBackBuffer->Release();
+		pBackBuffer = NULL;
+		return FALSE;
+	}	
+
+	m_pDevice->SetRenderTarget(0, pMaskSurface);
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_ARGB(0, 255,255,255), 1.0f, 0);
+
+	HRESULT hr;
+	MSMeshBase::CUSTOMVERTEX* pVertices = new MSMeshBase::CUSTOMVERTEX[4];
+	pVertices[0].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[1].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[2].normal = D3DXVECTOR3(0, 0, -1);
+	pVertices[3].normal = D3DXVECTOR3(0, 0, -1);
+
+	pVertices[0].tu = 0;	pVertices[0].tv = 0;
+	pVertices[1].tu = 0;    pVertices[1].tv = 1;
+	pVertices[2].tu = 1;	pVertices[2].tv = 1;
+	pVertices[3].tu = 1;    pVertices[3].tv = 0;
+
+	D3DXMATRIX matIdentity;
+	D3DXMatrixIdentity(&matIdentity);
+	UINT iPass, cPasses = 0;
+	m_pMaskCamera->CameraOn();
+	D3DXMATRIX matTran, matT, matS, matInvT;
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{	
+		for (int i =0; i< numRects; i++)
+		{
+			pVertices[0].position = D3DXVECTOR3(pts[i][0].x, -pts[i][0].y, 0);
+			pVertices[1].position = D3DXVECTOR3(pts[i][1].x, -pts[i][1].y, 0);
+			pVertices[2].position = D3DXVECTOR3(pts[i][2].x, -pts[i][2].y, 0);
+			pVertices[3].position = D3DXVECTOR3(pts[i][3].x, -pts[i][3].y, 0);
+			D3DXVECTOR3 tV = (pVertices[0].position + pVertices[1].position + 
+				pVertices[2].position + pVertices[3].position)/4;
+
+			D3DXMatrixTranslation(&matT, -tV.x, -tV.y, -tV.z);
+			D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, fMaskScale);
+			D3DXMatrixTranslation(&matInvT, tV.x, tV.y, tV.z);
+			matTran = matT*matS*matInvT;
+			D3DXVec3TransformCoord(&(pVertices[0].position), &(pVertices[0].position), &matTran);
+			D3DXVec3TransformCoord(&(pVertices[1].position), &(pVertices[1].position), &matTran);
+			D3DXVec3TransformCoord(&(pVertices[2].position), &(pVertices[2].position), &matTran);
+			D3DXVec3TransformCoord(&(pVertices[3].position), &(pVertices[3].position), &matTran);
+			
+			for (int i=0; i < 4; i++)
+			{
+				m_pWarpMesh->SetVertex(i, pVertices[i]);
+			}
+			m_pWarpMesh->SetTransform(&matIdentity);
+			hr = pEffect->SetTexture("g_Texture", m_pMaskRectTexture);
+			hr = pEffect->SetTechnique("techniqueWarpMask");
+
+			hr = pEffect->Begin(&cPasses, 0);
+			for (iPass = 0; iPass < cPasses; iPass++)
+			{
+				pEffect->BeginPass(iPass);	
+				m_pWarpMesh->Render();			
+				pEffect->EndPass();
+			}
+			hr = pEffect->End();
+		}
+		hr = m_pDevice->EndScene();
+		m_pDevice->Present(NULL,NULL,NULL,NULL);
+	}
+	m_pMaskCamera->CameraOff();
+	m_pDevice->SetRenderTarget(0, pBackBuffer);
+	pBackBuffer->Release();
+	pBackBuffer = NULL;
+	pMaskSurface->Release();
+	pMaskSurface = NULL;
+
+	delete [] pVertices;
+	pVertices = NULL;
+
 	return TRUE;
 }

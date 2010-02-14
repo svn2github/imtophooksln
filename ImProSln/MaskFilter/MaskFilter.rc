@@ -130,7 +130,7 @@ END
 // Dialog
 //
 
-IDD_MaskFilterPropPage DIALOGEX 0, 0, 235, 156
+IDD_MaskFilterPropPage DIALOGEX 0, 0, 235, 217
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
@@ -142,11 +142,17 @@ BEGIN
     EDITTEXT        IDC_EDIT1,27,62,156,13,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_btnBrowse,189,62,17,12
     PUSHBUTTON      "Load",IDC_btnLoadMask,157,77,50,14
-    GROUPBOX        "Load Mask From ARLayout",IDC_STATIC,15,91,191,37
+    GROUPBOX        "Load Mask From ARLayout",IDC_STATIC,15,91,191,38
     EDITTEXT        IDC_EDIT2,27,100,156,13,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_btnBrowse2,189,100,17,12
     PUSHBUTTON      "Load",IDC_btnLoadMask2,157,115,50,14
     CONTROL         "Mask FlipY",IDC_ckMaskFlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,30,34,49,10
+    GROUPBOX        "Load Mask From Warp Matrix",IDC_STATIC,15,130,191,41
+    EDITTEXT        IDC_EDIT3,27,143,156,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_btnBrowse3,189,143,17,12
+    PUSHBUTTON      "Load",IDC_btnLoadMask3,157,158,50,14
+    GROUPBOX        "Test Mask From Vertices",IDC_STATIC,15,172,191,38
+    PUSHBUTTON      "Test",IDC_btnTest,156,188,50,14
 END
 
 
@@ -166,7 +172,7 @@ BEGIN
         VERTGUIDE, 206
         VERTGUIDE, 219
         TOPMARGIN, 7
-        BOTTOMMARGIN, 149
+        BOTTOMMARGIN, 210
         HORZGUIDE, 29
         HORZGUIDE, 91
     END

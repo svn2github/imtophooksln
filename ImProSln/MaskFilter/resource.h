@@ -14,8 +14,12 @@
 #define IDC_EDIT2                       1007
 #define IDC_btnBrowse2                  1008
 #define IDC_btnLoadMask2                1009
-#define IDC_CHECK1                      1010
 #define IDC_ckMaskFlipY                 1010
+#define IDC_EDIT3                       1011
+#define IDC_btnBrowse3                  1012
+#define IDC_btnLoadMask3                1013
+#define IDC_BUTTON1                     1014
+#define IDC_btnTest                     1014
 
 // Next default values for new objects
 // 
@@ -23,7 +27,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           1000
 #endif
 #endif

@@ -41,7 +41,6 @@ sampler2D g_MaskSampler = sampler_state {
 }; 
 
 
-
 float4x4 WorldViewProj : WorldViewProjection;
 
 VSOUT mainVS(appdata appIn ) {
@@ -80,8 +79,13 @@ float4 ARMaskPS(VSOUT vin) : COLOR {
 	return float4(0,0,0,1);
 }
 
+float4 WarpMaskPS(VSOUT vin) : COLOR {
+	return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
+}
+
 technique technique0 {
 	pass p0 {
+		ZENABLE = false;
 		AlphaBlendEnable = false;
 		CullMode = None;
 		//VertexShader = compile vs_3_0 mainVS();
@@ -91,8 +95,19 @@ technique technique0 {
 
 technique techniqueARMask {
 	pass p0 {
+		ZENABLE = false;
 		AlphaBlendEnable = false;
 		CullMode = None;
 		PixelShader = compile ps_2_a ARMaskPS();
+	}
+}
+
+
+technique techniqueWarpMask {
+	pass p0 {
+		ZENABLE = false;
+		AlphaBlendEnable = false;
+		CullMode = None;
+		PixelShader = compile ps_2_a WarpMaskPS();
 	}
 }

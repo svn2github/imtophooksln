@@ -63,4 +63,10 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnloadmask2();
 	CButton m_ckMaskFlipY;
 	afx_msg void OnBnClickedckmaskflipy();
+	CEdit m_edWarpPath;
+	CButton m_btnWarpBrowse;
+	CButton m_btnWarpLoad;
+	afx_msg void OnBnClickedbtnbrowse3();
+	afx_msg void OnBnClickedbtnloadmask3();
+	afx_msg void OnBnClickedbtntest();
 };
