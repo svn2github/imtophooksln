@@ -134,14 +134,19 @@ IDD_MaskFilterPropPage DIALOGEX 0, 0, 235, 156
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    CONTROL         "Block All",IDC_raBlockAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,29,30,41,10
-    GROUPBOX        "Mask Flag",IDC_GP_MaskFlag,15,17,204,34,WS_GROUP
-    CONTROL         "Pass All",IDC_raPassAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,88,30,40,10
-    CONTROL         "Blend",IDC_raBlend,"Button",BS_AUTORADIOBUTTON | WS_GROUP,150,30,33,10
-    GROUPBOX        "Load Mask",IDC_STATIC,15,50,204,51
+    CONTROL         "Block All",IDC_raBlockAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,29,19,41,10
+    GROUPBOX        "Mask Flag",IDC_GP_MaskFlag,15,7,204,44,WS_GROUP
+    CONTROL         "Pass All",IDC_raPassAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,88,19,40,10
+    CONTROL         "Blend",IDC_raBlend,"Button",BS_AUTORADIOBUTTON | WS_GROUP,150,19,33,10
+    GROUPBOX        "Load Mask",IDC_STATIC,15,50,204,41
     EDITTEXT        IDC_EDIT1,27,62,156,13,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_btnBrowse,189,62,17,12
     PUSHBUTTON      "Load",IDC_btnLoadMask,157,77,50,14
+    GROUPBOX        "Load Mask From ARLayout",IDC_STATIC,15,91,191,37
+    EDITTEXT        IDC_EDIT2,27,100,156,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_btnBrowse2,189,100,17,12
+    PUSHBUTTON      "Load",IDC_btnLoadMask2,157,115,50,14
+    CONTROL         "Mask FlipY",IDC_ckMaskFlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,30,34,49,10
 END
 
 
@@ -162,7 +167,7 @@ BEGIN
         VERTGUIDE, 219
         TOPMARGIN, 7
         BOTTOMMARGIN, 149
-        HORZGUIDE, 40
+        HORZGUIDE, 29
         HORZGUIDE, 91
     END
 END

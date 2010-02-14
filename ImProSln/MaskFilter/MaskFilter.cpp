@@ -285,7 +285,10 @@ HRESULT MaskFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			return S_FALSE;
 		}
-		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &m_pOutputPins[0]->CurrentMediaType(), false);
+		{
+			CAutoLock lck(&m_csDisplayState);
+			DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &m_pOutputPins[0]->CurrentMediaType(), false);
+		}
 	}
 	return S_OK;
 }
@@ -428,4 +431,34 @@ BOOL MaskFilter::LoadMaskFromFile(WCHAR* path)
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->LoadMaskFromFile(path);
+}
+
+BOOL MaskFilter::GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig)
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLauout(pMarkerConfig);
+}
+BOOL MaskFilter::GenerateMaskFromARLayoutFile(WCHAR* path)
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLayoutFile(path);
+}
+
+BOOL MaskFilter::GetMaskFlipY()
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GetMaskFlipY();
+}
+BOOL MaskFilter::SetMaskFlipY(bool bFlipY)
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+    return ((MaskFilterDisplay*)m_pD3DDisplay)->SetMaskFlipY(bFlipY);
 }

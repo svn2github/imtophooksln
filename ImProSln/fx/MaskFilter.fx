@@ -1,4 +1,5 @@
 int maskFlag = 2;
+bool bMaskFlipY = 0;
 
 struct appdata {
     float3 Position	: POSITION;
@@ -32,8 +33,8 @@ sampler2D g_Sampler = sampler_state {
 }; 
 
 sampler2D g_MaskSampler = sampler_state {
-    MinFilter = Linear;
-    MagFilter = Linear;
+    MinFilter = Point;
+    MagFilter = Point;
     Texture = <g_MaskTexture>;
 	AddressU = Wrap;
     AddressV = Wrap;
@@ -61,12 +62,22 @@ float4 mainPS(VSOUT vin) : COLOR {
 	}
 	else
 	{
+		float2 maskUV = vin.UV.xy;
+		if (bMaskFlipY)
+		{
+			maskUV.y = 1 - maskUV.y; 
+		}
 		float4 texColor = tex2D(g_Sampler, vin.UV.xy);
-		float4 maskColor = tex2D(g_MaskSampler, vin.UV.xy);
+		float4 maskColor = tex2D(g_MaskSampler, maskUV);
 		float maskAlpha = maskColor.a;
 		return texColor*(1.0 - maskAlpha) + maskColor*maskAlpha;
 	}
 	return float4(0,0,0,0);
+}
+
+
+float4 ARMaskPS(VSOUT vin) : COLOR {
+	return float4(0,0,0,1);
 }
 
 technique technique0 {
@@ -75,5 +86,13 @@ technique technique0 {
 		CullMode = None;
 		//VertexShader = compile vs_3_0 mainVS();
 		PixelShader = compile ps_2_a  mainPS();
+	}
+}
+
+technique techniqueARMask {
+	pass p0 {
+		AlphaBlendEnable = false;
+		CullMode = None;
+		PixelShader = compile ps_2_a ARMaskPS();
 	}
 }

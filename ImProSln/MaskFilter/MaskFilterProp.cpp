@@ -18,6 +18,10 @@ void MaskFilterPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT1, m_edPath);
 	DDX_Control(pDX, IDC_btnBrowse, m_btnBrowse);
 	DDX_Control(pDX, IDC_btnLoadMask, m_btnLoad);
+	DDX_Control(pDX, IDC_EDIT2, m_edARLayoutPath);
+	DDX_Control(pDX, IDC_btnBrowse2, m_btnARLayoutBrowse);
+	DDX_Control(pDX, IDC_btnLoadMask2, m_btnARLayoutLoad);
+	DDX_Control(pDX, IDC_ckMaskFlipY, m_ckMaskFlipY);
 }
 BOOL MaskFilterPropPage::OnInitDialog()
 {
@@ -34,6 +38,9 @@ BEGIN_MESSAGE_MAP(MaskFilterPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_raBlend, &MaskFilterPropPage::OnBnClickedrablend)
 	ON_BN_CLICKED(IDC_btnBrowse, &MaskFilterPropPage::OnBnClickedbtnbrowse)
 	ON_BN_CLICKED(IDC_btnLoadMask, &MaskFilterPropPage::OnBnClickedbtnloadmask)
+	ON_BN_CLICKED(IDC_btnBrowse2, &MaskFilterPropPage::OnBnClickedbtnbrowse2)
+	ON_BN_CLICKED(IDC_btnLoadMask2, &MaskFilterPropPage::OnBnClickedbtnloadmask2)
+	ON_BN_CLICKED(IDC_ckMaskFlipY, &MaskFilterPropPage::OnBnClickedckmaskflipy)
 END_MESSAGE_MAP()
 
 
@@ -94,6 +101,8 @@ HRESULT MaskFilterPropPage::OnActivate(void)
 	CString path;
 	path = theApp.GetProfileString(L"MySetting",L"LoadMaskPath", L"");
 	m_edPath.SetWindowText(path);
+	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromARLayoutPath",L"");
+	m_edARLayoutPath.SetWindowText(path);
 	GetSetting();
 	return S_OK;
 }
@@ -210,4 +219,50 @@ bool MaskFilterPropPage::GetSetting()
 bool MaskFilterPropPage::ApplySetting()
 {
 	return true;
+}
+void MaskFilterPropPage::OnBnClickedbtnbrowse2()
+{
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
+	OPENFILENAME openfn;
+	WCHAR cFname[256];
+	WCHAR szFilterOpn[]=TEXT("ARLayout files \0*.txt\0All files (*.*)\0*.*\0\0");
+	DWORD nFilterIndex=1;
+	cFname[0]=0x00;
+	ZeroMemory(&openfn, sizeof(openfn));
+	openfn.hwndOwner=GetActiveWindow()->GetSafeHwnd();
+	openfn.lpstrFile=cFname;
+	openfn.nMaxFile=sizeof(cFname);
+	openfn.lStructSize=sizeof(openfn);
+	openfn.lpstrFilter=szFilterOpn; 
+	openfn.nFilterIndex=nFilterIndex;
+	//openfn.lpstrInitialDir=szCurDir;
+	openfn.Flags= OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
+	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
+	if (!hr)
+	{
+		return ;
+	}
+	m_edARLayoutPath.SetWindowText(openfn.lpstrFile);
+}
+
+void MaskFilterPropPage::OnBnClickedbtnloadmask2()
+{
+	CString path;
+	m_edARLayoutPath.GetWindowText(path);
+	bool ret = m_pFilter->GenerateMaskFromARLayoutFile((WCHAR*)(LPCWSTR)path);
+	if (!ret)
+	{
+		MessageBox(L"LoadFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"LoadMaskFromARLayoutPath",path);
+}
+
+void MaskFilterPropPage::OnBnClickedckmaskflipy()
+{
+	if (m_pFilter == NULL)
+		return ;
+	m_pFilter->SetMaskFlipY(m_ckMaskFlipY.GetCheck());
 }

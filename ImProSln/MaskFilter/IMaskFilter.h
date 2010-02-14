@@ -1,6 +1,8 @@
 #pragma once
 #include <d3dx9.h>
 #include "streams.h"
+#include "ARToolKitPlus/TrackerMultiMarker.h"
+using namespace ARToolKitPlus;
 // {60ED1F46-5744-409c-B8B9-3824D1D7B8FE}
 DEFINE_GUID(IID_IMaskFilter, 
 			0x60ed1f46, 0x5744, 0x409c, 0xb8, 0xb9, 0x38, 0x24, 0xd1, 0xd7, 0xb8, 0xfe);
@@ -21,4 +23,8 @@ public:
 	virtual BOOL SetMaskFlag(int flag);
 	virtual int GetMaskFlag();
 	virtual BOOL LoadMaskFromFile(WCHAR* path);
+	virtual BOOL GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig);
+	virtual BOOL GenerateMaskFromARLayoutFile(WCHAR* path);
+	virtual BOOL GetMaskFlipY();
+	virtual BOOL SetMaskFlipY(bool bFlipY);
 };

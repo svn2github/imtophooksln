@@ -36,6 +36,11 @@ public:
 	virtual BOOL SetMaskFlag(int flag);
 	virtual int GetMaskFlag();
 	virtual BOOL LoadMaskFromFile(WCHAR* path);
+	virtual BOOL GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig);
+	virtual BOOL GenerateMaskFromARLayoutFile(WCHAR* path);
+	virtual BOOL GetMaskFlipY();
+	virtual BOOL SetMaskFlipY(bool bFlipY);
+	//virtual BOOL GenerateMaskFromWarpMatrix(WCHAR* path);
 protected:
 	CCritSec m_csDisplayState;
 	
