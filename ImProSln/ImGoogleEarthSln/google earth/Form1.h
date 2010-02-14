@@ -48,12 +48,22 @@ D3DXVECTOR3 google_earth_point;
 D3DXMATRIX camera;
 
 CCritSec g_State;
+/*
 double LeftTopLong = 121.564422;
 double LeftTopLat = 25.033828;
 double LeftDownLong = 121.564423;
 double LeftDownLat = 25.033341;
 double RightDownLong = 121.565153;
 double RightDownLat = 25.033338;
+*/
+
+// Zoomout to 101
+double LeftTopLong = 121.55607268966645;
+double LeftTopLat = 25.041212573911324;
+double LeftDownLong = 121.55607268966645;
+double LeftDownLat = 25.025659005961995;
+double RightDownLong = 121.57323882736176;
+double RightDownLat = 25.025659005961995;
 
 double longitude = 0;
 double latitude = 0;
