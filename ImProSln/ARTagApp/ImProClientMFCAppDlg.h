@@ -42,7 +42,7 @@ public:
 	CButton m_btnStopCapture;
 	CStatic m_picCapturePreview;
 	CButton m_btnStartTrack;
-	TestCamera* m_pDSCam;
+	ARTagCameraDS* m_pDSCam;
 	afx_msg void OnBnClickedSavegraph();
 	CButton m_btnPlay;
 	CButton m_btnPause;

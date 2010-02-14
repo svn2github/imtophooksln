@@ -54,6 +54,25 @@ HRESULT ARTagCameraDS::ConnectGraph()
 		return hr;
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 	
+	
+	CComPtr<ISpecifyPropertyPages> pPages;
+
+	hr = m_pARTagFilter->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);
+	if (SUCCEEDED(hr))
+	{
+		CAUUID caGUID;
+		pPages->GetPages(&caGUID);
+		OleCreatePropertyFrame(NULL, 0, 0,
+			L"ARTag Prop", 1,
+			(IUnknown **)&(m_pARTagFilter.p),
+			caGUID.cElems,
+			caGUID.pElems,
+			0, 0, NULL);
+		CoTaskMemFree(caGUID.pElems);
+		
+		pPages = NULL;
+	}
+
 	return S_OK;
 }
 HRESULT ARTagCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)

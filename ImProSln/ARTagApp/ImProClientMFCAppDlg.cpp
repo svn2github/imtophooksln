@@ -118,14 +118,12 @@ void CImProClientMFCAppDlg::OnBnClickedBtncapturecam()
 	}
 	bool ret;
 	m_hWndCaptureWnd = m_picCapturePreview.GetSafeHwnd();
-	m_pDSCam = new TestCamera();
+	m_pDSCam = new ARTagCameraDS();
 	ret = m_pDSCam->OpenCamera(0, true);
 	ret = m_pDSCam->SetVideoWindow(m_hWndCaptureWnd);
-	//void* argv[1] = {(void*)this};
-	//m_pDSCam->SetARCallback(this->ARTagCallback, 1, argv);
+	void* argv[1] = {(void*)this};
+	m_pDSCam->SetARCallback(this->ARTagCallback, 1, argv);
 	
-
-
 	m_btnCaptureCam.EnableWindow(FALSE);
 	m_btnStopCapture.EnableWindow(TRUE);
 
