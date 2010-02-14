@@ -42,8 +42,9 @@ BOOL MaskFilterDisplay::Render()
 	UINT iPass, cPasses = 0;
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
-		
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
+		hr = pEffect->SetTexture("g_MaskTexture", m_pMaskTexture);
+		hr = pEffect->SetInt("maskFlag", m_maskFlag);
 		hr = pEffect->SetTechnique("technique0");
 		hr = pEffect->Begin(&cPasses, 0);
 		for (iPass = 0; iPass < cPasses; iPass++)
@@ -142,4 +143,36 @@ BOOL MaskFilterDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 		return FALSE;
 	}
 	return __super::CreateTexture(rtWidth, rtHeight);
+}
+
+BOOL MaskFilterDisplay::SetMaskFlag(int flag)
+{
+	if (flag < 0 || flag > MaskFlag::BlendMask)
+	{
+		return FALSE;
+	}
+	m_maskFlag = (MaskFlag)flag;
+	return TRUE;
+}
+
+int MaskFilterDisplay::GetMaskFlag()
+{
+	return m_maskFlag;
+}
+BOOL MaskFilterDisplay::LoadMaskFromFile(WCHAR* path)
+{
+	if (m_pDevice == NULL)
+		return FALSE;
+	if (m_pMaskTexture != NULL)
+	{
+		m_pMaskTexture->Release();
+		m_pMaskTexture = NULL;
+	}
+	HRESULT hr;
+	hr = D3DXCreateTextureFromFileEx(m_pDevice, path, D3DX_DEFAULT, D3DX_DEFAULT, 0,
+		D3DUSAGE_RENDERTARGET, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, 
+		D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, &m_pMaskTexture);
+	
+	return SUCCEEDED(hr);
+	
 }

@@ -403,3 +403,29 @@ MS3DDisplay* MaskFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth,
 	return new MaskFilterDisplay(pDevice, rtWidth, rtHeight);
 }
 
+BOOL MaskFilter::SetMaskFlag(int flag)
+{
+	CAutoLock lck(&m_csDisplayState);
+	if (m_pD3DDisplay == NULL)
+	{
+		return FALSE;
+	}
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->SetMaskFlag(flag);
+}
+int MaskFilter::GetMaskFlag()
+{
+	CAutoLock lck(&m_csDisplayState);
+	if (m_pD3DDisplay == NULL)
+	{
+		return -1;
+	}
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GetMaskFlag();
+}
+
+BOOL MaskFilter::LoadMaskFromFile(WCHAR* path)
+{
+	CAutoLock lck(&m_csDisplayState);
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->LoadMaskFromFile(path);
+}

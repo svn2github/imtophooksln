@@ -134,6 +134,14 @@ IDD_MaskFilterPropPage DIALOGEX 0, 0, 235, 156
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
+    CONTROL         "Block All",IDC_raBlockAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,29,30,41,10
+    GROUPBOX        "Mask Flag",IDC_GP_MaskFlag,15,17,204,34,WS_GROUP
+    CONTROL         "Pass All",IDC_raPassAll,"Button",BS_AUTORADIOBUTTON | WS_GROUP,88,30,40,10
+    CONTROL         "Blend",IDC_raBlend,"Button",BS_AUTORADIOBUTTON | WS_GROUP,150,30,33,10
+    GROUPBOX        "Load Mask",IDC_STATIC,15,50,204,51
+    EDITTEXT        IDC_EDIT1,27,62,156,13,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_btnBrowse,189,62,17,12
+    PUSHBUTTON      "Load",IDC_btnLoadMask,157,77,50,14
 END
 
 
@@ -149,8 +157,13 @@ BEGIN
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
+        VERTGUIDE, 15
+        VERTGUIDE, 206
+        VERTGUIDE, 219
         TOPMARGIN, 7
         BOTTOMMARGIN, 149
+        HORZGUIDE, 40
+        HORZGUIDE, 91
     END
 END
 #endif    // APSTUDIO_INVOKED

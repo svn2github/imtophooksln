@@ -1,4 +1,4 @@
-int maskFlag = 1;
+int maskFlag = 2;
 
 struct appdata {
     float3 Position	: POSITION;

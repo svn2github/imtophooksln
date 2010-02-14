@@ -26,6 +26,8 @@ protected:
 
 protected:
 	IMaskFilter *m_pFilter;
+	bool GetSetting();
+	bool ApplySetting();
 
 public:
 	// Dialog Data
@@ -43,4 +45,15 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetTitileResourceID() { return IDS_MaskFilterPropPage_Title;}
 
 
+	afx_msg void OnBnClickedrablockall();
+	CButton m_raBlockAll;
+	CButton m_raPassAll;
+	CButton m_raBlend;
+	afx_msg void OnBnClickedrapassall();
+	afx_msg void OnBnClickedrablend();
+	CEdit m_edPath;
+	CButton m_btnBrowse;
+	CButton m_btnLoad;
+	afx_msg void OnBnClickedbtnbrowse();
+	afx_msg void OnBnClickedbtnloadmask();
 };

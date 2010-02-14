@@ -868,15 +868,15 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 			if(!getFstTag)
 				return;
 			 
-			/*
+			
 			 clatitude = tlatitude;
 			 clongitude = tlongitude;
 			 caltitude = taltitude;
 			 cheading = theading;
 			 ctilt = ttilt;
  			 croll = troll;
-			*/
-
+			
+			/*
 			 double alpha = 0.2;
 			 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 			 clongitude = clongitude*alpha + tlongitude*(1-alpha);
@@ -884,7 +884,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 			 cheading = cheading*alpha + theading*(1-alpha);
 			 ctilt = ctilt*alpha + ttilt*(1-alpha);
  			 croll = croll*alpha + troll*(1-alpha);
-
+			*/
 
 			/*
 			 // calculate current camera
@@ -938,6 +938,14 @@ bool animTimerTickFunc()
 		if(!getFstTag)
 			return false;
 
+		clatitude = tlatitude;
+		clongitude = tlongitude;
+		caltitude = taltitude;
+		cheading = theading;
+		ctilt = ttilt;
+		croll = troll;
+
+		/*
 		 double alpha = 0.2;
 		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
@@ -945,6 +953,7 @@ bool animTimerTickFunc()
 		 cheading = cheading*alpha + theading*(1-alpha);
 		 ctilt = ctilt*alpha + ttilt*(1-alpha);
 		 croll = croll*alpha + troll*(1-alpha);
+		*/
 
 		 array<Object^>^ parameter = gcnew array<Object^>(6); 
 		 parameter[0] = clatitude;

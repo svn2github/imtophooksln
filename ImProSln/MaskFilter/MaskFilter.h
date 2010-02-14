@@ -33,9 +33,11 @@ public:
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//implement IMaskFilterProperty
-
+	virtual BOOL SetMaskFlag(int flag);
+	virtual int GetMaskFlag();
+	virtual BOOL LoadMaskFromFile(WCHAR* path);
 protected:
-
+	CCritSec m_csDisplayState;
 	
 protected:
 

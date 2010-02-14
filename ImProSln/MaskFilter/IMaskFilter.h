@@ -18,5 +18,7 @@ MIDL_INTERFACE("60ED1F46-5744-409c-B8B9-3824D1D7B8FE")
 IMaskFilter: public IUnknown
 {
 public:
-
+	virtual BOOL SetMaskFlag(int flag);
+	virtual int GetMaskFlag();
+	virtual BOOL LoadMaskFromFile(WCHAR* path);
 };

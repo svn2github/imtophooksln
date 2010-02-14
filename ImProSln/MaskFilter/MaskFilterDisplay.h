@@ -7,13 +7,12 @@ class MaskFilterDisplay :
 protected:
 	enum MaskFlag 
 	{
-		BlockAll,
-		PassAll,
-		BlendMask
+		BlockAll = 0,
+		PassAll = 1,
+		BlendMask = 2
 	};
 	MaskFlag m_maskFlag;
 	LPDIRECT3DTEXTURE9 m_pMaskTexture;
-
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 public:
@@ -24,4 +23,7 @@ public:
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
+	virtual BOOL SetMaskFlag(int flag);
+	virtual int GetMaskFlag();
+	virtual BOOL LoadMaskFromFile(WCHAR* path);
 };
