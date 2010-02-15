@@ -330,6 +330,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	GetProjCorner(&cvPt,&dstPt);
 	{
 		CAutoLock lck(&m_csMatPro2VW[idx]);
+		CAutoLock lck2(&m_csProjCoord);
 		if (m_matPro2VW[idx] == NULL)
 		{
 			m_matPro2VW[idx] = new D3DXMATRIX();
@@ -375,6 +376,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 }
 
 HRESULT AR2WarpController ::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
+	CAutoLock lck(&m_csProjCoord);
 	projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
 	projCoord->getProjHomo();
 	return S_OK;
@@ -854,15 +856,17 @@ bool AR2WarpController::SendLowResMaskVertices()
 	}
 	sendData.m_points = new float[4*2*nWorkingCam];
 	sendData.m_nPoints = 4*nWorkingCam;
-
-	for (int i = 0; i < nWorkingCam; i++)
 	{
-		sendData.m_points[i*8 + 0] = projCoord->proj3DPoints[0][0];  sendData.m_points[i*8 + 1] = projCoord->proj3DPoints[0][1];
-		sendData.m_points[i*8 + 2] = projCoord->proj3DPoints[1][0];  sendData.m_points[i*8 + 3] = projCoord->proj3DPoints[1][1];
-		sendData.m_points[i*8 + 4] = projCoord->proj3DPoints[2][0];  sendData.m_points[i*8 + 5] = projCoord->proj3DPoints[2][1];
-		sendData.m_points[i*8 + 6] = projCoord->proj3DPoints[3][0];  sendData.m_points[i*8 + 7] = projCoord->proj3DPoints[3][1];
+		CAutoLock lck(&m_csProjCoord);
+		for (int i = 0; i < nWorkingCam; i++)
+		{
+			
+			sendData.m_points[i*8 + 0] = projCoord->proj3DPoints[0][0];  sendData.m_points[i*8 + 1] = projCoord->proj3DPoints[0][1];
+			sendData.m_points[i*8 + 2] = projCoord->proj3DPoints[1][0];  sendData.m_points[i*8 + 3] = projCoord->proj3DPoints[1][1];
+			sendData.m_points[i*8 + 4] = projCoord->proj3DPoints[2][0];  sendData.m_points[i*8 + 5] = projCoord->proj3DPoints[2][1];
+			sendData.m_points[i*8 + 6] = projCoord->proj3DPoints[3][0];  sendData.m_points[i*8 + 7] = projCoord->proj3DPoints[3][1];
+		}
 	}
-	
 	IMemAllocator* pAllocator = pOutPin->Allocator();
 	CMediaSample* pSendSample = NULL;
 

@@ -164,6 +164,7 @@ HRESULT MaskFilter::ReceiveInput2(IMediaSample *pSample, const IPin* pReceivePin
 			pt[i][j].y = pMaskVertexData->m_points[i*4*2 + j*2 + 1];
 		}
 	}
+	SetMaskFlag(pMaskVertexData->m_maskflag);
 	GenerateMaskFromVertices(pt, nCol);
 	for (int i =0; i < nCol; i++)
 	{

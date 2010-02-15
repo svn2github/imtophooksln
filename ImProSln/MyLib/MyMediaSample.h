@@ -144,7 +144,8 @@ class MaskVertexData
 public:
 	float* m_points;
 	int m_nPoints;
-	MaskVertexData() : m_points(NULL), m_nPoints(0)
+	int m_maskflag;
+	MaskVertexData() : m_points(NULL), m_nPoints(0), m_maskflag(2)
 	{
 		
 	}

@@ -80,7 +80,8 @@ protected:
 
 	virtual bool SendBoundingBox2OSCSender();
 
-	// function for projector coordinate to virtual world	
+	// function for projector coordinate to virtual world
+	CCritSec m_csProjCoord;
 	ProjectorTrans2World* projCoord ;
 	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
 	int tableHeight;
