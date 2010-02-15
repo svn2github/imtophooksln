@@ -298,7 +298,7 @@ void ProjectorTrans2World::getProjHomo(){
 	float xLength = maxX - minX;
 	float yLength = maxY - minY;
 	
-	cvSave("oricorner.txt",pro3DPointsMat);
+	//cvSave("oricorner.txt",pro3DPointsMat);
 
 	for(int i = 0 ;i< 4; i ++){
 		cvmSet(pro3DPointsMat,i,0,(float)(cvmGet(pro3DPointsMat,i,0)-minX)/xLength);

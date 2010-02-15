@@ -844,13 +844,25 @@ bool AR2WarpController::SendLowResMaskVertices()
 	{
 		return false;
 	}
-	sendData.m_points = new float[8];
-	sendData.m_nPoints = 4;
-	sendData.m_points[0] = 0.25;  sendData.m_points[1] = 0.25;
-	sendData.m_points[2] = 0.25;  sendData.m_points[3] = 0.75;
-	sendData.m_points[4] = 0.75;  sendData.m_points[5] = 0.75;
-	sendData.m_points[6] = 0.75;  sendData.m_points[7] = 0.25;
+	int nWorkingCam = 0;
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (m_matPro2VW[i] != NULL)
+		{
+			nWorkingCam++;
+		}
+	}
+	sendData.m_points = new float[4*2*nWorkingCam];
+	sendData.m_nPoints = 4*nWorkingCam;
 
+	for (int i = 0; i < nWorkingCam; i++)
+	{
+		sendData.m_points[i*8 + 0] = projCoord->proj3DPoints[0][0];  sendData.m_points[i*8 + 1] = projCoord->proj3DPoints[0][1];
+		sendData.m_points[i*8 + 2] = projCoord->proj3DPoints[1][0];  sendData.m_points[i*8 + 3] = projCoord->proj3DPoints[1][1];
+		sendData.m_points[i*8 + 4] = projCoord->proj3DPoints[2][0];  sendData.m_points[i*8 + 5] = projCoord->proj3DPoints[2][1];
+		sendData.m_points[i*8 + 6] = projCoord->proj3DPoints[3][0];  sendData.m_points[i*8 + 7] = projCoord->proj3DPoints[3][1];
+	}
+	
 	IMemAllocator* pAllocator = pOutPin->Allocator();
 	CMediaSample* pSendSample = NULL;
 
@@ -859,13 +871,17 @@ bool AR2WarpController::SendLowResMaskVertices()
 	{
 		return S_FALSE;
 	}
-	pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
+
+	pSendSample->SetPointer((BYTE*)&sendData, sizeof(MaskVertexData));
+
 	pOutPin->Deliver(pSendSample);
+
 	if (pSendSample != NULL)
 	{
 		pSendSample->Release();
 		pSendSample = NULL;
 	}
+	
 	return S_OK;
 }
 
