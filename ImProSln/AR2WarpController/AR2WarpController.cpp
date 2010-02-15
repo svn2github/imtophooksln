@@ -38,8 +38,9 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	int size= wcslen(szPath);
 	
 	wcstombs(fileDir, szPath, size+1);
-	tableWidth = 380;
-	tableHeight = 380;
+	// tableW and tableH is the real size of the table in mm 710 * 520
+	tableWidth = 710;
+	tableHeight = 520;
 	projCoord = NULL;
 	projCoord = new  ProjectorTrans2World(tableWidth,tableHeight,fileDir);
 	
@@ -582,9 +583,6 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 {
 	if (iPosition < 0) {
 		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) { // WATCH OUT !!
-		return VFW_S_NO_MORE_ITEMS;
 	}
 	bool bWarpConfigPin = false;
 	for ( int i =0; i< NUMCAM; i++)

@@ -258,6 +258,7 @@ int* ProjectorTrans2World::getTableSize(){
 
 void ProjectorTrans2World::getProjHomo(){
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
+	CvMat* projboundPoint  = cvCreateMat(4,2,CV_32F);
 	CvPoint3D32f projIn3D ;
 	
 	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;  // for finding bounding box
@@ -268,14 +269,14 @@ void ProjectorTrans2World::getProjHomo(){
 
 	    projIn3D = findPro3D(proj2DPoint);	
 
-		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
-		cvmSet(pro3DPointsMat,i,1,projIn3D.y);
-
 		projIn3D.x = projIn3D.x/tableWidth ;
 		projIn3D.y = projIn3D.y/tableHeight ;
 
 		proj3DPoints[i][0] = projIn3D.x;
 		proj3DPoints[i][1] = projIn3D.y;
+
+		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
+		cvmSet(pro3DPointsMat,i,1,projIn3D.y);
 
 		if(minX > projIn3D.x)
 			minX = projIn3D.x;
@@ -294,7 +295,41 @@ void ProjectorTrans2World::getProjHomo(){
 	projBox[1] = minY;
 	projBox[2] = maxX;
 	projBox[3] = maxY;
+	float xLength = maxX - minX;
+	float yLength = maxY - minY;
+	
+	cvSave("oricorner.txt",pro3DPointsMat);
 
-	cvFindHomography(pro3DPointsMat,&projCornerMat,proHomoMat);
+	for(int i = 0 ;i< 4; i ++){
+		cvmSet(pro3DPointsMat,i,0,(float)(cvmGet(pro3DPointsMat,i,0)-minX)/xLength);
+		cvmSet(pro3DPointsMat,i,1,(float)(cvmGet(pro3DPointsMat,i,1)-minY)/yLength);
+	}
+
+	/*cvmSet(projboundPoint,0,0,minX);
+	cvmSet(projboundPoint,0,1,minY);
+
+	cvmSet(projboundPoint,1,0,maxX);
+	cvmSet(projboundPoint,1,1,minY);
+
+	cvmSet(projboundPoint,2,0,maxX);
+	cvmSet(projboundPoint,2,1,maxY);
+
+	cvmSet(projboundPoint,3,0,minX);
+	cvmSet(projboundPoint,3,1,maxY);*/
+
+	cvmSet(projboundPoint,2,0,0);
+	cvmSet(projboundPoint,2,1,0);
+
+	cvmSet(projboundPoint,3,0,1);
+	cvmSet(projboundPoint,3,1,0);
+
+	cvmSet(projboundPoint,0,0,1);
+	cvmSet(projboundPoint,0,1,1);
+
+	cvmSet(projboundPoint,1,0,0);
+	cvmSet(projboundPoint,1,1,1);
+	cvFindHomography(pro3DPointsMat,projboundPoint,proHomoMat);
+	
 	cvReleaseMat(&proj2DPoint);
+	cvReleaseMat(&projboundPoint);
 }

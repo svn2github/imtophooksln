@@ -45,6 +45,9 @@ BackGroundMapping::~BackGroundMapping(){
 void BackGroundMapping::setBackground(IplImage *BGImg){
 
     int white ,black;
+	if(layoutFlip == true){
+		cvFlip(BGImg);
+	}
  
 	for(int i=0;i<mappingTable->height;i++)
 	{
@@ -59,9 +62,7 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 				cvSet2D(backgroundImg,i,j,cvScalar(white,white,white));
 		}
 	}
-	if(layoutFlip == true){
-		cvFlip(backgroundImg);
-	}
+	
 	IplImage *temp = cvCreateImage(cvGetSize(backgroundImg),8,1) ;
 
 	cvCopy(backgroundImg,temp);

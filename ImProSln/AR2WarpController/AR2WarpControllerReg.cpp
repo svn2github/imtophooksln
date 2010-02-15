@@ -5,7 +5,7 @@
 
 static WCHAR g_wszName[] = L"AR2Warp Controller";
 const AMOVIESETUP_PIN psudAR2WarpControllerPins[] =
-{ { L"AR Result"            // strName
+{ { L"AR Result0"            // strName
 , FALSE               // bRendered
 , FALSE               // bOutput
 , FALSE               // bZero
@@ -15,9 +15,70 @@ const AMOVIESETUP_PIN psudAR2WarpControllerPins[] =
 , 0                   // nTypes
 , NULL                // lpTypes
 },
-{ L"Warp Config"           // strName
+{ L"AR Result1"            // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"AR Result2"            // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"touch Result"            // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"Warp Config0"           // strName
 , FALSE               // bRendered
 , TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+
+{ L"Warp Config1"           // strName
+, FALSE               // bRendered
+, TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"Warp Config2"     // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"ARLayout Config"     // strName
+, FALSE               // bRendered
+, FALSE               // bOutput
 , FALSE               // bZero
 , FALSE               // bMany
 , &CLSID_NULL         // clsConnectsToFilter
@@ -28,7 +89,7 @@ const AMOVIESETUP_PIN psudAR2WarpControllerPins[] =
 };
 
 
-const REGFILTER2 sudHomoWarpFilter =
+const REGFILTER2 sudAR2WarpFilter =
 { 	1,                // Version number.
 MERIT_DO_NOT_USE, // Merit.
 2,                // Number of pins.
@@ -57,7 +118,7 @@ STDAPI DllRegisterServer(void)
 			NULL ,                            // Device moniker. 
 			&CLSID_LegacyAmFilterCategory,  // Video compressor category.
 			g_wszName,                       // Instance data.
-			&sudHomoWarpFilter                   // Filter information.
+			&sudAR2WarpFilter                   // Filter information.
 			);
 		pFM2->Release();
 	}
