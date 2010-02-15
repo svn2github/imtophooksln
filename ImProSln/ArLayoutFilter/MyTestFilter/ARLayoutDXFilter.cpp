@@ -4,6 +4,7 @@
 #include "MyMediaSample.h"
 #include "ARLayoutDXDisplay.h"
 #include "ARLayoutDXProp.h"
+#include "MyARTagMediaSample.h"
 #include "cv.h"
 #include <map>
 using namespace std;
@@ -94,13 +95,13 @@ HRESULT ARLayoutDXFilter::CreatePins()
 			this,               
 			L"Layout");      
 
-		CMuxTransformStream* pOutput1 = new CMuxTransformStream(NAME("CMuxTransform stream pin"),
-			&hr,              
-			this,               
+		CMuxTransformOutputPin* pOutput1 = new CSourceOutputPin(NAME("CMuxTransform stream pin"),
+			this,
+			&hr,                             
 			L"markinfo");     
 		m_pInputPins.push_back(pInput0);
 		m_pStreamPins.push_back(pOutput0);
-		m_pStreamPins.push_back(pOutput1);
+		m_pOutputPins.push_back(pOutput1);
 	}
 	return S_OK;
 }
@@ -121,6 +122,7 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 		return S_FALSE;
 	}
 	DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
+	sendConfigData();
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
@@ -187,6 +189,20 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 			return S_OK;
 		}
 	}
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
+	{
+		if (iPosition < 0  || iPosition > 0)
+		{	
+			return VFW_S_NO_MORE_ITEMS;
+		}
+		CMediaType mt;
+		mt.SetType(&GUID_MyMediaSample);
+		mt.SetSubtype(&GUID_ARLayoutConfigData);
+		mt.SetSampleSize(sizeof(ARLayoutConfigData));
+		*pMediaType = mt;
+		return S_OK;
+	}
+
 	return S_FALSE;
 }
 HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
@@ -201,6 +217,15 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 		}
 		else if (IsEqualGUID(*mtOut->Type(), MEDIATYPE_Video) && 
 			IsEqualGUID(*mtOut->Subtype(), MEDIASUBTYPE_RGB32))
+		{
+			return NOERROR;
+		}
+	}
+	else if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
+	{
+		CMediaType mt;
+		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+			IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutConfigData))
 		{
 			return NOERROR;
 		}
@@ -230,11 +255,13 @@ HRESULT ARLayoutDXFilter::DecideBufferSize(
 	if (m_pStreamPins.size() > 0 && pOutPin == m_pStreamPins[0])
 	{
 		CMediaType mt = ((CMuxTransformStream*)pOutPin)->CurrentMediaType();
-		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && 
-			(IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER)))
+		if ((IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && 
+			(IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))) ||
+			((IsEqualGUID(*mt.Type(), MEDIATYPE_Video) && 
+			(IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32)))))
 		{
 			pProp->cBuffers = 1;
-			pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
+			pProp->cbBuffer = mt.GetSampleSize();
 			if (pProp->cbAlign == 0)
 			{
 				pProp->cbAlign = 1;
@@ -251,13 +278,16 @@ HRESULT ARLayoutDXFilter::DecideBufferSize(
 			}
 			return S_OK;
 		}
-		else if (IsEqualGUID(*mt.Type(), MEDIATYPE_Video) && 
-			(IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32)))
+	}
+
+	if (m_pOutputPins.size() > 0 && pOutPin == m_pOutputPins[0])
+	{
+		CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
+		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && 
+			IsEqualGUID(*mt.Subtype(), GUID_ARLayoutConfigData))
 		{
-			D3DSURFACE_DESC desc;
-			m_pOutTexture->GetLevelDesc(0, &desc);
 			pProp->cBuffers = 1;
-			pProp->cbBuffer = desc.Width*desc.Height*4;
+			pProp->cbBuffer = mt.GetSampleSize();
 			if (pProp->cbAlign == 0)
 			{
 				pProp->cbAlign = 1;
@@ -277,7 +307,11 @@ HRESULT ARLayoutDXFilter::DecideBufferSize(
 	}
 	return E_FAIL;
 }
-
+HRESULT ARLayoutDXFilter::StartStreaming()
+{	
+	sendConfigData();
+	return __super::StartStreaming();
+}
 MS3DDisplay* ARLayoutDXFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
 	return new ARLayoutDXDisplay(pD3D, rtWidth, rtHeight);
@@ -691,4 +725,31 @@ ARMultiEachMarkerInfoT* ARLayoutDXFilter::GetARMarker(int id)
 		}
 	}
 	return ret;
+}
+
+bool ARLayoutDXFilter::sendConfigData()
+{
+	if (m_pOutputPins.size() < 0 || !m_pOutputPins[0]->IsConnected()) 
+	{
+		return false;
+	}
+	ARLayoutConfigData sendData;
+	sendData.m_ARMarkers = m_ARMarkers;
+	sendData.m_numMarker = m_numMarker;
+
+	IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
+	CMediaSample* pSendSample = NULL;
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	pSendSample->SetPointer((BYTE*)&sendData, sizeof(ARLayoutConfigData));
+	m_pOutputPins[0]->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+	return true;
 }

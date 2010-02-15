@@ -328,11 +328,21 @@ HRESULT CMuxTransformFilter::EndFlush(void)
 	// ensure no more data to go downstream -- we have no queued data
 
 	// call EndFlush on downstream pins
+	HRESULT errhr = S_OK; 
+	HRESULT hr = S_OK;
 	ASSERT (m_pOutputPins.size() != 0);
 	for (int i = 0 ; i < m_pOutputPins.size(); i++)
 	{
-		return m_pOutputPins[i]->DeliverEndFlush();
+		if (m_pOutputPins[i]->IsConnected())
+		{
+			hr = m_pOutputPins[i]->DeliverEndFlush();
+			if (FAILED(hr))
+			{
+				errhr = hr; 
+			}
+		}
 	}
+	return errhr;
 	// caller (the input pin's method) will unblock Receives
 }
 
@@ -888,7 +898,10 @@ CMuxTransformOutputPin::Notify(IBaseFilter * pSender, Quality q)
 	HRESULT errorHr = S_OK;
 	for (int i =0; i < m_pTransformFilter->m_pInputPins.size(); i++)
 	{
-		hr = m_pTransformFilter->m_pInputPins[i]->PassNotify(q);
+		if (m_pTransformFilter->m_pInputPins[i]->IsConnected())
+		{
+			hr = m_pTransformFilter->m_pInputPins[i]->PassNotify(q);
+		}
 		if (FAILED(hr))
 		{
 			errorHr = hr;
@@ -1262,3 +1275,73 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 	return S_FALSE;
 }
 
+CSourceOutputPin::CSourceOutputPin(
+	__in_opt LPCTSTR pObjectName,
+	__inout CMuxTransformFilter *pTransformFilter,
+	__inout HRESULT * phr,
+	__in_opt LPCWSTR pPinName)
+	: CMuxTransformOutputPin(pObjectName, pTransformFilter, phr, pPinName)
+{
+
+}
+
+#ifdef UNICODE
+CSourceOutputPin::CSourceOutputPin(
+	__in_opt LPCSTR pObjectName,
+	__inout CMuxTransformFilter *pTransformFilter,
+	__inout HRESULT * phr,
+	__in_opt LPCWSTR pPinName)
+	: CMuxTransformOutputPin(pObjectName, pTransformFilter, phr, pPinName)
+{
+}
+#endif
+
+// destructor
+
+CSourceOutputPin::~CSourceOutputPin()
+{
+
+}
+
+
+HRESULT
+CSourceOutputPin::CheckConnect(IPin *pPin)
+{
+	HRESULT hr = m_pTransformFilter->CheckConnect(PINDIR_OUTPUT,this, pPin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	return CBaseOutputPin::CheckConnect(pPin);
+}
+
+
+
+// check a given transform - must have selected input type first
+
+HRESULT
+CSourceOutputPin::CheckMediaType(const CMediaType* pmtOut)
+{
+	// must have selected input first
+	return m_pTransformFilter->CheckOutputType(pmtOut, this);
+}
+
+// return a specific media type indexed by iPosition
+
+HRESULT
+CSourceOutputPin::GetMediaType(
+								  int iPosition,
+								  __inout CMediaType *pMediaType)
+{	
+	return m_pTransformFilter->GetMediaType(iPosition,this, pMediaType);
+}
+
+HRESULT
+CSourceOutputPin::CompleteConnect(IPin *pReceivePin)
+{
+	HRESULT hr = m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	//for (int i=0; i< m_pOu
+	return DecideAllocator(m_pInputPin, &m_pAllocator);
+}

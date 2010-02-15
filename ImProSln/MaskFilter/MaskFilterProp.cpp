@@ -115,7 +115,9 @@ HRESULT MaskFilterPropPage::OnActivate(void)
 	m_edARLayoutPath.SetWindowText(path);
 	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromWarpPath", L"");
 	m_edWarpPath.SetWindowText(path);
-	m_edMaskScale.SetWindowText(L"1.0");
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"%.2f", m_fMaskScale);
+	m_edMaskScale.SetWindowText(str);
 
 	GetSetting();
 	return S_OK;

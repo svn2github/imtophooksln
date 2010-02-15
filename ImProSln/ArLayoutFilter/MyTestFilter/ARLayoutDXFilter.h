@@ -36,6 +36,7 @@ public:
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
+	virtual HRESULT StartStreaming();
 	//Derive from D3DTransformFilter
 
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
@@ -54,6 +55,7 @@ protected:
 		vector<fRECT>& allMarkerRects);
 	bool generateIntersectTable(ARMultiEachMarkerInfoT* ARMarkers, int numMarker,
 		vector<vector<int>>& table);
+	bool sendConfigData();
 public:
 	ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARLayoutDXFilter();

@@ -116,7 +116,22 @@ HRESULT MaskFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin
 
 HRESULT MaskFilter::ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin)
 {
+	if (pSample == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
 
+	ARLayoutConfigData* pARConfig = NULL;
+	pSample->GetPointer((BYTE**)&pARConfig);
+	if (pARConfig == NULL)
+		return S_FALSE;
+	ARMultiMarkerInfoT* config = NULL;
+	((MaskFilterDisplay*)m_pD3DDisplay)->GenerateARMarkinfo(pARConfig->m_ARMarkers, pARConfig->m_numMarker, config);
+	if (config == NULL)
+		return S_FALSE;
+	GenerateMaskFromARLayout(config);
+	delete config;
+	config = NULL;
 	return S_OK;
 }
 
@@ -230,7 +245,7 @@ HRESULT MaskFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		if (*pmt->FormatType() != FORMAT_VideoInfo && *pmt->FormatType() != GUID_FORMATTYPE_D3DXTEXTURE9DESC) {
 			return E_INVALIDARG;
 		}
 

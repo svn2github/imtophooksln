@@ -25,7 +25,7 @@ protected:
 	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
 	bool CreateMarkerMesh();
 	bool CreateWarpMesh();
-	BOOL GenerateARMarkinfo(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, ARMultiMarkerInfoT*& config);
+	
 public:
 	MaskFilterDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
 	MaskFilterDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight);
@@ -44,5 +44,6 @@ public:
 	virtual BOOL ClearMask();
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
-	
+
+	virtual BOOL GenerateARMarkinfo(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, ARMultiMarkerInfoT*& config);
 };
