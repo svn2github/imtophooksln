@@ -120,9 +120,7 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 	{
 		return S_FALSE;
 	}
-	OutputDebugStringW(L"@@@@@@@@ DecideLayout ------>\n");
 	DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
-	OutputDebugStringW(L"@@@@@@@@ DecideLayout <------\n");
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
@@ -354,6 +352,45 @@ bool ARLayoutDXFilter::initARMarkers()
 			}
 		}
 	}
+	generateAllMarkerRect(m_ARMarkers, m_numMarker, m_allMarkerRects);
+	generateIntersectTable(m_ARMarkers, m_numMarker, m_TagIntersectTable);
+	return true;
+}
+bool ARLayoutDXFilter::generateAllMarkerRect(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, 
+						   vector<fRECT>& allMarkerRects)
+{
+	allMarkerRects.clear();
+	for (int idx = 0; idx < numMarker; idx++)
+	{
+		fRECT markerRect;
+		GetARTag2DRect(&markerRect, &(ARMarkers[idx]));
+		allMarkerRects.push_back(markerRect);
+	}
+	return true;
+}
+bool ARLayoutDXFilter::generateIntersectTable(ARMultiEachMarkerInfoT* ARMarkers, int numMarker,
+							vector<vector<int>>& table)
+{
+	m_TagIntersectTable.clear();
+	for (int idx =0; idx < numMarker; idx++)
+	{
+		vector<int> intersectList;
+		ARMultiEachMarkerInfoT* curMarker = &(ARMarkers[idx]);
+		fRECT curRect;
+		GetARTag2DRect(&curRect, &(ARMarkers[idx]));
+		for (int intersectIdx = 0 ; intersectIdx < numMarker; intersectIdx++)
+		{
+			if (intersectIdx == idx)
+				continue;
+			fRECT intersectRECT;
+			GetARTag2DRect(&intersectRECT, &(ARMarkers[intersectIdx]));
+			if (curRect.IsIntersect(intersectRECT))
+			{
+				intersectList.push_back(intersectIdx);
+			}
+		}
+		m_TagIntersectTable.push_back(intersectList);
+	}
 	return true;
 }
 
@@ -416,6 +453,8 @@ bool ARLayoutDXFilter::LoadConfigFromFile(WCHAR* path)
 		initARMarkers(); //reinit Markers
 		return false;
 	}
+	generateAllMarkerRect(m_ARMarkers, m_numMarker, m_allMarkerRects);
+	generateIntersectTable(m_ARMarkers, m_numMarker, m_TagIntersectTable);
 	return true;
 }
 bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
@@ -451,14 +490,10 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	CAutoLock lck(&m_csARMarker);
 	map<int, bool> decisionMap; // idx, visible, have decided?
 	vector<int> undecideIdx;
-	vector<fRECT> allMarkerRects;
 	
 	for (int idx = 0; idx < m_numMarker; idx++)
 	{
 		undecideIdx.push_back(idx);
-		fRECT markerRect;
-		GetARTag2DRect(&markerRect, &(m_ARMarkers[idx]));
-		allMarkerRects.push_back(markerRect);
 	}
 	
 	if (numFingerRects > 0 && fingerRects != NULL)
@@ -469,7 +504,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 			{	
 				int idx = undecideIdx.at(iterIdx);		
-				markerRect = allMarkerRects[idx];
+				markerRect = m_allMarkerRects[idx];
 				if (markerRect.IsIntersect(fingerRects[i]))
 				{
 					decisionMap[idx] = false;
@@ -504,7 +539,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			{
 				int idx = undecideIdx.at(iterIdx);
 				fRECT myRECT;
-				myRECT = allMarkerRects[idx];
+				myRECT = m_allMarkerRects[idx];
 				float myArea = abs((myRECT.right - myRECT.left) * (myRECT.bottom - myRECT.top));
 				if ((myArea < idealArea) && myRECT.IsIntersect(camRects[i]))  // in camview && area < ideaArea && not decided yet
 				{
@@ -517,7 +552,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 							continue;
 
 						fRECT decidedRECT;
-						decidedRECT = allMarkerRects[iter->first];
+						decidedRECT = m_allMarkerRects[iter->first];
 						if ( decidedRECT.IsIntersect(myRECT))
 						{
 							bPlaceTaken = true;
@@ -545,20 +580,16 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	{
 		int idx = undecideIdx.at(iterIdx);
 		bool bPlaceTaken = false;
-		fRECT myRECT;
-		myRECT = allMarkerRects[idx];
-		for (map<int, bool>::iterator iter = decisionMap.begin(); 
-			iter != decisionMap.end(); iter++)
+		for (int i = 0; i < m_TagIntersectTable[idx].size(); i++)
 		{
-			if (iter->second == false)
-				continue;
-			fRECT decidedRECT;
-			decidedRECT = allMarkerRects[iter->first];
-			
-			if (decidedRECT.IsIntersect(myRECT))
+			int intersectIdx = m_TagIntersectTable[idx][i];
+			if (decisionMap.find(intersectIdx) != decisionMap.end())
 			{
-				bPlaceTaken = true;
-				break;
+				if (decisionMap[m_TagIntersectTable[idx][i]] == true)
+				{
+					bPlaceTaken = true;
+					break;
+				}
 			}
 		}
 		if (bPlaceTaken)
