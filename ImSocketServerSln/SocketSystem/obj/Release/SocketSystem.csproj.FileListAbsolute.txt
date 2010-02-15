@@ -3,3 +3,8 @@ D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\bin\Re
 D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Release\ResolveAssemblyReference.cache
 D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Release\SocketSystem.exe
 D:\Document\[MY] Program\Lab Projects\imPro\[C#]SocketSystem\SocketSystem\obj\Release\SocketSystem.pdb
+C:\ImSocketServerSln\SocketSystem\obj\Release\SocketSystem.exe
+C:\ImSocketServerSln\SocketSystem\obj\Release\SocketSystem.pdb
+C:\ImSocketServerSln\SocketSystem\bin\Release\SocketSystem.exe
+C:\ImSocketServerSln\SocketSystem\bin\Release\SocketSystem.pdb
+C:\ImSocketServerSln\SocketSystem\obj\Release\ResolveAssemblyReference.cache

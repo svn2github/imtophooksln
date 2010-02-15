@@ -9,7 +9,7 @@ namespace SocketSystem
     {
 
         //private String COMMUNICATION_SERVER_IP = "127.0.0.1";
-        private String PARAMETERS_FROM_FILE = ".\\ip_config.txt";
+        private String PARAMETERS_FROM_FILE = ".\\setting.txt";
         private String COMMUNICATION_SERVER_IP;// = "192.168.1.18";
         private short COMMUNICATION_SERVER_PORT;// = 5000;
         private CommuncationServer commServer;
