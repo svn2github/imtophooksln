@@ -288,7 +288,7 @@ namespace googleearth {
 			
 			// register to TcpServer.
 			sendData("11,"+id);
-			sendData("15,flashGE,"+id+",ll,requestUpdate");		 
+			sendData("15,flashGE,"+id+",geLogin");		 
 			
 		}
 
