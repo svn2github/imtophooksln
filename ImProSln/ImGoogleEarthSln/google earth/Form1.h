@@ -184,7 +184,9 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress = "192.168.1.26";
+		
+		private: static String^ id = "tabletGE_1";
+		private: static String^ ipAddress = "192.168.1.2";
 		private: static Int32 port = 5000;
 	private: System::Windows::Forms::Timer^  animTimer;
 
@@ -208,7 +210,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 
-			//setupSocket();
+			setupSocket();
 			
 		}
 
@@ -264,8 +266,9 @@ namespace googleearth {
             Receive();
 			
 			// register to TcpServer.
-			sendData("11,tabletGE_1");		 
-			 
+			sendData("11,"+id);
+			sendData("15,flashGE,"+id+",ll,requestUpdate");		 
+			
 		}
 
         //**********************************************
@@ -329,6 +332,7 @@ namespace googleearth {
 		private: System::Void sendData (String^ message) {
 			array<Byte>^data = System::Text::Encoding::ASCII->GetBytes( message );
 			GetNetworkStream->Write( data, 0, data->Length );
+			GetNetworkStream->Flush();
 		}
 
 
@@ -958,24 +962,24 @@ bool animTimerTickFunc()
 	{
 		if(!getFstTag)
 			return false;
-
+		/*
 		clatitude = tlatitude;
 		clongitude = tlongitude;
 		caltitude = taltitude;
 		cheading = theading;
 		ctilt = ttilt;
-		croll = troll;
-
-		/*
-		 double alpha = 0.2;
+ 		croll = troll;
+		 */
+		
+		 double alpha = 0.3
+			 ;
 		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
 		 caltitude = caltitude*alpha + taltitude*(1-alpha);
 		 cheading = cheading*alpha + theading*(1-alpha);
 		 ctilt = ctilt*alpha + ttilt*(1-alpha);
 		 croll = croll*alpha + troll*(1-alpha);
-		*/
-
+		
 		 array<Object^>^ parameter = gcnew array<Object^>(6); 
 		 parameter[0] = clatitude;
 		 parameter[1] = clongitude;
