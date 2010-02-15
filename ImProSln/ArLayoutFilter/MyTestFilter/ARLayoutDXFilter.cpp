@@ -133,8 +133,7 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 		m_pARStrategyData = new ARLayoutStartegyData();
 	}
 	*m_pARStrategyData = *sData;
-	//DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
-	//sendConfigData();
+
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)

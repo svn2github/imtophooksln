@@ -26,6 +26,10 @@ DEFINE_GUID(GUID_ARLayoutStartegyData,
 DEFINE_GUID(GUID_ForegroundRegion_Data, 
 			0xde2f3a15, 0xa44b, 0x4729, 0xb6, 0xcf, 0x90, 0x13, 0x1d, 0x4f, 0x14, 0xa2);
 
+// {4E716891-B2F5-4d4c-9A73-1F33971A88DE}
+DEFINE_GUID(GUID_MaskVertexData, 
+			0x4e716891, 0xb2f5, 0x4d4c, 0x9a, 0x73, 0x1f, 0x33, 0x97, 0x1a, 0x88, 0xde);
+
 class WarpConfigData
 {
 public:
@@ -133,4 +137,42 @@ public:
 			foregroundRects = NULL;
 		}
 	}
+};
+
+class MaskVertexData
+{
+public:
+	float* m_points;
+	int m_nPoints;
+	MaskVertexData() : m_points(NULL), m_nPoints(0)
+	{
+		
+	}
+	~MaskVertexData()
+	{
+		if (m_points != NULL)
+		{
+			delete [] m_points;
+			m_points = NULL;
+		}
+	}
+
+	MaskVertexData& operator = (const MaskVertexData &rhs)
+	{
+		if (m_points != NULL)
+		{
+			delete [] m_points;
+			m_points = NULL;
+			this->m_points = 0;
+		}
+		this->m_nPoints = rhs.m_nPoints;
+		
+		if (rhs.m_nPoints != 0)
+		{
+			this->m_points = new float[rhs.m_nPoints];
+			memcpy(this->m_points, rhs.m_points, sizeof(float)*rhs.m_nPoints);
+		}
+		return *this;
+	}
+
 };

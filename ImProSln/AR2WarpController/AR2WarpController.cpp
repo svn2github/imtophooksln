@@ -120,6 +120,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		return S_FALSE;
 	}
+	CMuxTransformInputPin* pRecPin = (CMuxTransformInputPin*) pReceivePin;
 	HRESULT hr;
 	if ((m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin) || 
 		(m_pInputPins.size() >= 2 && m_pInputPins[1] == pReceivePin) || 
@@ -128,23 +129,46 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 		hr = ReceiveARResult(pSample, pReceivePin);
 		if (SUCCEEDED(hr))
 		{
-			if ( m_pInputPins[0] == pReceivePin && m_pOutputPins[0]->IsConnected())
+			CMuxTransformOutputPin* pMaskPin = GetLowResMaskPin();
+			if ( m_pInputPins[0] == pRecPin)
 			{
-				SendWarpConfig(0);
+				if (m_pOutputPins[0]->IsConnected())
+				{
+					SendWarpConfig(0);
+				}
+				if (pMaskPin != NULL && pMaskPin->IsConnected())
+				{
+					SendLowResMaskVertices();
+				}
 			}
-			if ( m_pInputPins[1] == pReceivePin && m_pOutputPins[1]->IsConnected())
+			if ( m_pInputPins[1] == pRecPin && m_pOutputPins[1]->IsConnected())
 			{
-				SendWarpConfig(1);
+				if (m_pOutputPins[1]->IsConnected())
+				{
+					SendWarpConfig(1);
+				}
+				if (pMaskPin != NULL && pMaskPin->IsConnected())
+				{
+					SendLowResMaskVertices();
+				}
 			}
-			if ( m_pInputPins[2] == pReceivePin && m_pOutputPins[2]->IsConnected())
+			if ( m_pInputPins[2] == pRecPin && m_pOutputPins[2]->IsConnected())
 			{
-				SendWarpConfig(2);
+				if (m_pOutputPins[2]->IsConnected())
+				{
+					SendWarpConfig(2);
+				}
+				if (pMaskPin != NULL && pMaskPin->IsConnected())
+				{
+					SendLowResMaskVertices();
+				}
 			}
 			if (m_pOutputPins[NUMCAM]->IsConnected())
 			{
 				SendARLayoutStartegyData();
 			}
 			SendBoundingBox2OSCSender();
+			
 		}
 	}
 	else if (m_pInputPins.size() >= NUMCAM+1 && m_pInputPins[NUMCAM] == pReceivePin)
@@ -388,7 +412,7 @@ HRESULT AR2WarpController::ReceiveTouchResult(IMediaSample *pSample, const IPin*
 HRESULT AR2WarpController::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < (NUMCAM + 1) || m_pOutputPins.size() < 4) {
+	if (m_pInputPins.size() < (NUMCAM + 1) || m_pOutputPins.size() < 5) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -452,7 +476,10 @@ HRESULT AR2WarpController::CreatePins()
 			this,            // Owner filter
 			&hr,             // Result code
 			L"boardcast out");   // Pin name
-
+		CMuxTransformOutputPin* pOutput5 = new CMuxTransformOutputPin(NAME("Transform output pin"),
+			this,            // Owner filter
+			&hr,             // Result code
+			L"lowRes mask conf");   // Pin name
 
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
@@ -465,7 +492,7 @@ HRESULT AR2WarpController::CreatePins()
 		m_pOutputPins.push_back(pOutput2);
 		m_pOutputPins.push_back(pOutput3);
 		m_pOutputPins.push_back(pOutput4);
-
+		m_pOutputPins.push_back(pOutput5);
 	}
 	return S_OK;
 }
@@ -541,6 +568,14 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 		}
 		return S_OK;
 	}
+	else if (pPin == GetLowResMaskPin())
+	{
+		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_MaskVertexData))
+		{
+			return E_INVALIDARG;
+		}
+		return S_OK;
+	}
 	return E_FAIL;
 }
 HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* pOutPin,
@@ -558,6 +593,26 @@ HRESULT AR2WarpController::DecideBufferSize(IMemAllocator * pAlloc, const IPin* 
 	}
 	if (bWarpConfigPin || pOutPin == m_pOutputPins[NUMCAM] ||
 		pOutPin == GetBoardCastOutputPin())
+	{
+		CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = mt.GetSampleSize();
+		if (pProp->cbAlign == 0)
+		{
+			pProp->cbAlign = 1;
+		}
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+	}
+	if (pOutPin == GetLowResMaskPin())
 	{
 		CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
 		pProp->cBuffers = 1;
@@ -617,6 +672,15 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 		myMediaType.SetType(&GUID_MyMediaSample);
 		myMediaType.SetSubtype(&GUID_ARLayoutStartegyData);
 		myMediaType.SetSampleSize(sizeof(ARLayoutStartegyData));
+		*pMediaType = myMediaType;
+		return S_OK; // not implement yet.
+	}
+	else if (GetLowResMaskPin() == pOutPin)
+	{
+		CMediaType myMediaType;
+		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetSubtype(&GUID_MaskVertexData);
+		myMediaType.SetSampleSize(sizeof(MaskVertexData));
 		*pMediaType = myMediaType;
 		return S_OK; // not implement yet.
 	}
@@ -771,6 +835,40 @@ bool AR2WarpController::SendWarpConfig(int camIdx)
 	}
 	return true;
 }
+bool AR2WarpController::SendLowResMaskVertices()
+{
+	MaskVertexData sendData; 
+
+	CMuxTransformOutputPin* pOutPin = GetLowResMaskPin();
+	if (pOutPin == NULL || pOutPin->IsConnected() == false)
+	{
+		return false;
+	}
+	sendData.m_points = new float[8];
+	sendData.m_nPoints = 4;
+	sendData.m_points[0] = 0.25;  sendData.m_points[1] = 0.25;
+	sendData.m_points[2] = 0.25;  sendData.m_points[3] = 0.75;
+	sendData.m_points[4] = 0.75;  sendData.m_points[5] = 0.75;
+	sendData.m_points[6] = 0.75;  sendData.m_points[7] = 0.25;
+
+	IMemAllocator* pAllocator = pOutPin->Allocator();
+	CMediaSample* pSendSample = NULL;
+
+	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+	if (pSendSample == NULL)
+	{
+		return S_FALSE;
+	}
+	pSendSample->SetPointer((BYTE*)&sendData, sizeof(WarpConfigData));
+	pOutPin->Deliver(pSendSample);
+	if (pSendSample != NULL)
+	{
+		pSendSample->Release();
+		pSendSample = NULL;
+	}
+	return S_OK;
+}
+
 bool AR2WarpController::SendARLayoutStartegyData(bool bBoardCast)
 {	
 	if (!bBoardCast)
@@ -1017,7 +1115,14 @@ CBoardCastOutputPin* AR2WarpController::GetBoardCastOutputPin()
 	}
 	return NULL;
 }
-
+CMuxTransformOutputPin* AR2WarpController::GetLowResMaskPin()
+{
+	if (m_pOutputPins.size() >= NUMCAM + 3)
+	{
+		return ((CBoardCastOutputPin*) m_pOutputPins[NUMCAM+2]);
+	}
+	return NULL;
+}
 bool AR2WarpController::GetOthersBoardCastInputPin(CMuxTransformInputPin** ppPin, int& nPin, int maxSize)
 {
 	nPin = 0;

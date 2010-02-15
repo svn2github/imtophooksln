@@ -27,7 +27,7 @@ public:
 	virtual BOOL GenerateMaskFromARLayoutFile(WCHAR* path, float fMaskScale = 1.2);
 	virtual BOOL GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix);
 	virtual BOOL GenerateMaskFromWarpConfigFile(WCHAR* path);
-	virtual BOOL GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale = 1.2);
+	virtual BOOL GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRects, float fMaskScale = 1.2);
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
 	virtual BOOL ClearMask();

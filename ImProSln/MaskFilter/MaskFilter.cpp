@@ -135,6 +135,45 @@ HRESULT MaskFilter::ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin
 	return S_OK;
 }
 
+HRESULT MaskFilter::ReceiveInput2(IMediaSample *pSample, const IPin* pReceivePin)
+{
+	if (pSample == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+
+	MaskVertexData* pMaskVertexData = NULL;
+	pSample->GetPointer((BYTE**)&pMaskVertexData);
+	if (pMaskVertexData == NULL)
+		return S_FALSE;
+	if (pMaskVertexData->m_nPoints % 4 != 0)
+	{
+		return S_FALSE;
+	}
+	int nCol = pMaskVertexData->m_nPoints/4;
+	D3DXVECTOR2** pt = new D3DXVECTOR2*[nCol];
+	for (int i =0; i < nCol; i++)
+	{
+		pt[i] = new D3DXVECTOR2[4];
+	}
+	for (int i =0; i < nCol; i++)
+	{
+		for (int j = 0 ; j< 4; j++)
+		{
+			pt[i][j].x = pMaskVertexData->m_points[i*4*2 + j*2 + 0];
+			pt[i][j].y = pMaskVertexData->m_points[i*4*2 + j*2 + 1];
+		}
+	}
+	GenerateMaskFromVertices(pt, nCol);
+	for (int i =0; i < nCol; i++)
+	{
+		delete[] pt[i];
+		pt[i] = NULL;
+	}
+	delete pt;
+	pt = NULL;
+	return S_OK;
+}
 
 
 HRESULT MaskFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
@@ -148,14 +187,17 @@ HRESULT MaskFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	{
 		return ReceiveInput1(pSample, pReceivePin);
 	}
+	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
+	{
+		return ReceiveInput2(pSample, pReceivePin);
+	}
 	return S_OK;
-
-
 }
+
 HRESULT MaskFilter::CreatePins()
 {
 	HRESULT hr = S_OK;
-	if (m_pInputPins.size() < 2 || m_pOutputPins.size() < 1) {
+	if (m_pInputPins.size() < 3 || m_pOutputPins.size() < 1) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -191,11 +233,17 @@ HRESULT MaskFilter::CreatePins()
 			return NULL;
 		}
 
+		CMuxTransformInputPin* pInput2 = new CMuxTransformInputPin(NAME("CMuxTransform input pin"),
+			this,              // Owner filter
+			&hr,               // Result code
+			L"vtx conf");      // Pin name
+		
 		CMuxTransformOutputPin* pOutput = new CMuxTransformOutputPin(NAME("Transform output pin"),
-			this,            // Owner filter
-			&hr,             // Result code
+			this,         // Owner filter
+			&hr,          // Result code
 			L"output");   // Pin name
 		// Can't fail
+
 		ASSERT(SUCCEEDED(hr));
 		if (pOutput == NULL) {
 			delete pInput0;
@@ -205,11 +253,12 @@ HRESULT MaskFilter::CreatePins()
 			return NULL;
 			}
 
-		
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
+		m_pInputPins.push_back(pInput2);
 		m_pOutputPins.push_back(pOutput);
 	}
+
 	return S_OK;
 }
 
@@ -232,6 +281,14 @@ HRESULT MaskFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
 		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
+		{
+			return E_INVALIDARG;
+		}
+		return NOERROR;
+	}
+	else if (m_pInputPins.size() >= 3 && m_pInputPins[2] == pPin)
+	{
+		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_MaskVertexData))
 		{
 			return E_INVALIDARG;
 		}
@@ -277,17 +334,21 @@ HRESULT MaskFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin,
 			initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		}
 	}
+	if ((m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin) || 
+		(m_pInputPins.size() > 2 && m_pInputPins[2] == pMyPin))
+	{
+		m_pInputPins[1]->m_bVisible = (pMyPin == m_pInputPins[1]);
+		m_pInputPins[2]->m_bVisible = (pMyPin == m_pInputPins[2]);
+	}
 	return hr;
 }
 
 HRESULT MaskFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
-	if (dir == PINDIR_OUTPUT)
+	if (dir == PINDIR_INPUT && (pPin == m_pInputPins[1] || pPin == m_pInputPins[2]))
 	{
-		for (int i =0; i< m_pOutputPins.size(); i++)
-		{
-			m_pOutputPins[i]->m_bVisible = true;
-		}
+		m_pInputPins[1]->m_bVisible = true;
+		m_pInputPins[2]->m_bVisible = true;
 	}
 	return __super::BreakConnect(dir, pPin);
 }
@@ -512,7 +573,7 @@ BOOL MaskFilter::GenerateMaskFromWarpConfigFile(WCHAR* path)
 	}
 	return TRUE;
 }
-BOOL MaskFilter::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale)
+BOOL MaskFilter::GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRects, float fMaskScale)
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;

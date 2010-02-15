@@ -578,7 +578,7 @@ BOOL MaskFilterDisplay::GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int num
 	return TRUE;
 }
 
-BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale)
+BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRects, float fMaskScale)
 {
 	if (m_pDevice == NULL || m_pMaskRectTexture == NULL)
 	{

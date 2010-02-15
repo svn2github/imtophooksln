@@ -325,7 +325,11 @@ void MaskFilterPropPage::OnBnClickedbtnloadmask3()
 
 void MaskFilterPropPage::OnBnClickedbtntest()
 {
-	D3DXVECTOR2 pts[3][4];
+	D3DXVECTOR2** pts = new D3DXVECTOR2*[3];
+	for (int i =0; i < 3; i++)
+	{
+		pts[i] = new D3DXVECTOR2[4];
+	}
 	pts[0][0] = D3DXVECTOR2(0.125, 0.125); pts[0][1] = D3DXVECTOR2(0.125, 0.25); 
 	pts[0][2] = D3DXVECTOR2(0.25, 0.25); pts[0][3] = D3DXVECTOR2(0.25, 0.125);
 
@@ -334,9 +338,13 @@ void MaskFilterPropPage::OnBnClickedbtntest()
 
 	pts[2][0] = D3DXVECTOR2(0.125, 0.625); pts[2][1] = D3DXVECTOR2(0.125, 0.75); 
 	pts[2][2] = D3DXVECTOR2(0.25, 0.75); pts[2][3] = D3DXVECTOR2(0.25, 0.625);
-
-
 	m_pFilter->GenerateMaskFromVertices(pts, 3, m_fMaskScale); 
+
+	for (int i =0; i < 3; i++)
+	{
+		delete [] pts[i];
+	}
+	delete[] pts;
 }
 
 void MaskFilterPropPage::OnEnKillfocusEdit4()
