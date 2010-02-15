@@ -357,7 +357,46 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	if (m_ARTracker != NULL)
 	{
 		numDetected = m_ARTracker->calc(pOutData);
-		if (numDetected > 0)
+		if (numDetected <= 0)
+		{
+			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
+			{
+				
+				ARTagResultData* pARTagResult = new ARTagResultData(NULL, 0, NULL, 
+					NULL, NULL);
+				pARTagResult->m_screenW = bitHeader.biWidth;
+				pARTagResult->m_screenH = bitHeader.biHeight;
+				ARFloat basisScale[3] = {1, 1, 1};
+				{
+					CAutoLock lck(&m_csARTracker);
+					m_ARTracker->getBasisScale(basisScale);
+				}
+				pARTagResult->m_basisScale[0] =  basisScale[0];
+				pARTagResult->m_basisScale[1] =  basisScale[1];
+				pARTagResult->m_basisScale[2] =  basisScale[2];
+
+				IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
+				CMediaSample* pSample = NULL;
+
+				pAllocator->GetBuffer((IMediaSample**)&pSample, NULL, NULL, 0);
+				if (pSample != NULL)
+				{
+					pSample->SetPointer((BYTE*)pARTagResult, sizeof(ARTagResultData));
+					m_pOutputPins[1]->Deliver(pSample);
+				}
+				if (pSample != NULL)
+				{
+					pSample->Release();
+					pSample = NULL;
+				}
+				if (pARTagResult != NULL)
+				{
+					delete pARTagResult;
+					pARTagResult = NULL;
+				}
+			}
+		}
+		else 
 		{
 			CAutoLock lck(&m_csARTracker);
 			markinfos = new ARMarkerInfo[numDetected];

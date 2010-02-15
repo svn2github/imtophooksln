@@ -56,6 +56,7 @@ public:
 	CMuxTransformInputPin* GetBoardCastInputPin();
 	CBoardCastOutputPin* GetBoardCastOutputPin();
 	CMuxTransformOutputPin* GetLowResMaskPin();
+	CMuxTransformOutputPin* GetHighResMaskPin(int idx);
 	bool GetOthersBoardCastInputPin(CMuxTransformInputPin** ppPin, int& nPin, int maxSize);
 	bool GetOthersBoardCastOutputPin(CBoardCastOutputPin** ppPin, int& nPin, int maxSize);
 /////////////////////////////////////////////////////////////
@@ -76,6 +77,7 @@ protected:
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	virtual bool SendWarpConfig(int camIDx);
 	virtual bool SendLowResMaskVertices();
+	virtual bool SendHighResMaskVertices(int idx);
 	virtual bool SendARLayoutStartegyData(bool bBoardCast = false);
 
 	virtual bool SendBoundingBox2OSCSender();
