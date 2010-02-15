@@ -155,6 +155,7 @@ BEGIN
     PUSHBUTTON      "Test",IDC_btnTest,156,188,50,14
     EDITTEXT        IDC_EDIT4,129,32,38,12,ES_AUTOHSCROLL
     LTEXT           "Mask Scale:",IDC_STATIC,89,34,41,9
+    PUSHBUTTON      "Clear Mask",IDC_btnClearMAsk,35,188,50,14
 END
 
 
@@ -177,6 +178,7 @@ BEGIN
         BOTTOMMARGIN, 210
         HORZGUIDE, 29
         HORZGUIDE, 91
+        HORZGUIDE, 202
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -72,4 +72,5 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edMaskScale;
 	afx_msg void OnEnKillfocusEdit4();
 	float m_fMaskScale;
+	afx_msg void OnBnClickedbtnclearmask();
 };

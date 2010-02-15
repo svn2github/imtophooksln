@@ -216,7 +216,7 @@ HRESULT MaskFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 	}
 	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutData))
+		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
 		{
 			return E_INVALIDARG;
 		}
@@ -503,6 +503,13 @@ BOOL MaskFilter::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, fl
 		return FALSE;
 	CAutoLock lck(&m_csDisplayState);
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromVertices(pts, numRects, fMaskScale);
+}
+BOOL MaskFilter::ClearMask()
+{
+	if (m_pD3DDisplay == NULL)
+		return FALSE;
+	CAutoLock lck(&m_csDisplayState);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->ClearMask();
 }
 
 

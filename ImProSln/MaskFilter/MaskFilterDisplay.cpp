@@ -14,6 +14,7 @@ MS3DDisplay(pD3D, rtWidth, rtHeight)
 	CreateMarkerMesh();
 	CreateWarpMesh();
 	CreateTexture(0, 0);
+	ClearMask();
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
 	m_pMaskCamera->SetEyePos(D3DXVECTOR3(0.5, -0.5, -5));
@@ -31,6 +32,7 @@ MS3DDisplay(pDevice, rtWidth, rtHeight)
 	CreateMarkerMesh();
 	CreateWarpMesh();
 	CreateTexture(0, 0);
+	ClearMask();
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
 	m_pMaskCamera->SetEyePos(D3DXVECTOR3(0.5, -0.5, -5));
@@ -674,6 +676,38 @@ BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRe
 
 	delete [] pVertices;
 	pVertices = NULL;
+
+	return TRUE;
+}
+
+BOOL MaskFilterDisplay::ClearMask()
+{
+	if (m_pDevice == NULL)
+		return FALSE;
+	HRESULT hr;
+	IDirect3DSurface9* pBackBuffer = NULL;
+	m_pDevice->GetRenderTarget(0,&pBackBuffer);
+	if ( pBackBuffer == NULL)
+	{
+		return FALSE;
+	}
+	IDirect3DSurface9* pMaskSurface = NULL;
+	m_pMaskTexture->GetSurfaceLevel(0, &pMaskSurface);
+	if (pMaskSurface == NULL)
+	{
+		pBackBuffer->Release();
+		pBackBuffer = NULL;
+		return FALSE;
+	}
+	m_pDevice->SetRenderTarget(0, pMaskSurface);
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_ARGB(0, 255,255,255), 1.0f, 0);
+	
+	m_pDevice->SetRenderTarget(0, pBackBuffer);
+	pBackBuffer->Release();
+	pBackBuffer = NULL;
+	pMaskSurface->Release();
+	pMaskSurface = NULL;
 
 	return TRUE;
 }

@@ -30,4 +30,5 @@ public:
 	virtual BOOL GenerateMaskFromVertices(D3DXVECTOR2 pts[][4], int numRects, float fMaskScale = 1.2);
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
+	virtual BOOL ClearMask();
 };

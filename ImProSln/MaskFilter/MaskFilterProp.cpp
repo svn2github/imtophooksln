@@ -49,6 +49,7 @@ BEGIN_MESSAGE_MAP(MaskFilterPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnLoadMask3, &MaskFilterPropPage::OnBnClickedbtnloadmask3)
 	ON_BN_CLICKED(IDC_btnTest, &MaskFilterPropPage::OnBnClickedbtntest)
 	ON_EN_KILLFOCUS(IDC_EDIT4, &MaskFilterPropPage::OnEnKillfocusEdit4)
+	ON_BN_CLICKED(IDC_btnClearMAsk, &MaskFilterPropPage::OnBnClickedbtnclearmask)
 END_MESSAGE_MAP()
 
 
@@ -345,4 +346,11 @@ void MaskFilterPropPage::OnEnKillfocusEdit4()
 	double fMaskScale = 1.0;
 	swscanf_s(wstr, L"%lf", &fMaskScale);
 	m_fMaskScale = fMaskScale;
+}
+
+void MaskFilterPropPage::OnBnClickedbtnclearmask()
+{
+	if (m_pFilter == NULL)
+		return;
+	m_pFilter->ClearMask();
 }
