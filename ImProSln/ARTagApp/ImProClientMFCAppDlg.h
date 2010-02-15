@@ -52,4 +52,10 @@ public:
 	afx_msg void OnBnClickedbtnstop();
 	CButton m_btnSaveGraph;
 	afx_msg void OnDestroy();
+	CButton m_btnCamProp;
+	CButton m_btnCamPinProp;
+	afx_msg void OnBnClickedbtnshowcamprop();
+	afx_msg void OnBnClickedbtncampinprop();
+	afx_msg void OnBnClickedbtnarprop();
+	CButton m_btnARProp;
 };

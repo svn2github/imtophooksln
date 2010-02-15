@@ -526,3 +526,53 @@ HRESULT CCameraDS::Pause()
 		return S_FALSE;
 	return m_pMediaControl->Pause();
 }
+
+HRESULT CCameraDS::ShowCamProp()
+{
+	if (m_pDeviceFilter == NULL)
+		return S_FALSE;
+	CComPtr<ISpecifyPropertyPages> pPages;
+
+	HRESULT hr = m_pDeviceFilter->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);
+	if (SUCCEEDED(hr))
+	{
+		CAUUID caGUID;
+		pPages->GetPages(&caGUID);
+
+		OleCreatePropertyFrame(NULL, 0, 0,
+			L"Property Sheet", 1,
+			(IUnknown **)&(m_pDeviceFilter.p),
+			caGUID.cElems,
+			caGUID.pElems,
+			0, 0, NULL);
+		CoTaskMemFree(caGUID.pElems);
+	}
+	pPages = NULL;
+	return S_OK;
+}
+HRESULT CCameraDS::ShowCamPinProp()
+{
+	if (m_pCameraOutput == NULL)
+		return S_FALSE;
+	CComPtr<ISpecifyPropertyPages> pPages;
+	HRESULT hr = m_pCameraOutput->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);
+	if (SUCCEEDED(hr))
+	{
+		PIN_INFO PinInfo;
+		m_pCameraOutput->QueryPinInfo(&PinInfo);
+
+		CAUUID caGUID;
+		pPages->GetPages(&caGUID);
+
+		OleCreatePropertyFrame(NULL, 0, 0,
+			L"Property Sheet", 1,
+			(IUnknown **)&(m_pCameraOutput.p),
+			caGUID.cElems,
+			caGUID.pElems,
+			0, 0, NULL);
+		CoTaskMemFree(caGUID.pElems);
+		PinInfo.pFilter->Release();
+	}
+	pPages = NULL;
+	return S_OK;
+}

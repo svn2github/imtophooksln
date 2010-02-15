@@ -76,9 +76,12 @@ public:
 	virtual HRESULT Play();
 	virtual HRESULT Stop();
 	virtual HRESULT Pause();
+	virtual HRESULT ShowCamProp();
+	virtual HRESULT ShowCamPinProp();
 
-	bool SetVideoWindow(HWND hwnd);
-	HRESULT SaveGraphFile(WCHAR *wszPath);
+
+	virtual bool SetVideoWindow(HWND hwnd);
+	virtual HRESULT SaveGraphFile(WCHAR *wszPath);
 	static int CameraCount(); 
 	static int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize);
 	int GetWidth(){return m_nWidth;} 

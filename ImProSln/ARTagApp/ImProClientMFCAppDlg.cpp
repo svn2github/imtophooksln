@@ -34,6 +34,9 @@ void CImProClientMFCAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnPause, m_btnPause);
 	DDX_Control(pDX, IDC_btnStop, m_btnStop);
 	DDX_Control(pDX, IDC_SaveGraph, m_btnSaveGraph);
+	DDX_Control(pDX, IDC_btnShowCamProp, m_btnCamProp);
+	DDX_Control(pDX, IDC_btnCamPinProp, m_btnCamPinProp);
+	DDX_Control(pDX, IDC_btnARProp, m_btnARProp);
 }
 
 BEGIN_MESSAGE_MAP(CImProClientMFCAppDlg, CDialog)
@@ -47,6 +50,9 @@ BEGIN_MESSAGE_MAP(CImProClientMFCAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnPause, &CImProClientMFCAppDlg::OnBnClickedbtnpause)
 	ON_BN_CLICKED(IDC_btnStop, &CImProClientMFCAppDlg::OnBnClickedbtnstop)
 	ON_WM_DESTROY()
+	ON_BN_CLICKED(IDC_btnShowCamProp, &CImProClientMFCAppDlg::OnBnClickedbtnshowcamprop)
+	ON_BN_CLICKED(IDC_btnCamPinProp, &CImProClientMFCAppDlg::OnBnClickedbtncampinprop)
+	ON_BN_CLICKED(IDC_btnARProp, &CImProClientMFCAppDlg::OnBnClickedbtnarprop)
 END_MESSAGE_MAP()
 
 
@@ -132,6 +138,9 @@ void CImProClientMFCAppDlg::OnBnClickedBtncapturecam()
 	m_btnStop.EnableWindow(FALSE);
 
 	m_btnSaveGraph.EnableWindow(TRUE);
+	m_btnCamProp.EnableWindow(TRUE);
+	m_btnCamPinProp.EnableWindow(TRUE);
+	m_btnARProp.EnableWindow(TRUE);
 }
 
 void CImProClientMFCAppDlg::CaptureCallback(IplImage *frame)
@@ -157,6 +166,9 @@ void CImProClientMFCAppDlg::OnBnClickedBtnstopcapture()
 	m_btnStop.EnableWindow(FALSE);
 
 	m_btnSaveGraph.EnableWindow(FALSE);
+	m_btnCamProp.EnableWindow(FALSE);
+	m_btnCamPinProp.EnableWindow(FALSE);
+	m_btnARProp.EnableWindow(FALSE);
 }
 
 
@@ -226,4 +238,25 @@ void CImProClientMFCAppDlg::OnDestroy()
 	}
 	CDialog::OnDestroy();
 	
+}
+
+void CImProClientMFCAppDlg::OnBnClickedbtnshowcamprop()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamProp();
+}
+
+void CImProClientMFCAppDlg::OnBnClickedbtncampinprop()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamPinProp();
+}
+
+void CImProClientMFCAppDlg::OnBnClickedbtnarprop()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowARProp();
 }

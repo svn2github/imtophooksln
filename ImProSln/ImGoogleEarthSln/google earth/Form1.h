@@ -780,7 +780,6 @@ namespace googleearth {
 		{
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
-			//this->arTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->SuspendLayout();
 			// 
@@ -792,14 +791,10 @@ namespace googleearth {
 			this->webBrowser1->Name = L"webBrowser1";
 			this->webBrowser1->Size = System::Drawing::Size(628, 334);
 			this->webBrowser1->TabIndex = 0;
+			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
-			// arTimer
+			// animTimer
 			// 
-			//this->arTimer->Interval = 30;
-			//this->arTimer->Tick += gcnew System::EventHandler(this, &Form1::arTimer_Tick);
-			//// 
-			//// animTimer
-			//// 
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
@@ -811,6 +806,8 @@ namespace googleearth {
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
+			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
+			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyDown);
 			this->ResumeLayout(false);
 
 		}
@@ -927,6 +924,30 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 				altitude_scale = 1.0;
 		 
 		}
+private: System::Void OnKeyUp(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) 
+		 {
+
+
+		 }
+private: System::Void OnKeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
+		 }
+private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Windows::Forms::PreviewKeyDownEventArgs^  e) {
+			 if (g_pARCam != NULL)
+			 {
+				 if (e->KeyCode == Keys::D1)
+				 {
+					 g_pARCam->ShowCamProp();
+				 }
+				 else if(e->KeyCode == Keys::D2)
+				 {
+					 g_pARCam->ShowCamPinProp();
+				 }
+				 else if(e->KeyCode == Keys::D3)
+				 {
+					 g_pARCam->ShowARProp();
+				 }
+			 }
+		 }
 };
 }
 

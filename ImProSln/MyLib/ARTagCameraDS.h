@@ -22,4 +22,5 @@ public:
 	virtual ~ARTagCameraDS(void);
 	virtual void CloseCamera();
 	virtual BOOL SetARCallback(IARTagFilter::CallbackFuncPtr pcallback, int argc, void* argv[]);
+	virtual BOOL ShowARProp();
 };

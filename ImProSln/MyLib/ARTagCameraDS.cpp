@@ -107,3 +107,27 @@ BOOL ARTagCameraDS::SetARCallback(IARTagFilter::CallbackFuncPtr pcallback, int a
 	}
 	return m_pIARTagFilter->SetCallback(pcallback, argc, argv);
 }
+BOOL ARTagCameraDS::ShowARProp()
+{
+	if (m_pARTagFilter == NULL)
+		return S_FALSE;
+	CComPtr<ISpecifyPropertyPages> pPages;
+
+	HRESULT hr = m_pARTagFilter->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);
+	if (SUCCEEDED(hr))
+	{
+		CAUUID caGUID;
+		pPages->GetPages(&caGUID);
+
+		OleCreatePropertyFrame(NULL, 0, 0,
+			L"Property Sheet", 1,
+			(IUnknown **)&(m_pARTagFilter.p),
+			caGUID.cElems,
+			caGUID.pElems,
+			0, 0, NULL);
+		CoTaskMemFree(caGUID.pElems);
+	}
+	pPages = NULL;
+	return S_OK;
+	
+}
