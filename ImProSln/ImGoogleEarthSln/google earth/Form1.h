@@ -185,10 +185,11 @@ namespace googleearth {
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		
-		private: static String^ id = "tabletGE_1";
-		private: static String^ ipAddress = "192.168.1.2";
-		private: static Int32 port = 5000;
-	private: System::Windows::Forms::Timer^  animTimer;
+		private: static String^ id;
+		private: static String^ ipAddress;
+		private: static Int32 port;
+		private: static bool useSocket = true;
+	    private: System::Windows::Forms::Timer^  animTimer;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -202,15 +203,20 @@ namespace googleearth {
 			//
 			//TODO: 在此加入建構函式程式碼
 			//
-			
+						
+			g_formPtr = this;
+
 			//full screen mode
 			//setFullScreen();			
-			g_formPtr = this;
+
+			loadParameters();
+
 			setupBrowser();
 			
 			setupArtoolkit();
-
-			setupSocket();
+			
+			if(useSocket)
+				setupSocket();
 			
 		}
 
@@ -221,6 +227,21 @@ namespace googleearth {
 				this->TopMost = true;
 			}				 
 		}
+
+	    private: System::Void loadParameters(){
+					 String^ line;
+					 System::IO::StreamReader^ file = gcnew System::IO::StreamReader(".\\setting.txt");
+					 
+					 line = file->ReadLine();
+					 ipAddress = line->Split(' ')[1];
+
+					 line = file->ReadLine();
+					 port = System::Int32::Parse(line->Split(' ')[1]);
+
+					 line = file->ReadLine();
+					 id = line->Split(' ')[1];
+		}
+
 
 		private: System::Void setupBrowser(){
 			String^ URL = "file:///C:/googleEarth.html";
@@ -949,6 +970,10 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 				 else if(e->KeyCode == Keys::D3)
 				 {
 					 g_pARCam->ShowARProp();
+				 }
+				 else if(e->KeyCode == Keys::D4)
+				 {
+					setFullScreen();
 				 }
 			 }
 		 }
