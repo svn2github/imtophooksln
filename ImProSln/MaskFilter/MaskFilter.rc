@@ -153,6 +153,8 @@ BEGIN
     PUSHBUTTON      "Load",IDC_btnLoadMask3,157,158,50,14
     GROUPBOX        "Test Mask From Vertices",IDC_STATIC,15,172,191,38
     PUSHBUTTON      "Test",IDC_btnTest,156,188,50,14
+    EDITTEXT        IDC_EDIT4,129,32,38,12,ES_AUTOHSCROLL
+    LTEXT           "Mask Scale:",IDC_STATIC,89,34,41,9
 END
 
 

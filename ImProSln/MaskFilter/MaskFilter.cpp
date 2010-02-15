@@ -433,26 +433,26 @@ BOOL MaskFilter::LoadMaskFromFile(WCHAR* path)
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->LoadMaskFromFile(path);
 }
 
-BOOL MaskFilter::GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig)
+BOOL MaskFilter::GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfig, float fMaskScale)
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
 	CAutoLock lck(&m_csDisplayState);
-	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLauout(pMarkerConfig);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLauout(pMarkerConfig, fMaskScale);
 }
-BOOL MaskFilter::GenerateMaskFromARLayoutFile(WCHAR* path)
+BOOL MaskFilter::GenerateMaskFromARLayoutFile(WCHAR* path, float fMaskScale )
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
 	CAutoLock lck(&m_csDisplayState);
-	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLayoutFile(path);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLayoutFile(path, fMaskScale);
 }
 BOOL MaskFilter::GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix)
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
 	CAutoLock lck(&m_csDisplayState);
-	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromWarpMatrix(warpMat, numMatrix, 1.2);
+	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromWarpMatrix(warpMat, numMatrix);
 }
 BOOL MaskFilter::GenerateMaskFromWarpConfigFile(WCHAR* path)
 {

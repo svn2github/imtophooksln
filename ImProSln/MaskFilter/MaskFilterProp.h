@@ -69,4 +69,7 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnbrowse3();
 	afx_msg void OnBnClickedbtnloadmask3();
 	afx_msg void OnBnClickedbtntest();
+	CEdit m_edMaskScale;
+	afx_msg void OnEnKillfocusEdit4();
+	float m_fMaskScale;
 };

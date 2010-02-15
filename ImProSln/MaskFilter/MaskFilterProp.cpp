@@ -25,6 +25,7 @@ void MaskFilterPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_edWarpPath);
 	DDX_Control(pDX, IDC_btnBrowse3, m_btnWarpBrowse);
 	DDX_Control(pDX, IDC_btnLoadMask3, m_btnWarpLoad);
+	DDX_Control(pDX, IDC_EDIT4, m_edMaskScale);
 }
 BOOL MaskFilterPropPage::OnInitDialog()
 {
@@ -47,6 +48,7 @@ BEGIN_MESSAGE_MAP(MaskFilterPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnBrowse3, &MaskFilterPropPage::OnBnClickedbtnbrowse3)
 	ON_BN_CLICKED(IDC_btnLoadMask3, &MaskFilterPropPage::OnBnClickedbtnloadmask3)
 	ON_BN_CLICKED(IDC_btnTest, &MaskFilterPropPage::OnBnClickedbtntest)
+	ON_EN_KILLFOCUS(IDC_EDIT4, &MaskFilterPropPage::OnEnKillfocusEdit4)
 END_MESSAGE_MAP()
 
 
@@ -56,6 +58,7 @@ END_MESSAGE_MAP()
 MaskFilterPropPage::MaskFilterPropPage(IUnknown *pUnk) : 
 CMFCBasePropertyPage(NAME("MaskFilterPropPage"), pUnk),
 m_pFilter(0)
+, m_fMaskScale(1.0)
 {
 }
 
@@ -111,6 +114,8 @@ HRESULT MaskFilterPropPage::OnActivate(void)
 	m_edARLayoutPath.SetWindowText(path);
 	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromWarpPath", L"");
 	m_edWarpPath.SetWindowText(path);
+	m_edMaskScale.SetWindowText(L"1.0");
+
 	GetSetting();
 	return S_OK;
 }
@@ -259,7 +264,7 @@ void MaskFilterPropPage::OnBnClickedbtnloadmask2()
 {
 	CString path;
 	m_edARLayoutPath.GetWindowText(path);
-	bool ret = m_pFilter->GenerateMaskFromARLayoutFile((WCHAR*)(LPCWSTR)path);
+	bool ret = m_pFilter->GenerateMaskFromARLayoutFile((WCHAR*)(LPCWSTR)path,  m_fMaskScale);
 	if (!ret)
 	{
 		MessageBox(L"LoadFile Failed!!", L"Error!!");
@@ -328,5 +333,16 @@ void MaskFilterPropPage::OnBnClickedbtntest()
 	pts[2][2] = D3DXVECTOR2(0.25, 0.75); pts[2][3] = D3DXVECTOR2(0.25, 0.625);
 
 
-	m_pFilter->GenerateMaskFromVertices(pts, 3, 2); 
+	m_pFilter->GenerateMaskFromVertices(pts, 3, m_fMaskScale); 
+}
+
+void MaskFilterPropPage::OnEnKillfocusEdit4()
+{
+	CString str;
+	m_edMaskScale.GetWindowText(str);
+	WCHAR wstr[MAX_PATH];
+	wcscpy(wstr, str);
+	double fMaskScale = 1.0;
+	swscanf_s(wstr, L"%lf", &fMaskScale);
+	m_fMaskScale = fMaskScale;
 }

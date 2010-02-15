@@ -223,7 +223,7 @@ BOOL MaskFilterDisplay::LoadMaskFromFile(WCHAR* path)
 	return SUCCEEDED(hr);
 }
 
-BOOL MaskFilterDisplay::GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMarkerConfig)
+BOOL MaskFilterDisplay::GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMarkerConfig, float fMaskScale)
 {
 	if (m_pDevice == NULL)
 		return FALSE;
@@ -252,6 +252,22 @@ BOOL MaskFilterDisplay::GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMark
 	}
 	UINT iPass, cPasses = 0;
 	m_pMaskCamera->CameraOn();
+
+	MSMeshBase::CUSTOMVERTEX Vt[4];
+	D3DXMATRIX matTran, matT, matInvT, matS;
+	D3DXVECTOR3 center(0,0,0);
+	for(int i =0; i< 4; i++)
+	{
+		m_pMarkerMesh->GetVertex(i, Vt[i]);
+		center += Vt[i].position;
+	}
+	center /= 4;
+
+	D3DXMatrixTranslation(&matT, -center.x, -center.y, -center.z);
+	D3DXMatrixTranslation(&matInvT, center.x, center.y, center.z);
+	D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, fMaskScale);
+	matTran = matT*matS*matInvT;
+
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{	
 		D3DXMATRIX tranMat, matScale;
@@ -262,6 +278,7 @@ BOOL MaskFilterDisplay::GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMark
 			{
 				continue;
 			}
+
 			D3DXMatrixIdentity(&tranMat);
 			D3DXMatrixScaling(&matScale, marker->width, marker->width, 1);
 			int id = marker->patt_id;
@@ -273,7 +290,7 @@ BOOL MaskFilterDisplay::GenerateMaskFromARLauout(const ARMultiMarkerInfoT* pMark
 					tranMat.m[col][row] = marker->trans[row][col];
 				}
 			}
-			tranMat = matScale * tranMat;
+			tranMat = matTran * matScale * tranMat;
 			m_pMarkerMesh->SetTransform(&tranMat);
 			
 			hr = pEffect->SetTechnique("techniqueARMask");
@@ -359,7 +376,7 @@ bool MaskFilterDisplay::CreateWarpMesh()
 	pVertices = NULL;
 	return true;
 }
-BOOL MaskFilterDisplay::GenerateMaskFromARLayoutFile(WCHAR* path)
+BOOL MaskFilterDisplay::GenerateMaskFromARLayoutFile(WCHAR* path, float fMaskScale)
 {
 	ARMultiEachMarkerInfoT* ARMarkers = NULL;
 	int numMarker = 0;
@@ -405,7 +422,7 @@ BOOL MaskFilterDisplay::GenerateMaskFromARLayoutFile(WCHAR* path)
 		GenerateARMarkinfo(ARMarkers, numMarker, config);
 		if (config != NULL)
 		{
-			GenerateMaskFromARLauout(config);
+			GenerateMaskFromARLauout(config, fMaskScale);
 		}
 		if (config != NULL)
 		{
