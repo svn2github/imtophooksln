@@ -4,11 +4,13 @@
 #define BLACK_VALUE 10
 
 
-BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel,char* fileDir){
+BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
 
 	BGthreshold = 0;
 	BlackValue = 0;
 	WhiteValue = 0 ;
+	camFlip = false; 
+	layoutFlip = false ;
 
 	char settingFile[100];
 
@@ -16,14 +18,12 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH, int imgChannel,ch
 
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
-	fscanf(pFile ,"[ %d %d %d ] \n",&BGthreshold , &BlackValue,&WhiteValue);  // threshold , blackvalue , whiteValue
-
-
+	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&WhiteValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	binaryResult = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	resultImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
-	result4CImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,3);
+	result4CImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,camChannel);
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
 	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -59,7 +59,11 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 				cvSet2D(backgroundImg,i,j,cvScalar(white,white,white));
 		}
 	}
+	if(layoutFlip == true){
+		cvFlip(backgroundImg);
+	}
 	IplImage *temp = cvCreateImage(cvGetSize(backgroundImg),8,1) ;
+
 	cvCopy(backgroundImg,temp);
 
 	/*if(isDilate){
@@ -80,18 +84,23 @@ void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
 	cvCvtColor( srcImg, resultImg, CV_RGB2GRAY);
+	if(camFlip ==true){
+	cvFlip(resultImg);
+	}
 	cvShowImage("BG",backgroundImg);
-	cvShowImage("SRC",srcImg);
+	cvShowImage("SRC",resultImg);
 	cvWaitKey(1);
 
 	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
 	cvSub(resultImg,backgroundImg,resultImg);
-	//cvSubS(resultImg,subValue,resultImg);
 	if(BGthreshold != 0){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
 	}
 	cvCvtColor( resultImg, result4CImg, CV_GRAY2RGB);
 	findForegroundRect(resultImg);
+	if(outputFlip == true){
+		cvFlip(result4CImg);
+	}
 	return result4CImg;
 }
 
@@ -105,21 +114,7 @@ void  BackGroundMapping::findForegroundRect(IplImage *FGImage){
 	for( ; cont != 0; cont = cont->h_next )	{
 		int count = cont->total; // This is number point in contour
 		foregroundLists.push_back(cvContourBoundingRect(cont));
-
-		//cvDrawContours(FGImage, cont, CV_RGB(255,255,255), CV_RGB(255,255,255), 3, 2, CV_FILLED);
-		//cvShowImage("Contours",FGImage);
-		//cvWaitKey(1);
 	}
 
 	cvReleaseMemStorage(&storage);
 }
-
-
-
-//int BackGroundMapping::getThreshold(){
-//	return BGthreshold ;
-//}
-//
-//void BackGroundMapping::setThreshold(int threshold){
-//	BGthreshold = threshold;
-//}

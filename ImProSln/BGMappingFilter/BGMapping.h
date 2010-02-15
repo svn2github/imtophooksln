@@ -11,18 +11,12 @@ using namespace std;
 class BackGroundMapping{
 
 public:
-	BackGroundMapping(int w , int h , int imgChannel,char* fileDir);
+	BackGroundMapping(int w , int h ,int camChannel,char* fileDir);
 	~BackGroundMapping();
 	
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
 	void setBackground(IplImage* BGImg);  
-	/*void setThreshold(int threshold);
-	int getThreshold();
-	void setBlackValue(int bValue);
-	int getBlackValue();
-	void setWhiteValue(int wValue);
-	int getWhiteValue();*/
 
 public:
 	std::vector<CvRect> foregroundLists;
@@ -51,5 +45,8 @@ public:
 	int WhiteValue;
 
 	bool isDilate;
+	bool camFlip;
+	bool layoutFlip;
+	bool outputFlip;
 };
 #endif

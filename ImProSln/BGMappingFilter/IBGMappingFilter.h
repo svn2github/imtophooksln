@@ -14,4 +14,11 @@ public:
 	virtual int getWhiteValue();
 	virtual HRESULT setBlackValue(int bValue) ;
 	virtual int getBlackValue();
+
+	virtual HRESULT setCamFlip(bool value) ;
+	virtual bool getCamFlip();
+	virtual HRESULT setLayoutFlip(bool value) ;
+	virtual bool getLayoutFlip();
+	virtual HRESULT setOutputFlip(bool value) ;
+	virtual bool getOutputFlip();
 };

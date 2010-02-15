@@ -11,6 +11,7 @@ BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifies
 	foregroundIplImg = NULL;
 	cameraInputIplImg = NULL;
 	camChannel = 3 ;
+	layoutChannel = 3;
 	
 }
 BGMappingFilter::~BGMappingFilter()
@@ -86,7 +87,7 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 
 	hr = Transform(pSample, pOutSample);
 
-	if(hr){
+	if(hr == S_OK){
 		SendForegroundRect();
 	}
 
@@ -140,7 +141,7 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 
 	BYTE* backgroundByteData;
 	pSample->GetPointer(&backgroundByteData);
-	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, camChannel);
+	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, layoutChannel);
 
 	backgroundtmp->imageData = (char*)backgroundByteData;
 	cvResize(backgroundtmp,backgroundIplImg);
@@ -338,14 +339,36 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		{
 			camChannel = 3;
 		}
-	/*	else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			camChannel = 4;
 		}
-*/
+
 		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
 		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
-		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
+
+		return S_OK;
+
+	}
+
+	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin)
+	{
+		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		layoutW = bitHeader.biWidth;
+		layoutH = bitHeader.biHeight;
+
+		GUID guidSubType = inputMT.subtype;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			layoutChannel = 3;
+		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			layoutChannel = 4;
+		}
+		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, layoutChannel);
 
 		// set the calibration data of homo and mapping table
 		extern HMODULE GetModule();
@@ -371,17 +394,6 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		BG = new BackGroundMapping(cameraW,cameraH,camChannel,fileDir);
 		BG->loadHomo(homoDir,mTableDir);
 
-		return S_OK;
-
-	}
-
-	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin)
-	{
-		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		layoutW = bitHeader.biWidth;
-		layoutH = bitHeader.biHeight;
 		return S_OK;
 	}
 	return S_OK;
@@ -603,4 +615,27 @@ HRESULT BGMappingFilter::SendForegroundRect(){
 	}
 	return S_OK;
 
+}
+HRESULT BGMappingFilter::setCamFlip(bool value){
+	BG->camFlip = value ;
+	return S_OK;
+}
+bool BGMappingFilter:: getCamFlip(){
+	return BG->camFlip;
+
+}
+HRESULT BGMappingFilter:: setLayoutFlip(bool value) {
+	BG->layoutFlip = value ;
+	return S_OK;
+}
+bool BGMappingFilter::getLayoutFlip(){
+	return BG->layoutFlip;
+}
+
+HRESULT BGMappingFilter:: setOutputFlip(bool value) {
+	BG->outputFlip = value ;
+	return S_OK;
+}
+bool BGMappingFilter::getOutputFlip(){
+	return BG->outputFlip;
 }

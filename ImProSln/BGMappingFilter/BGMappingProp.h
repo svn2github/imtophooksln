@@ -46,7 +46,14 @@ public:
 	HWND m_Btxt;
 	HWND m_whiteValue;
 	HWND m_Wtxt;
-	FILE* saveFile;
+
+	CButton* m_checkCamFlip;
+	CButton* m_checkLayoutFlip;
+	CButton* m_checkOutputFlip;
+
+
+
+
 
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID();
@@ -56,4 +63,5 @@ public: //inherit from CMFCBaseProperty Page
 
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnEnChangeEditWhite();
+	afx_msg void OnBnClickedCheckLayout();
 };

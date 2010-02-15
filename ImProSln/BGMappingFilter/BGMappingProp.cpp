@@ -16,6 +16,7 @@ BEGIN_MESSAGE_MAP(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 
 	ON_BN_CLICKED(IDC_BUTTON1, &CBGMappingPorpertyPage::OnBnClickedButton1)
 	ON_EN_CHANGE(IDC_EDIT_WHITE, &CBGMappingPorpertyPage::OnEnChangeEditWhite)
+	ON_BN_CLICKED(IDC_CHECK_Layout, &CBGMappingPorpertyPage::OnBnClickedCheckLayout)
 END_MESSAGE_MAP()
 
 
@@ -86,6 +87,7 @@ CUnknown *WINAPI CBGMappingPorpertyPage::CreateInstance(LPUNKNOWN punk, HRESULT 
 
 HRESULT CBGMappingPorpertyPage::OnApplyChanges(void)
 {
+
 	return S_OK;
 }
 
@@ -119,6 +121,9 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
 	m_pFilter->setBlackValue(::SLIDER_GetPos(m_blackValue));
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
+	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
+	m_pFilter->setLayoutFlip(m_checkLayoutFlip->GetCheck());
+	m_pFilter->setOutputFlip(m_checkOutputFlip->GetCheck());
 	
 }
 
@@ -140,7 +145,10 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	m_Wtxt = ::GetDlgItem(m_Dlg, IDC_EDIT_WHITE);
 	m_blackValue = ::GetDlgItem(m_Dlg,IDC_SLIDER_BLACK);
 	m_Btxt = ::GetDlgItem(m_Dlg, IDC_EDIT_BLACK);
-	
+	m_checkCamFlip = (CButton*)GetDlgItem(IDC_CHECK_camera);
+	m_checkLayoutFlip = (CButton*)GetDlgItem(IDC_CHECK_Layout);
+	m_checkOutputFlip = (CButton*)GetDlgItem(IDC_CHECK_Output);
+
 	::SLIDER_SetRange(m_threshold, 0, 255);
 	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
@@ -152,6 +160,10 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	::SLIDER_SetRange(m_whiteValue, 0, 255);
 	::SLIDER_SetPos(m_whiteValue,m_pFilter->getWhiteValue());
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
+
+	m_checkCamFlip->SetCheck(m_pFilter->getCamFlip());
+	m_checkLayoutFlip->SetCheck(m_pFilter->getLayoutFlip());
+	m_checkOutputFlip->SetCheck(m_pFilter->getOutputFlip());
 	return S_OK;
 }
 
@@ -175,8 +187,12 @@ void CBGMappingPorpertyPage::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResu
 
 
 
-void CBGMappingPorpertyPage::OnBnClickedButton1()
+void CBGMappingPorpertyPage::OnBnClickedButton1()  // save Button
 {
+
+	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
+	m_pFilter->setLayoutFlip(m_checkLayoutFlip->GetCheck());
+	m_pFilter->setOutputFlip(m_checkOutputFlip->GetCheck());
 
 	extern HMODULE GetModule();
 	WCHAR str[MAX_PATH] = {0};
@@ -199,8 +215,8 @@ void CBGMappingPorpertyPage::OnBnClickedButton1()
 
 	FILE  * pFile ;
 	pFile = fopen(Dir,"w");
-
-	fprintf(pFile ,"[ %d %d %d ] \n",m_pFilter->getBGThreshold() , m_pFilter->getBlackValue(),m_pFilter->getWhiteValue());  // threshold , blackvalue , whiteValue
+	// threshold , blackvalue , whiteValue , camFlip , layoutFlip, outputFlip
+	fprintf(pFile ,"[ %d %d %d %d %d %d] \n",m_pFilter->getBGThreshold() , m_pFilter->getBlackValue(),m_pFilter->getWhiteValue(),m_pFilter->getCamFlip(),m_pFilter->getLayoutFlip(),m_pFilter->getOutputFlip());  
 
 	fclose(pFile);
 }
@@ -213,4 +229,9 @@ void CBGMappingPorpertyPage::OnEnChangeEditWhite()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
+}
+
+void CBGMappingPorpertyPage::OnBnClickedCheckLayout()
+{
+	// TODO: 在此加入控制項告知處理常式程式碼
 }

@@ -57,6 +57,13 @@ public:
 	virtual int getBlackValue();
 	virtual HRESULT setWhiteValue(int wValue) ;
 	virtual int getWhiteValue();
+	virtual HRESULT setCamFlip(bool value) ;
+	virtual bool getCamFlip();
+	virtual HRESULT setLayoutFlip(bool value) ;
+	virtual bool getLayoutFlip();
+	virtual HRESULT setOutputFlip(bool value) ;
+	virtual bool getOutputFlip();
+
 	HRESULT SendForegroundRect();
 
 
