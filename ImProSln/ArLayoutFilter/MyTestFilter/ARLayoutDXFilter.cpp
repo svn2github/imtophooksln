@@ -756,22 +756,30 @@ bool ARLayoutDXFilter::sendConfigData()
 		return false;
 	}
 	ARLayoutConfigData sendData;
-	sendData.m_ARMarkers = m_ARMarkers;
-	sendData.m_numMarker = m_numMarker;
+	{
+		CAutoLock lck(&m_csARMarker);
+		sendData.m_ARMarkers = m_ARMarkers;
+		sendData.m_numMarker = m_numMarker;
 
-	IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
-	CMediaSample* pSendSample = NULL;
-	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
-	if (pSendSample == NULL)
-	{
-		return S_FALSE;
+		IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
+		CMediaSample* pSendSample = NULL;
+		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		if (pSendSample == NULL)
+		{
+			sendData.m_ARMarkers = NULL;
+			sendData.m_numMarker = 0;
+			return S_FALSE;
+		}
+		pSendSample->SetPointer((BYTE*)&sendData, sizeof(ARLayoutConfigData));
+		m_pOutputPins[0]->Deliver(pSendSample);
+		sendData.m_ARMarkers = NULL;
+		sendData.m_numMarker = 0;
+		if (pSendSample != NULL)
+		{
+			pSendSample->Release();
+			pSendSample = NULL;
+		}
 	}
-	pSendSample->SetPointer((BYTE*)&sendData, sizeof(ARLayoutConfigData));
-	m_pOutputPins[0]->Deliver(pSendSample);
-	if (pSendSample != NULL)
-	{
-		pSendSample->Release();
-		pSendSample = NULL;
-	}
+
 	return true;
 }

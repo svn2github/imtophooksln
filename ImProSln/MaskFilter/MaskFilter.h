@@ -7,7 +7,7 @@
 #include "MaskFilterDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
-
+#include "MyMediaSample.h"
 class MaskFilter :
 	public CMuxTransformFilter, public IMaskFilter,
 	public ISpecifyPropertyPages, public D3DTransformFilterBase
@@ -46,7 +46,11 @@ public:
 	virtual BOOL ClearMask();
 protected:
 	CCritSec m_csDisplayState;
-	
+	CCritSec m_csMaskVertexData;
+	CCritSec m_csARLayoutConfig;
+	ARLayoutConfigData* m_pARLayoutConfig;
+	MaskVertexData* m_pMaskVertexData;
+	HRESULT UpdateMask();
 protected:
 
 	virtual bool         IsAcceptedType(const CMediaType *pMT);

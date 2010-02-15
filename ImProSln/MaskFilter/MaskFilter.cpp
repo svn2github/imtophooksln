@@ -8,11 +8,21 @@
 MaskFilter::MaskFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Mask Filter"), 0, CLSID_MaskFilter)
 { 
-	
+	m_pARLayoutConfig = NULL;
+	m_pMaskVertexData = NULL;
 }
 MaskFilter::~MaskFilter()
 {
-
+	if (m_pARLayoutConfig != NULL)
+	{
+		delete m_pARLayoutConfig;
+		m_pARLayoutConfig = NULL;
+	}
+	if (m_pMaskVertexData != NULL)
+	{
+		delete m_pMaskVertexData;
+		m_pMaskVertexData = NULL;
+	}
 }
 
 CUnknown *WINAPI MaskFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -125,13 +135,14 @@ HRESULT MaskFilter::ReceiveInput1(IMediaSample *pSample, const IPin* pReceivePin
 	pSample->GetPointer((BYTE**)&pARConfig);
 	if (pARConfig == NULL)
 		return S_FALSE;
-	ARMultiMarkerInfoT* config = NULL;
-	((MaskFilterDisplay*)m_pD3DDisplay)->GenerateARMarkinfo(pARConfig->m_ARMarkers, pARConfig->m_numMarker, config);
-	if (config == NULL)
-		return S_FALSE;
-	GenerateMaskFromARLayout(config);
-	delete config;
-	config = NULL;
+	{
+		CAutoLock lck(&m_csARLayoutConfig);
+		if (m_pARLayoutConfig == NULL)
+		{
+			m_pARLayoutConfig = new ARLayoutConfigData();
+		}
+		*m_pARLayoutConfig = *pARConfig;
+	}
 	return S_OK;
 }
 
@@ -142,6 +153,7 @@ HRESULT MaskFilter::ReceiveInput2(IMediaSample *pSample, const IPin* pReceivePin
 	if (m_pD3DDisplay == NULL)
 		return S_FALSE;
 
+
 	MaskVertexData* pMaskVertexData = NULL;
 	pSample->GetPointer((BYTE**)&pMaskVertexData);
 	if (pMaskVertexData == NULL)
@@ -150,29 +162,14 @@ HRESULT MaskFilter::ReceiveInput2(IMediaSample *pSample, const IPin* pReceivePin
 	{
 		return S_FALSE;
 	}
-	int nCol = pMaskVertexData->m_nPoints/4;
-	D3DXVECTOR2** pt = new D3DXVECTOR2*[nCol];
-	for (int i =0; i < nCol; i++)
 	{
-		pt[i] = new D3DXVECTOR2[4];
-	}
-	for (int i =0; i < nCol; i++)
-	{
-		for (int j = 0 ; j< 4; j++)
+		CAutoLock lck(&m_csMaskVertexData);
+		if (m_pMaskVertexData == NULL)
 		{
-			pt[i][j].x = pMaskVertexData->m_points[i*4*2 + j*2 + 0];
-			pt[i][j].y = pMaskVertexData->m_points[i*4*2 + j*2 + 1];
+			m_pMaskVertexData = new MaskVertexData();
 		}
+		*m_pMaskVertexData = *pMaskVertexData;
 	}
-	SetMaskFlag(pMaskVertexData->m_maskflag);
-	GenerateMaskFromVertices(pt, nCol);
-	for (int i =0; i < nCol; i++)
-	{
-		delete[] pt[i];
-		pt[i] = NULL;
-	}
-	delete pt;
-	pt = NULL;
 	return S_OK;
 }
 
@@ -363,6 +360,7 @@ HRESULT MaskFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			return S_FALSE;
 		}
 		{
+			UpdateMask();
 			CAutoLock lck(&m_csDisplayState);
 			DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &m_pOutputPins[0]->CurrentMediaType(), false);
 		}
@@ -370,7 +368,55 @@ HRESULT MaskFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	return S_OK;
 }
 
-
+HRESULT MaskFilter::UpdateMask()
+{
+	{
+		CAutoLock lck(&m_csMaskVertexData);
+		if (m_pMaskVertexData != NULL)
+		{
+			int nCol = m_pMaskVertexData->m_nPoints/4;
+			D3DXVECTOR2** pt = new D3DXVECTOR2*[nCol];
+			for (int i =0; i < nCol; i++)
+			{
+				pt[i] = new D3DXVECTOR2[4];
+			}
+			for (int i =0; i < nCol; i++)
+			{
+				for (int j = 0 ; j< 4; j++)
+				{
+					pt[i][j].x = m_pMaskVertexData->m_points[i*4*2 + j*2 + 0];
+					pt[i][j].y = m_pMaskVertexData->m_points[i*4*2 + j*2 + 1];
+				}
+			}
+			SetMaskFlag(m_pMaskVertexData->m_maskflag);
+			GenerateMaskFromVertices(pt, nCol);
+			for (int i =0; i < nCol; i++)
+			{
+				delete[] pt[i];
+				pt[i] = NULL;
+			}
+			delete pt;
+			pt = NULL;
+			delete m_pMaskVertexData;
+			m_pMaskVertexData = NULL;
+		}
+	}
+	{
+		CAutoLock lck(&m_csARLayoutConfig);
+		if (m_pARLayoutConfig != NULL)
+		{
+			ARMultiMarkerInfoT* config = NULL;
+			((MaskFilterDisplay*)m_pD3DDisplay)->GenerateARMarkinfo(m_pARLayoutConfig->m_ARMarkers,
+				m_pARLayoutConfig->m_numMarker, config);
+			if (config == NULL)
+				return S_FALSE;
+			GenerateMaskFromARLayout(config);
+			delete config;
+			config = NULL;
+		}
+	}
+	return S_OK;
+}
 HRESULT MaskFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin, ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr = NOERROR;

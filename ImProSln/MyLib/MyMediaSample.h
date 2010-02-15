@@ -167,11 +167,11 @@ public:
 			this->m_points = 0;
 		}
 		this->m_nPoints = rhs.m_nPoints;
-		
+		this->m_maskflag = rhs.m_maskflag;
 		if (rhs.m_nPoints != 0)
 		{
-			this->m_points = new float[rhs.m_nPoints];
-			memcpy(this->m_points, rhs.m_points, sizeof(float)*rhs.m_nPoints);
+			this->m_points = new float[rhs.m_nPoints*2];
+			memcpy(this->m_points, rhs.m_points, sizeof(float)*rhs.m_nPoints*2);
 		}
 		return *this;
 	}
