@@ -72,7 +72,8 @@ public:
 	fRECT* fingerRects;
 	unsigned int numFingers;
 	ARLayoutStartegyData() : camViews(NULL), numCamView(0), fingerRects(NULL), numFingers(0)
-	{	}
+	{
+	}
 	~ARLayoutStartegyData()
 	{
 		if (camViews != NULL)
@@ -86,6 +87,35 @@ public:
 			fingerRects = NULL;
 		}
 	}
+	 ARLayoutStartegyData& operator = (const ARLayoutStartegyData &rhs)
+	 {
+		 if (camViews != NULL)
+		 {
+			 delete [] camViews;
+			 camViews = NULL;
+			 this->numCamView = 0;
+
+		 }
+		 if (fingerRects != NULL)
+		 {
+			 delete[] fingerRects;
+			 fingerRects = NULL;
+			 this->numFingers = 0;
+		 }
+		 this->numCamView = rhs.numCamView;
+		 this->numFingers = rhs.numFingers;
+		 if (rhs.numCamView != 0)
+		 {
+			 this->camViews = new fRECT[this->numCamView];
+			 memcpy(this->camViews, rhs.camViews, sizeof(fRECT)*rhs.numCamView);
+		 }
+		 if (rhs.numFingers != 0)
+		 {
+			 this->fingerRects = new fRECT[rhs.numFingers];
+			 memcpy(this->fingerRects, rhs.fingerRects, sizeof(fRECT)*rhs.numFingers);
+		 }
+		 return *this;
+	 }
 };
 
 class ForegroundRegion

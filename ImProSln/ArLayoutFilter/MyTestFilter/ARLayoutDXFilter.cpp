@@ -16,6 +16,7 @@ ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	m_ARMarkers = NULL;
 	m_numMarker = 0;
 	m_minMarkerWidth = 1.0;
+	m_pARStrategyData = NULL;
 	initD3D(800, 600);
 	initARMarkers();
 }
@@ -27,6 +28,11 @@ ARLayoutDXFilter::~ARLayoutDXFilter()
 		m_ARMarkers = NULL;
 	}
 	m_numMarker = 0;
+	if (m_pARStrategyData != NULL)
+	{
+		delete m_pARStrategyData;
+		m_pARStrategyData = NULL;
+	}
 }
 
 CUnknown *WINAPI ARLayoutDXFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -121,8 +127,14 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 	{
 		return S_FALSE;
 	}
-	DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
-	sendConfigData();
+	CAutoLock lck(&m_csARStrategyData);
+	if (m_pARStrategyData == NULL)
+	{
+		m_pARStrategyData = new ARLayoutStartegyData();
+	}
+	*m_pARStrategyData = *sData;
+	//DecideLayout(sData->camViews, sData->numCamView, sData->fingerRects, sData->numFingers);
+	//sendConfigData();
 	return S_OK;
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
@@ -130,6 +142,17 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
+		{
+			CAutoLock lck(&m_csARStrategyData);
+			if (m_pARStrategyData != NULL)
+			{
+				DecideLayout(m_pARStrategyData->camViews, m_pARStrategyData->numCamView,
+					m_pARStrategyData->fingerRects, m_pARStrategyData->numFingers);
+				sendConfigData();
+				delete m_pARStrategyData;
+				m_pARStrategyData = NULL;
+			}
+		}
 		SetRenderTarget();
 		{
 			CAutoLock lck(&m_csARMarker);

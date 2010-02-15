@@ -11,6 +11,7 @@
 #include "MSSD3DClass.h"
 #include "D3DTransformFilterBase.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
+#include "MyMediaSample.h"
 #include <vector>
 using namespace std;
 using namespace ARToolKitPlus;
@@ -47,6 +48,8 @@ protected:
 	ARMultiEachMarkerInfoT* m_ARMarkers;
 	int m_numMarker;
 	float m_minMarkerWidth;
+	CCritSec m_csARStrategyData;
+	ARLayoutStartegyData* m_pARStrategyData;
 
 	vector<vector<int>> m_TagIntersectTable;
 	vector<fRECT> m_allMarkerRects;
