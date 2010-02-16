@@ -86,7 +86,9 @@ double ctilt = 0;
 double cheading = 0;
 double croll = 0;
 
-double altitude_scale = 0.8;
+double angleThreshold = PI * 5 / 180; // 5 degrees
+
+double altitude_scale = 1.2;
 
 bool getFstTag = false;
 
@@ -132,14 +134,17 @@ BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, con
 bool arTimerTickFunc()
 {
 	
-
-	// set target camera
-	tlatitude = latitude;
-	tlongitude = longitude;
-	taltitude = altitude;
-	theading = heading;
-	ttilt = tilt;
-	troll = roll;
+	double dheading = abs(heading - theading);
+	double dtilt = abs(tilt - ttilt);
+	double droll = abs(roll - troll);
+	
+	// for stablization
+	if(dheading > angleThreshold)
+		theading = heading;
+	if(dtilt > angleThreshold)
+		ttilt = tilt;
+	if(droll > angleThreshold)
+		troll = roll;
 
 	if(!getFstTag){
 		clatitude = tlatitude;
@@ -188,8 +193,9 @@ namespace googleearth {
 		private: static String^ id;
 		private: static String^ ipAddress;
 		private: static Int32 port;
-		private: static bool useSocket = true;
+		private: static bool useSocket = false;
 	    private: System::Windows::Forms::Timer^  animTimer;
+	private: System::Windows::Forms::TextBox^  debugTextBox;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -212,9 +218,9 @@ namespace googleearth {
 			loadParameters();
 
 			setupBrowser();
-			
+
 			setupArtoolkit();
-			
+
 			if(useSocket)
 				setupSocket();
 			
@@ -806,6 +812,7 @@ namespace googleearth {
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->debugTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -823,17 +830,27 @@ namespace googleearth {
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
+			// debugTextBox
+			// 
+			this->debugTextBox->Location = System::Drawing::Point(447, 23);
+			this->debugTextBox->Name = L"debugTextBox";
+			this->debugTextBox->Size = System::Drawing::Size(118, 22);
+			this->debugTextBox->TabIndex = 1;
+			this->debugTextBox->Text = L"Debug";
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(628, 334);
+			this->Controls->Add(this->debugTextBox);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
 			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyDown);
 			this->ResumeLayout(false);
+			this->PerformLayout();
 
 		}
 
@@ -983,6 +1000,9 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 
 bool animTimerTickFunc()
 {
+	
+	printf("update");
+
 	try
 	{
 		if(!getFstTag)
