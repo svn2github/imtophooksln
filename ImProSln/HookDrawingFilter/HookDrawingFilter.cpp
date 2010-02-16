@@ -103,7 +103,18 @@ BOOL HookDrawingStream::GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2
 
 	return TRUE;
 }
-
+BOOL HookDrawingStream::GetResolution(UINT& resW, UINT& resH)
+{
+	if (m_pFilter == NULL)
+		return FALSE;
+	return ((HookDrawingFilter*)m_pFilter)->GetResolution(this, resW, resH);
+}
+BOOL HookDrawingStream::SetResolution(UINT resW, UINT resH)
+{
+	if (m_pFilter == NULL)
+		return FALSE;
+	return ((HookDrawingFilter*)m_pFilter)->SetResolution(this, resW, resH);
+}
 
 STDMETHODIMP HookDrawingStream::GetPages(CAUUID *pPages)
 {
@@ -145,7 +156,7 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_hHookRecMsgWnd = 0;
 	RegisterHookWndClass(GetModule());
 	CreateHookWindow(320, 240); // size doesn't matter
-	HRESULT hr = initD3D(2048, 1024);
+	HRESULT hr = initD3D(2048, 768);
 	if (SUCCEEDED(hr))
 	{
 		HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
@@ -301,6 +312,7 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 	{
 		if (m_pStreamPins[i] == pPin)
 		{
+			CAutoLock lck(&m_csAddTextures);
 			CMediaType mt;
 			mt.SetType(&GUID_MyMediaSample);
 			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
@@ -385,7 +397,7 @@ MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int r
 }
 HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
 {
-	
+	CAutoLock lck(&m_csAddTextures);
 	if (idx < 0 || idx >= m_numPins || m_pAddOutTexture.size() < m_numPins || 
 		m_pAddRenderTarget.size() < m_numPins)
 	{
@@ -426,6 +438,7 @@ HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
 }
 HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 {
+	CAutoLock lck(&m_csAddTextures);
 	HRESULT hr = S_FALSE;
 	for (int i =0; i< m_pAddOutTexture.size(); i++)
 	{
@@ -459,6 +472,27 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 		m_pAddRenderTarget.push_back(pAddRenderTarget);
 	}
 
+	return S_OK;
+}
+HRESULT HookDrawingFilter::CreateInTexture(UINT w, UINT h)
+{
+	CAutoLock lck(&m_csInTexture);
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HRESULT hr = S_OK;
+	LPDIRECT3DTEXTURE9 pTexture = NULL;
+	hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &pTexture);
+	if (FAILED(hr))
+	{
+		return hr;
+	}
+	if (m_pInTexture != NULL)
+	{
+		m_pInTexture->Release();
+		m_pInTexture = NULL;
+	}
+	m_pInTexture = pTexture;
 	return S_OK;
 }
 HRESULT HookDrawingFilter::GetPages(CAUUID *pPages)
@@ -607,6 +641,79 @@ BOOL HookDrawingFilter::SetHookedWindow(HWND hwnd)
 	m_hHookedWnd = hwnd;
 	return TRUE;
 }
+BOOL HookDrawingFilter::GetResolution(IPin* pPin, UINT& resW, UINT& resH)
+{
+	int idx = -1;
+	for (int i =0; i< m_numPins; i++)
+	{
+		if (pPin == m_pStreamPins[i])
+		{
+			idx = i;
+			break;
+		}
+	}
+	if (idx < 0 )
+	{
+		return FALSE;
+	}
+	{
+		CAutoLock lck(&m_csAddTextures);
+		if (m_pAddOutTexture.size() <= idx || m_pAddOutTexture[idx] == NULL)
+		{
+			return FALSE;
+		}
+
+		D3DSURFACE_DESC desc;
+		m_pAddOutTexture[idx]->GetLevelDesc(0, &desc);
+		resW = desc.Width;
+		resH = desc.Height;
+	}
+	return TRUE;
+}
+BOOL HookDrawingFilter::SetResolution(IPin* pPin, UINT resW, UINT resH)
+{
+	int idx = -1;
+	for (int i =0; i< m_numPins; i++)
+	{
+		if (pPin == m_pStreamPins[i])
+		{
+			idx = i;
+			break;
+		}
+	}
+	if (idx < 0 )
+		return FALSE;
+	if (m_pStreamPins.size() <= idx || m_pStreamPins[idx]->IsConnected())
+	{
+		return FALSE;
+	}
+	{
+		CAutoLock lck(&m_csAddTextures);
+		if (m_pAddOutTexture.size() <= idx || m_pAddOutTexture[idx] == FALSE)
+		{
+			return FALSE;
+		}
+	}
+	
+	return CreateAdditionalTexture(idx, resW, resH);
+}
+
+BOOL HookDrawingFilter::GetSourceResolution( UINT& resW, UINT& resH)
+{
+	CAutoLock lck(&m_csInTexture);
+
+	D3DSURFACE_DESC desc;
+	m_pInTexture->GetLevelDesc(0, &desc);
+	resW = desc.Width;
+	resH = desc.Height;
+
+	return TRUE;
+}
+BOOL HookDrawingFilter::SetSourceResolution(UINT resW, UINT resH)
+{
+	return CreateInTexture(resW, resH);
+}
+
 
 void HookDrawingFilter::onHookedWindowDestory()
 {
@@ -688,6 +795,7 @@ BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height,
 	pSurface->ReleaseDC(textureDC);
 	pSurface->Release();
 	pSurface = NULL;
+	
 	return TRUE;
 }
 
@@ -730,11 +838,11 @@ BOOL HookDrawingFilter::CaptureHookWnd()
 	pSurface->ReleaseDC(textureDC);
 	pSurface->Release();
 	pSurface = NULL;
-
 	return TRUE;
 }
 BOOL HookDrawingFilter::SwitchOutTexture(int idx)
 {
+	CAutoLock lck(&m_csAddTextures);
 	if (idx < 0 || idx >= m_pAddOutTexture.size())
 	{
 		return FALSE;
@@ -747,6 +855,7 @@ BOOL HookDrawingFilter::SwitchOutTexture(int idx)
 }
 BOOL HookDrawingFilter::SwitchRenderTarget(int idx)
 {
+	CAutoLock lck(&m_csAddTextures);
 	if (idx < 0 || idx >= m_pAddRenderTarget.size())
 	{
 		return FALSE;

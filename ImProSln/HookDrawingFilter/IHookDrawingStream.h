@@ -15,4 +15,8 @@ public:
 		const D3DXVECTOR2& rb, const D3DXVECTOR2& rt);
 	virtual BOOL GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2& rb, 
 		D3DXVECTOR2& rt);
+
+	virtual BOOL GetResolution(UINT& resW, UINT& resH);
+	virtual BOOL SetResolution(UINT resW, UINT resH);
+	
 };

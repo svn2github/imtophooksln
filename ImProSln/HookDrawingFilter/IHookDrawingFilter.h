@@ -11,4 +11,9 @@ public:
 	virtual BOOL IsHooked();
 	virtual HWND GetHookedWindow();
 	virtual BOOL SetHookedWindow(HWND hwnd);
+	virtual HRESULT CreateAdditionalTexture(UINT idx, UINT w, UINT h);
+	virtual HRESULT CreateInTexture(UINT w, UINT h);
+	virtual BOOL GetSourceResolution(UINT& w, UINT& h);
+	virtual BOOL SetSourceResolution(UINT w, UINT h);
+	virtual	BOOL CaptureHookWnd();
 };

@@ -59,4 +59,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnEnChangeedleft();
 	afx_msg void OnEnChangeedright();
 	afx_msg void OnEnChangeedbottom();
+	afx_msg void OnCbnSelchangeCombo1();
+	CComboBox m_cbResolution;
 };

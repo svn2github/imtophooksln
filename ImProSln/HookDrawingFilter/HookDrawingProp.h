@@ -33,6 +33,7 @@ protected:
 	STARTUPINFO m_si;
 	PROCESS_INFORMATION m_pi;
 	BOOL onWindowHooked();
+	bool GetSetting();
 public:
 	// Dialog Data
 	enum {IDD = IDD_HookDrawingPropPage};
@@ -57,4 +58,6 @@ public: //inherit from CMFCBaseProperty Page
 
 	CEdit m_edWndName;
 	CEdit m_edWndClass;
+	CComboBox m_cbResolution;
+	afx_msg void OnCbnSelchangeCbres();
 };

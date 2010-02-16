@@ -14,6 +14,8 @@
 #define IDC_edTop                       13003
 #define IDC_EDIT5                       13004
 #define IDC_edBottom                    13004
+#define IDC_COMBO1                      13005
+#define IDC_CBRES                       13006
 
 // Next default values for new objects
 // 
@@ -21,7 +23,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        13001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         13002
+#define _APS_NEXT_CONTROL_VALUE         13007
 #define _APS_NEXT_SYMED_VALUE           13000
 #endif
 #endif

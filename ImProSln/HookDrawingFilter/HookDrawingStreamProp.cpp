@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "HookDrawingStreamProp.h"
 #include "HookDrawingFilterApp.h"
-
+#include "CMuxTransformFilter.h"
 extern CHookDrawingFilterApp theApp;
 IMPLEMENT_DYNAMIC(HookDrawingStreamPropPage, CMFCBasePropertyPage)
 
@@ -13,6 +13,7 @@ void HookDrawingStreamPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edRight, m_edRight);
 	DDX_Control(pDX, IDC_edTop, m_edTop);
 	DDX_Control(pDX, IDC_edBottom, m_edBottom);
+	DDX_Control(pDX, IDC_COMBO1, m_cbResolution);
 }
 BOOL HookDrawingStreamPropPage::OnInitDialog()
 {
@@ -30,6 +31,7 @@ BEGIN_MESSAGE_MAP(HookDrawingStreamPropPage, CMFCBasePropertyPage)
 	ON_EN_CHANGE(IDC_edLeft, &HookDrawingStreamPropPage::OnEnChangeedleft)
 	ON_EN_CHANGE(IDC_edRight, &HookDrawingStreamPropPage::OnEnChangeedright)
 	ON_EN_CHANGE(IDC_edBottom, &HookDrawingStreamPropPage::OnEnChangeedbottom)
+	ON_CBN_SELCHANGE(IDC_COMBO1, &HookDrawingStreamPropPage::OnCbnSelchangeCombo1)
 END_MESSAGE_MAP()
 
 
@@ -84,6 +86,12 @@ BOOL HookDrawingStreamPropPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wP
 HRESULT HookDrawingStreamPropPage::OnActivate(void)
 {
 	EnableWindow(TRUE);
+	m_cbResolution.AddString(L"320 x 240");
+	m_cbResolution.AddString(L"640 x 480");
+	m_cbResolution.AddString(L"800 x 600");
+	m_cbResolution.AddString(L"1024 x 768");
+	m_cbResolution.AddString(L"1280 x 1024");
+	
 	GetSetting();
 	return S_OK;
 }
@@ -125,6 +133,22 @@ bool HookDrawingStreamPropPage::GetSetting()
 	m_edRight.SetWindowText(str);
 	swprintf_s(str, MAX_PATH, L"%.2f", rb.y);
 	m_edBottom.SetWindowText(str);
+
+	UINT w =0, h = 0;
+	if (m_pPin->GetResolution(w, h))
+	{
+		for (int i =0; i< m_cbResolution.GetCount();i++)
+		{
+			int scanW = 0, scanH = 0;
+			m_cbResolution.GetLBText(i, str);
+			swscanf_s(str, L"%d x %d", &scanW, &scanH);
+			if (scanW == w && scanH == scanH)
+			{
+				m_cbResolution.SetCurSel(i);
+			}
+		}
+	}
+	
 
 	return true;
 }
@@ -194,4 +218,16 @@ void HookDrawingStreamPropPage::OnEnChangeedright()
 void HookDrawingStreamPropPage::OnEnChangeedbottom()
 {
 	SetDirty();
+}
+
+void HookDrawingStreamPropPage::OnCbnSelchangeCombo1()
+{
+	if (m_pPin == NULL)
+		return;
+	WCHAR str[MAX_PATH] = {0};
+	int idx = m_cbResolution.GetCurSel();
+	m_cbResolution.GetLBText(idx, str);
+	int w =0, h = 0; 
+	swscanf_s(str, L"%d x %d", &w, &h);
+	m_pPin->SetResolution(w, h);
 }

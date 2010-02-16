@@ -24,6 +24,8 @@ public:
 		const D3DXVECTOR2& rb, const D3DXVECTOR2& rt);
 	virtual BOOL GetWarpPts(D3DXVECTOR2& lt, D3DXVECTOR2& lb, D3DXVECTOR2& rb, 
 				D3DXVECTOR2& rt);
+	virtual BOOL GetResolution(UINT& resW, UINT& resH);
+	virtual BOOL SetResolution(UINT resW, UINT resH);
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -65,6 +67,7 @@ public:
 	virtual HRESULT initD3D(UINT rtWidth, UINT rtHeight );
 	virtual HRESULT initAddTextures(UINT w, UINT h);
 	virtual HRESULT CreateAdditionalTexture(UINT idx, UINT w, UINT h);
+	virtual HRESULT CreateInTexture(UINT w, UINT h);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -86,12 +89,17 @@ public:
 	virtual BOOL IsHooked();
 	virtual HWND GetHookedWindow();
 	virtual BOOL SetHookedWindow(HWND hwnd);
+	virtual BOOL GetResolution(IPin* pPin, UINT& resW, UINT& resH);
+	virtual BOOL SetResolution(IPin* pPin, UINT resW, UINT resH);
+	virtual BOOL GetSourceResolution(UINT& resW, UINT& resH);
+	virtual BOOL SetSourceResolution(UINT resW, UINT resH);
+	virtual	BOOL CaptureHookWnd();
 protected:
 	const int m_numPins;
 	HWND m_hHookedWnd;
 	HWND m_hHookRecMsgWnd;
 	CCritSec m_csFillBuffer;
-
+	CCritSec m_csAddTextures;
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
 	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL SwitchOutTexture(int idx);
@@ -99,7 +107,7 @@ protected:
 	void onHookedWindowDestory();
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
-	BOOL CaptureHookWnd();
+
 	ATOM RegisterHookWndClass(HINSTANCE hInstance);
 	HRESULT CreateHookWindow(UINT winW, UINT winH);
 };

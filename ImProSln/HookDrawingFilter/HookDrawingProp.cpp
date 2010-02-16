@@ -13,7 +13,7 @@ void HookDrawingPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_edDetourPath);
 	DDX_Control(pDX, IDC_BUTTON3, m_btnBrowse);
 	DDX_Control(pDX, IDC_BUTTON4, m_btnCreateProc);
-
+	DDX_Control(pDX, IDC_CBRES, m_cbResolution);
 }
 BOOL HookDrawingPropPage::OnInitDialog()
 {
@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(HookDrawingPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON3, &HookDrawingPropPage::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &HookDrawingPropPage::OnBnClickedButton4)
 
+	ON_CBN_SELCHANGE(IDC_CBRES, &HookDrawingPropPage::OnCbnSelchangeCbres)
 END_MESSAGE_MAP()
 
 
@@ -89,6 +90,16 @@ BOOL HookDrawingPropPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, 
 HRESULT HookDrawingPropPage::OnActivate(void)
 {
 	EnableWindow(TRUE);
+	m_cbResolution.AddString(L"800 x 600");
+	m_cbResolution.AddString(L"1600 x 600");
+	m_cbResolution.AddString(L"2400 x 600");
+	m_cbResolution.AddString(L"3200 x 600");
+
+	m_cbResolution.AddString(L"1024 x 768");
+	m_cbResolution.AddString(L"2048 x 768");
+	m_cbResolution.AddString(L"3072 x 768");
+	m_cbResolution.AddString(L"4096 x 768");
+	GetSetting();
 	return S_OK;
 }
 HRESULT HookDrawingPropPage::OnApplyChanges(void)
@@ -193,4 +204,37 @@ BOOL HookDrawingPropPage::onWindowHooked()
 	m_btnBrowse.EnableWindow(FALSE);
 	m_edDetourPath.EnableWindow(FALSE);
 	return TRUE;
+}
+bool HookDrawingPropPage::GetSetting()
+{
+	if (m_pFilter == NULL)
+		return false;
+	WCHAR str[MAX_PATH] = {0};
+	UINT w =0, h = 0;
+	if (m_pFilter->GetSourceResolution(w, h))
+	{
+		for (int i =0; i< m_cbResolution.GetCount();i++)
+		{
+			int scanW = 0, scanH = 0;
+			m_cbResolution.GetLBText(i, str);
+			swscanf_s(str, L"%d x %d", &scanW, &scanH);
+			if (scanW == w && scanH == scanH)
+			{
+				m_cbResolution.SetCurSel(i);
+			}
+		}
+	}
+	return true;
+}
+void HookDrawingPropPage::OnCbnSelchangeCbres()
+{
+	if (m_pFilter == NULL)
+		return;
+	WCHAR str[MAX_PATH] = {0};
+	int idx = m_cbResolution.GetCurSel();
+	m_cbResolution.GetLBText(idx, str);
+	int w =0, h = 0; 
+	swscanf_s(str, L"%d x %d", &w, &h);
+	m_pFilter->SetSourceResolution(w, h);
+	m_pFilter->CaptureHookWnd();
 }
