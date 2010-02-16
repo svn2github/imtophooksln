@@ -62,7 +62,9 @@ public:
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	//Derive from D3DTransformFilterBase
-	virtual HRESULT CreateTextures(UINT w, UINT h);
+	virtual HRESULT initD3D(UINT rtWidth, UINT rtHeight );
+	virtual HRESULT initAddTextures(UINT w, UINT h);
+	virtual HRESULT CreateAdditionalTexture(UINT idx, UINT w, UINT h);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -91,7 +93,9 @@ protected:
 	CCritSec m_csFillBuffer;
 
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
+	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL SwitchOutTexture(int idx);
+	BOOL SwitchRenderTarget(int idx);
 	void onHookedWindowDestory();
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);

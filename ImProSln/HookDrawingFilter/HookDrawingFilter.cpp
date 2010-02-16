@@ -145,7 +145,7 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_hHookRecMsgWnd = 0;
 	RegisterHookWndClass(GetModule());
 	CreateHookWindow(320, 240); // size doesn't matter
-	HRESULT hr = initD3D(1024, 768);
+	HRESULT hr = initD3D(2048, 1024);
 	if (SUCCEEDED(hr))
 	{
 		HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
@@ -170,6 +170,12 @@ HookDrawingFilter::~HookDrawingFilter()
 		m_pAddOutTexture[i] = NULL;
 	}
 	m_pAddOutTexture.clear();
+	for (int i =0; i < m_pAddRenderTarget.size(); i++)
+	{
+		m_pAddRenderTarget[i]->Release();
+		m_pAddRenderTarget[i] = NULL;
+	}
+	m_pAddRenderTarget.clear();
 }
 
 CUnknown *WINAPI HookDrawingFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -269,6 +275,8 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	{
 		return S_FALSE;
 	}
+	SwitchRenderTarget(idx);
+	SwitchOutTexture(idx);
 	SetRenderTarget();
 	{
 		CAutoLock lck(&m_csInTexture);
@@ -279,7 +287,6 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		m_pD3DDisplay->Render();
 	}
 	ResetRenderTarget();
-	SwitchOutTexture(idx);
 	CopyRenderTarget2OutputTexture();	
 	CMediaType mt;
 	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
@@ -294,23 +301,19 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 	{
 		if (m_pStreamPins[i] == pPin)
 		{
-			isStreamPin = true;
-			break;
+			CMediaType mt;
+			mt.SetType(&GUID_MyMediaSample);
+			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
 		}
 	}
-	if (isStreamPin)
-	{
-		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
-		mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
-		mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
-		D3DSURFACE_DESC desc;
-		m_pOutTexture->GetLevelDesc(0, &desc);
-		mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
-		mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
-		*pMediaType = mt;
-		return S_OK;
-	}
+
 	return S_FALSE;
 }
 HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
@@ -351,8 +354,9 @@ HRESULT HookDrawingFilter::DecideBufferSize(
 	}
 	if (isStreamPin)
 	{
+		CMediaType mt = ((CMuxTransformStream*)pOutPin)->CurrentMediaType();
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = sizeof(LPDIRECT3DTEXTURE9);
+		pProp->cbBuffer = mt.GetSampleSize();
 		if (pProp->cbAlign == 0)
 		{
 			pProp->cbAlign = 1;
@@ -379,8 +383,48 @@ MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int r
 {
 	return new HookDrawingDisplay(pDevice, rtWidth, rtHeight);
 }
-
-HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
+HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
+{
+	
+	if (idx < 0 || idx >= m_numPins || m_pAddOutTexture.size() < m_numPins || 
+		m_pAddRenderTarget.size() < m_numPins)
+	{
+		return S_FALSE;
+	}
+	if ( m_pAddOutTexture[idx] != NULL)
+	{
+		m_pAddOutTexture[idx]->Release();
+		m_pAddOutTexture[idx] = NULL;
+	}
+	if (m_pAddRenderTarget[idx] != NULL)
+	{
+		m_pAddRenderTarget[idx]->Release();
+		m_pAddRenderTarget[idx] = NULL;
+	}
+	HRESULT hr;
+	hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &(m_pAddOutTexture[idx]));
+	if (FAILED(hr))
+	{
+		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
+	}
+	hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+		0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &(m_pAddRenderTarget[idx]));
+	if (FAILED(hr))
+	{
+		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
+	}
+	return hr;
+}
+HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
+{
+	HRESULT hr;
+	hr = __super::initD3D(rtWidth, rtHeight);
+	hr = initAddTextures(800, 600);
+	return hr;
+	
+}
+HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 {
 	HRESULT hr = S_FALSE;
 	for (int i =0; i< m_pAddOutTexture.size(); i++)
@@ -398,6 +442,7 @@ HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
 	for (int i =0 ;i< m_numPins; i++)
 	{
 		LPDIRECT3DTEXTURE9 pAddTexture = NULL;
+		LPDIRECT3DTEXTURE9 pAddRenderTarget = NULL;
 		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
 			0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &pAddTexture);
 		if (FAILED(hr))
@@ -405,9 +450,16 @@ HRESULT HookDrawingFilter::CreateTextures(UINT w, UINT h)
 			return hr;
 		}
 		m_pAddOutTexture.push_back(pAddTexture);
+		hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &pAddRenderTarget);
+		if (FAILED(hr))
+		{
+			return hr;
+		}
+		m_pAddRenderTarget.push_back(pAddRenderTarget);
 	}
 
-	return __super::CreateTextures(w, h);
+	return S_OK;
 }
 HRESULT HookDrawingFilter::GetPages(CAUUID *pPages)
 {
@@ -691,5 +743,17 @@ BOOL HookDrawingFilter::SwitchOutTexture(int idx)
 		m_pOutTexture->Release();
 	m_pOutTexture = m_pAddOutTexture[idx];
 	m_pAddOutTexture[idx]->AddRef();
+	return TRUE;
+}
+BOOL HookDrawingFilter::SwitchRenderTarget(int idx)
+{
+	if (idx < 0 || idx >= m_pAddRenderTarget.size())
+	{
+		return FALSE;
+	}
+	if (m_pRenderTarget != NULL)
+		m_pRenderTarget->Release();
+	m_pRenderTarget = m_pAddRenderTarget[idx];
+	m_pAddRenderTarget[idx]->AddRef();
 	return TRUE;
 }
