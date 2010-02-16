@@ -48,4 +48,6 @@ public: //inherit from CMFCBaseProperty Page
 	CEdit m_edTop;
 	CEdit m_edBottom;
 	afx_msg void OnBnClickedBtntest();
+	CComboBox m_cbARLevel;
+	afx_msg void OnCbnSelchangeCombo1();
 };

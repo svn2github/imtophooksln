@@ -14,6 +14,7 @@ void ARLayoutDXPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDRight, m_edRight);
 	DDX_Control(pDX, IDC_EDTop, m_edTop);
 	DDX_Control(pDX, IDC_EDBottom, m_edBottom);
+	DDX_Control(pDX, IDC_COMBO1, m_cbARLevel);
 }
 
 
@@ -22,6 +23,7 @@ BEGIN_MESSAGE_MAP(ARLayoutDXPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BTN_SAVE, &ARLayoutDXPropPage::OnBnClickedBtnSave)
 	ON_BN_CLICKED(IDC_BTN_Load, &ARLayoutDXPropPage::OnBnClickedBtnLoad)
 	ON_BN_CLICKED(IDC_BTNTest, &ARLayoutDXPropPage::OnBnClickedBtntest)
+	ON_CBN_SELCHANGE(IDC_COMBO1, &ARLayoutDXPropPage::OnCbnSelchangeCombo1)
 END_MESSAGE_MAP()
 
 
@@ -88,6 +90,10 @@ HRESULT ARLayoutDXPropPage::OnActivate(void)
 	m_edRight.SetWindowText(L"1.0");
 	m_edTop.SetWindowText(L"0.0");
 	m_edBottom.SetWindowText(L"1.0");
+
+	m_cbARLevel.AddString(L"3 Level(4x4 8x8 16x16)");
+	m_cbARLevel.AddString(L"2 Level(8x8 16x16)");
+	m_cbARLevel.SetCurSel(0);
 	return S_OK;
 }
 HRESULT ARLayoutDXPropPage::OnApplyChanges(void)
@@ -191,4 +197,20 @@ void ARLayoutDXPropPage::OnBnClickedBtntest()
 
 	m_pFilter->DecideLayout(camView, 1, NULL, 0);
 
+}
+
+
+void ARLayoutDXPropPage::OnCbnSelchangeCombo1()
+{
+	if (m_pFilter == NULL)
+		return;
+	int curSel = m_cbARLevel.GetCurSel();
+	if (curSel == 0	)
+	{
+		m_pFilter->initARMarkers(2, 8, 2, 80);
+	}
+	else if (curSel == 1)
+	{
+		m_pFilter->initARMarkers(3, 8, 2, 40);
+	}
 }

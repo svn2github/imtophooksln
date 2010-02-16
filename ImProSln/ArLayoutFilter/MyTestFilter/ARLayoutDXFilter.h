@@ -53,7 +53,7 @@ protected:
 
 	vector<vector<int>> m_TagIntersectTable;
 	vector<fRECT> m_allMarkerRects;
-	bool initARMarkers();
+
 	bool generateAllMarkerRect(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, 
 		vector<fRECT>& allMarkerRects);
 	bool generateIntersectTable(ARMultiEachMarkerInfoT* ARMarkers, int numMarker,
@@ -66,6 +66,7 @@ public:
 	virtual bool SaveConfigToFile(WCHAR* filename);
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
 		fRECT* fingerRects, UINT numFingerRects );
+	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
 private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);

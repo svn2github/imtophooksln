@@ -356,29 +356,35 @@ HRESULT ARLayoutDXFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
-bool ARLayoutDXFilter::initARMarkers()
+bool ARLayoutDXFilter::initARMarkers(UINT numLevel, UINT intMarkerBits, UINT intBorderBits, float intWidthBits)
 {
 	CAutoLock lck(&m_csARMarker);
-	if (m_ARMarkers != NULL)
-	{
-		delete [] m_ARMarkers;
-		m_ARMarkers = NULL;
-	}
-	m_numMarker = 0;
-	m_minMarkerWidth = 1.0;
-	float markerBits = 8;
-	float borderBits = 2;
-	float WidthBits = 80;
- 	int numLevel = 2;
+
+	float markerBits = intMarkerBits;
+	float borderBits = intBorderBits;
+	float WidthBits = intWidthBits;
+	int numMarker = 0;
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = markerBits/WidthBits/level;
 		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
 		int numY = numX;
-		m_numMarker += numX * numY;
-	
+		numMarker += numX * numY;
+	}
+	if (numMarker > NUMMARKER)
+	{
+		return false;
+	}
+	m_numMarker = numMarker;
+	m_minMarkerWidth = 1.0;
+
+	if (m_ARMarkers != NULL)
+	{
+		delete [] m_ARMarkers;
+		m_ARMarkers = NULL;
 	}
 
+	m_numMarker = numMarker;
 	m_ARMarkers = new ARMultiEachMarkerInfoT[m_numMarker];
 	
 	memset((void*)m_ARMarkers, 0, sizeof(ARMultiEachMarkerInfoT)*m_numMarker);
@@ -410,6 +416,7 @@ bool ARLayoutDXFilter::initARMarkers()
 	}
 	generateAllMarkerRect(m_ARMarkers, m_numMarker, m_allMarkerRects);
 	generateIntersectTable(m_ARMarkers, m_numMarker, m_TagIntersectTable);
+	sendConfigData();
 	return true;
 }
 bool ARLayoutDXFilter::generateAllMarkerRect(ARMultiEachMarkerInfoT* ARMarkers, int numMarker, 
@@ -751,7 +758,7 @@ ARMultiEachMarkerInfoT* ARLayoutDXFilter::GetARMarker(int id)
 
 bool ARLayoutDXFilter::sendConfigData()
 {
-	if (m_pOutputPins.size() < 0 || !m_pOutputPins[0]->IsConnected()) 
+	if (m_pOutputPins.size() <= 0 || !m_pOutputPins[0]->IsConnected()) 
 	{
 		return false;
 	}
