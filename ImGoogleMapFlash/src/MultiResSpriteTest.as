@@ -70,7 +70,7 @@ package
 			content.addChild(forMedia);
 			
 			// add low resolution view			
-			multiResSprite = new IMMultiView(content, 1280, 1024, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
+			multiResSprite = new IMMultiView(content, 1280, 1024, false, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
 
 			// add high resolution views
 			for each (var view:IMView in Setting.HRes) 

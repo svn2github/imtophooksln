@@ -34,7 +34,7 @@ package {
 			addEventListener(BringToFrontEvent.DO, bringToFront);
 			
 			// flickr parameters
-			var FlickrQuality:Number = 6;
+			var FlickrQuality:Number = 2;
 			var FlickrPhotoNum:Number = 20;			
 			
 			// prepare the flickr sprite			
@@ -42,11 +42,11 @@ package {
 			var flickrPlateHeight:Number = Setting.LRes.stageHeight * FlickrQuality;
 			flickrPlate = new Sprite();			
 			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum);
-			flickr.fetch(true);
-//			flickr.fetch(false, "Siggraph");
+//			flickr.fetch(true);
+			flickr.fetch(false, "Siggraph");
 			
 			// add low resolution view
-			multiResSprite = new IMMultiView(flickrPlate, flickrPlateWidth, flickrPlateHeight, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
+			multiResSprite = new IMMultiView(flickrPlate, flickrPlateWidth, flickrPlateHeight, false, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
 
 			// add high resolution views
 			for each (var view:IMView in Setting.HRes) 

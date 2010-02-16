@@ -2,6 +2,7 @@ package impro.multiview
 {
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
@@ -11,7 +12,7 @@ package impro.multiview
 	
 	public class IMViewport extends Sprite
 	{
-		private var parentSprite:Sprite;
+		private var parentSprite:DisplayObject
 		private var screenWidth:Number;
 		private var screenHeight:Number;
 		private var plateWidth:Number;
@@ -31,7 +32,7 @@ package impro.multiview
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;	
 				
-		public function IMViewport(parent:Sprite, plateWidth:Number, plateHeight:Number, screenX:Number, screenY:Number, screenWidth:Number, screenHeight:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100, $DEBUG:Boolean = true)
+		public function IMViewport(parent:DisplayObject, plateWidth:Number, plateHeight:Number, screenX:Number, screenY:Number, screenWidth:Number, screenHeight:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100, $DEBUG:Boolean = true)
 		{
 			super();
 			DEBUG = $DEBUG;
@@ -46,7 +47,7 @@ package impro.multiview
 			
 			fullRect = new Rectangle(0, 0, screenWidth, screenHeight);
 			
-			bitmapData = new BitmapData(plateHeight, plateHeight);
+			bitmapData = new BitmapData(plateWidth, plateHeight);
 			bitmap = new Bitmap(bitmapData);
 			
 			
