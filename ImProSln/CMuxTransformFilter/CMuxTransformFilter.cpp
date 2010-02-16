@@ -189,7 +189,7 @@ BOOL CMuxTransformFilter::IsAnyOutPinConnect()
 }
 CCritSec* CMuxTransformFilter::GetReceiveCS(IPin* pPin)
 {
-	return &m_csReceive;
+	return NULL;
 }
 HRESULT CMuxTransformFilter::Stop()
 {
@@ -1208,7 +1208,12 @@ DWORD CMuxTransformStream::ThreadProc(void) {
 	return 0;
 }
 
-
+float CMuxTransformStream::GetFrameRateLimit()
+{
+	if (m_pFilter == NULL)
+		return 30.0; //default value
+	return m_pFilter->GetFrameRateLimit(this);
+}
 //
 // DoBufferProcessingLoop
 //
@@ -1221,7 +1226,19 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 	OnThreadStartPlay();
 
 	do {
+		DWORD currTime = 0;
+		DWORD lastTime = 0;
+		DWORD elapsedTime = 0;
+		DWORD idealElapsedTime = 1.0 / GetFrameRateLimit() * 1000.0;
 		while (!CheckRequest(&com)) {
+			currTime = timeGetTime();
+			elapsedTime = currTime - lastTime;
+			
+			if (elapsedTime < idealElapsedTime )
+			{
+				continue;
+			}
+			lastTime = currTime;
 			IMediaSample *pSample;
 			HRESULT hr = GetDeliveryBuffer(&pSample,NULL,NULL,0);
 			if (FAILED(hr)) {

@@ -781,17 +781,6 @@ HRESULT AR2WarpController::GetPages(CAUUID *pPages)
 	
 }
 
-CCritSec* AR2WarpController::GetReceiveCS(IPin* pPin)
-{
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
-	{
-		return NULL;
-	}
-	else
-	{
-		return __super::GetReceiveCS(pPin);
-	}
-}
 
 bool AR2WarpController::ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts)
 {

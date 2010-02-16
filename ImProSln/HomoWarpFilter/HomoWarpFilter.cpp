@@ -594,18 +594,6 @@ bool HomoWarpFilter::SetIsInvWarp(bool bInv)
 	return true;
 }
 
-CCritSec* HomoWarpFilter::GetReceiveCS(IPin* pPin)
-{
-	if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
-	{
-		return NULL;
-	}
-	else
-	{
-		return __super::GetReceiveCS(pPin);
-	}
-}
-
 bool HomoWarpFilter::SaveConfigToFile(WCHAR* path)
 {
 	CAutoLock lck(&m_accessWarpMatCS);

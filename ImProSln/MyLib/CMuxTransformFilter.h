@@ -213,8 +213,7 @@ protected:
 	virtual DWORD ThreadProc(void);  		// the thread function
 
 	virtual HRESULT DoBufferProcessingLoop(void);    // the loop executed whilst running
-
-
+	virtual float GetFrameRateLimit();
 	// *
 	// * AM_MEDIA_TYPE support
 	// *
@@ -258,7 +257,7 @@ public:
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
 	// Source Filter Method
 	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };
-
+	virtual float GetFrameRateLimit(IPin* pPin) { return 30.0;}
 	// =================================================================
 	// ----- Optional Override Methods           -----------------------
 	// =================================================================

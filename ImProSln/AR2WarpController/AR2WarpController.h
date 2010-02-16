@@ -72,7 +72,6 @@ protected:
 
 
 	ForegroundRegion* m_pFGList;
-	virtual CCritSec* GetReceiveCS(IPin* pPin);
 	virtual bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	virtual bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	virtual bool SendWarpConfig(int camIDx);
