@@ -28,10 +28,6 @@ package impro.googlemap
 		private var updateCallback:Function;
 
 		
-//		private var maskBmp:Bitmap;
-//		private var invFilter:ColorMatrixFilter = genInvFilter();
-//		private var invTransform:ColorTransform = new ColorTransform(0,0,0,0,0,0,0,255);	
-
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;				
 		private var DEBUG_TEXT:TextField;			
@@ -95,29 +91,13 @@ package impro.googlemap
 			addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
 			addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
 			
-//			maskBmp = new Bitmap();			
-//			addChild(maskBmp);			
 		}
 		
 		public function disableTouchListeners():void{
 			removeEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
 			removeEventListener(TouchEvent.MOUSE_UP, touchDropIt);					
 		}
-		
-//		public function setMask(bitmapData:BitmapData):void{
-//			maskBmp.bitmapData = bitmapData;
-//			maskBmp.x = -w/2;
-//			maskBmp.y = -h/2;
-//			maskBmp.width = w;
-//			maskBmp.height = h;			
-//			maskBmp.bitmapData.applyFilter(maskBmp.bitmapData, maskBmp.bitmapData.rect ,new Point(0,0), invFilter);
-//		}
-
-//		private function tiltIt(e:MouseEvent):void{
-//			trace("tilt It: " + e.delta); // amount mouse wheel moved 
-//			theMap.pitch(e.delta);
-//		}
-		
+				
 		public function setViewport(cx:Number, cy:Number, w:Number, h:Number):void{
 			this.x = cx;
 			this.y = cy;
@@ -219,18 +199,8 @@ package impro.googlemap
 			
 			if(DEBUG){
 				DEBUG_TEXT.y = this.h /2; 
-				DEBUG_TEXT.text = x + ", " + y;
+				DEBUG_TEXT.text = x + ", " + y;			
 			}
-			trace(">> " + x + ", " + y);			
 		}
-
-//		private function genInvFilter():ColorMatrixFilter{
-//            var matrix:Array = new Array();
-//            matrix = matrix.concat([0, 0, 0, 0, 0]); // red
-//            matrix = matrix.concat([0, 0, 0, 0, 0]); // green
-//            matrix = matrix.concat([0, 0, 0, 0, 0]); // blue
-//            matrix = matrix.concat([0, 0, 0, -1, 255]); // alpha
-//			return new ColorMatrixFilter(matrix);
-//		}		
 	}
 }

@@ -6,7 +6,7 @@
 	import flash.events.IOErrorEvent;
 	import flash.net.URLRequest;
 	import flash.system.LoaderContext;
-
+	
 	public class ImageObject extends Multitouchable 
 	{		
 		
@@ -27,9 +27,14 @@
 		private var imageSprite:Sprite;
 		private var background:Sprite;
 		
-		public function ImageObject (url:String)
+		private var onLoadComplete:Function;		
+		private var imageWidth:Number
+		private var imageHeight:Number
+		
+		public function ImageObject (url:String, onLoadComplete:Function)
 		{
 			index = counter++;
+			this.onLoadComplete = onLoadComplete;
 			
 			photoLoader = new Loader();		
 
@@ -52,8 +57,8 @@
 			background.alpha = 0;
 						
 			imageSprite = new Sprite();
-			this.addChild(background);
-			this.addChild(imageSprite);				
+			addChild(background);
+			addChild(imageSprite);				
 			
 			/*
 			addEventListener(GenericTapEvent.DOUBLE_TAP,function(event:Event):void{
@@ -68,8 +73,7 @@
 				
 			});
 			*/
-			
-			
+						
 		}
 //		private function onProgressHandler(mProgress:ProgressEvent)
 //		{	
@@ -86,28 +90,38 @@
 			}
 		}
 		
+		public function getImageWidth():Number{
+			return imageWidth;
+		}
+		public function getImageHeight():Number{
+			return imageHeight;
+		}
+		
 		private function arrange( event:Event = null ):void 
 		{							
 			this.alpha = 1;
-			photoLoader.x = -photoLoader.width/2;
-			photoLoader.y = -photoLoader.height/2;			
+//			photoLoader.x = -photoLoader.width/2;
+//			photoLoader.y = -photoLoader.height/2;			
 			
 			var image:Bitmap = Bitmap(photoLoader.content);
 			image.smoothing=true;
 			
 			var myBitmap : BitmapData = new BitmapData(image.width, image.height,false,0xffffffff);
+//			var myBitmap : BitmapData = new BitmapData(Flickr.photoWidth, Flickr.photoHeight, false,0xffffffff);			
 			myBitmap.draw(image);
 			
 			var m:Number = 4;
 			var m2:Number = m*2;			
-			background.graphics.beginFill(0xffffff);
-			background.graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
-			background.graphics.endFill();
+//			background.graphics.beginFill(0xffffff);
+//			background.graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
+//			background.graphics.drawRect(-m, -m, myBitmap.width, myBitmap.height+m2);
+//			background.graphics.endFill();
 
 //			imageSprite.addChild(image);
-			imageSprite.graphics.beginBitmapFill(myBitmap,null,true,true);
+			imageSprite.graphics.beginBitmapFill(myBitmap, null, false, true);
 			imageSprite.graphics.lineStyle(0, 0x00, 0);
-            imageSprite.graphics.drawRect(0, 0, image.width, image.height);
+			var min:Number = Math.min(image.width, image.height)
+            imageSprite.graphics.drawRect(0, 0, image.width, Math.min(image.width, image.height));
             imageSprite.graphics.endFill();
 			
 //			var m:Number = 4;
@@ -127,6 +141,12 @@
 //            graphics.endFill();
 			
 			handleAddedToStage(null);
+			
+			
+			this.imageWidth = image.width;
+//			this.imageHeight = image.height;
+			this.imageHeight = Math.min(image.width, image.height);
+			onLoadComplete.call(this, this);
 		}				
 		
 		/*

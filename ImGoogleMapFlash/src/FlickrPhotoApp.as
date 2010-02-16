@@ -21,6 +21,11 @@ package {
 	[SWF(width="1280", height="720", backgroundColor="#000000", frameRate="30")]
 	public class FlickrPhotoApp extends Sprite
 	{
+		public static var photoWidth:Number = 100;
+		private var FlickrQuality:Number = 2;
+		private var FlickrPhotoNum:Number = 40;			
+
+
 		private var multiResSprite:IMMultiView;
 		private var showAll:Boolean = true;		
 				
@@ -34,14 +39,12 @@ package {
 			addEventListener(BringToFrontEvent.DO, bringToFront);
 			
 			// flickr parameters
-			var FlickrQuality:Number = 2;
-			var FlickrPhotoNum:Number = 20;			
 			
 			// prepare the flickr sprite			
 			var flickrPlateWidth:Number = Setting.LRes.stageWidth * FlickrQuality;
 			var flickrPlateHeight:Number = Setting.LRes.stageHeight * FlickrQuality;
 			flickrPlate = new Sprite();			
-			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum);
+			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum, photoWidth);
 //			flickr.fetch(true);
 			flickr.fetch(false, "Siggraph");
 			

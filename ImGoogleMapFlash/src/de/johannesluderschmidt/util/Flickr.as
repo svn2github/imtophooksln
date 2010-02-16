@@ -9,8 +9,13 @@
 	import flash.net.URLRequest;
 	import flash.net.URLVariables;
 
+	import com.greensock.*;
+	import com.greensock.easing.*;
+
 	public class Flickr extends Sprite
 	{
+		public var photoWidth:Number;
+		
 		private var index:int = 0;		
 		private var rest:URLLoader = null;
 		private var flickr:XML = null;
@@ -21,12 +26,18 @@
 		private var plateWidth:Number;
 		private var plateHeight:Number;
 		
-		public function Flickr(d:Sprite, width:Number, height:Number, fetchIn:Number) 
+		private var margin:Number = 20;
+		private var curX:Number = margin;
+		private var curY:Number = margin;
+		private var maxHeightInRow:Number = 0;
+		
+		public function Flickr(d:Sprite, width:Number, height:Number, fetchIn:Number, photoWidth:Number) 
 		{
 			thestage = d;
 			fetchCount = fetchIn;
 			this.plateWidth = width;
 			this.plateHeight = height;
+			this.photoWidth = photoWidth;
 			allPics = new Array();
 		
 		}
@@ -95,7 +106,7 @@
 						secret + ".jpg";
 		
 				
-				photo = new ImageObject( url);				
+				photo = new ImageObject( url, addPics);				
 				photo.name="ImageObject_"+i;
 				photo.scaleX = 0.7 + 0.3*Math.random();
 				photo.scaleY = photo.scaleX;
@@ -134,34 +145,64 @@
 				// Assemble the URL and request
 				url = 	"http://static.flickr.com/" + server + "/" + id + "_" + 
 						secret + ".jpg";
-				
-				
-				photo = new ImageObject( url);				
+								
+				photo = new ImageObject( url, addPics);				
 				photo.name="ImageObject_"+i;
-				photo.scaleX = 0.6;
-				photo.scaleY = 0.6;
+//				photo.scaleX = 0.6;
+//				photo.scaleY = 0.6;
 //				photo.scaleX = 0.7 + 0.3*Math.random();
 //				photo.scaleY = photo.scaleX;
 //				photo.x = (Math.random()*plateWidth) - plateWidth/2;
 //				photo.y = (Math.random()*plateHeight) - plateHeight/2;
 				
-				if((_x+_imgW) > plateWidth){
-					_x = margin;
-					_y += (_imgW + margin);
-				}
+//				if((_x+_imgW) > plateWidth){
+//					_x = margin;
+//					_y += (_imgW + margin);
+//				}
 				
-				photo.x = _x;
-				photo.y = _y;
+//				photo.x = _x;
+//				photo.y = _y;
 				
-				trace(">> " + _x + ", " + _y);
-				
-				_x += (_imgW + margin);
+//				_x += (_imgW + margin);
 								
-				allPics.push(photo);
-				
-				thestage.addChild(photo);
+//				allPics.push(photo);				
+//				thestage.addChild(photo);
 			}
 		}		
+		
+		private function addPics(obj:Object):void{
+			
+			var imObj:ImageObject = obj as ImageObject;
+			var imgW:Number = imObj.getImageWidth();
+			var imgH:Number = imObj.getImageHeight();
+			var scale:Number = photoWidth / imgW;
+			imObj.scaleX = scale;
+			imObj.scaleY = scale;
+			
+			if((curX + photoWidth) > plateWidth){
+				curX = margin;
+				curY += (maxHeightInRow + margin);
+				maxHeightInRow = 0;
+			}else{
+				maxHeightInRow = Math.max(imgH*scale, maxHeightInRow); 
+			}
+			
+//			curX += margin;
+//			imObj.x = curX;
+//			imObj.y = curY;
+			imObj.x = 0;
+			imObj.y = 0;
+//			TweenLite.to(imObj, 4, {x:curX, y:curY, ease:Elastic.easeOut});
+						
+			curX += (photoWidth + margin);
+
+			trace("addPics[" + imObj.name + "]: (" + imObj.x + ", " + imObj.y + ")");
+
+			allPics.push(imObj);				
+			thestage.addChild(imObj);
+			
+			
+		}
 		
 		public function clearPics():void
 		{

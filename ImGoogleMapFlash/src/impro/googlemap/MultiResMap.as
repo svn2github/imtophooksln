@@ -60,18 +60,17 @@ package impro.googlemap
 			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
 			
 			if(DEBUG){
-				var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
-				DEBUG_TEXT = new TextField();
-				DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
-				DEBUG_TEXT.background = true;	
-				DEBUG_TEXT.backgroundColor = 0x000000;	
-				DEBUG_TEXT.border = true;	
-				DEBUG_TEXT.borderColor = 0x333333;							
-				DEBUG_TEXT.text = "DEBUG";
-				DEBUG_TEXT.x = 200;
-				DEBUG_TEXT.y = 200;
-				
-				addChild(DEBUG_TEXT);
+//				var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
+//				DEBUG_TEXT = new TextField();
+//				DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
+//				DEBUG_TEXT.background = true;	
+//				DEBUG_TEXT.backgroundColor = 0x000000;	
+//				DEBUG_TEXT.border = true;	
+//				DEBUG_TEXT.borderColor = 0x333333;							
+//				DEBUG_TEXT.text = "DEBUG";
+//				DEBUG_TEXT.x = 200;
+//				DEBUG_TEXT.y = 200;				
+//				addChild(DEBUG_TEXT);
 			}
 			
 			// add imObject listener

@@ -20,7 +20,7 @@ package impro.multiview
 		private var renderTargetHeight:Number;				
 		private var renderTargetAsLRes:Boolean;
 		
-		public function IMMultiView(renderTarget:DisplayObject, renderTargetWidth:Number, renderTargetHeight:Number, renderTargetAsLRes:Boolean, lresWidth:Number, lresHeight:Number, $DEBUG:Boolean = true)
+		public function IMMultiView(renderTarget:DisplayObject, renderTargetWidth:Number, renderTargetHeight:Number, useRenderTargetAsLRes:Boolean, lresWidth:Number, lresHeight:Number, $DEBUG:Boolean = true)
 		{
 			super();
 			DEBUG = $DEBUG;
@@ -28,7 +28,7 @@ package impro.multiview
 			this.renderTarget = renderTarget;
 			this.renderTargetWidth = renderTargetWidth;
 			this.renderTargetHeight = renderTargetHeight;
-			this.renderTargetAsLRes = renderTargetAsLRes;
+			this.renderTargetAsLRes = useRenderTargetAsLRes;
 			this.lresWidth = lresWidth;
 			this.lresHeight = lresHeight;
 			
@@ -42,7 +42,7 @@ package impro.multiview
 						
 			addChild(renderTarget);
 			
-			if(renderTargetAsLRes){
+			if(useRenderTargetAsLRes){
 				if(renderTarget.width !=0 && renderTarget.height != 0){
 					var scaleX:Number = lresWidth / renderTarget.width; 
 					var scaleY:Number = lresHeight / renderTarget.height
@@ -50,18 +50,16 @@ package impro.multiview
 					renderTarget.scaleY = scaleY;
 				}
 			}
-			
+			else{
 			// add itself as the full view
-			if(!renderTargetAsLRes)
-			{
-//				renderTargetMask = new Sprite();
-//				renderTargetMask.graphics.beginFill(0x000000);
-//				renderTargetMask.graphics.drawRect(0, 0, renderTargetWidth, renderTargetHeight);
-//				renderTargetMask.graphics.endFill();
-//				addChild(renderTargetMask);				
-
-				addViewport(-1, 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);
+				renderTargetMask = new Sprite();
+				renderTargetMask.graphics.beginFill(0x000000);
+				renderTargetMask.graphics.drawRect(0, 0, renderTargetWidth, renderTargetHeight);
+				renderTargetMask.graphics.endFill();
+				addChild(renderTargetMask);				
+				addViewport(-1, 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);				
 			}
+			
 		}	
 						
 		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100):void{			
@@ -76,12 +74,14 @@ package impro.multiview
 		}
 		
 		public function hideAll():void{
-			renderTargetMask.alpha = 0;
+			if(renderTargetMask!=null)
+				renderTargetMask.alpha = 0;
 			for each (var viewport:IMViewport in viewportDict) 
                 viewport.alpha = 0;			
 		}
 		public function showAll():void{
-			renderTargetMask.alpha = 1;
+			if(renderTargetMask!=null)
+				renderTargetMask.alpha = 1;
 			for each (var viewport:IMViewport in viewportDict) 
                 viewport.alpha = 1;			
 		}

@@ -45,33 +45,9 @@ package impro.multiview
 			this.plateWidth = plateWidth;
 			this.plateHeight = plateHeight;
 			
-			fullRect = new Rectangle(0, 0, screenWidth, screenHeight);
-			
+			fullRect = new Rectangle(0, 0, screenWidth, screenHeight);			
 			bitmapData = new BitmapData(plateWidth, plateHeight);
-			bitmap = new Bitmap(bitmapData);
-			
-			
-//			this.graphics.beginFill(0x000000);
-//			this.graphics.drawRect(screenX, screenY, screenWidth, screenHeight);
-//			this.graphics.endFill();
-			
-			
-			
-//			translatePlate = new Sprite();
-//			scalePlate = new Sprite();
-//			recenterPlate = new Sprite();
-			
-//			translatePlate.x = -plateHeight/2;
-//			translatePlate.y = -plateHeight/2;
-//			translatePlate.addChild(bitmap);
-			
-//			scalePlate.scaleX = 1;
-//			scalePlate.scaleY = 1;
-//			scalePlate.addChild(translatePlate);			
-			
-//			recenterPlate.x = screenWidth/2;
-//			recenterPlate.y = screenHeight/2;
-//			recenterPlate.addChild(scalePlate);
+			bitmap = new Bitmap(bitmapData);		
 			
 			var square:Sprite = new Sprite();
 			square.graphics.beginFill(0xff000000);
@@ -94,7 +70,7 @@ package impro.multiview
 				addChild(ruler);
 			}
 			
-			viewport = new ViewportControl(updateCallback, vpCx, vpCy, vpWidth, vpHeight);
+			viewport = new ViewportControl(updateCallback, vpCx, vpCy, vpWidth, vpHeight, DEBUG);
 		}
 
 		public function setViewportBound(rx1:Number, ry1:Number, rx2:Number, ry2:Number):void{
@@ -115,7 +91,7 @@ package impro.multiview
 			tmatrix.concat(smatrix);
 			tmatrix.concat(tmatrix2);
 			
-			bitmapData.fillRect(fullRect, 0xff0000);			
+			bitmapData.fillRect(fullRect, 0xff000000);			
 			bitmapData.draw(parentSprite, tmatrix);
 			
 			//new Matrix(			
