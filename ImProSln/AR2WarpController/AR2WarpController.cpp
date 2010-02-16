@@ -488,11 +488,6 @@ HRESULT AR2WarpController::CreatePins()
 			this,            // Owner filter
 			&hr,             // Result code
 			L"HighRes mask conf2");   // Pin name
-		CMuxTransformOutputPin* pOutput9 = new CMuxTransformOutputPin(NAME("Transform output pin"),
-			this,            // Owner filter
-			&hr,             // Result code
-			L"HighRes mask conf3");   // Pin name
-
 
 		m_pInputPins.push_back(pInput0);
 		m_pInputPins.push_back(pInput1);
@@ -509,7 +504,7 @@ HRESULT AR2WarpController::CreatePins()
 		m_pOutputPins.push_back(pOutput6);
 		m_pOutputPins.push_back(pOutput7);
 		m_pOutputPins.push_back(pOutput8);
-		m_pOutputPins.push_back(pOutput9);
+	
 	}
 	return S_OK;
 }
