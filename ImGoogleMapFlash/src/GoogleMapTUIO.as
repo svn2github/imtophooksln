@@ -33,7 +33,7 @@ package {
 			//這樣就可以確保 stage 屬性一定有值
 			
 			//Connect to FLOSC to recieve touch input
-			this.stage.stageWidth = 500;
+//			this.stage.stageWidth = 500;
 			
 			// add multi-resolution map
 			addMultiResMap();
@@ -58,7 +58,10 @@ package {
 //				else if(e.keyCode == Keyboard.DOWN)
 //					geControl.moveDown();							
 //			});  
-
+			
+			
+//			var iview:IMView = multiResMap.getMapStage();
+			
 			TUIO.init(multiResMap.getMapStage(), this, 'localhost', 3000, '', Setting.DEBUG);
 			  
 		}  

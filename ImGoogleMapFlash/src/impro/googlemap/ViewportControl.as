@@ -112,8 +112,7 @@ package impro.googlemap
 			this.x = rx1 + this.w/2;
 			this.y = ry1 + this.h/2;
 			handle.x = w/2-handleSize/2;
-			handle.y = h/2-handleSize/2;			
-			
+			handle.y = h/2-handleSize/2;						
 			updateControl();
 		}
 		

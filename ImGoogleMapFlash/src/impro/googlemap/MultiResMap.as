@@ -101,7 +101,8 @@ package impro.googlemap
 			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
 						
 			getViewport(he.ID).setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
-			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);			
+			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
+			getViewport(he.ID).update();
 		}
 		
 		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number):MapViewport{			
