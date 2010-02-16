@@ -1,6 +1,5 @@
 ﻿package de.johannesluderschmidt.util{	
-	
-	
+		
 	import de.johannesluderschmidt.demoObjects.ImageObject;
 	
 	import flash.display.Sprite;
@@ -8,9 +7,6 @@
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLVariables;
-
-	import com.greensock.*;
-	import com.greensock.easing.*;
 
 	public class Flickr extends Sprite
 	{
@@ -31,13 +27,18 @@
 		private var curY:Number = margin;
 		private var maxHeightInRow:Number = 0;
 		
-		public function Flickr(d:Sprite, width:Number, height:Number, fetchIn:Number, photoWidth:Number) 
+		private var onLoadComplete:Function;
+		
+		public function Flickr(d:Sprite, width:Number, height:Number, fetchIn:Number, photoWidth:Number, onLoadComplete:Function) 
 		{
 			thestage = d;
 			fetchCount = fetchIn;
 			this.plateWidth = width;
 			this.plateHeight = height;
 			this.photoWidth = photoWidth;
+			
+			this.onLoadComplete = onLoadComplete;
+			
 			allPics = new Array();
 		
 		}
@@ -188,20 +189,16 @@
 			}
 			
 //			curX += margin;
-//			imObj.x = curX;
-//			imObj.y = curY;
-			imObj.x = 0;
-			imObj.y = 0;
-//			TweenLite.to(imObj, 4, {x:curX, y:curY, ease:Elastic.easeOut});
-						
+			imObj.x = curX;
+			imObj.y = curY;						
 			curX += (photoWidth + margin);
 
-			trace("addPics[" + imObj.name + "]: (" + imObj.x + ", " + imObj.y + ")");
+//			trace("addPics[" + imObj.name + "]: (" + imObj.x + ", " + imObj.y + ")");
 
 			allPics.push(imObj);				
 			thestage.addChild(imObj);
 			
-			
+			onLoadComplete.call();
 		}
 		
 		public function clearPics():void

@@ -34,7 +34,7 @@ package {
 		
 		public function FlickrPhotoApp(){
 			
-			stage.addEventListener (KeyboardEvent.KEY_DOWN, keyDown);			
+//			stage.addEventListener (KeyboardEvent.KEY_DOWN, keyDown);			
 			addEventListener(BringToBackEvent.DO, bringToBack);
 			addEventListener(BringToFrontEvent.DO, bringToFront);
 			
@@ -44,7 +44,7 @@ package {
 			var flickrPlateWidth:Number = Setting.LRes.stageWidth * FlickrQuality;
 			var flickrPlateHeight:Number = Setting.LRes.stageHeight * FlickrQuality;
 			flickrPlate = new Sprite();			
-			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum, photoWidth);
+			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum, photoWidth, photoLoadComplete);
 //			flickr.fetch(true);
 			flickr.fetch(false, "Siggraph");
 			
@@ -62,6 +62,10 @@ package {
 			Multitouchable.touchMoveCallback = touchMoveCallback;
 //			Multitouchable.touchDownCallback = touchDownCallback;
 //			Multitouchable.touchUpCallback = touchUpCallback;
+		}
+		
+		private function photoLoadComplete():void{
+			multiResSprite.updateViewport();			
 		}
 
 		private function onKeyEnter(place:String):void{

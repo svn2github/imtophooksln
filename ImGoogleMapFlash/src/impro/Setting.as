@@ -10,11 +10,16 @@ package impro
 		public static var ServerIP:String = "192.168.1.4";
 		public static var ServerPort:Number = 5000;
 		
-		public static var LRes:IMView = new IMView(-1, 0, 0, 1024, 768);		
+//		public static var LRes:IMView = new IMView(-1, 0, 0, 1024, 768);		
+//		public static var HRes:Array = new Array(
+//				new IMView(0, 1024, 0, 1024, 768)	// high relosution 1
+////				new IMView(1, 800, 0, 400, 400)	// high relosution 2
+//				);
+				
+		public static var LRes:IMView = new IMView(-1, 0, 0, 500, 500);		
 		public static var HRes:Array = new Array(
-				new IMView(0, 1024, 0, 1024, 768)	// high relosution 1
+				new IMView(0, 500, 0, 500, 500)	// high relosution 1
 //				new IMView(1, 800, 0, 400, 400)	// high relosution 2
 				);
-				
 	}
 }
