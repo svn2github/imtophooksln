@@ -4,7 +4,10 @@ package impro.googlemap
 	
 	import flash.display.Sprite;
 	import flash.events.*;
-	import flash.filters.ColorMatrixFilter;
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	
 	import flash.geom.Point;
 	
 	public class ViewportControl extends RotatableScalable
@@ -23,22 +26,43 @@ package impro.googlemap
 		private var oriPt4:Point = new Point();
 		
 		private var updateCallback:Function;
+
 		
 //		private var maskBmp:Bitmap;
 //		private var invFilter:ColorMatrixFilter = genInvFilter();
 //		private var invTransform:ColorTransform = new ColorTransform(0,0,0,0,0,0,0,255);	
 
 		//-------------------------------------- DEBUG VARS			
-//		private var DEBUG:Boolean;				
+		private var DEBUG:Boolean;				
+		private var DEBUG_TEXT:TextField;			
 		
 //		public function ViewportControl(smap:MapViewport, cx:Number, cy:Number, w:Number, h:Number)
-		public function ViewportControl(callback:Function, cx:Number, cy:Number, w:Number, h:Number)
+		public function ViewportControl(callback:Function, cx:Number, cy:Number, w:Number, h:Number, $DEBUG:Boolean = true)
 		{
 			super();
 			
+			DEBUG = $DEBUG;
+				
 			this.updateCallback = callback;
 			this.w = w;
 			this.h = h;
+			
+			if(DEBUG)
+			{
+	  			var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
+				DEBUG_TEXT = new TextField();       
+				DEBUG_TEXT.defaultTextFormat = format;
+				DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
+				DEBUG_TEXT.background = true;	
+				DEBUG_TEXT.backgroundColor = 0x000000;	
+				DEBUG_TEXT.border = true;	
+				DEBUG_TEXT.borderColor = 0x333333;							
+				DEBUG_TEXT.x = 0;			
+				DEBUG_TEXT.y = this.h /2;
+				DEBUG_TEXT.text = "DEBUG_TEXT";
+				addChild(DEBUG_TEXT);						
+			}			
+			
 			setViewport(cx, cy, w, h);
 							
 			// draw handle			
@@ -70,7 +94,6 @@ package impro.googlemap
 			
 			addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
 			addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
-			
 			
 //			maskBmp = new Bitmap();			
 //			addChild(maskBmp);			
@@ -156,11 +179,10 @@ package impro.googlemap
 			
 			if(event.target == handle){
 				w = Math.abs(handle.x)*2 + handleSize;
-				h = Math.abs(handle.y)*2 + handleSize;
-					
-				updateControl();
+				h = Math.abs(handle.y)*2 + handleSize;					
 			}
-//			theMap.update();
+
+			updateControl();
 			updateCallback.call(this);
 		}
 		
@@ -179,6 +201,7 @@ package impro.googlemap
 			this.graphics.drawRect(-w/2, 0, w, 1);			
 			this.graphics.endFill();
 			
+			// draw bounding box
 			this.graphics.lineStyle(1, 0xff0000);
 			this.graphics.moveTo(-w/2, -h/2);
 			this.graphics.lineTo(w/2, -h/2);
@@ -192,16 +215,22 @@ package impro.googlemap
 			this.graphics.lineTo(oriPt2.x, oriPt2.y);
 			this.graphics.lineTo(oriPt3.x, oriPt3.y);			
 			this.graphics.lineTo(oriPt4.x, oriPt4.y);
-			this.graphics.lineTo(oriPt1.x, oriPt1.y);								
+			this.graphics.lineTo(oriPt1.x, oriPt1.y);
+			
+			if(DEBUG){
+				DEBUG_TEXT.y = this.h /2; 
+				DEBUG_TEXT.text = x + ", " + y;
+			}
+			trace(">> " + x + ", " + y);			
 		}
 
-		private function genInvFilter():ColorMatrixFilter{
-            var matrix:Array = new Array();
-            matrix = matrix.concat([0, 0, 0, 0, 0]); // red
-            matrix = matrix.concat([0, 0, 0, 0, 0]); // green
-            matrix = matrix.concat([0, 0, 0, 0, 0]); // blue
-            matrix = matrix.concat([0, 0, 0, -1, 255]); // alpha
-			return new ColorMatrixFilter(matrix);
-		}		
+//		private function genInvFilter():ColorMatrixFilter{
+//            var matrix:Array = new Array();
+//            matrix = matrix.concat([0, 0, 0, 0, 0]); // red
+//            matrix = matrix.concat([0, 0, 0, 0, 0]); // green
+//            matrix = matrix.concat([0, 0, 0, 0, 0]); // blue
+//            matrix = matrix.concat([0, 0, 0, -1, 255]); // alpha
+//			return new ColorMatrixFilter(matrix);
+//		}		
 	}
 }

@@ -13,10 +13,12 @@ package impro.googlemap
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.geom.Point;
-	import flash.text.TextField;
-	import flash.utils.Dictionary;
 	import flash.net.XMLSocket;
-
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	import flash.utils.Dictionary;
+	
 	import impro.googlemap.events.HResEvent;
 	import impro.multiview.IMView;
 	
@@ -30,17 +32,19 @@ package impro.googlemap
 		private var map:TappableMap = new TappableMap();
 //		private var map:Map = new  Map();		
 
-		private var ruler:Sprite = new Sprite();
-		private var zoomText:TextField = new TextField(); 
+ 
 		
 		private var geControlDict:Dictionary = new Dictionary();		
 		private var viewportDict:Dictionary = new Dictionary();				
 		private var geocoder:ClientGeocoder;
 
 
+	
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;				
-		 
+		private var DEBUG_TEXT:TextField;		 
+		private var ruler:Sprite = new Sprite();
+
 		public function MultiResMap(x:Number, y:Number, width:Number, height:Number, $DEBUG:Boolean = true)
 		{
 			DEBUG = $DEBUG;
@@ -55,6 +59,20 @@ package impro.googlemap
 			
 			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
 			
+			if(DEBUG){
+				var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
+				DEBUG_TEXT = new TextField();
+				DEBUG_TEXT.autoSize = TextFieldAutoSize.LEFT;
+				DEBUG_TEXT.background = true;	
+				DEBUG_TEXT.backgroundColor = 0x000000;	
+				DEBUG_TEXT.border = true;	
+				DEBUG_TEXT.borderColor = 0x333333;							
+				DEBUG_TEXT.text = "DEBUG";
+				DEBUG_TEXT.x = 200;
+				DEBUG_TEXT.y = 200;
+				
+				addChild(DEBUG_TEXT);
+			}
 			
 			// add imObject listener
 			TUIO.addIMObjectListener(this);
@@ -98,8 +116,8 @@ package impro.googlemap
 		private function hresPosChange(e:Event):void{
 			
 			var he:HResEvent = e as HResEvent;
-			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
-						
+//			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
+			
 			getViewport(he.ID).setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
 			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
 			getViewport(he.ID).update();
@@ -147,7 +165,6 @@ package impro.googlemap
 	    	map.setCenter(TAIWAN, 8);	        
 	        map.addControl(new MapTypeControl());
 	        map.addControl(new NavigationControl());
-	        zoomText.text = ""+map.getZoom();
 	        
 			geocoder = new ClientGeocoder();
 			geocoder.addEventListener(GeocodingEvent.GEOCODING_SUCCESS, geoCodingSuccess); 
@@ -173,7 +190,6 @@ package impro.googlemap
 		
 		private function onMapZoom(event:MapZoomEvent):void{
 			var zoom:Number = (event.currentTarget as Map).getZoom();
-			zoomText.text = ""+zoom;
 						
 			for each (var viewport:MapViewport in viewportDict) 
                 viewport.update();            			

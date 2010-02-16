@@ -96,7 +96,7 @@ package impro.googlemap
 				DEBUG_TEXT.x = 85;
 				DEBUG_TEXT.y = 25;
 				DEBUG_TEXT.text = "DEBUG_TEXT";
-				this.addChild( DEBUG_TEXT );						
+//				addChild( DEBUG_TEXT );						
 	//			this.setChildIndex(DEBUG_TEXT, this.numChildren-1);
 				
 				TYPE_BUTTON = new Sprite();
