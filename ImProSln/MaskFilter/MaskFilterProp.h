@@ -4,6 +4,7 @@
 #include "streams.h"
 #include "resource.h"
 #include "afxwin.h"
+#include "afxcmn.h"
 
 
 
@@ -69,8 +70,12 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnbrowse3();
 	afx_msg void OnBnClickedbtnloadmask3();
 	afx_msg void OnBnClickedbtntest();
-	CEdit m_edMaskScale;
-	afx_msg void OnEnKillfocusEdit4();
+	
 	float m_fMaskScale;
+	const float slrScaleValue;
 	afx_msg void OnBnClickedbtnclearmask();
+	CSliderCtrl m_slrMaskScale;
+	afx_msg void OnTRBNThumbPosChangingSlider1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
+	CStatic m_txtMaskScale;
 };

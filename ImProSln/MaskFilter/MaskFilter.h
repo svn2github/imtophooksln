@@ -44,10 +44,14 @@ public:
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
 	virtual BOOL ClearMask();
+	virtual float GetMaskScale();
+	virtual BOOL SetMaskScale(float fScale);
 protected:
 	CCritSec m_csDisplayState;
 	CCritSec m_csMaskVertexData;
 	CCritSec m_csARLayoutConfig;
+	CCritSec m_csMaskScale;
+	float m_fMaskScale;
 	ARLayoutConfigData* m_pARLayoutConfig;
 	MaskVertexData* m_pMaskVertexData;
 	HRESULT UpdateMask();

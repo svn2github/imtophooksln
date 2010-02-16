@@ -153,9 +153,10 @@ BEGIN
     PUSHBUTTON      "Load",IDC_btnLoadMask3,157,158,50,14
     GROUPBOX        "Test Mask From Vertices",IDC_STATIC,15,172,191,38
     PUSHBUTTON      "Test",IDC_btnTest,156,188,50,14
-    EDITTEXT        IDC_EDIT4,129,32,38,12,ES_AUTOHSCROLL
-    LTEXT           "Mask Scale:",IDC_STATIC,89,34,41,9
+    LTEXT           "1.0",IDC_txtMaskScale,131,35,20,9
     PUSHBUTTON      "Clear Mask",IDC_btnClearMAsk,35,188,50,14
+    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,151,35,63,11
+    LTEXT           "Mask Scale:",IDC_STATIC,89,35,38,8
 END
 
 

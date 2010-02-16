@@ -10,6 +10,7 @@ MaskFilter::MaskFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 { 
 	m_pARLayoutConfig = NULL;
 	m_pMaskVertexData = NULL;
+	m_fMaskScale = 1.2; 
 }
 MaskFilter::~MaskFilter()
 {
@@ -389,7 +390,7 @@ HRESULT MaskFilter::UpdateMask()
 				}
 			}
 			SetMaskFlag(m_pMaskVertexData->m_maskflag);
-			GenerateMaskFromVertices(pt, nCol);
+			GenerateMaskFromVertices(pt, nCol, m_fMaskScale);
 			for (int i =0; i < nCol; i++)
 			{
 				delete[] pt[i];
@@ -410,7 +411,7 @@ HRESULT MaskFilter::UpdateMask()
 				m_pARLayoutConfig->m_numMarker, config);
 			if (config == NULL)
 				return S_FALSE;
-			GenerateMaskFromARLayout(config);
+			GenerateMaskFromARLayout(config, m_fMaskScale);
 			delete config;
 			config = NULL;
 		}
@@ -649,4 +650,15 @@ BOOL MaskFilter::SetMaskFlipY(bool bFlipY)
 		return FALSE;
 	CAutoLock lck(&m_csDisplayState);
     return ((MaskFilterDisplay*)m_pD3DDisplay)->SetMaskFlipY(bFlipY);
+}
+float MaskFilter::GetMaskScale()
+{
+	CAutoLock lck(&m_csMaskScale);
+	return m_fMaskScale;
+}
+BOOL MaskFilter::SetMaskScale(float fScale)
+{
+	CAutoLock lck(&m_csMaskScale);
+	m_fMaskScale = fScale;
+	return TRUE;
 }

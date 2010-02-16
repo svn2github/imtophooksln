@@ -31,4 +31,6 @@ public:
 	virtual BOOL GetMaskFlipY();
 	virtual BOOL SetMaskFlipY(bool bFlipY);
 	virtual BOOL ClearMask();
+	virtual float GetMaskScale();
+	virtual BOOL SetMaskScale(float fScale);
 };

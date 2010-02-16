@@ -25,7 +25,8 @@ void MaskFilterPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_edWarpPath);
 	DDX_Control(pDX, IDC_btnBrowse3, m_btnWarpBrowse);
 	DDX_Control(pDX, IDC_btnLoadMask3, m_btnWarpLoad);
-	DDX_Control(pDX, IDC_EDIT4, m_edMaskScale);
+	DDX_Control(pDX, IDC_SLIDER1, m_slrMaskScale);
+	DDX_Control(pDX, IDC_txtMaskScale, m_txtMaskScale);
 }
 BOOL MaskFilterPropPage::OnInitDialog()
 {
@@ -48,8 +49,10 @@ BEGIN_MESSAGE_MAP(MaskFilterPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnBrowse3, &MaskFilterPropPage::OnBnClickedbtnbrowse3)
 	ON_BN_CLICKED(IDC_btnLoadMask3, &MaskFilterPropPage::OnBnClickedbtnloadmask3)
 	ON_BN_CLICKED(IDC_btnTest, &MaskFilterPropPage::OnBnClickedbtntest)
-	ON_EN_KILLFOCUS(IDC_EDIT4, &MaskFilterPropPage::OnEnKillfocusEdit4)
+	
 	ON_BN_CLICKED(IDC_btnClearMAsk, &MaskFilterPropPage::OnBnClickedbtnclearmask)
+	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLIDER1, &MaskFilterPropPage::OnTRBNThumbPosChangingSlider1)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &MaskFilterPropPage::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
 
 
@@ -59,7 +62,7 @@ END_MESSAGE_MAP()
 MaskFilterPropPage::MaskFilterPropPage(IUnknown *pUnk) : 
 CMFCBasePropertyPage(NAME("MaskFilterPropPage"), pUnk),
 m_pFilter(0)
-, m_fMaskScale(1.0)
+, m_fMaskScale(1.0), slrScaleValue(100)
 {
 }
 
@@ -115,10 +118,7 @@ HRESULT MaskFilterPropPage::OnActivate(void)
 	m_edARLayoutPath.SetWindowText(path);
 	path = theApp.GetProfileString(L"MySetting",L"LoadMaskFromWarpPath", L"");
 	m_edWarpPath.SetWindowText(path);
-	WCHAR str[MAX_PATH];
-	swprintf_s(str, MAX_PATH, L"%.2f", m_fMaskScale);
-	m_edMaskScale.SetWindowText(str);
-
+	m_slrMaskScale.SetRange(50, 150, TRUE);
 	GetSetting();
 	return S_OK;
 }
@@ -230,6 +230,13 @@ bool MaskFilterPropPage::GetSetting()
 	{
 		m_raBlend.SetCheck(TRUE);
 	}
+
+	float fMaskScale = m_pFilter->GetMaskScale();
+	
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"%.2f", fMaskScale);
+	m_txtMaskScale.SetWindowText(str);
+	m_slrMaskScale.SetPos(fMaskScale*slrScaleValue);
 	return true;
 }
 bool MaskFilterPropPage::ApplySetting()
@@ -347,20 +354,36 @@ void MaskFilterPropPage::OnBnClickedbtntest()
 	delete[] pts;
 }
 
-void MaskFilterPropPage::OnEnKillfocusEdit4()
-{
-	CString str;
-	m_edMaskScale.GetWindowText(str);
-	WCHAR wstr[MAX_PATH];
-	wcscpy(wstr, str);
-	double fMaskScale = 1.0;
-	swscanf_s(wstr, L"%lf", &fMaskScale);
-	m_fMaskScale = fMaskScale;
-}
-
 void MaskFilterPropPage::OnBnClickedbtnclearmask()
 {
 	if (m_pFilter == NULL)
 		return;
 	m_pFilter->ClearMask();
+}
+
+void MaskFilterPropPage::OnTRBNThumbPosChangingSlider1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// This feature requires Windows Vista or greater.
+	// The symbol _WIN32_WINNT must be >= 0x0600.
+	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+
+}
+
+void MaskFilterPropPage::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	if (m_pFilter == NULL)
+	{
+		return;
+	}
+	int slrMaskScale = m_slrMaskScale.GetPos();
+	m_fMaskScale = slrMaskScale / slrScaleValue;
+	m_pFilter->SetMaskScale(m_fMaskScale);
+	WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"%.2f", m_fMaskScale);
+	m_txtMaskScale.SetWindowText(str);
 }
