@@ -35,6 +35,10 @@ public:
 	virtual HRESULT OnApplyChanges(void);
 
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
+
+protected:	
+	bool GetSetting();
+
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_ARLayoutDXFilterPropPage;}
 	virtual int GetTitileResourceID() { return IDS_ARLayoutPropPageTitle;}
@@ -50,4 +54,7 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedBtntest();
 	CComboBox m_cbARLevel;
 	afx_msg void OnCbnSelchangeCombo1();
+	CComboBox m_cbFPS;
+//	afx_msg void OnCbnSelchangeCbfps();
+	afx_msg void OnCbnSelchangeCbfps();
 };

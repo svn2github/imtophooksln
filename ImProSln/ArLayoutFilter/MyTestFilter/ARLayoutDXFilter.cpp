@@ -12,7 +12,7 @@ using namespace std;
 ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("ARLayoutDX Filter"), 0, CLSID_ARLayoutFilter)
 {
-
+	m_FrameRate = 10;
 	m_ARMarkers = NULL;
 	m_numMarker = 0;
 	m_minMarkerWidth = 1.0;
@@ -789,4 +789,24 @@ bool ARLayoutDXFilter::sendConfigData()
 	}
 
 	return true;
+}
+
+float ARLayoutDXFilter::GetFrameRateLimit(IPin* pPin)
+{
+	return GetFrameRate();
+}
+BOOL ARLayoutDXFilter::SetFrameRate(float fps)
+{
+	CAutoLock lck(&m_csFrameRate);
+	if (fps <= 0)
+	{
+		return FALSE;
+	}
+	m_FrameRate = fps;
+	return TRUE;
+}
+float ARLayoutDXFilter::GetFrameRate()
+{
+	CAutoLock lck(&m_csFrameRate);
+	return m_FrameRate;
 }

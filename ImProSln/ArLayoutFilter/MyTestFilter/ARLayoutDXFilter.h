@@ -38,11 +38,15 @@ public:
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	virtual HRESULT StartStreaming();
+
+	virtual BOOL SetFrameRate(float fps);
+	virtual float GetFrameRate();
 	//Derive from D3DTransformFilter
 
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
-
+protected:
+	virtual float GetFrameRateLimit(IPin* pPin);
 protected:
 	CCritSec m_csARMarker;
 	ARMultiEachMarkerInfoT* m_ARMarkers;
@@ -50,7 +54,9 @@ protected:
 	float m_minMarkerWidth;
 	CCritSec m_csARStrategyData;
 	ARLayoutStartegyData* m_pARStrategyData;
-
+	CCritSec m_csFrameRate;
+	float m_FrameRate;
+		
 	vector<vector<int>> m_TagIntersectTable;
 	vector<fRECT> m_allMarkerRects;
 
@@ -59,6 +65,7 @@ protected:
 	bool generateIntersectTable(ARMultiEachMarkerInfoT* ARMarkers, int numMarker,
 		vector<vector<int>>& table);
 	bool sendConfigData();
+
 public:
 	ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARLayoutDXFilter();
@@ -67,6 +74,7 @@ public:
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
 		fRECT* fingerRects, UINT numFingerRects );
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
+
 private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);

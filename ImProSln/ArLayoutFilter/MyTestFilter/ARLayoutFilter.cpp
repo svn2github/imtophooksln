@@ -220,7 +220,6 @@ HRESULT ARLayoutFilter::LoadnewBitmap(){
 	
 	return S_OK;
 }
-int nFrameRate = 0;
 
 HRESULT ARLayoutFilter::FillBuffer(IMediaSample *pSample, IPin* pPin)
 {

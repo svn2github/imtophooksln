@@ -15,6 +15,7 @@ void ARLayoutDXPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDTop, m_edTop);
 	DDX_Control(pDX, IDC_EDBottom, m_edBottom);
 	DDX_Control(pDX, IDC_COMBO1, m_cbARLevel);
+	DDX_Control(pDX, IDC_CBFPS, m_cbFPS);
 }
 
 
@@ -24,6 +25,8 @@ BEGIN_MESSAGE_MAP(ARLayoutDXPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BTN_Load, &ARLayoutDXPropPage::OnBnClickedBtnLoad)
 	ON_BN_CLICKED(IDC_BTNTest, &ARLayoutDXPropPage::OnBnClickedBtntest)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &ARLayoutDXPropPage::OnCbnSelchangeCombo1)
+//	ON_CBN_SELCHANGE(IDC_CBFPS, &ARLayoutDXPropPage::OnCbnSelchangeCbfps)
+ON_CBN_SELCHANGE(IDC_CBFPS, &ARLayoutDXPropPage::OnCbnSelchangeCbfps)
 END_MESSAGE_MAP()
 
 
@@ -94,6 +97,13 @@ HRESULT ARLayoutDXPropPage::OnActivate(void)
 	m_cbARLevel.AddString(L"3 Level(4x4 8x8 16x16)");
 	m_cbARLevel.AddString(L"2 Level(8x8 16x16)");
 	m_cbARLevel.SetCurSel(0);
+
+	m_cbFPS.AddString(L"30");
+	m_cbFPS.AddString(L"20");
+	m_cbFPS.AddString(L"15");
+	m_cbFPS.AddString(L"10");
+	m_cbFPS.AddString(L"5");
+	GetSetting();
 	return S_OK;
 }
 HRESULT ARLayoutDXPropPage::OnApplyChanges(void)
@@ -213,4 +223,42 @@ void ARLayoutDXPropPage::OnCbnSelchangeCombo1()
 	{
 		m_pFilter->initARMarkers(3, 8, 2, 40);
 	}
+}
+
+bool ARLayoutDXPropPage::GetSetting()
+{
+	float fps = m_pFilter->GetFrameRate();
+	int cbCount = m_cbFPS.GetCount();
+	WCHAR str[MAX_PATH];
+	double cbFPS;
+	int chooseIdx = -1;
+	float minError = 1000;
+	
+	for (int i =0 ; i< cbCount; i++)
+	{
+		m_cbFPS.GetLBText(i, str);
+		swscanf_s(str, L"%lf", &cbFPS);
+		if (abs(fps - cbFPS) < minError)
+		{
+			chooseIdx = i;
+			minError = abs(fps - cbFPS);
+		}
+	}
+	if (chooseIdx != -1)
+		m_cbFPS.SetCurSel(chooseIdx);
+	return true;
+}
+
+
+void ARLayoutDXPropPage::OnCbnSelchangeCbfps()
+{
+	if (m_pFilter == NULL)
+		return;
+    int idx = m_cbFPS.GetCurSel();
+	WCHAR str[MAX_PATH] = {0};
+	m_cbFPS.GetLBText(idx, str);
+	double cbFps = 0;
+	swscanf_s(str, L"%lf", &cbFps);
+	m_pFilter->SetFrameRate(cbFps);
+			
 }
