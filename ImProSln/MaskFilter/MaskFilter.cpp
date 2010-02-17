@@ -10,7 +10,7 @@ MaskFilter::MaskFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 { 
 	m_pARLayoutConfig = NULL;
 	m_pMaskVertexData = NULL;
-	m_fMaskScale = 1.2; 
+	m_fMaskScale = 0.8; 
 }
 MaskFilter::~MaskFilter()
 {
