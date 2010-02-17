@@ -7,34 +7,33 @@
 	import flash.net.URLRequest;
 	import flash.system.LoaderContext;
 	
+	import impro.events.FlickrEvent;
+	
 	public class ImageObject extends Multitouchable 
 	{		
 		
 		public static var counter:Number = 1;
 		public var index:Number;
 		
-		public var doubleTapEnabled: Boolean;
 		
-		private var progressBar:Sprite = new Sprite();	
 		private var photoLoader:Loader = null;		
 		
-		private var _isFullscreen:Boolean = false;
-		private var oldPosX:Number;
-		private var oldPosY:Number;
-		private var oldSizeX:Number;
-		private var oldSizeY:Number;
+//		private var _isFullscreen:Boolean = false;
+//		public var doubleTapEnabled: Boolean;
+//		private var progressBar:Sprite = new Sprite();	
 		
+		private var theStage:DisplayObjectContainer;		
+
 		private var imageSprite:Sprite;
 		private var background:Sprite;
 		
-		private var onLoadComplete:Function;		
 		private var imageWidth:Number
 		private var imageHeight:Number
 		
-		public function ImageObject (url:String, onLoadComplete:Function)
+		public function ImageObject (url:String, theStage:DisplayObjectContainer)
 		{
 			index = counter++;
-			this.onLoadComplete = onLoadComplete;
+			this.theStage = theStage;
 			
 			photoLoader = new Loader();		
 
@@ -59,28 +58,8 @@
 			imageSprite = new Sprite();
 			addChild(background);
 			addChild(imageSprite);				
-			
-			/*
-			addEventListener(GenericTapEvent.DOUBLE_TAP,function(event:Event):void{
-				trace("double tap");
-				if(!_isFullscreen){
-					showFullscreen();
-				}else{
-					hideFullscreen();
-				}
-				_isFullscreen = !_isFullscreen;
-				
-				
-			});
-			*/
 						
 		}
-//		private function onProgressHandler(mProgress:ProgressEvent)
-//		{	
-//		var percent:Number = -100*(mProgress.target.bytesLoaded/mProgress.target.bytesTotal);
-//		//progressBar.alpha=percent;			
-//		///trace(percent);
-//		}
 		
 		public function highlight(DO:Boolean):void{
 			if(DO){
@@ -97,56 +76,36 @@
 			return imageHeight;
 		}
 		
+		
 		private function arrange( event:Event = null ):void 
 		{							
 			this.alpha = 1;
-//			photoLoader.x = -photoLoader.width/2;
-//			photoLoader.y = -photoLoader.height/2;			
 			
 			var image:Bitmap = Bitmap(photoLoader.content);
 			image.smoothing=true;
 			
-			var myBitmap : BitmapData = new BitmapData(image.width, image.height,false,0xffffffff);
-//			var myBitmap : BitmapData = new BitmapData(Flickr.photoWidth, Flickr.photoHeight, false,0xffffffff);			
+			var myBitmap : BitmapData = new BitmapData(image.width, image.height,false,0xffffffff);			
 			myBitmap.draw(image);
 			
 			var m:Number = 4;
 			var m2:Number = m*2;			
-//			background.graphics.beginFill(0xffffff);
-//			background.graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
-//			background.graphics.drawRect(-m, -m, myBitmap.width, myBitmap.height+m2);
-//			background.graphics.endFill();
+			background.graphics.beginFill(0xffffff);
+			background.graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
+			background.graphics.drawRect(-m, -m, myBitmap.width, myBitmap.height+m2);
+			background.graphics.endFill();
 
-//			imageSprite.addChild(image);
 			imageSprite.graphics.beginBitmapFill(myBitmap, null, false, true);
 			imageSprite.graphics.lineStyle(0, 0x00, 0);
 			var min:Number = Math.min(image.width, image.height)
             imageSprite.graphics.drawRect(0, 0, image.width, Math.min(image.width, image.height));
             imageSprite.graphics.endFill();
-			
-//			var m:Number = 4;
-//			var m2:Number = m*2;			
-//			graphics.beginFill(0x646464);
-//			graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
-//			graphics.endFill();			
-//			graphics.beginFill(0xffffff);
-//			graphics.drawRect(-m, -m, image.width+m2, image.height+m2);
-//			graphics.endFill();
-			
-
-			
-//			graphics.beginBitmapFill(myBitmap,null,true,true);
-//			graphics.lineStyle(0, 0x00, 0);
-//            graphics.drawRect(0, 0, image.width, image.height);
-//            graphics.endFill();
-			
-			handleAddedToStage(null);
-			
-			
+						
 			this.imageWidth = image.width;
 //			this.imageHeight = image.height;
 			this.imageHeight = Math.min(image.width, image.height);
-			onLoadComplete.call(this, this);
+			
+			handleAddedToStage(null);
+			dispatchEvent(new FlickrEvent(FlickrEvent.PHOTO_LOADED, this));
 		}				
 		
 		/*

@@ -10,15 +10,15 @@ package impro.googlemap
 	
 	import flash.geom.Point;
 	
-	public class ViewportControl extends RotatableScalable
+	public class ViewportControl extends Sprite //RotatableScalable
 	{
 		private static var inInd:Number = 0;
 		private var id:String = String(inInd++);
 //		private var theMap:MapViewport;
 		private var handle:Sprite = new Sprite();
 		private var handleSize:Number = 20;
-		private var w:Number;
-		private var h:Number;
+		public var w:Number;
+		public var h:Number;
 		
 		private var oriPt1:Point = new Point();
 		private var oriPt2:Point = new Point();
@@ -88,15 +88,15 @@ package impro.googlemap
 			addEventListener(MouseEvent.MOUSE_UP, dropIt);
 //			this.addEventListener(MouseEvent.MOUSE_WHEEL, tiltIt);
 			
-			addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
-			addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
+//			addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
+//			addEventListener(TouchEvent.MOUSE_UP, touchDropIt);								
 			
 		}
 		
-		public function disableTouchListeners():void{
-			removeEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
-			removeEventListener(TouchEvent.MOUSE_UP, touchDropIt);					
-		}
+//		public function disableTouchListeners():void{
+//			removeEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
+//			removeEventListener(TouchEvent.MOUSE_UP, touchDropIt);					
+//		}
 				
 		public function setViewport(cx:Number, cy:Number, w:Number, h:Number):void{
 			this.x = cx;
@@ -133,13 +133,13 @@ package impro.googlemap
 
 		private function touchPickUp(event:TouchEvent):void {
 //		    (event.target as Sprite).startDrag(false);
-		    event.target.startDrag(false);
-		    trace(id + ": touchPickUp");
+//		    event.target.startDrag(false);
+//		    trace(id + ": touchPickUp");
 		}
 		
 		private function touchDropIt(event:TouchEvent):void {
-			event.target.stopDrag();
-			trace(id + ":touchDropIt");
+//			event.target.stopDrag();
+//			trace(id + ":touchDropIt");
 //			if(event.target == handle){
 //				w = Math.abs(handle.x)*2 + handleSize;
 //				h = Math.abs(handle.y)*2 + handleSize;

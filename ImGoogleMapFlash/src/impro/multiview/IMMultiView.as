@@ -50,7 +50,8 @@ package impro.multiview
 					renderTarget.scaleY = scaleY;
 				}
 			}
-			else{
+			else
+			{
 			// add itself as the full view
 				renderTargetMask = new Sprite();
 				renderTargetMask.graphics.beginFill(0x000000);
@@ -58,8 +59,7 @@ package impro.multiview
 				renderTargetMask.graphics.endFill();
 				addChild(renderTargetMask);				
 				addViewport(-1, 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);				
-			}
-			
+			}			
 		}	
 						
 		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100):void{			
@@ -68,7 +68,7 @@ package impro.multiview
 			addChild(viewport);
 			
 			if(DEBUG){
-				viewport.viewport.disableTouchListeners();
+//				viewport.viewport.disableTouchListeners();
 				addChild(viewport.viewport);				
 			}				
 		}

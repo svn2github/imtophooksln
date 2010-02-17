@@ -1,36 +1,44 @@
 package {
 	
-	import de.johannesluderschmidt.controller.TouchEventsManager;
 	import de.johannesluderschmidt.demoObjects.ImageObject;
 	import de.johannesluderschmidt.demoObjects.Multitouchable;
+	import de.johannesluderschmidt.demoObjects.VideoObject;
 	import de.johannesluderschmidt.event.BringToBackEvent;
 	import de.johannesluderschmidt.event.BringToFrontEvent;
 	import de.johannesluderschmidt.tuio.TUIO;
-	import de.johannesluderschmidt.tuio.TouchEvent;
 	import de.johannesluderschmidt.util.Flickr;
 	
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
-	import flash.events.KeyboardEvent;
 	
-	import impro.multiview.IMView;
+	import impro.IImproApp;
 	import impro.Setting;
+	import impro.events.FlickrEvent;
 	import impro.multiview.IMMultiView;
-	
+	import impro.multiview.IMView;
+
 
 	[SWF(width="1280", height="720", backgroundColor="#000000", frameRate="30")]
-	public class FlickrPhotoApp extends Sprite
+	public class FlickrPhotoApp extends Sprite implements IImproApp
 	{
 		public static var photoWidth:Number = 100;
 		private var FlickrQuality:Number = 2;
 		private var FlickrPhotoNum:Number = 40;			
-
 
 		private var multiResSprite:IMMultiView;
 		private var showAll:Boolean = true;		
 				
 		private var flickr:Flickr;
 		private var flickrPlate:Sprite;
+		private var flickrPlateWidth:Number;
+		private var flickrPlateHeight:Number;
+
+		private var margin:Number = 20;
+		private var curX:Number = margin;
+		private var curY:Number = margin;
+		private var maxHeightInRow:Number = 0;
+		
+		var vid:VideoObject;
 		
 		public function FlickrPhotoApp(){
 			
@@ -41,12 +49,18 @@ package {
 			// flickr parameters
 			
 			// prepare the flickr sprite			
-			var flickrPlateWidth:Number = Setting.LRes.stageWidth * FlickrQuality;
-			var flickrPlateHeight:Number = Setting.LRes.stageHeight * FlickrQuality;
+			flickrPlateWidth = Setting.LRes.stageWidth * 3;
+			flickrPlateHeight = Setting.LRes.stageHeight * 3;
 			flickrPlate = new Sprite();			
-			flickr = new Flickr(flickrPlate, flickrPlateWidth, flickrPlateHeight, FlickrPhotoNum, photoWidth, photoLoadComplete);
+			flickr = new Flickr(flickrPlate, FlickrPhotoNum);
 //			flickr.fetch(true);
 			flickr.fetch(false, "Siggraph");
+			
+//			vid = new VideoObject("file:///C:/flv/test.flv", this);
+//			vid.x = 100;
+//			vid.y = 100;
+////			addChild(vid);
+//			flickrPlate.addChild(vid);
 			
 			// add low resolution view
 			multiResSprite = new IMMultiView(flickrPlate, flickrPlateWidth, flickrPlateHeight, false, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
@@ -62,10 +76,40 @@ package {
 			Multitouchable.touchMoveCallback = touchMoveCallback;
 //			Multitouchable.touchDownCallback = touchDownCallback;
 //			Multitouchable.touchUpCallback = touchUpCallback;
+
+			addEventListener(FlickrEvent.PHOTO_LOADED, function (e:FlickrEvent):void{
+				addPics(e.imgObj);
+				multiResSprite.updateViewport();				
+			});
+			
+			
 		}
 		
-		private function photoLoadComplete():void{
-			multiResSprite.updateViewport();			
+		public function close():void{
+//			TUIO.stopSocket();	
+		}
+		
+		private function addPics(obj:ImageObject):void{
+			
+			var imObj:ImageObject = obj;
+			var imgW:Number = imObj.getImageWidth();
+			var imgH:Number = imObj.getImageHeight();
+			var scale:Number = photoWidth / imgW;
+			imObj.scaleX = scale;
+			imObj.scaleY = scale;
+			
+			if((curX + photoWidth) > flickrPlateWidth){
+				curX = margin;
+				curY += (maxHeightInRow + margin);
+				maxHeightInRow = 0;
+			}else{
+				maxHeightInRow = Math.max(imgH*scale, maxHeightInRow); 
+			}
+			
+			imObj.x = curX;
+			imObj.y = curY;						
+			curX += (photoWidth + margin);
+//			flickrPlate.addChild(imObj);
 		}
 
 		private function onKeyEnter(place:String):void{
@@ -88,10 +132,8 @@ package {
 //			trace("up");
 //		}
 		
-		private function keyDown (e:KeyboardEvent):void {
-			
-			multiResSprite.updateViewport();
-			
+		public function updateView ():void {	
+			multiResSprite.updateViewport();			
 			if(Setting.DEBUG){
 				showAll = !showAll;
 				if(showAll)

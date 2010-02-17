@@ -7,6 +7,8 @@
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
 	import flash.net.URLVariables;
+	
+	import impro.events.FlickrEvent;
 
 	public class Flickr extends Sprite
 	{
@@ -17,27 +19,12 @@
 		private var flickr:XML = null;
 		private var thestage:Sprite;
 		private var fetchCount:Number;
-		private var allPics:Array;	
-		public var photo:ImageObject;
-		private var plateWidth:Number;
-		private var plateHeight:Number;
+		private var allPics:Array;			
 		
-		private var margin:Number = 20;
-		private var curX:Number = margin;
-		private var curY:Number = margin;
-		private var maxHeightInRow:Number = 0;
-		
-		private var onLoadComplete:Function;
-		
-		public function Flickr(d:Sprite, width:Number, height:Number, fetchIn:Number, photoWidth:Number, onLoadComplete:Function) 
+		public function Flickr(d:Sprite, fetchIn:Number) 
 		{
 			thestage = d;
 			fetchCount = fetchIn;
-			this.plateWidth = width;
-			this.plateHeight = height;
-			this.photoWidth = photoWidth;
-			
-			this.onLoadComplete = onLoadComplete;
 			
 			allPics = new Array();
 		
@@ -83,41 +70,39 @@
 			showPics();
 		}
 
-		private function showPics2():void 
-		{	
-			var id:String = null;
-			var secret:String = null;
-			var server:String = null;			
-			var url:String = null;
-			var request:URLRequest = null;			
-			
-			var len:int = flickr..photo.length();
-		
-			if(len > fetchCount)
-				len = fetchCount;
-			
-			for(var i:int=0; i<len; i++)
-			{
-				server = flickr..photo[i].@server.toString();
-				id = flickr..photo[i].@id.toString();
-				secret = flickr..photo[i].@secret.toString();
-				
-				// Assemble the URL and request
-				url = 	"http://static.flickr.com/" + server + "/" + id + "_" + 
-						secret + ".jpg";
-		
-				
-				photo = new ImageObject( url, addPics);				
-				photo.name="ImageObject_"+i;
-				photo.scaleX = 0.7 + 0.3*Math.random();
-				photo.scaleY = photo.scaleX;
-				photo.x = (Math.random()*plateWidth) - plateWidth/2;
-				photo.y = (Math.random()*plateHeight) - plateHeight/2;								
-				allPics.push(photo);
-				
-				thestage.addChild(photo);
-			}
-		}
+//		private function showPics2():void 
+//		{	
+//			var id:String = null;
+//			var secret:String = null;
+//			var server:String = null;			
+//			var url:String = null;
+//			var request:URLRequest = null;			
+//			
+//			var len:int = flickr..photo.length();
+//		
+//			if(len > fetchCount)
+//				len = fetchCount;
+//			
+//			for(var i:int=0; i<len; i++)
+//			{
+//				server = flickr..photo[i].@server.toString();
+//				id = flickr..photo[i].@id.toString();
+//				secret = flickr..photo[i].@secret.toString();
+//				
+//				// Assemble the URL and request
+//				url = 	"http://static.flickr.com/" + server + "/" + id + "_" + 
+//						secret + ".jpg";
+//		
+//				
+//				photo = new ImageObject( url, null);				
+//				photo.name="ImageObject_"+i;
+//				photo.scaleX = 0.7 + 0.3*Math.random();
+//				photo.scaleY = photo.scaleX;
+//				allPics.push(photo);
+//				
+//				thestage.addChild(photo);
+//			}
+//		}
 		
 		private function showPics():void 
 		{	
@@ -146,8 +131,8 @@
 				// Assemble the URL and request
 				url = 	"http://static.flickr.com/" + server + "/" + id + "_" + 
 						secret + ".jpg";
-								
-				photo = new ImageObject( url, addPics);				
+				
+				var photo:ImageObject = new ImageObject(url, this.stage);				
 				photo.name="ImageObject_"+i;
 //				photo.scaleX = 0.6;
 //				photo.scaleY = 0.6;
@@ -155,52 +140,17 @@
 //				photo.scaleY = photo.scaleX;
 //				photo.x = (Math.random()*plateWidth) - plateWidth/2;
 //				photo.y = (Math.random()*plateHeight) - plateHeight/2;
-				
-//				if((_x+_imgW) > plateWidth){
-//					_x = margin;
-//					_y += (_imgW + margin);
-//				}
-				
-//				photo.x = _x;
-//				photo.y = _y;
-				
-//				_x += (_imgW + margin);
 								
-//				allPics.push(photo);				
-//				thestage.addChild(photo);
+				allPics.push(photo);
+				thestage.addChild(photo);
 			}
 		}		
 		
-		private function addPics(obj:Object):void{
-			
-			var imObj:ImageObject = obj as ImageObject;
-			var imgW:Number = imObj.getImageWidth();
-			var imgH:Number = imObj.getImageHeight();
-			var scale:Number = photoWidth / imgW;
-			imObj.scaleX = scale;
-			imObj.scaleY = scale;
-			
-			if((curX + photoWidth) > plateWidth){
-				curX = margin;
-				curY += (maxHeightInRow + margin);
-				maxHeightInRow = 0;
-			}else{
-				maxHeightInRow = Math.max(imgH*scale, maxHeightInRow); 
-			}
-			
-//			curX += margin;
-			imObj.x = curX;
-			imObj.y = curY;						
-			curX += (photoWidth + margin);
-
-//			trace("addPics[" + imObj.name + "]: (" + imObj.x + ", " + imObj.y + ")");
-
-			allPics.push(imObj);				
-			thestage.addChild(imObj);
-			
-			onLoadComplete.call();
+		private function photoLoaded(e:FlickrEvent):void{
+			trace(e.imgObj.name);
 		}
 		
+
 		public function clearPics():void
 		{
 			for(var i:int = 0; i<allPics.length; i++)

@@ -150,9 +150,9 @@ package impro.googlemap
 			return viewportDict[id];
 		}
 		
-		public function getMapStage():IMView{
-			return new IMView(-1, 0, 0, map.width, map.height);
-		}
+//		public function getMapStage():IMView{
+//			return new IMView(-1, 0, 0, map.width, map.height);
+//		}
 		public function getMapWidth():Number{
 			return map.width;
 		}

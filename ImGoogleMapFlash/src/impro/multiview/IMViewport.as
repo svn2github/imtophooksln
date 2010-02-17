@@ -82,8 +82,8 @@ package impro.multiview
 		
 		public function updateCallback():void{
 			
-			var scaleX:Number = screenWidth / viewport.width;
-			var scaleY:Number = screenHeight / viewport.height;			
+			var scaleX:Number = screenWidth / viewport.w;
+			var scaleY:Number = screenHeight / viewport.h;			
 
 			var tmatrix:Matrix = new Matrix(1, 0, 0, 1, -viewport.x, -viewport.y);
 			var smatrix:Matrix = new Matrix(scaleX, 0, 0, scaleY, 0, 0);

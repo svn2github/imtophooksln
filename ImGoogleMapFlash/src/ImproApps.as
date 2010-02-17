@@ -6,11 +6,13 @@ package
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
-
+	
+	import impro.IImproApp;
+	
+	[SWF(width="1366", height="768", backgroundColor="#000000", frameRate="30")]
 	public class ImproApps extends Sprite
 	{
 		private var theApp:DisplayObject;
-		private var button:RotatableScalable;
 		
 		public function ImproApps()
 		{
@@ -27,25 +29,41 @@ package
 			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);
 			
-			launchApp("1");
-			
+			launchApp("1");			
 		}
 		
 		private function launchApp(app:String):void{
 
 			switch(app){
 				case "1":
-					if(theApp != null)
+					if(theApp != null){
+						(theApp as IImproApp).close();
 						stage.removeChild(theApp);
+					}
 					theApp = new GoogleMapTUIO();
     				stage.addChild(theApp);
 					break;
 				case "2":
-					if(theApp != null)
+					if(theApp != null){
+						(theApp as IImproApp).close();
 						stage.removeChild(theApp);
+					}						
 					theApp = new FlickrPhotoApp();
     				stage.addChild(theApp);
 					break;
+				case "3":
+					if(theApp != null)
+						stage.removeChild(theApp);
+					theApp = new MultiResSpriteTest();
+    				stage.addChild(theApp);
+					break;
+				case "4":
+					if(theApp != null)
+						stage.removeChild(theApp);
+					theApp = new MultiResMoveClipTest();
+    				stage.addChild(theApp);
+					break;
+					
 			}	
 		}
 		
@@ -53,7 +71,7 @@ package
 //			trace("Key Pressed: " + String.fromCharCode(event.charCode) + 
 //        		" (key code: " + event.keyCode + " character code: " 
 //        		+ event.charCode + ")");
-			        		
+			(theApp as IImproApp).updateView();
         	launchApp(String.fromCharCode(event.charCode));        	
 		}
 	}

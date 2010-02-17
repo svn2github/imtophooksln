@@ -1,19 +1,23 @@
 package
 {
-	import app.core.object.KeyboardObject;
+	import de.johannesluderschmidt.demoObjects.VideoObject;
 	
 	import flash.display.*;
 	import flash.events.*;
 	import flash.geom.*;
 	import flash.net.*;
 	
-	import impro.multiview.IMView;
 	import impro.googlemap.*;
+	import impro.multiview.IMView;
 	
 //	[SWF(width=1366, height=500, frameRate=24, backgroundColor=0xEB7F00)]
 	public class MyTouchApp2 extends Sprite {//allows it to be scaled around
 		
 		private var sq:Sprite = new Sprite();
+		
+		var bitmap:Bitmap;
+		var bitmapData:BitmapData;
+		var vid:VideoObject;
 		
 		public function MyTouchApp2()
 		{
@@ -23,33 +27,36 @@ package
 			//----------------------------------------        
 			
 			
-//			var keyboard:KeyboardObject = new KeyboardObject();
-//			keyboard.x = 100; 
-//			keyboard.y = 100; 
-//			this.addChild(keyboard);
+			vid = new VideoObject("file:///C:/flv/test.flv", this);
+//			this.addChild(vid);
 			
-//			var map:TappableMap = new TappableMap();
-//			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExRcR7IumtuiL9gAiOhCPfe14dC1HBSpTjOFiyNExylutyalkkjAIFFIZw";
-//			map.setSize(new Point(500,500));
-//			this.addChild(map);
 			
-//			sq.graphics.beginFill(0xff0000);
-//			sq.graphics.drawRect(0,0,100,100);
-//			sq.graphics.endFill();
-//			sq.x = sq.y = 150;
-//			this.addChild(sq);			
+			bitmapData = new BitmapData(320, 240);			
+			bitmap = new Bitmap(bitmapData);
+			addChild(bitmap);
+						
+			this.addEventListener(Event.ENTER_FRAME, function(e:Event):void{
+				bitmapData.draw(vid);
+			});
 			
-//			var ssq:SquareMT = new SquareMT();
-//			ssq.x = sq.y = 50;
-//			this.addChild(ssq);
+
 			
-//			sq.addEventListener(TouchEvent.MOUSE_DOWN, this.sqTouchDown, false, 0, true);
-//			sq.addEventListener(TouchEvent.MOUSE_OVER, this.sqTouchOver, false, 0, true);
-//			sq.addEventListener(TouchEvent.MOUSE_UP, this.sqTouchUp, false, 0, true);
+//			var mRequest:URLRequest = new URLRequest("./assets/swf/Conservative.swf");
+//			var netClient:Object = new Object();
+//			netClient.onMetaData = function(meta:Object)
+//			{
+//			        trace(meta.duration);
+//			};
+//			ns.client = netClient;
+//			
+//			ns.addEventListener(NetStatusEvent.NET_STATUS, netstat);
 			
-//			this.addEventListener(TouchEvent.MOUSE_MOVE, this.touchDown, false, 0, true);			
-//			this.addEventListener(TouchEvent.MOUSE_DOWN, this.touchDown, false, 0, true);		
 		}
+
+		function netstat(stats:NetStatusEvent)
+		{
+    		trace(stats.info.code);
+		};
 
 		public function sqTouchOver(e:TouchEvent):void{
 			trace("touch sq");

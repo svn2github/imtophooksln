@@ -1,22 +1,26 @@
 package
 {
-	import flash.display.Sprite;
-	import flash.events.KeyboardEvent;
-	import flash.text.*;
+	import de.johannesluderschmidt.demoObjects.MovableSquare;
+	import de.johannesluderschmidt.tuio.TUIO;
 	
+	import flash.display.Sprite;
+	import flash.text.TextField;
+	import flash.text.TextFormat;
+	
+	import impro.IImproApp;
 	import impro.Setting;
 	import impro.multiview.IMMultiView;
 	import impro.multiview.IMView;
 	
 	[SWF(width="1280", height="720", backgroundColor="#000000", frameRate="30")]
-	public class MultiResSpriteTest extends Sprite
+	public class MultiResSpriteTest extends Sprite implements IImproApp
 	{
 		private var multiResSprite:IMMultiView;
 		private var showAll:Boolean = true;
 		
 		public function MultiResSpriteTest()
 		{			
-			stage.addEventListener (KeyboardEvent.KEY_DOWN, keyDown);
+//			stage.addEventListener (KeyboardEvent.KEY_DOWN, keyDown);
 			
 			
 //	        textField.embedFonts = true;
@@ -52,7 +56,6 @@ package
 					"\nPlease bookmark this page and check it often for updates." + 
 					"\nFrequent updates are also available via Twitter and RSS.";
 
-	
 			var callForSubmissions:Sprite = CallFOrSomething(600, 400, forSubmissionsTitle, forSubmissionsText);
 			var callForVolunteers:Sprite = CallFOrSomething(600, 400, forVolunteersTitle, forVolunteersText);
 			callForVolunteers.x = 50 + callForSubmissions.x + callForSubmissions.width
@@ -63,24 +66,40 @@ package
 			forMedia.x = callForVolunteers.x;
 			forMedia.y = callForVolunteers.y + callForVolunteers.height;
 			
+			var plate:Sprite = new Sprite();
+			
+//			var content:Multitouchable = new Multitouchable();
+//			var content:MovableSquare = new MovableSquare(0x0000ff);
 			var content:Sprite = new Sprite();
+			content.graphics.beginFill(0x00ff00);
+			content.graphics.drawRect(0,0,50,50);
+			content.graphics.endFill();
 			content.addChild(callForSubmissions);
 			content.addChild(callForVolunteers);
 			content.addChild(callForAttendees);
 			content.addChild(forMedia);
 			
-			// add low resolution view			
-			multiResSprite = new IMMultiView(content, 1280, 1024, false, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
+			plate.addChild(content);
+//			
+//			// add low resolution view			
+			multiResSprite = new IMMultiView(plate, 1366, 768, false, Setting.LRes.stageWidth, Setting.LRes.stageHeight, Setting.DEBUG);						
 
 			// add high resolution views
 			for each (var view:IMView in Setting.HRes) 
 				multiResSprite.addViewport(view.id, view.stageX, view.stageY, view.stageWidth, view.stageHeight);
 			
-			addChild(multiResSprite);
+			addChild(multiResSprite);			
 			
+			multiResSprite.updateViewport();
+			
+			TUIO.init(new IMView(-2, 0, 0, 1366, 768), this, 'localhost', 3000, '', Setting.DEBUG);
 		}
-
-		private function keyDown (e:KeyboardEvent):void {			
+		
+		public function close():void{
+			TUIO.startSocket();	
+		}
+				
+		public function updateView():void{
 			multiResSprite.updateViewport();			
 			if(Setting.DEBUG){
 				showAll = !showAll;
@@ -88,8 +107,19 @@ package
 					multiResSprite.showAll();
 				else		
 					multiResSprite.hideAll();
-			}
+			}			
 		}
+		
+//		private function keyDown (e:KeyboardEvent):void {			
+//			multiResSprite.updateViewport();			
+//			if(Setting.DEBUG){
+//				showAll = !showAll;
+//				if(showAll)
+//					multiResSprite.showAll();
+//				else		
+//					multiResSprite.hideAll();
+//			}
+//		}
 		
 		private function CallFOrSomething(_width:Number, _height:Number, title:String, content:String):Sprite{
 			var callforSprite:Sprite = new Sprite();			

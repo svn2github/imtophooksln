@@ -1,21 +1,24 @@
 package 
 {
+	import app.core.action.RotatableScalable;
+
 	import flash.display.DisplayObject;
 	import flash.display.Loader;
 	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.ProgressEvent;
+	import flash.events.*;
 	import flash.net.URLRequest;
 	
 	import impro.Setting;
+	import impro.IImproApp;
 	import impro.multiview.IMView;
 	import impro.multiview.IMMultiView;
 	
 	[SWF(width="1280", height="720", backgroundColor="#000000", frameRate="30")]
-	public class MultiResMoveClipTest extends Sprite
+	public class MultiResMoveClipTest extends Sprite implements IImproApp
 	{
 		private var multiResSprite:IMMultiView;
-
+		private var showAll:Boolean = true;
+		
 		public function MultiResMoveClipTest()
 		{
 			super();
@@ -31,14 +34,26 @@ package
 			mLoader.load(mRequest);
 		}		
 
+		public function close():void{
+			
+		}
+
+		public function updateView():void{
+			multiResSprite.updateViewport();			
+			if(Setting.DEBUG){
+				showAll = !showAll;
+				if(showAll)
+					multiResSprite.showAll();
+				else		
+					multiResSprite.hideAll();
+			}			
+		}
+
 		private function onCompleteHandler(loadEvent:Event)
 		{
 //		    addChild(loadEvent.currentTarget.content);
 			var content:DisplayObject = loadEvent.currentTarget.content;
-			content.x = 0;
-			content.y = 0;			
 			content.addEventListener(Event.ENTER_FRAME, function(e:Event):void{
-				trace("frame");
 				if(multiResSprite != null)
 					multiResSprite.updateViewport();
 			});
@@ -53,6 +68,7 @@ package
 //			
 			addChild(multiResSprite);
 		    
+		    TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
 		}
 		
 		private function onProgressHandler(mProgress:ProgressEvent)

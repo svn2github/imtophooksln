@@ -6,12 +6,13 @@ package {
 	import flash.ui.Keyboard;
 	
 	import impro.NUIPad.MTEditor;
+	import impro.IImproApp;
 	import impro.Setting;
 	import impro.googlemap.*;
 	import impro.multiview.IMView;
 	
 	[SWF(width=2048, height=768, frameRate=24, backgroundColor=0xEB7F00)]
-	public class GoogleMapTUIO extends Sprite
+	public class GoogleMapTUIO extends Sprite implements IImproApp
 	{
 		private var multiResMap:MultiResMap;			
 		private	var editor:MTEditor;
@@ -39,7 +40,7 @@ package {
 			addMultiResMap();
 			
 			// add keyborad widget
-			addKeyboardWidget();
+//			addKeyboardWidget();
 			
 			// add google earth client
 			addGoogleEarthClient();
@@ -62,10 +63,14 @@ package {
 			
 //			var iview:IMView = multiResMap.getMapStage();
 			
-			TUIO.init(multiResMap.getMapStage(), this, 'localhost', 3000, '', Setting.DEBUG);
+			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
 			  
 		}  
-		
+
+		public function close():void{
+			
+		}		
+
 		private function addMultiResMap():void{
 			// add low resolution views
 			var lres:IMView = Setting.LRes;
@@ -127,6 +132,10 @@ package {
         }
         private function securityErrorHandler(event:SecurityErrorEvent):void {
             trace("securityErrorHandler: " + event);
+        }
+        
+        public function updateView():void{
+        	
         }
         
 		private function onKeyEnter(place:String):void{
