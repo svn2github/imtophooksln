@@ -597,7 +597,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			camRects[i].top = min((float)1.0, max((float)0.0, camRects[i].top));
 			camRects[i].bottom = min((float)1.0, max((float)0.0, camRects[i].bottom));
 		}
-
+		/*
 		for (int i = 0; i < numCamRect; i++) // for each cam view
 		{
 			float camViewWidth = abs(camRects->right - camRects->left);
@@ -645,7 +645,8 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 					}
 				}
 			}
-		}
+			
+		}*/
 	}
 	
 	for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
