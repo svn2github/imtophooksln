@@ -3,7 +3,11 @@ package impro.multiview
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
 	import flash.utils.Dictionary;
+	import flash.events.Event;
 
+	import impro.googlemap.events.HResEvent;
+	import de.johannesluderschmidt.tuio.TUIO;
+	
 	public class IMMultiView extends Sprite
 	{
 		private var renderTarget:DisplayObject;
@@ -59,8 +63,21 @@ package impro.multiview
 				renderTargetMask.graphics.endFill();
 				addChild(renderTargetMask);				
 				addViewport(-1, 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);				
-			}			
+			}
+			
+			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
+			TUIO.addIMObjectListener(this);
+						
 		}	
+		
+		private function hresPosChange(e:Event):void{
+			
+			var he:HResEvent = e as HResEvent;
+//			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
+			getViewport(he.ID).setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
+			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
+			getViewport(he.ID).update();
+		}		
 						
 		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100):void{			
 			var viewport:IMViewport = new IMViewport(renderTarget, renderTargetWidth, renderTargetHeight, x, y, width, height, vpCx, vpCy, vpWidth, vpHeight, DEBUG);			

@@ -21,6 +21,8 @@
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;	
 
+	import flash.events.IMObject;
+
 	//import app.core.element.Wrapper;
 
 	public class TUIO
@@ -49,6 +51,11 @@
 		
 		private static var LONG_PRESS_TIME:Number = 4000;
 		private static var HSIgnore : HotSpotIgnore;
+
+		//--------------------------------------		
+		private static var IMID_ARRAY:Array; 		
+		private static var IMEVENT_ARRAY:Array;		
+		private static var IMOBJECT_ARRAY:Array;	
 		
 		import impro.multiview.IMView;
 		
@@ -79,9 +86,11 @@
 			bPlayback = false;									
 			objectArray = new Array();
 			idArray = new Array();
-			
-			
 			eventListeners = new Array();
+
+			IMOBJECT_ARRAY = new Array();
+			IMID_ARRAY = new Array();
+			IMEVENT_ARRAY = new Array();
 			
 			try
 			{
@@ -115,7 +124,29 @@
 //            localConnection.allowDomain('*');
 //            localConnection.connect("_simulatedTouch");			
 		}
-		
+
+		public static function getIMObjectById(id:Number):IMObject
+		{
+			for(var i:int=0; i<IMOBJECT_ARRAY.length; i++)
+			{
+				if(IMOBJECT_ARRAY[i].ID == id)
+				{
+					return IMOBJECT_ARRAY[i];
+				}
+			}
+			return null;
+		}				
+		public static function addIMObjectListener(reciever:Object):void
+		{
+//			var tmpObj:IMObject = getIMObjectById(id);			
+//			if(tmpObj)
+//			{
+//				tmpObj.addListener(reciever);				
+//			}
+//			tmpObj.addListener(reciever);
+			IMObject.addListener(reciever);			
+		}		
+				
 		/**
          * Handles the local connection event to the multi-touch applicaiton. 
          * Used in the SimTouch simulator.  
@@ -280,10 +311,87 @@
 							
 						}
 					}
-					
-						
 				}
 			}
+			
+			for each(node in msg.MESSAGE)
+			{
+				{
+					if(node.@NAME == "/tuio/BoundingBox")
+					{
+						type = node.ARGUMENT[0].@VALUE;				
+						if(type == "set"){
+							
+							var rx1:Number, 
+								ry1:Number,
+								rx2:Number,
+								ry2:Number;
+							
+							try 
+							{
+								id = node.ARGUMENT[1].@VALUE;
+								rx1 = Number(node.ARGUMENT[2].@VALUE) * IMSTAGE.stageWidth;
+								ry1 = Number(node.ARGUMENT[3].@VALUE) * IMSTAGE.stageHeight;
+								rx2 = Number(node.ARGUMENT[4].@VALUE) * IMSTAGE.stageWidth;
+								ry2 = Number(node.ARGUMENT[5].@VALUE) * IMSTAGE.stageHeight;								
+							} catch (e:Error)
+							{
+								trace("imPro: Error Parsing TUIO XML");
+							}
+							
+							var imObj:IMObject = getIMObjectById(id);
+							if(imObj == null)
+							{
+								imObj = new IMObject("BoundingBox", id, rx1, ry1, rx2, ry2, -1);
+	//							STAGE.addChild(tuioobj.TUIO_CURSOR);								
+								IMOBJECT_ARRAY.push(imObj);
+								imObj.notifyCreated();
+							} else {
+								imObj.rx1 = rx1;
+								imObj.ry1 = ry1;
+								imObj.rx2 = rx2;
+								imObj.ry2 = ry2;							
+							}
+							
+							imObj.notifyMoved();
+							//imObj.TUIO_OBJECT.dispatchEvent(new HResEvent(HResEvent.POSE_CHANGE, true, false, rx, ry, rw, rh, id, 0));						
+						}				
+					}
+					else if(node.@NAME == "/tuio/originalPts"){
+						type = node.ARGUMENT[0].@VALUE;				
+						if(type == "set"){
+							
+							var px1:Number,	py1:Number,
+								px2:Number,	py2:Number,
+								px3:Number,	py3:Number,
+								px4:Number,	py4:Number;
+							
+							try 
+							{
+								id = node.ARGUMENT[1].@VALUE;
+								px1 = Number(node.ARGUMENT[2].@VALUE) * IMSTAGE.stageWidth;
+								py1 = Number(node.ARGUMENT[3].@VALUE) * IMSTAGE.stageHeight;
+								px2 = Number(node.ARGUMENT[4].@VALUE) * IMSTAGE.stageWidth;
+								py2 = Number(node.ARGUMENT[5].@VALUE) * IMSTAGE.stageHeight;
+								px3 = Number(node.ARGUMENT[6].@VALUE) * IMSTAGE.stageWidth;
+								py3 = Number(node.ARGUMENT[7].@VALUE) * IMSTAGE.stageHeight;
+								px4 = Number(node.ARGUMENT[8].@VALUE) * IMSTAGE.stageWidth;
+								py4 = Number(node.ARGUMENT[9].@VALUE) * IMSTAGE.stageHeight;
+								
+							} catch (e:Error)
+							{
+								trace("imPro: Error Parsing TUIO XML");
+							}
+							
+							var imObj:IMObject = getIMObjectById(id);
+							if(imObj != null){
+								imObj.setOrignialPts(px1, py1, px2, py2, px3, py3, px4, py4);
+							}
+						}
+					}
+				}
+			}			
+			
 			if(bDebug)
 			{
 				debugText.text = "";

@@ -18,11 +18,11 @@ package {
 	import impro.multiview.IMView;
 
 
-	[SWF(width="1280", height="720", backgroundColor="#000000", frameRate="30")]
+	[SWF(width=2048, height=768, frameRate=24, backgroundColor=0xEB7F00)]
 	public class FlickrPhotoApp extends Sprite implements IImproApp
 	{
-		public static var photoWidth:Number = 100;
-		private var FlickrQuality:Number = 2;
+		public static var photoWidth:Number = 200;
+		private var FlickrQuality:Number = 1;
 		private var FlickrPhotoNum:Number = 40;			
 
 		private var multiResSprite:IMMultiView;
@@ -49,8 +49,8 @@ package {
 			// flickr parameters
 			
 			// prepare the flickr sprite			
-			flickrPlateWidth = Setting.LRes.stageWidth * 3;
-			flickrPlateHeight = Setting.LRes.stageHeight * 3;
+			flickrPlateWidth = Setting.LRes.stageWidth * FlickrQuality;
+			flickrPlateHeight = Setting.LRes.stageHeight * FlickrQuality;
 			flickrPlate = new Sprite();			
 			flickr = new Flickr(flickrPlate, FlickrPhotoNum);
 //			flickr.fetch(true);

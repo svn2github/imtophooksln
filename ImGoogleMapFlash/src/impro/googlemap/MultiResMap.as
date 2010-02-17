@@ -11,7 +11,8 @@ package impro.googlemap
 	import com.google.maps.services.GeocodingEvent;
 	
 	import flash.display.Sprite;
-	import flash.events.*;
+	import flash.events.Event;
+	import flash.events.TUIO;
 	import flash.geom.Point;
 	import flash.net.XMLSocket;
 	import flash.text.TextField;
@@ -58,6 +59,7 @@ package impro.googlemap
 			addChild(map);
 			
 			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
+			TUIO.addIMObjectListener(this);
 			
 			if(DEBUG){
 //				var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
@@ -74,7 +76,6 @@ package impro.googlemap
 			}
 			
 			// add imObject listener
-			TUIO.addIMObjectListener(this);
 
 			if(DEBUG){
 				ruler.graphics.beginFill(0x0000ff, 1);			

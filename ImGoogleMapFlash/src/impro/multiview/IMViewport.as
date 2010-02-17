@@ -105,9 +105,9 @@ package impro.multiview
 			return bitmapData;
 		}
 		
-//		public function update():void{
-//			bitmapData.draw(parentSprite);
-//		}
+		public function update():void{
+			updateCallback();
+		}
 
 	}
 }

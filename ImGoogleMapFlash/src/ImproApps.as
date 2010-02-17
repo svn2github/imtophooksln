@@ -9,7 +9,7 @@ package
 	
 	import impro.IImproApp;
 	
-	[SWF(width="1366", height="768", backgroundColor="#000000", frameRate="30")]
+	[SWF(width="2048", height="768", backgroundColor="#000000", frameRate="30")]
 	public class ImproApps extends Sprite
 	{
 		private var theApp:DisplayObject;
@@ -29,7 +29,7 @@ package
 			
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKey);
 			
-			launchApp("1");			
+			launchApp("2");			
 		}
 		
 		private function launchApp(app:String):void{
