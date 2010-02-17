@@ -1,4 +1,4 @@
-
+float4 minColor = (0.5, 0.5, 0.5, 0.5);
 	 
 struct VSOUT {
     float4 pos	: POSITION;
@@ -19,8 +19,12 @@ sampler2D g_Sampler = sampler_state {
 }; 
 
 float4 mainPS(VSOUT vin) : COLOR {
-	return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
-	//return float4(1.0, 1.0, 0.0, 0.0);
+	float4 ret = tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
+	ret.a = max(ret.a, minColor.a);
+	ret.r = max(ret.r, minColor.r);
+	ret.g = max(ret.g, minColor.g);
+	ret.b = max(ret.b, minColor.b);
+	return ret;
 }
 
 technique technique0 {
