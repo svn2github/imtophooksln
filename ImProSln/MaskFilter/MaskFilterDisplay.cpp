@@ -635,21 +635,31 @@ BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRect
 			pVertices[1].position = D3DXVECTOR3(pts[i][1].x, -pts[i][1].y, 0);
 			pVertices[2].position = D3DXVECTOR3(pts[i][2].x, -pts[i][2].y, 0);
 			pVertices[3].position = D3DXVECTOR3(pts[i][3].x, -pts[i][3].y, 0);
-			D3DXVECTOR3 tV = (pVertices[0].position + pVertices[1].position + 
-				pVertices[2].position + pVertices[3].position)/4;
+			float minX = pVertices[0].position.x;
+			float maxX = pVertices[0].position.x;
+			float minY = pVertices[0].position.y;
+			float maxY = pVertices[0].position.y;
+			for (int k = 0; k < 4; k++ )
+			{
+				minX = min(minX, pVertices[k].position.x);
+				minY = min(minY, pVertices[k].position.y);
+				maxX = max(maxX, pVertices[k].position.x);
+				maxY = max(maxY, pVertices[k].position.y);
+			}
+			D3DXVECTOR3 tV((minX + maxX)/2, (minY + maxY)/2, 0);  
 
-			D3DXMatrixTranslation(&matT, -tV.x, -tV.y, -tV.z);
+			D3DXMatrixTranslation(&matT, -tV.x, -tV.y, 0);
 			D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, fMaskScale);
-			D3DXMatrixTranslation(&matInvT, tV.x, tV.y, tV.z);
+			D3DXMatrixTranslation(&matInvT, tV.x, tV.y, 0);
 			matTran = matT*matS*matInvT;
 			D3DXVec3TransformCoord(&(pVertices[0].position), &(pVertices[0].position), &matTran);
 			D3DXVec3TransformCoord(&(pVertices[1].position), &(pVertices[1].position), &matTran);
 			D3DXVec3TransformCoord(&(pVertices[2].position), &(pVertices[2].position), &matTran);
 			D3DXVec3TransformCoord(&(pVertices[3].position), &(pVertices[3].position), &matTran);
 			
-			for (int i=0; i < 4; i++)
+			for (int j=0; j < 4; j++)
 			{
-				m_pWarpMesh->SetVertex(i, pVertices[i]);
+				m_pWarpMesh->SetVertex(j, pVertices[j]);
 			}
 			m_pWarpMesh->SetTransform(&matIdentity);
 			hr = pEffect->SetTexture("g_Texture", m_pMaskRectTexture);
