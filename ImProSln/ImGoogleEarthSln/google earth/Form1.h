@@ -86,9 +86,7 @@ double ctilt = 0;
 double cheading = 0;
 double croll = 0;
 
-double angleThreshold = PI * 5 / 180; // 5 degrees
-
-double altitude_scale = 1.2;
+double altitude_scale = 0.8;
 
 bool getFstTag = false;
 
@@ -134,17 +132,14 @@ BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, con
 bool arTimerTickFunc()
 {
 	
-	double dheading = abs(heading - theading);
-	double dtilt = abs(tilt - ttilt);
-	double droll = abs(roll - troll);
-	
-	// for stablization
-	if(dheading > angleThreshold)
-		theading = heading;
-	if(dtilt > angleThreshold)
-		ttilt = tilt;
-	if(droll > angleThreshold)
-		troll = roll;
+
+	// set target camera
+	tlatitude = latitude;
+	tlongitude = longitude;
+	taltitude = altitude;
+	theading = heading;
+	ttilt = tilt;
+	troll = roll;
 
 	if(!getFstTag){
 		clatitude = tlatitude;
@@ -189,13 +184,9 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		
-		private: static String^ id;
-		private: static String^ ipAddress;
-		private: static Int32 port;
-		private: static bool useSocket = false;
-	    private: System::Windows::Forms::Timer^  animTimer;
-	private: System::Windows::Forms::TextBox^  debugTextBox;
+		private: static String^ ipAddress = "192.168.1.26";
+		private: static Int32 port = 5000;
+	private: System::Windows::Forms::Timer^  animTimer;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -209,20 +200,15 @@ namespace googleearth {
 			//
 			//TODO: 在此加入建構函式程式碼
 			//
-						
-			g_formPtr = this;
-
+			
 			//full screen mode
 			//setFullScreen();			
-
-			loadParameters();
-
+			g_formPtr = this;
 			setupBrowser();
-
+			
 			setupArtoolkit();
 
-			if(useSocket)
-				setupSocket();
+			//setupSocket();
 			
 		}
 
@@ -233,21 +219,6 @@ namespace googleearth {
 				this->TopMost = true;
 			}				 
 		}
-
-	    private: System::Void loadParameters(){
-					 String^ line;
-					 System::IO::StreamReader^ file = gcnew System::IO::StreamReader(".\\setting.txt");
-					 
-					 line = file->ReadLine();
-					 ipAddress = line->Split(' ')[1];
-
-					 line = file->ReadLine();
-					 port = System::Int32::Parse(line->Split(' ')[1]);
-
-					 line = file->ReadLine();
-					 id = line->Split(' ')[1];
-		}
-
 
 		private: System::Void setupBrowser(){
 			String^ URL = "file:///C:/googleEarth.html";
@@ -293,9 +264,8 @@ namespace googleearth {
             Receive();
 			
 			// register to TcpServer.
-			sendData("11,"+id);
-			sendData("15,flashGE,"+id+",geLogin");		 
-			
+			sendData("11,tabletGE_1");		 
+			 
 		}
 
         //**********************************************
@@ -359,7 +329,6 @@ namespace googleearth {
 		private: System::Void sendData (String^ message) {
 			array<Byte>^data = System::Text::Encoding::ASCII->GetBytes( message );
 			GetNetworkStream->Write( data, 0, data->Length );
-			GetNetworkStream->Flush();
 		}
 
 
@@ -812,7 +781,6 @@ namespace googleearth {
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
-			this->debugTextBox = (gcnew System::Windows::Forms::TextBox());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -830,27 +798,17 @@ namespace googleearth {
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
-			// debugTextBox
-			// 
-			this->debugTextBox->Location = System::Drawing::Point(447, 23);
-			this->debugTextBox->Name = L"debugTextBox";
-			this->debugTextBox->Size = System::Drawing::Size(118, 22);
-			this->debugTextBox->TabIndex = 1;
-			this->debugTextBox->Text = L"Debug";
-			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(628, 334);
-			this->Controls->Add(this->debugTextBox);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
 			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyDown);
 			this->ResumeLayout(false);
-			this->PerformLayout();
 
 		}
 
@@ -988,10 +946,6 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 				 {
 					 g_pARCam->ShowARProp();
 				 }
-				 else if(e->KeyCode == Keys::D4)
-				 {
-					setFullScreen();
-				 }
 			 }
 		 }
 };
@@ -1000,31 +954,28 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 
 bool animTimerTickFunc()
 {
-	
-	printf("update");
-
 	try
 	{
 		if(!getFstTag)
 			return false;
-		/*
+
 		clatitude = tlatitude;
 		clongitude = tlongitude;
 		caltitude = taltitude;
 		cheading = theading;
 		ctilt = ttilt;
- 		croll = troll;
-		 */
-		
-		 double alpha = 0.3
-			 ;
+		croll = troll;
+
+		/*
+		 double alpha = 0.2;
 		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
 		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
 		 caltitude = caltitude*alpha + taltitude*(1-alpha);
 		 cheading = cheading*alpha + theading*(1-alpha);
 		 ctilt = ctilt*alpha + ttilt*(1-alpha);
 		 croll = croll*alpha + troll*(1-alpha);
-		
+		*/
+
 		 array<Object^>^ parameter = gcnew array<Object^>(6); 
 		 parameter[0] = clatitude;
 		 parameter[1] = clongitude;
@@ -1048,6 +999,7 @@ bool animTimerTickFunc()
 bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
 	
+
 	double      target_trans[3][4];
 	double      cam_trans[3][4];
 	char        string[256];
@@ -1055,41 +1007,40 @@ bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMu
 	D3DXMATRIX d3dTarget_trans, d3d_camTrans;
 	D3DXMatrixIdentity(&d3dTarget_trans);
 	D3DXMatrixIdentity(&d3d_camTrans);
+
 	for (int row = 0; row < 3; row ++)
 	{
 		for (int col =0; col < 4; col++)
 		{
-			target_trans[row][col] = config->cvTrans[row][col];
-			d3dTarget_trans.m[col][row] = config->cvTrans[row][col];
+			if (col == 3)
+			{
+				cam_trans[row][col] = config->cvTrans[col][row];
+			}
+			else
+			{
+				cam_trans[row][col] = config->cvTrans[row][col];
+			}
+			d3d_camTrans.m[row][col] = config->cvTrans[col][row];
 		}
 	}
-	D3DXMatrixInverse(&d3d_camTrans, NULL, &d3dTarget_trans);
+	D3DXMatrixInverse(&d3dTarget_trans, NULL, &d3d_camTrans);
+
 	for (int row = 0; row < 3; row ++)
 	{
 		for (int col =0; col < 4; col++)
 		{
-			cam_trans[row][col] = d3d_camTrans.m[col][row];
-
+			if (col == 3)
+			{
+				target_trans[row][col] = d3d_camTrans.m[col][row];
+			}
+			else
+			{
+				target_trans[row][col] = d3d_camTrans.m[row][col];
+			}
 		}
 	}
 
-	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
-	camera._11 = cam_trans[0][0];
-	camera._12 = cam_trans[1][0]; 
-	camera._13 = cam_trans[2][0];
-	camera._14 = 0;
-	camera._21 = cam_trans[0][1];
-	camera._22 = cam_trans[1][1];
-	camera._23 = cam_trans[2][1];
-	camera._24 = 0;
-	camera._31 = cam_trans[0][2];
-	camera._32 = cam_trans[1][2];
-	camera._33 = cam_trans[2][2];
-	camera._34 = 0;
-	camera._41 = cam_trans[0][3];
-	camera._42 = cam_trans[1][3];
-	camera._43 = cam_trans[2][3];
-	camera._44 = 1;
+	camera = d3d_camTrans ;
 
 	//計算google earth中需要的各個參數
 	g_formPtr->countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
