@@ -23,12 +23,15 @@ extern CARTagFilterApp theApp;
 ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("ARTag Filter"), 0, CLSID_ARTagDSFilter)
 { 
+	
+	D3DXMatrixIdentity(&m_matIntri);
 	/* Initialize any private variables here. */
 	m_ARTracker = NULL;
 	m_pCallback = NULL;
 	m_callbackArgc = 0;
 	m_callbackArgv = NULL;
 	m_bDrawTag = true;
+	m_bDrawReproPt = true;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 }
@@ -409,6 +412,11 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 			const ARFloat* matARProj = m_ARTracker->getProjectionMatrix();
 			const ARMultiMarkerInfoT* markerConfig = m_ARTracker->getMultiMarkerConfig();
 			
+			if (m_bDrawReproPt)
+			{
+				ShowReprojectImage(imgOut, numDetected,
+				markinfos, markerConfig,matARView, matARProj );
+			}
 			if (m_pCallback != NULL)
 			{
 				m_pCallback(numDetected, markinfos, markerConfig, matARView, matARProj, m_callbackArgc, m_callbackArgv);
@@ -452,16 +460,6 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	if (m_bDrawTag)
 	{
 		DrawARTag(imgOut, markinfos, numDetected);
-		
-		/*
-		CopyInputImage2InputTexture(pOut, pOutType, false);
-		SetRenderTarget();
-		m_pD3DDisplay->SetTexture(m_pInTexture);
-		((ARTagD3DDisplay*)m_pD3DDisplay)->Render(markinfos, numDetected, bitHeader.biWidth, bitHeader.biHeight );
-		ResetRenderTarget();
-		CopyRenderTarget2OutputTexture();
-		CopyOutputTexture2OutputData(pOut, pOutType, true);
-		*/
 	}
 	cvFlip(imgOut, NULL, 0);
 	if (img != NULL)
@@ -482,7 +480,172 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	return S_OK;
 }
 
+bool ARTagDSFilter::ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts, double basisScale[3])
+{
+	if (pMarker == NULL)
+	{
+		return false;
+	}
+	if (vts != NULL)
+	{
+		delete [] vts;
+		vts = NULL;
+	}
 
+	vts = new D3DXVECTOR3[4];
+	vts[0] = D3DXVECTOR3(0,0,0); 
+	vts[1] = D3DXVECTOR3(0, -pMarker->width , 0);
+	vts[2] = D3DXVECTOR3(pMarker->width, -pMarker->width, 0);
+	vts[3] = D3DXVECTOR3(pMarker->width, 0, 0);
+
+	D3DXMATRIX matMark, matScale, matTran;
+	D3DXMatrixIdentity(&matTran);
+	D3DXMatrixIdentity(&matMark);
+	D3DXMatrixScaling(&matScale, basisScale[0], basisScale[1], basisScale[2]);
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	matTran = matMark * matScale;
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&vts[i], &vts[i], &matTran);
+	}
+	return true;
+}
+
+bool ARTagDSFilter::ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts)
+{
+	if (pMarker == NULL)
+	{
+		return false;
+	}
+	if (vts != NULL)
+	{
+		delete [] vts;
+		vts = NULL;
+	}
+
+	vts = new D3DXVECTOR3[4];
+	vts[0] = D3DXVECTOR3(0,0,0); 
+	vts[1] = D3DXVECTOR3(0, -pMarker->width , 0);
+	vts[2] = D3DXVECTOR3(pMarker->width, -pMarker->width, 0);
+	vts[3] = D3DXVECTOR3(pMarker->width, 0, 0);
+
+	D3DXMATRIX matMark, matTran;
+	D3DXMatrixIdentity(&matTran);
+	D3DXMatrixIdentity(&matMark);
+	for(int row=0; row < 3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			matMark.m[col][row] = pMarker->trans[row][col];
+		}
+	}
+	matTran = matMark;
+	for (int i =0; i < 4; i++)
+	{
+		D3DXVec3TransformCoord(&vts[i], &vts[i], &matTran);
+	}
+	return true;
+}
+HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, const ARMarkerInfo* detectedMarkers, 
+										   const ARMultiMarkerInfoT* config, const double* matView, const double* matProj)
+{
+	if (srcImage == NULL)
+		return S_FALSE;
+	
+	int width = srcImage->width;
+	int height = srcImage->height;
+	
+
+	float s[] = {0,0,0,
+		0,0,0,
+		0,0,0};
+	CvMat mat = cvMat(3,3, CV_32F, &s);
+
+	float* pos3d = (float*)malloc(4*3*nDetected*sizeof(float));
+	int nValidDetected = 0;
+
+	memset(pos3d,0,4*3*nDetected*sizeof(float));
+	for (int i = 0; i< nDetected; i++)
+	{
+		ARMultiEachMarkerInfoT* pcfgMarker = NULL;
+		for (int j =0; j< config->marker_num; j++)
+		{
+			if (config->marker[j].patt_id == detectedMarkers[i].id)
+			{
+				pcfgMarker = &(config->marker[j]);
+				break;
+			}	
+		}
+		if (pcfgMarker == NULL)
+		{
+			continue;
+		}
+
+		D3DXVECTOR3* pt3d = NULL;
+		ARTag2VW(pcfgMarker, pt3d);
+		if (pt3d == NULL)
+		{
+			continue;
+		}
+		D3DXVECTOR3 pt3d_rev[4];
+		pt3d_rev[0] = pt3d[0];
+		pt3d_rev[1] = pt3d[3];
+		pt3d_rev[2] = pt3d[2];
+		pt3d_rev[3] = pt3d[1];
+		nValidDetected++;
+
+		pos3d[4*3*(nValidDetected-1) + 0] = pt3d_rev[0].x;  pos3d[4*3*(nValidDetected-1) + 1] = pt3d_rev[0].y;  pos3d[4*3*(nValidDetected-1) + 2] = pt3d_rev[0].z;
+		pos3d[4*3*(nValidDetected-1) + 3] = pt3d_rev[1].x;  pos3d[4*3*(nValidDetected-1) + 4] = pt3d_rev[1].y;  pos3d[4*3*(nValidDetected-1) + 5] = pt3d_rev[1].z;
+		pos3d[4*3*(nValidDetected-1) + 6] = pt3d_rev[2].x;  pos3d[4*3*(nValidDetected-1) + 7] = pt3d_rev[2].y;  pos3d[4*3*(nValidDetected-1) + 8] = pt3d_rev[2].z;
+		pos3d[4*3*(nValidDetected-1) + 9] = pt3d_rev[3].x;  pos3d[4*3*(nValidDetected-1) + 10] = pt3d_rev[3].y;  pos3d[4*3*(nValidDetected-1) + 11] = pt3d_rev[3].z;
+
+		delete [] pt3d;
+		pt3d = NULL;
+	}
+	if (nValidDetected < 1)
+	{
+		free(pos3d);
+		return false;
+	}
+
+	D3DXMATRIX matExtrin;
+
+	for (int row =0 ; row < 4; row++)
+	{
+		for(int col =0; col<4; col++)
+		{
+			matExtrin.m[row][col] = config->cvTrans[col][row];
+		}
+	}
+
+	for (int i =0; i< nValidDetected; i++)
+	{
+		for (int j =0; j<4;j++)
+		{
+			D3DXVECTOR4 vtmp(0,0,0,0);
+			D3DXVECTOR3 v3d;
+			v3d.x = pos3d[4*3*i + 3*j + 0];  
+			v3d.y = pos3d[4*3*i + 3*j + 1]; 
+			v3d.z = pos3d[4*3*i + 3*j + 2]; 
+			
+			D3DXVec3Transform(&vtmp, &v3d, &matExtrin);
+			D3DXVec4Transform(&vtmp, &vtmp, &m_matIntri);
+			vtmp /= vtmp.z;
+			int x = vtmp.x;
+			int y = vtmp.y;
+			cvDrawCircle(srcImage, cvPoint(x, y), 3, cvScalar(255,0,0), 2);	
+		}
+	}
+	free(pos3d);
+
+	return S_OK;
+}
 HRESULT ARTagDSFilter::DecideBufferSize(IMemAllocator *pAlloc,const IPin* pOutPin, ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr = NOERROR;
@@ -614,6 +777,13 @@ bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_fa
 	if (m_ARTracker == NULL)
 	{
 		return false;
+	}
+	for (int row =0; row <4; row++)
+	{
+		for (int col=0; col<4; col++)
+		{
+			m_matIntri.m[col][row] = mat[row*4 + col];
+		}
 	}
 	return m_ARTracker->setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip);
 }
@@ -1064,7 +1234,17 @@ bool ARTagDSFilter::getbDrawTag()
 }
 bool ARTagDSFilter::setbDrawTag(bool v)
 {
-	m_bDrawTag = v; return true;
+	m_bDrawTag = v; 
+	return true;
+}
+bool ARTagDSFilter::getbDrawReproPt()
+{
+	return m_bDrawReproPt;
+}
+bool ARTagDSFilter::setbDrawReproPt(bool v)
+{
+	m_bDrawReproPt = v;
+	return true;
 }
 
 bool ARTagDSFilter::IsReady()
@@ -1160,12 +1340,12 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 		&(mat[4]), &(mat[5]), &(mat[6]), &(mat[7]),
 		&(mat[8]), &(mat[9]), &(mat[10]), &(mat[11]),
 		&(mat[12]), &(mat[13]), &(mat[14]), &(mat[15]));
-	
-	m_ARTracker->setCamera(width, height, mat, distfactor, 1, 1000);
-	m_ARTracker->setBorderWidth(1.0/8.0);
-	m_ARTracker->setThreshold(100);
-	m_ARTracker->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
-	m_ARTracker->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
+
+	this->setCamera(width, height, mat, distfactor, 1, 1000);
+	this->setBorderWidth(1.0/8.0);
+	this->setThreshold(100);
+	this->setUndistortionMode(ARToolKitPlus::UNDIST_NONE);
+	this->setMarkerMode(ARToolKitPlus::MARKER_ID_SIMPLE);
 	
 	ARMultiEachMarkerInfoT* ARMarkers = NULL;
 	int numMarker = 0;

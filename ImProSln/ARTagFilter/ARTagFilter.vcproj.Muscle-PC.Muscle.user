@@ -11,7 +11,7 @@
 			<DebugSettings
 				Command="C:\Program Files\Final Codecs\Codecs\GraphEdit.exe "
 				WorkingDirectory=""
-				CommandArguments="D:\Projects\ImProSln\setting\ARTagFilter.grf"
+				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

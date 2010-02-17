@@ -600,15 +600,18 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::ARTag2World3D(const ARMultiEachMarkerInfoT*
 		delete [] vts;
 		vts = NULL;
 	}
+	double basisScale[3] = {1};
+	getBasisScale(basisScale);
 	vts = new D3DXVECTOR3[4];
 	vts[0] = D3DXVECTOR3(0,0,0); 
-	vts[1] = D3DXVECTOR3(0, -pMarker->width, 0);
+	vts[1] = D3DXVECTOR3(0, -pMarker->width , 0);
 	vts[2] = D3DXVECTOR3(pMarker->width, -pMarker->width, 0);
 	vts[3] = D3DXVECTOR3(pMarker->width, 0, 0);
 
-	D3DXMATRIX matMark;
+	D3DXMATRIX matMark, matScale, matTran;
+	D3DXMatrixIdentity(&matTran);
 	D3DXMatrixIdentity(&matMark);
-
+	D3DXMatrixScaling(&matScale, basisScale[0], basisScale[1], basisScale[2]);
 	for(int row=0; row < 3; row++)
 	{
 		for (int col = 0; col < 4; col++)
@@ -616,10 +619,10 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::ARTag2World3D(const ARMultiEachMarkerInfoT*
 			matMark.m[col][row] = pMarker->trans[row][col];
 		}
 	}
-	
+	matTran = matMark * matScale;
 	for (int i =0; i < 4; i++)
 	{
-		D3DXVec3TransformCoord(&vts[i], &vts[i], &matMark);
+		D3DXVec3TransformCoord(&vts[i], &vts[i], &matTran);
 	}
 	return true;
 }
@@ -770,14 +773,31 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	cv3DPts = cvMat(nValidDetected*4, 3, CV_32F, pos3d);
 	camExtrin = cvMat(4, 4, CV_32F, tmp);
 	findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin);
+	double bscale[3] = {0};
+	getBasisScale(bscale);
+	D3DXMATRIX matExtrin, matScale;
+	D3DXMatrixScaling(&matScale, bscale[0], bscale[1], bscale[2]);
+
+	for (int row =0 ; row < 4; row++)
+	{
+		for(int col =0; col<4; col++)
+		{
+			float test = cvmGet(&camExtrin, row, col);
+			matExtrin.m[col][row] = cvmGet(&camExtrin, row, col);
+		}
+	}
+	matExtrin = matExtrin * matScale;
+
 	for (int row =0; row <4; row++)
 	{
 		for (int col =0; col < 4; col++)
 		{
-			config->cvTrans[row][col] = cvmGet(&camExtrin, row, col);
+			config->cvTrans[row][col] = matExtrin.m[col][row];
 		}
 	}
 	
+	
+
 	free(pt2d);
 	free(pos3d);
 

@@ -358,6 +358,7 @@ m_pARProperty(0)
 	m_cbMarkerMode = 0;
 	m_cbUnDistortMode = 0;
 	m_ckDrawTag = 0;
+	m_ckDrawReProj = 0;
 	m_slrThreshold = 0;
 	m_slrBorderW = 0;
 	m_txtThreshold = 0;
@@ -420,6 +421,8 @@ bool ARTagGeneralPage::GetSetting()
 	{
 		return false;
 	}
+	bool bDrawReproj = m_pARProperty->getbDrawReproPt();
+	Button_SetCheck(m_ckDrawReProj, bDrawReproj);
 	bool bDrawTag = m_pARProperty->getbDrawTag();
 	Button_SetCheck(m_ckDrawTag, bDrawTag);
 	int poseEstimator = m_pARProperty->getPoseEstimator();
@@ -452,6 +455,8 @@ bool ARTagGeneralPage::ApplySetting()
 	{
 		return false;
 	}
+	bool bDrawReproj = Button_GetCheck(m_ckDrawReProj);
+	m_pARProperty->setbDrawReproPt(bDrawReproj);
 	bool bDrawTag = Button_GetCheck(m_ckDrawTag);
 	m_pARProperty->setbDrawTag(bDrawTag);
 
@@ -635,6 +640,7 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	}
 	::EnableWindow(this->m_Dlg, TRUE);
 
+	m_ckDrawReProj = GetDlgItem(m_Dlg, IDC_CKReProj);
 	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
 	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);
 	m_cbMarkerMode = GetDlgItem(m_Dlg, IDC_COMBO_MarkerMode);

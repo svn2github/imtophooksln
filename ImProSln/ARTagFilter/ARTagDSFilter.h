@@ -60,12 +60,18 @@ public:
 	virtual int getPoseEstimator();
 	virtual bool getbDrawTag();
 	virtual bool setbDrawTag(bool v);
+	virtual bool getbDrawReproPt();
+	virtual bool setbDrawReproPt(bool v);
+
 	virtual bool IsReady();
 	virtual bool setWorldBasisScale(double v[3]);
 	virtual bool getWorldBasisScale(double v[3]);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]);
 private:
 	HRESULT VariantFromString(PCWSTR wszValue, VARIANT &Variant);
+
+	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts, double basisScale[3]);
+	bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 protected:
 	
 	//
@@ -73,6 +79,7 @@ protected:
 	double m_WorldBasisScale[3];
 
 	bool			 m_bDrawTag;
+	bool             m_bDrawReproPt;
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;
 	void** m_callbackArgv;
@@ -87,6 +94,12 @@ protected:
 		IMediaSample *pOut, const CMediaType* pOutType);
 	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo);
+
+	D3DXMATRIX m_matIntri;
+	HRESULT ShowReprojectImage(IplImage* srcImage, int nDetected, const ARMarkerInfo* detectedMarkers, 
+		const ARMultiMarkerInfoT* config, const double* matView, const double* matProj);
+
+
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();
