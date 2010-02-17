@@ -791,7 +791,7 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	{
 		for (int col =0; col < 4; col++)
 		{
-			config->cvTrans[row][col] = matExtrin.m[row][col];
+			config->cvTrans[row][col] = matExtrin.m[col][row];
 		}
 	}
 	
