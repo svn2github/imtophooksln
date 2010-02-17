@@ -606,7 +606,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			{
 				continue;
 			}
-			float idealArea = max((float)(m_minMarkerWidth*m_minMarkerWidth*0.95), (float)camViewWidth/4 * camViewHeight/4);
+			float idealArea = max((float)(m_minMarkerWidth*m_minMarkerWidth*0.95), (float)(camViewWidth/3 * camViewHeight/3));
 			for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 			{
 				int idx = undecideIdx.at(iterIdx);
