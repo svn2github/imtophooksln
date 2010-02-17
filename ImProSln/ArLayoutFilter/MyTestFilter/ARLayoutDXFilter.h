@@ -72,11 +72,11 @@ public:
 	virtual bool LoadConfigFromFile(WCHAR* filename);
 	virtual bool SaveConfigToFile(WCHAR* filename);
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
-		fRECT* fingerRects, UINT numFingerRects );
+		fRECT* fingerRects, UINT numFingerRects, float fingerExtend = 0.07 );
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
 
 private:
-	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker);
+	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker, float fScale = 1.0);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);
 	HRESULT ReceiveConfig(IMediaSample *pSample, const IPin* pReceivePin);
 };

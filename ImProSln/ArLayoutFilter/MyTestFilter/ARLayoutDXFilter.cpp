@@ -548,7 +548,7 @@ bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
 }
 
 bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fingerRects, 
-									UINT numFingerRects )
+									UINT numFingerRects, float fingerExtend)
 {
 	CAutoLock lck(&m_csARMarker);
 	map<int, bool> decisionMap; // idx, visible, have decided?
@@ -558,7 +558,16 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	{
 		undecideIdx.push_back(idx);
 	}
-	
+	//Extenr Finger Rectangle
+
+	for (int i=0; i< numFingerRects; i++)
+	{
+		fingerRects[i].left -= fingerExtend;
+		fingerRects[i].right += fingerExtend;
+		fingerRects[i].top -= fingerExtend;
+		fingerRects[i].bottom += fingerExtend;
+	}
+
 	if (numFingerRects > 0 && fingerRects != NULL)
 	{
 		fRECT markerRect;
@@ -677,13 +686,16 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	return true;
 }
 
-bool ARLayoutDXFilter::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker)
+bool ARLayoutDXFilter::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker, float fScale)
 {
 	if (retRect == NULL || pMarker == NULL)
 	{
 		return false;
 	}
-	D3DXMATRIX matMark;
+	D3DXMATRIX matMark, matT, matInvT, matS;
+	D3DXMatrixIdentity(&matT);
+	D3DXMatrixIdentity(&matInvT);
+	D3DXMatrixScaling(&matS, fScale, fScale, fScale);
 	D3DXMatrixIdentity(&matMark);
 	for(int row=0; row < 3; row++)
 	{
@@ -694,7 +706,10 @@ bool ARLayoutDXFilter::GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInf
 	}
 	D3DXVECTOR3 v[4] = { D3DXVECTOR3(0,0,0), D3DXVECTOR3(0, -pMarker->width, 0),
 		D3DXVECTOR3(pMarker->width, -pMarker->width, 0), D3DXVECTOR3(pMarker->width, 0, 0)};
-	
+	D3DXVECTOR3 center = (v[0] + v[1] + v[2] + v[3]) / 4.0;
+	D3DXMatrixTranslation(&matT, - center.x, -center.y, -center.z);
+	D3DXMatrixTranslation(&matInvT, center.x, center.y, center.z);
+	matMark = matT * matS * matInvT * matMark;
 	for (int i =0; i < 4; i++)
 	{
 		D3DXVec3TransformCoord(&v[i], &v[i], &matMark);
