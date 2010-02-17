@@ -620,7 +620,7 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	{
 		for(int col =0; col<4; col++)
 		{
-			matExtrin.m[row][col] = config->cvTrans[col][row];
+			matExtrin.m[col][row] = config->cvTrans[col][row];
 		}
 	}
 
