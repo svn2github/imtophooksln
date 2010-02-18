@@ -432,7 +432,7 @@ HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
 {
 	HRESULT hr;
 	hr = __super::initD3D(rtWidth, rtHeight);
-	hr = initAddTextures(800, 600);
+	hr = initAddTextures(1024, 768);
 	return hr;
 	
 }
