@@ -635,21 +635,13 @@ BOOL MaskFilterDisplay::GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRect
 			pVertices[1].position = D3DXVECTOR3(pts[i][1].x, -pts[i][1].y, 0);
 			pVertices[2].position = D3DXVECTOR3(pts[i][2].x, -pts[i][2].y, 0);
 			pVertices[3].position = D3DXVECTOR3(pts[i][3].x, -pts[i][3].y, 0);
-			float minX = pVertices[0].position.x;
-			float maxX = pVertices[0].position.x;
-			float minY = pVertices[0].position.y;
-			float maxY = pVertices[0].position.y;
-			for (int k = 0; k < 4; k++ )
-			{
-				minX = min(minX, pVertices[k].position.x);
-				minY = min(minY, pVertices[k].position.y);
-				maxX = max(maxX, pVertices[k].position.x);
-				maxY = max(maxY, pVertices[k].position.y);
-			}
-			D3DXVECTOR3 tV((minX + maxX)/2, (minY + maxY)/2, 0);  
+			
+			
+			D3DXVECTOR3 tV = (pVertices[0].position + pVertices[1].position + 
+				+ pVertices[2].position + pVertices[3].position) / 4.0;
 
 			D3DXMatrixTranslation(&matT, -tV.x, -tV.y, 0);
-			D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, fMaskScale);
+			D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, 1);
 			D3DXMatrixTranslation(&matInvT, tV.x, tV.y, 0);
 			matTran = matT*matS*matInvT;
 			D3DXVec3TransformCoord(&(pVertices[0].position), &(pVertices[0].position), &matTran);
