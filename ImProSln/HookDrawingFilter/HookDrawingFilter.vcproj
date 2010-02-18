@@ -153,7 +153,7 @@
 				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib detours.lib detoured.lib MSD3DLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;..\MyLib\bin;..\Detours\lib;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;..\MyLib\bin;..\Detours\lib"
 				ModuleDefinitionFile=".\HookDrawingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

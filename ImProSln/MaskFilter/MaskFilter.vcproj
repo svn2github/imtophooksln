@@ -130,7 +130,7 @@
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
-				RuntimeLibrary="0"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -150,6 +150,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
@@ -322,6 +323,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MyARTagMediaSample.h"
@@ -332,6 +341,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

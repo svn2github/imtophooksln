@@ -150,6 +150,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"

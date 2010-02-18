@@ -208,7 +208,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release_mdd|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\DSLib\lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			UseOfMFC="0"
@@ -244,7 +244,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
+				OutputFile="$(OutDir)\strmbase_mdd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

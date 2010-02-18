@@ -154,7 +154,7 @@
 				AdditionalOptions="/ENTRY:FilterDllMain&#x0D;&#x0A;"
 				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib  ARToolKitPlus.lib MSD3DLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\bin&quot;; "
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\bin&quot;"
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
