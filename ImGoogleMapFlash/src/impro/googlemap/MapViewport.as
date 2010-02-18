@@ -7,9 +7,9 @@ package impro.googlemap
 	import com.google.maps.MapEvent;
 	import com.google.maps.MapOptions;
 	import com.google.maps.MapType;
-	import com.google.maps.interfaces.IMapType;
 	import com.google.maps.View;
 	import com.google.maps.geom.Attitude;
+	import com.google.maps.interfaces.IMapType;
 	
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -33,7 +33,12 @@ package impro.googlemap
 		
 //		private var imgLoader:Loader;
 //		private var maskBmp:Bitmap;
-
+		
+		private var stableViewportX:Number = 0;
+		private var stableViewportY:Number = 0;
+		private var stableViewportW:Number = 0;
+		private var stableViewportH:Number = 0;
+		
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;				
 		private var DEBUG_TEXT:TextField;			
@@ -166,18 +171,45 @@ package impro.googlemap
 				
 		private function updateMap(useBestZoom:Boolean = true):void{
 			
+			// for stablization
+			var stablization:Number = 4;
+			var dx:Number = Math.abs((stableViewportX - viewport.x));
+			var dy:Number = Math.abs((stableViewportY - viewport.y));
+			var dw:Number = Math.abs((stableViewportW - viewport.w));
+			var dh:Number = Math.abs((stableViewportH - viewport.h));
+			if(dx > stablization || dy > stablization || dw > stablization || dh > stablization){
+				stableViewportX = viewport.x;
+				stableViewportY = viewport.y;
+				stableViewportW = viewport.w;
+				stableViewportH = viewport.h;				
+			}
+			// get target latlng
+			var toLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(stableViewportX, stableViewportY));
+			
+			// calculate best zoom level regarding the screen resolution
+			if(useBestZoom){
+				var bestZoom:Number = calBestZoom(stableViewportW, stableViewportH, screenWidth, screenHeight);
+				childMap.setZoom(parentMap.getZoom() + bestZoom -2);				
+			}
+			
+			var pow:Number = Math.pow(2, childMap.getZoom() - parentMap.getZoom());			
+			var w:Number = stableViewportW * pow; 
+			var h:Number = stableViewportH * pow;			
+			
+			/*
 			// get target latlng
 			var toLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(viewport.x, viewport.y));
 			
 			// calculate best zoom level regarding the screen resolution
 			if(useBestZoom){
-				var bestZoom:Number = calBestZoom(viewport.width, viewport.height, screenWidth, screenHeight);
+				var bestZoom:Number = calBestZoom(viewport.w, viewport.h, screenWidth, screenHeight);
 				childMap.setZoom(parentMap.getZoom() + bestZoom -2);				
 			}
 			
 			var pow:Number = Math.pow(2, childMap.getZoom() - parentMap.getZoom());			
-			var w:Number = viewport.width * pow; 
-			var h:Number = viewport.height * pow;
+			var w:Number = viewport.w * pow; 
+			var h:Number = viewport.h * pow;
+			*/
 			
 			// apply to map
 			childMap.setCenter(toLatlng);

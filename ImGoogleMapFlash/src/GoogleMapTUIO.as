@@ -12,6 +12,7 @@ package {
 	import impro.multiview.IMView;
 	
 	[SWF(width=2048, height=768, frameRate=24, backgroundColor=0xEB7F00)]
+//	[SWF(width=1600, height=600, frameRate=24, backgroundColor=0xEB7F00)]
 	public class GoogleMapTUIO extends Sprite implements IImproApp
 	{
 		private var multiResMap:MultiResMap;			
