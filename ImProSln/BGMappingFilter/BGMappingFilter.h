@@ -67,6 +67,7 @@ public:
 	HRESULT SendForegroundRect();
 
 
+
 private:
 
 	BackGroundMapping* BG ;
@@ -80,6 +81,7 @@ private:
 	int layoutH ;
 	int camChannel;
 	int layoutChannel;
+	bool isReceiveCam ; 
 
 
 };

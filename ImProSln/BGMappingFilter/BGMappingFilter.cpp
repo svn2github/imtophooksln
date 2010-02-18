@@ -12,6 +12,7 @@ BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifies
 	cameraInputIplImg = NULL;
 	camChannel = 3 ;
 	layoutChannel = 3;
+	isReceiveCam = false ;
 	
 }
 BGMappingFilter::~BGMappingFilter()
@@ -84,15 +85,19 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 
 	// Start timing the transform (if PERF is defined)
 	MSR_START(m_idTransform);
-
+	OutputDebugStringW(L"@@-@@  Transform; ---->");
 	hr = Transform(pSample, pOutSample);
+	OutputDebugStringW(L"@@-@@  Transform; <----");
 
 	if(hr == S_OK){
+		OutputDebugStringW(L"@@-@@  SendForegroundRect; ---->");
 		SendForegroundRect();
+		OutputDebugStringW(L"@@-@@  SendForegroundRect; <----");
+
 	}
 
 	// Stop the clock and log it (if PERF is defined)
-	MSR_STOP(m_idTransform);
+	//MSR_STOP(m_idTransform);
 
 	if (FAILED(hr)) {
 		DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
@@ -101,7 +106,9 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		// sample should not be delivered; we only deliver the sample if it's
 		// really S_OK (same as NOERROR, of course.)
 		if (hr == NOERROR) {
+			OutputDebugStringW(L"@@-@@  Deliver; ---->");
 			hr = GetConnectedOutputPin()->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			OutputDebugStringW(L"@@-@@  Deliver; <----");
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 			// S_FALSE returned from Transform is a PRIVATE agreement
@@ -145,10 +152,11 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 
 	backgroundtmp->imageData = (char*)backgroundByteData;
 	cvResize(backgroundtmp,backgroundIplImg);
-	
+
 	CAutoLock cAutoLockShared(&m_cSharedState);
 	BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
+
 	return S_OK;
 }
 
@@ -168,17 +176,24 @@ CMuxTransformOutputPin* BGMappingFilter::GetConnectedOutputPin()
 
 HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
-		return ReceiveCameraImg(pSample, pReceivePin);
-	}
-	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
-	{
-		return ReceiveBackground(pSample, pReceivePin);
-	}
-	return S_OK;
+		isReceiveCam = true ;
+		OutputDebugStringW(L"@@-@@  ReceiveCameraImg; ---->");
+		hr = ReceiveCameraImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@-@@  ReceiveCameraImg; <----");
+		isReceiveCam = false ;
 
+	}
+	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1]&& isReceiveCam == true)
+	{
+		OutputDebugStringW(L"@@-@@  ReceiveBackground; ---->");
+		hr = ReceiveBackground(pSample, pReceivePin);
+		OutputDebugStringW(L"@@-@@  ReceiveBackground; <----");
+		isReceiveCam = false ;
+	}
+	return hr;
 
 }
 HRESULT BGMappingFilter::CreatePins()
@@ -413,6 +428,7 @@ HRESULT BGMappingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 
 HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
+
 	HRESULT hr = S_OK;
 	long cbData;
 	BYTE* cameraByteData;
@@ -430,6 +446,7 @@ HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	CAutoLock cAutoLockShared(&m_cSharedState);
 	foregroundIplImg = BG->getForeground(cameraInputIplImg);
 	memcpy (foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
+
 	return S_OK;
 }
 

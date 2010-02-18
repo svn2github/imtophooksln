@@ -38,9 +38,9 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	int size= wcslen(szPath);
 	
 	wcstombs(fileDir, szPath, size+1);
-	// tableW and tableH is the real size of the table in mm 710 * 520
-	tableWidth = 710;
-	tableHeight = 520;
+	// tableW and tableH is the real size of the table in mm 720 * 540
+	tableWidth = 720;
+	tableHeight = 540;
 	projCoord = NULL;
 	projCoord = new  ProjectorTrans2World(tableWidth,tableHeight,fileDir);
 	
@@ -120,13 +120,18 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		return S_FALSE;
 	}
+	OutputDebugStringW(L"@@@@  AR2WarpReceive; ---->");
+
 	CMuxTransformInputPin* pRecPin = (CMuxTransformInputPin*) pReceivePin;
 	HRESULT hr;
 	if ((m_pInputPins.size() >= 1 && m_pInputPins[0] == pReceivePin) || 
 		(m_pInputPins.size() >= 2 && m_pInputPins[1] == pReceivePin) || 
 		(m_pInputPins.size() >= 3 && m_pInputPins[2] == pReceivePin) )
 	{
+		OutputDebugStringW(L"@@@@  ReceiveARResult; ---->");
 		hr = ReceiveARResult(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@  ReceiveARResult; <----");
+
 		if (SUCCEEDED(hr))
 		{
 			CMuxTransformOutputPin* pMaskPin = GetLowResMaskPin();
@@ -164,7 +169,9 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		hr = ReceiveTouchResult(pSample, pReceivePin);
 		SendARLayoutStartegyData(true);
+
 	}
+
 	return S_OK;
 }
 
@@ -198,6 +205,12 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 			{
 				delete m_matCam2VW[idx];
 				m_matCam2VW[idx] = NULL;
+			}
+			CAutoLock prolck(&(m_csMatPro2VW[idx]));
+			if (m_matPro2VW[idx] != NULL)
+			{
+				delete m_matPro2VW[idx];
+				m_matPro2VW[idx] = NULL;
 			}
 		}
 		return S_OK;
@@ -286,10 +299,12 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 		t[4*2*(nValidDetected-1) + 4] = ov_rev[2].x;  t[4*2*(nValidDetected-1) + 5] = ov_rev[2].y;
 		t[4*2*(nValidDetected-1) + 6] = ov_rev[3].x;  t[4*2*(nValidDetected-1) + 7] = ov_rev[3].y;
 
+
 		d[4*2*(nValidDetected-1) + 0] = arV[0][0]/w;  d[4*2*(nValidDetected-1) + 1] = arV[0][1]/h;
 		d[4*2*(nValidDetected-1) + 2] = arV[1][0]/w;  d[4*2*(nValidDetected-1) + 3] = arV[1][1]/h;
 		d[4*2*(nValidDetected-1) + 4] = arV[2][0]/w;  d[4*2*(nValidDetected-1) + 5] = arV[2][1]/h;
 		d[4*2*(nValidDetected-1) + 6] = arV[3][0]/w;  d[4*2*(nValidDetected-1) + 7] = arV[3][1]/h;
+		
 		delete [] ov;
 		ov = NULL;
 	}
@@ -322,7 +337,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	GetProjCorner(&cvPt,&dstPt);
 	{
 		CAutoLock lck(&m_csMatPro2VW[idx]);
-		CAutoLock lck2(&m_csProjCoord);
+		CAutoLock lckProj(&m_csProjCoord);
 		if (m_matPro2VW[idx] == NULL)
 		{
 			m_matPro2VW[idx] = new D3DXMATRIX();
@@ -370,7 +385,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 HRESULT AR2WarpController ::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
 	CAutoLock lck(&m_csProjCoord);
 	projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
-	projCoord->getProjHomo();
+	projCoord->getProjHomo();	
 	return S_OK;
 }
 
@@ -781,6 +796,19 @@ HRESULT AR2WarpController::GetPages(CAUUID *pPages)
 	
 }
 
+//CCritSec* AR2WarpController::GetReceiveCS(IPin* pPin)
+//{
+//	return NULL;
+//	/*
+//	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
+//	{
+//		return NULL;
+//	}
+//	else
+//	{
+//		return __super::GetReceiveCS(pPin);
+//	}*/
+//}
 
 bool AR2WarpController::ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts)
 {
@@ -1135,9 +1163,7 @@ bool AR2WarpController::SendARLayoutStartegyData(bool bBoardCast)
 			////////////////////////////
 			pSendSample->SetPointer((BYTE*)pData, sizeof(ARLayoutStartegyData));
 			WCHAR str[MAX_PATH];
-		
 			ppPins[p]->Deliver(pSendSample);
-		
 			if (pSendSample != NULL)
 			{
 				pSendSample->Release();
@@ -1163,7 +1189,7 @@ bool AR2WarpController::SendBoundingBox2OSCSender()
 	//for testing
 	for (int i=0; i< NUMCAM; i++)
 	{
-		if (m_matCam2VW[i] == NULL)
+		if (m_matPro2VW[i] == NULL)
 		{
 			continue;
 		}			

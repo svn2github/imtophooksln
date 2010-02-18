@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "BGMapping.h"
 
-#define BLACK_VALUE 10
+#define BLACK_VALUE 130
 
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
@@ -48,21 +48,25 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	if(layoutFlip == true){
 		cvFlip(BGImg);
 	}
- 
+	int BGchannel = BGImg->nChannels;
+	int mapChannel = mappingTable->nChannels;
+
 	for(int i=0;i<mappingTable->height;i++)
 	{
 		for(int j=0;j<mappingTable->width;j++)
 		{
-			black = cvGet2D(mappingTable,i,j).val[0] + BlackValue;
-			white = cvGet2D(mappingTable,i,j).val[1] - WhiteValue;	
-			if(cvGet2D(BGImg,i,j).val[0] < BLACK_VALUE){
-				cvSet2D(backgroundImg,i,j,cvScalar(black,black,black));
+			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + BlackValue;
+			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -WhiteValue;
+			
+			if((int)(uchar)BGImg->imageData[i*BGImg->widthStep+j*BGchannel]< BLACK_VALUE){
+				backgroundImg->imageData[i*backgroundImg->width+j] = black;
 			}
-			else 
-				cvSet2D(backgroundImg,i,j,cvScalar(white,white,white));
-		}
-	}
+			else {
+				backgroundImg->imageData[i*backgroundImg->width+j] = white;
+			}
 	
+		}
+	}		
 	IplImage *temp = cvCreateImage(cvGetSize(backgroundImg),8,1) ;
 
 	cvCopy(backgroundImg,temp);
@@ -88,12 +92,13 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	if(camFlip ==true){
 	cvFlip(resultImg);
 	}
-	cvShowImage("BG",backgroundImg);
-	cvShowImage("SRC",resultImg);
-	cvWaitKey(1);
-
 	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
+	/*cvShowImage("background",backgroundImg);
+	cvShowImage("src",resultImg);*/
 	cvSub(resultImg,backgroundImg,resultImg);
+	/*cvShowImage("result",resultImg);
+	cvWaitKey(1);*/
+
 	if(BGthreshold != 0){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
 	}

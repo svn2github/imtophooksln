@@ -2,6 +2,8 @@
 #include "pointTrans.h"
 #include "common.h"
 
+#define BLENDVALUE 0.8
+
 // tableW and tableH is the real size of the table in mm 710 * 520
 ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
 	pro2CamExtrinsic = NULL;
@@ -29,6 +31,7 @@ ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDi
 	proVectorInWorld = NULL;
 	pro3DPointsMat = NULL;
 	proHomoMat = NULL;
+	firstProjPoints = true ;
 	// init the mat for camera and projector parameters 
 	proIntrinsic = cvCreateMat(3,3,CV_32F) ;
 	camIntrinsic=cvCreateMat(3,3,CV_32F);
@@ -179,7 +182,7 @@ void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* obj
 	CvMat* object3D = cvCreateMat(cvGetSize(objectPoint).height,3,CV_32F);
 	for(int i = 0 ; i < cvGetSize(objectPoint).height ; i++){
 		cvmSet(object3D,i,0,cvmGet(objectPoint,i,0)*tableWidth);
-		cvmSet(object3D,i,1,cvmGet(objectPoint,i,1)*tableHeight);
+		cvmSet(object3D,i,1,cvmGet(objectPoint,i,1)*tableHeight );
 		cvmSet(object3D,i,2,0);
 	}
 
@@ -189,6 +192,7 @@ void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* obj
 		cvmSet(camOriSizePoint,i,1,(cvmGet(cameraPoint,i,1)*480)); 
 	}
 	cvFindExtrinsicCameraParams2(object3D,camOriSizePoint,camIntrinsic,camDisto,rotateRodrigues,transW2C);
+	
 	cvRodrigues2(rotateRodrigues,rotateW2C);
 	buildExtrinsicMat(rotateW2C,transW2C,world2CamExtrinsic);
 
@@ -260,6 +264,7 @@ void ProjectorTrans2World::getProjHomo(){
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
 	CvMat* projboundPoint  = cvCreateMat(4,2,CV_32F);
 	CvPoint3D32f projIn3D ;
+	char outmsg[100] ;
 	
 	float minX = 9999, minY= 9999, maxX= -9999, maxY= -9999;  // for finding bounding box
 	for(int i = 0 ; i < 4 ; i ++){
@@ -268,27 +273,34 @@ void ProjectorTrans2World::getProjHomo(){
 		proj2DPoint->data.fl[2] = 1;
 
 	    projIn3D = findPro3D(proj2DPoint);	
-
-		projIn3D.x = projIn3D.x/tableWidth ;
-		projIn3D.y = projIn3D.y/tableHeight ;
-
-		proj3DPoints[i][0] = projIn3D.x;
-		proj3DPoints[i][1] = projIn3D.y;
-
-		cvmSet(pro3DPointsMat,i,0,projIn3D.x);
-		cvmSet(pro3DPointsMat,i,1,projIn3D.y);
-
-		if(minX > projIn3D.x)
-			minX = projIn3D.x;
-
-	    if(maxX < projIn3D.x)
-			maxX = projIn3D.x;
+		proj3DPoints[i][0] = projIn3D.x/tableWidth;
+		proj3DPoints[i][1] = projIn3D.y/tableHeight;
 		
-		if(minY > projIn3D.y)
-			minY = projIn3D.y;
+		if(firstProjPoints == true){
+			pre_proj3DPoints[i][0] = proj3DPoints[i][0] ;
+			pre_proj3DPoints[i][1] = proj3DPoints[i][1] ;
+		}
 
-	    if(maxY < projIn3D.y)
-			maxY = projIn3D.y;
+		proj3DPoints[i][0]  = BLENDVALUE * proj3DPoints[i][0] + (1-BLENDVALUE) * pre_proj3DPoints[i][0];
+		proj3DPoints[i][1]  = BLENDVALUE * proj3DPoints[i][1] +  (1-BLENDVALUE) * pre_proj3DPoints[i][1];
+
+		pre_proj3DPoints[i][0] = proj3DPoints[i][0] ;
+		pre_proj3DPoints[i][1] = proj3DPoints[i][1] ;
+
+		cvmSet(pro3DPointsMat,i,0, proj3DPoints[i][0]);
+		cvmSet(pro3DPointsMat,i,1, proj3DPoints[i][1]);
+
+		if(minX > proj3DPoints[i][0])
+			minX = proj3DPoints[i][0];
+
+	    if(maxX < proj3DPoints[i][0])
+			maxX = proj3DPoints[i][0];
+		
+		if(minY > proj3DPoints[i][1])
+			minY = proj3DPoints[i][1];
+
+	    if(maxY < proj3DPoints[i][1])
+			maxY = proj3DPoints[i][1];
 	}
 
 	projBox[0] = minX;
@@ -298,37 +310,26 @@ void ProjectorTrans2World::getProjHomo(){
 	float xLength = maxX - minX;
 	float yLength = maxY - minY;
 	
-	//cvSave("oricorner.txt",pro3DPointsMat);
-
 	for(int i = 0 ;i< 4; i ++){
 		cvmSet(pro3DPointsMat,i,0,(float)(cvmGet(pro3DPointsMat,i,0)-minX)/xLength);
 		cvmSet(pro3DPointsMat,i,1,(float)(cvmGet(pro3DPointsMat,i,1)-minY)/yLength);
+		_dprintf(L" proj3DpointNormal %f %f ", cvmGet(pro3DPointsMat,i,0),cvmGet(pro3DPointsMat,i,1));
 	}
+	
 
-	/*cvmSet(projboundPoint,0,0,minX);
-	cvmSet(projboundPoint,0,1,minY);
+	cvmSet(projboundPoint,0,0,0);
+	cvmSet(projboundPoint,0,1,0);
 
-	cvmSet(projboundPoint,1,0,maxX);
-	cvmSet(projboundPoint,1,1,minY);
+	cvmSet(projboundPoint,1,0,1);
+	cvmSet(projboundPoint,1,1,0);
 
-	cvmSet(projboundPoint,2,0,maxX);
-	cvmSet(projboundPoint,2,1,maxY);
+	cvmSet(projboundPoint,2,0,1);
+	cvmSet(projboundPoint,2,1,1);
 
-	cvmSet(projboundPoint,3,0,minX);
-	cvmSet(projboundPoint,3,1,maxY);*/
+	cvmSet(projboundPoint,3,0,0);
+	cvmSet(projboundPoint,3,1,1);
 
-	cvmSet(projboundPoint,2,0,0);
-	cvmSet(projboundPoint,2,1,0);
-
-	cvmSet(projboundPoint,3,0,1);
-	cvmSet(projboundPoint,3,1,0);
-
-	cvmSet(projboundPoint,0,0,1);
-	cvmSet(projboundPoint,0,1,1);
-
-	cvmSet(projboundPoint,1,0,0);
-	cvmSet(projboundPoint,1,1,1);
-	cvFindHomography(pro3DPointsMat,projboundPoint,proHomoMat);
+	cvFindHomography(projboundPoint,pro3DPointsMat,proHomoMat);
 	
 	cvReleaseMat(&proj2DPoint);
 	cvReleaseMat(&projboundPoint);

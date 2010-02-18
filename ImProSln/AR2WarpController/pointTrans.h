@@ -72,4 +72,7 @@ public:
 	int tableWidth;
 	int tableHeight;
 
+	float pre_proj3DPoints[4][2];  
+	bool firstProjPoints ;
+
 };
