@@ -72,10 +72,13 @@ HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputTexture()
 	HRESULT hr;
 	if (m_pD3DDisplay == NULL || m_pOutTexture == NULL || m_pRenderTarget == NULL)
 		return S_FALSE;
+	
+	if (FAILED(TestDisplayDeviceLost()))
+		return S_FALSE;
 	CAutoLock lck0(&m_csD3DDisplay);
 	CAutoLock lck1(&m_csOutTexture);
 	CAutoLock lck2(&m_csRenderTarget);
-	IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 
 	LPDIRECT3DSURFACE9 pOutSurface = NULL;
 	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
@@ -106,7 +109,13 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 		return S_FALSE;
 	}
 	HRESULT hr = S_OK;
+
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
 	CAutoLock lck(&m_csInTexture);
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 	GUID guidSubType = pInMediaType->subtype;
 
 	LPDIRECT3DSURFACE9 pInSurface = NULL;
@@ -186,8 +195,13 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	{
 		return S_FALSE;
 	}
+	HRESULT hr = S_OK;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
 	CAutoLock lck(&m_csOutTexture);
-	HRESULT hr;
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 	GUID guidSubType = pOutMediaType->subtype;
 	
 	LPDIRECT3DSURFACE9 pOutSurface = NULL;
@@ -265,8 +279,13 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 
 HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOut, const CMediaType* pInType, const CMediaType* pOutType, bool bFlipY = true)
 {		
-	CopyInputImage2InputTexture(pIn, pInType, bFlipY);
-	SetRenderTarget();
+	HRESULT hr = S_OK;
+	hr = CopyInputImage2InputTexture(pIn, pInType, bFlipY);
+	if (FAILED(hr))
+		return S_FALSE;
+	hr = SetRenderTarget();
+	if (FAILED(hr))
+		return S_FALSE;
 	{
 		CAutoLock lck0(&m_csD3DDisplay);
 		CAutoLock lck1(&m_csInTexture);
@@ -275,9 +294,13 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 		m_pD3DDisplay->Render();
 		m_pD3DDisplay->SetTexture(NULL);
 	}
-	ResetRenderTarget();
-	CopyRenderTarget2OutputTexture();	
-	CopyOutputTexture2OutputData(pOut, pOutType, true);
+	hr = ResetRenderTarget();
+	if (FAILED(hr))
+		return S_FALSE;
+	hr = CopyRenderTarget2OutputTexture();	
+	if (FAILED(hr))
+		return S_FALSE;
+	hr = CopyOutputTexture2OutputData(pOut, pOutType, true);
 	return S_OK;
 }
 HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
@@ -326,15 +349,21 @@ HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 
 HRESULT D3DTransformFilterBase::SetRenderTarget()
 {
+
+
+	HRESULT hr;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
 	CAutoLock lck0(&m_csD3DDisplay);
 	CAutoLock lck1(&m_csRenderTarget);
 	if (m_pRenderTarget == NULL || m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
 	}
-	HRESULT hr;
-	LPDIRECT3DSURFACE9 pRTSurface = NULL;
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	LPDIRECT3DSURFACE9 pRTSurface = NULL;
 	hr = m_pRenderTarget->GetSurfaceLevel(0, &pRTSurface);
 	
 	hr = pDevice->GetRenderTarget(0, &m_pBackupRenderTarget);
@@ -349,8 +378,11 @@ HRESULT D3DTransformFilterBase::SetRenderTarget()
 }
 HRESULT D3DTransformFilterBase::ResetRenderTarget()
 {
+	if (FAILED(TestDisplayDeviceLost()))
+		return S_FALSE;
 	CAutoLock lck0(&m_csD3DDisplay);
 	CAutoLock lck1(&m_csRenderTarget);
+	HRESULT hr = S_OK;
 	if (m_pBackupRenderTarget == NULL || m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
@@ -360,6 +392,7 @@ HRESULT D3DTransformFilterBase::ResetRenderTarget()
 
 	m_pBackupRenderTarget->Release();
 	m_pBackupRenderTarget = NULL;
+	return S_OK;
 }
 HRESULT D3DTransformFilterBase::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
 									void* pUserContext)
@@ -374,7 +407,27 @@ HRESULT D3DTransformFilterBase::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice
 	return __super::OnAfterResetDevice(pd3dDevice, pUserContext);
 }
 
-
+HRESULT D3DTransformFilterBase::TestDisplayDeviceLost()
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HRESULT hr = S_OK;
+	
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	hr = pDevice->TestCooperativeLevel();
+	if (FAILED(hr))
+	{
+		if (hr == D3DERR_DEVICELOST)
+		{
+			return S_FALSE;
+		}
+		else if (hr == D3DERR_DEVICENOTRESET)
+		{
+			SendMessageW(m_pD3DDisplay->GetDisplayWindow(), MS3DDisplay::D3DDEVICELOST, 0, 0);
+		}
+	}
+	return hr;
+}
 HRESULT D3DTransformFilterBase::OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 										 void* pUserContext)
 {

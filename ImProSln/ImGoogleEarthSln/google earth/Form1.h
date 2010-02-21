@@ -86,7 +86,7 @@ double ctilt = 0;
 double cheading = 0;
 double croll = 0;
 
-double altitude_scale = 0.8;
+double altitude_scale = 1.0;
 
 bool getFstTag = false;
 
@@ -184,7 +184,7 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress = "192.168.1.26";
+		private: static String^ ipAddress = "10.102.118.255";
 		private: static Int32 port = 5000;
 	private: System::Windows::Forms::Timer^  animTimer;
 
@@ -208,7 +208,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 
-			//setupSocket();
+			setupSocket();
 			
 		}
 

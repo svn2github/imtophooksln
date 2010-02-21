@@ -17,8 +17,7 @@ ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	m_numMarker = 0;
 	m_minMarkerWidth = 1.0;
 	m_pARStrategyData = NULL;
-	initD3D(800, 600);
-	initARMarkers();
+
 }
 ARLayoutDXFilter::~ARLayoutDXFilter()
 {
@@ -108,6 +107,11 @@ HRESULT ARLayoutDXFilter::CreatePins()
 		m_pInputPins.push_back(pInput0);
 		m_pStreamPins.push_back(pOutput0);
 		m_pOutputPins.push_back(pOutput1);
+		if (m_pD3DDisplay == NULL)
+		{
+			initD3D(800, 600);
+			initARMarkers();
+		}
 	}
 	return S_OK;
 }
@@ -138,7 +142,7 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 }
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
-	
+	HRESULT hr = S_OK;
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		{
@@ -152,7 +156,9 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 				m_pARStrategyData = NULL;
 			}
 		}
-		SetRenderTarget();
+		hr = SetRenderTarget();
+		if (FAILED(hr))
+			return S_FALSE;
 		{
 			CAutoLock lck(&m_csARMarker);
 			ARMultiMarkerInfoT markerConfig;
@@ -160,14 +166,21 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			markerConfig.marker = m_ARMarkers;
 			markerConfig.marker_num = m_numMarker;
 			((ARLayoutDXDisplay*)m_pD3DDisplay)->Render(&markerConfig);
+			
 		}
-		ResetRenderTarget();
-		CopyRenderTarget2OutputTexture();	
+		hr = ResetRenderTarget();
+		if (FAILED(hr))
+			return S_FALSE;
+		hr = CopyRenderTarget2OutputTexture();	
+		if (FAILED(hr))
+			return S_FALSE;
 		CMediaType mt;
 		mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-		CopyOutputTexture2OutputData(pSamp, &mt, true);
+		
+		hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
 	}
-	return S_OK;
+	
+	return hr;
 }
 
 HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout CMediaType *pMediaType)
@@ -176,6 +189,8 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 	{
 		if (iPosition == 0 )
 		{	
+			if (m_pOutTexture == NULL)
+				return S_FALSE;
 			CMediaType mt;
 			mt.SetType(&GUID_MyMediaSample);
 			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
@@ -189,6 +204,8 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 		}
 		else if (iPosition == 1)
 		{
+			if (m_pOutTexture == NULL)
+				return S_FALSE;
 			CMediaType mt;
 			D3DSURFACE_DESC desc;
 			m_pOutTexture->GetLevelDesc(0, &desc);

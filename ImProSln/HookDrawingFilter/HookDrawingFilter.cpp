@@ -155,13 +155,7 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
 	RegisterHookWndClass(GetModule());
-	CreateHookWindow(320, 240); // size doesn't matter
-	HRESULT hr = initD3D(2048, 768);
-	if (SUCCEEDED(hr))
-	{
-		HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
-		HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
-	}
+
 }
 HookDrawingFilter::~HookDrawingFilter()
 {
@@ -261,6 +255,16 @@ HRESULT HookDrawingFilter::CreatePins()
 				pOutput0->m_bVisible = false;
 			}
 			m_pStreamPins.push_back(pOutput0);
+		}
+		if (m_pD3DDisplay == NULL)
+		{
+			CreateHookWindow(320, 240); // size doesn't matter
+			HRESULT hr = initD3D(2048, 768);
+			if (SUCCEEDED(hr))
+			{
+				HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
+				HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
+			}
 		}
 	}
 	
@@ -388,7 +392,10 @@ HRESULT HookDrawingFilter::DecideBufferSize(
 
 MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	return new HookDrawingDisplay(pD3D, rtWidth, rtHeight);
+	MS3DDisplay* ret = new HookDrawingDisplay(pD3D, rtWidth, rtHeight);
+	ret->SetDeviceLostCallback((MS3DDisplay::DeviceLostCallBack)OnBeforeDisplayResetDevice,
+		(MS3DDisplay::DeviceLostCallBack)OnAfterDisplayResetDevice, (void*)this);
+	return ret;
 }
 
 MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
@@ -446,6 +453,12 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 		m_pAddOutTexture[i] = NULL;
 	}
 	m_pAddOutTexture.clear();
+	for (int i =0; i< m_pAddRenderTarget.size(); i++)
+	{
+		m_pAddRenderTarget[i]->Release();
+		m_pAddRenderTarget[i] = NULL;
+	}
+	m_pAddRenderTarget.clear();
 	if (w == 0 || h == 0)
 	{
 		HDC dc = GetDC(GetDesktopWindow());
@@ -865,4 +878,36 @@ BOOL HookDrawingFilter::SwitchRenderTarget(int idx)
 	m_pRenderTarget = m_pAddRenderTarget[idx];
 	m_pAddRenderTarget[idx]->AddRef();
 	return TRUE;
+}
+
+
+HRESULT HookDrawingFilter::OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+												   void* pUserContext)
+{
+	HookDrawingFilter* pThis = (HookDrawingFilter*)pUserContext;
+	if (pThis == NULL)
+		return S_FALSE;
+	CAutoLock lck(&pThis->m_csAddTextures);
+	for (int i =0; i< pThis->m_pAddOutTexture.size(); i++)
+	{
+		pThis->m_pAddOutTexture[i]->Release();
+		pThis->m_pAddOutTexture[i] = NULL;
+	}
+	pThis->m_pAddOutTexture.clear();
+	for (int i =0; i< pThis->m_pAddRenderTarget.size(); i++)
+	{
+		pThis->m_pAddRenderTarget[i]->Release();
+		pThis->m_pAddRenderTarget[i] = NULL;
+	}
+	pThis->m_pAddRenderTarget.clear();
+	return S_OK;
+}
+HRESULT HookDrawingFilter::OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+												  void* pUserContext)
+{
+	HookDrawingFilter* pThis = (HookDrawingFilter*)pUserContext;
+	if (pThis == NULL)
+		return S_FALSE;
+	pThis->initAddTextures(1024, 768);
+	return S_OK;
 }

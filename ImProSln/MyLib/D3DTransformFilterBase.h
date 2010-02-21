@@ -37,11 +37,14 @@ protected:
 		void* pUserContext);
 	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
-	
+	virtual HRESULT TestDisplayDeviceLost();
+
 	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
 	static HRESULT CALLBACK OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
+	
+
 
 	D3DTransformFilterBase();
 	virtual ~D3DTransformFilterBase();

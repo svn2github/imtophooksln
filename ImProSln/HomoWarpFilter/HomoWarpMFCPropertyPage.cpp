@@ -271,6 +271,9 @@ BOOL CHomoWarpMFCPropertyPage::OnReceiveMessage(HWND hwnd,
 	int cmd = 0;
 
 	switch (uMsg) {
+	case WM_DESTROY:
+		cvDestroyWindow("HomoWarp Edit");
+		break;
 	case WM_COMMAND:
 
 		break;

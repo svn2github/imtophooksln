@@ -22,10 +22,14 @@ protected:
 	MS3DPlane* m_pWarpMesh;
 	MSCamera* m_pMaskCamera;
 	virtual ID3DXEffect* GetEffect();
-	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
+	virtual BOOL CreateMaskTexture(UINT rtWidth, UINT rtHeight);
 	bool CreateMarkerMesh();
 	bool CreateWarpMesh();
-	
+
+	virtual HRESULT OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
 public:
 	MaskFilterDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
 	MaskFilterDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight);

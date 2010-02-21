@@ -443,7 +443,7 @@ BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECT
 }
 
 vector<MS3DDisplay*> MS3DDisplay::m_pAllInstances;
-
+int MS3DDisplay::D3DDEVICELOST = 0;
 MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(NULL)
 {
 	ZeroMemory(&m_d3dpp, sizeof(m_d3dpp));
@@ -453,9 +453,12 @@ MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEven
 	m_pEffect = NULL;
 	m_texW = 0; m_texH = 0; 
 	RegisterWndClass(GetModule());
+	
 	CreateD3DWindow(rtWidth, rtHeight);
 	InitDevice(pD3D, rtWidth, rtHeight);
 	CreateTexture(rtWidth, rtHeight);
+	if (D3DDEVICELOST == 0)
+		D3DDEVICELOST = RegisterWindowMessage(D3DDEVICELOST_MSG);
 }
 MS3DDisplay::MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(pDevice)
 {
@@ -494,7 +497,7 @@ ATOM MS3DDisplay::RegisterWndClass(HINSTANCE hInstance)
 	wcex.lpszClassName	= L"D3DDisplayWnd";
 	wcex.hIconSm		= NULL;
 	ATOM ret = RegisterClassEx(&wcex);
-
+	
 	return ret;
 }
 HRESULT MS3DDisplay::SetDeviceLostCallback(DeviceLostCallBack pBeforeReset, 
@@ -509,6 +512,8 @@ HRESULT MS3DDisplay::SetDeviceLostCallback(DeviceLostCallBack pBeforeReset,
 }
 HRESULT MS3DDisplay::OnActivateApp()
 {
+	HRESULT hr = S_OK;
+	HRESULT err = S_OK;
 	if (m_pDevice != NULL)
 	{
 		HRESULT state = m_pDevice->TestCooperativeLevel();
@@ -519,23 +524,31 @@ HRESULT MS3DDisplay::OnActivateApp()
 				if (m_pAllInstances[i] == NULL)
 					continue;
 
-				m_pAllInstances[i]->OnDeviceLost(m_pDevice, NULL);
+				hr = m_pAllInstances[i]->OnDeviceLost(m_pDevice, NULL);
+				if (FAILED(hr))
+					err = hr;
 			}
 		}
 	}
-	return S_OK;
+	return err;
 }
 LRESULT MS3DDisplay::D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	if (message == WM_ACTIVATEAPP && wParam)
+	HRESULT hr = S_OK;
+	
+	if (message == D3DDEVICELOST)
 	{
+		HRESULT err = S_OK;
 		for (int i =0 ;i < m_pAllInstances.size(); i++)
 		{
 			if (m_pAllInstances[i]->GetD3DWnd() == hWnd)
 			{
-				m_pAllInstances[i]->OnActivateApp();
+				 hr = m_pAllInstances[i]->OnActivateApp();
+				 if (FAILED(hr))
+					 err = S_FALSE;
 			}
 		}
+		return err;
 	}
 
 	switch (message)
@@ -659,6 +672,7 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
 	DWORD tID = GetCurrentThreadId();
+
 	ZeroMemory( &m_d3dpp, sizeof(m_d3dpp) );
 	m_d3dpp.Windowed = TRUE;
 	m_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
@@ -714,18 +728,18 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 			return FALSE;
 		}
 	}
-	
+	HRESULT hr = S_OK;
 	// Turn on the zbuffer
-	m_pDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
+	hr = m_pDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	// Turn on ambient lighting 
-	m_pDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
-	m_pDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
+	hr = m_pDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	hr = m_pDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
 
-	m_pDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
-	m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-	m_pDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
-	m_pDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
-	m_pDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	hr = m_pDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
+	hr = m_pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+	hr = m_pDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
+	hr = m_pDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
+	hr = m_pDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
 	m_pDisplayPlane = new MS3DPlane(m_pDevice);
 	m_pCamera = new MSCamera(m_pDevice);
@@ -897,7 +911,6 @@ HRESULT MS3DDisplay::OnDeviceLost(IDirect3DDevice9 * pd3dDevice,
 	{
 		m_pBeforeReset[i](pd3dDevice, m_pUserContext[i]);
 	}
-	
 	hr = m_pDevice->Reset(&m_d3dpp);
 	if (FAILED(hr))
 	{

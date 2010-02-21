@@ -13,7 +13,7 @@ MS3DDisplay(pD3D, rtWidth, rtHeight)
 	m_pMaskRectTexture = NULL;
 	CreateMarkerMesh();
 	CreateWarpMesh();
-	CreateTexture(0, 0);
+	CreateMaskTexture(0, 0);
 	ClearMask();
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
@@ -31,7 +31,7 @@ MS3DDisplay(pDevice, rtWidth, rtHeight)
 	m_pMaskRectTexture = NULL;
 	CreateMarkerMesh();
 	CreateWarpMesh();
-	CreateTexture(0, 0);
+	CreateMaskTexture(0, 0);
 	ClearMask();
 	m_pMaskCamera = new MSCamera(m_pDevice);
 	m_pMaskCamera->SetOrthoPara(-0.5, 0.5, 0.5, -0.5);
@@ -156,7 +156,7 @@ ID3DXEffect* MaskFilterDisplay::GetEffect()
 }
 
 
-BOOL MaskFilterDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
+BOOL MaskFilterDisplay::CreateMaskTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 {
 	if (m_pDevice == NULL)
 	{
@@ -192,7 +192,7 @@ BOOL MaskFilterDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 
 	hr = D3DXCreateTextureFromFile(m_pDevice, str, &m_pMaskRectTexture);
 
-	return __super::CreateTexture(rtWidth, rtHeight);
+	return S_OK;
 }
 
 BOOL MaskFilterDisplay::SetMaskFlag(int flag)
@@ -713,4 +713,41 @@ BOOL MaskFilterDisplay::ClearMask()
 	pMaskSurface = NULL;
 
 	return TRUE;
+}
+
+
+HRESULT MaskFilterDisplay::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+											   void* pUserContext)
+{
+	if (m_pMaskTexture != NULL)
+	{
+		m_pMaskTexture->Release();
+		m_pMaskTexture = NULL;
+	}
+	if (m_pMaskRectTexture != NULL)
+	{
+		m_pMaskRectTexture->Release();
+		m_pMaskRectTexture = NULL;
+	}
+	if (m_pMarkerMesh != NULL)
+	{
+		delete m_pMarkerMesh;
+		m_pMarkerMesh = NULL;
+	}
+	if (m_pWarpMesh != NULL)
+	{
+		delete m_pWarpMesh;
+		m_pWarpMesh = NULL;
+	}
+
+	return __super::OnBeforeResetDevice(pd3dDevice,	 pUserContext);
+}
+HRESULT MaskFilterDisplay::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+											  void* pUserContext)
+{
+	CreateMarkerMesh();
+	CreateWarpMesh();
+	CreateMaskTexture(0, 0);
+	ClearMask();
+	return __super::OnAfterResetDevice(pd3dDevice, pUserContext);
 }

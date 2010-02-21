@@ -9,6 +9,7 @@
 #include "MSD3DLib.h"
 #include "streams.h"
 using namespace std;
+#define D3DDEVICELOST_MSG L"D3DDEVICELOST_MSG-71D4E9A2-4C5D-4c34-AEA2-9949A6747C38"
 
 class MSD3DLIB_API IEventManager
 {
@@ -348,10 +349,10 @@ class MSD3DLIB_API MS3DDisplay : public IRenderBase, public MSEventManager, publ
 public:
 	typedef HRESULT (__stdcall* DeviceLostCallBack)(IDirect3DDevice9 * pd3dDevice,	
 		void* pUserContext);
-
+	static int D3DDEVICELOST;
 protected:
-	CCritSec m_csResetDevice;
 
+	CCritSec m_csResetDevice;
 	static vector<MS3DDisplay*> m_pAllInstances;
 	D3DPRESENT_PARAMETERS m_d3dpp;
 	MS3DPlane* m_pDisplayPlane;
@@ -371,7 +372,7 @@ protected:
 	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
 		void* pUserContext);
 
-	virtual HRESULT OnDeviceLost(IDirect3DDevice9 * pd3dDevice, void* pUserContext);
+	
 	virtual HRESULT OnActivateApp();
 
 private:
@@ -397,7 +398,7 @@ public:
 	HWND GetDisplayWindow() { return m_hDisplayWnd;}
 	virtual HRESULT SetDeviceLostCallback(DeviceLostCallBack pBeforeReset, 
 		DeviceLostCallBack pAfterReset, void* pUserContext);
-
+	virtual HRESULT OnDeviceLost(IDirect3DDevice9 * pd3dDevice, void* pUserContext);
 	static LRESULT CALLBACK D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	
 };

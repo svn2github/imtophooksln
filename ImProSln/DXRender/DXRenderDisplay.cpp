@@ -41,14 +41,14 @@ BOOL DXRenderDisplay::Render()
 	{
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
 		hr = pEffect->SetTechnique("technique0");
-		pEffect->SetBool("bFlipX", m_bFlipX);
-		pEffect->SetBool("bFlipY", m_bFlipY);
+		hr = pEffect->SetBool("bFlipX", m_bFlipX);
+		hr = pEffect->SetBool("bFlipY", m_bFlipY);
 		hr = pEffect->Begin(&cPasses, 0);
 		for (iPass = 0; iPass < cPasses; iPass++)
 		{
-			pEffect->BeginPass(iPass);	
+			hr = pEffect->BeginPass(iPass);	
 			m_pDisplayPlane->Render();			
-			pEffect->EndPass();
+			hr = pEffect->EndPass();
 		}
 
 		hr = pEffect->End();

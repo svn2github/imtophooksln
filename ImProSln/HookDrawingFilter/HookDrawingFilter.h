@@ -110,4 +110,9 @@ protected:
 
 	ATOM RegisterHookWndClass(HINSTANCE hInstance);
 	HRESULT CreateHookWindow(UINT winW, UINT winH);
+
+	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+		void* pUserContext);
+	static HRESULT CALLBACK OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+		void* pUserContext);
 };
