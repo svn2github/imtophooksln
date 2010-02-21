@@ -10,6 +10,8 @@ D3DTransformFilterBase::D3DTransformFilterBase()
 	m_pInTexture = NULL;
 	m_pRenderTarget = NULL;
 	m_pBackupRenderTarget = NULL;
+	m_texW = 0; 
+	m_texH = 0;
 }
 
 D3DTransformFilterBase::~D3DTransformFilterBase()
@@ -57,16 +59,22 @@ HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight)
 	{
 		return S_FALSE;
 	}
-
+	m_pD3DDisplay->SetDeviceLostCallback((MS3DDisplay::DeviceLostCallBack)OnBeforeDisplayResetDevice, 
+		(MS3DDisplay::DeviceLostCallBack)OnAfterDisplayResetDevice, (void*)this);
 	hr = CreateTextures(rtWidth, rtHeight);
+	m_texW = rtWidth;
+	m_texH = rtHeight;
 	return hr;
 }
 
 HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputTexture()
 {
 	HRESULT hr;
-	if (m_pD3DDisplay == NULL)
+	if (m_pD3DDisplay == NULL || m_pOutTexture == NULL || m_pRenderTarget == NULL)
 		return S_FALSE;
+	CAutoLock lck0(&m_csD3DDisplay);
+	CAutoLock lck1(&m_csOutTexture);
+	CAutoLock lck2(&m_csRenderTarget);
 	IDirect3DDevice9 * pDevice = m_pD3DDisplay->GetD3DDevice();
 
 	LPDIRECT3DSURFACE9 pOutSurface = NULL;
@@ -93,7 +101,7 @@ HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputTexture()
 }
 HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, const CMediaType* pInMediaType, bool bFlipY = false )
 {
-	if (pIn == NULL || pInMediaType == NULL)
+	if (pIn == NULL || pInMediaType == NULL || m_pInTexture == NULL)
 	{
 		return S_FALSE;
 	}
@@ -174,10 +182,11 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 }
 HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = false)
 {
-	if (pOut == NULL)
+	if (pOut == NULL || m_pOutTexture == NULL)
 	{
 		return S_FALSE;
 	}
+	CAutoLock lck(&m_csOutTexture);
 	HRESULT hr;
 	GUID guidSubType = pOutMediaType->subtype;
 	
@@ -259,9 +268,12 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 	CopyInputImage2InputTexture(pIn, pInType, bFlipY);
 	SetRenderTarget();
 	{
-		CAutoLock lck(&m_csInTexture);
+		CAutoLock lck0(&m_csD3DDisplay);
+		CAutoLock lck1(&m_csInTexture);
+		CAutoLock lck2(&m_csRenderTarget);
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		m_pD3DDisplay->Render();
+		m_pD3DDisplay->SetTexture(NULL);
 	}
 	ResetRenderTarget();
 	CopyRenderTarget2OutputTexture();	
@@ -271,6 +283,9 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 {
 	HRESULT hr = S_FALSE;
+	CAutoLock lck0(&m_csInTexture);
+	CAutoLock lck1(&m_csOutTexture);
+	CAutoLock lck2(&m_csRenderTarget);
 	if (m_pInTexture != NULL)
 	{
 		m_pInTexture->Release();
@@ -311,6 +326,8 @@ HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 
 HRESULT D3DTransformFilterBase::SetRenderTarget()
 {
+	CAutoLock lck0(&m_csD3DDisplay);
+	CAutoLock lck1(&m_csRenderTarget);
 	if (m_pRenderTarget == NULL || m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
@@ -332,6 +349,8 @@ HRESULT D3DTransformFilterBase::SetRenderTarget()
 }
 HRESULT D3DTransformFilterBase::ResetRenderTarget()
 {
+	CAutoLock lck0(&m_csD3DDisplay);
+	CAutoLock lck1(&m_csRenderTarget);
 	if (m_pBackupRenderTarget == NULL || m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
@@ -341,4 +360,64 @@ HRESULT D3DTransformFilterBase::ResetRenderTarget()
 
 	m_pBackupRenderTarget->Release();
 	m_pBackupRenderTarget = NULL;
+}
+HRESULT D3DTransformFilterBase::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+									void* pUserContext)
+{
+
+	return __super::OnBeforeResetDevice(pd3dDevice, pUserContext);
+}
+HRESULT D3DTransformFilterBase::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+								    void* pUserContext)
+{
+
+	return __super::OnAfterResetDevice(pd3dDevice, pUserContext);
+}
+
+
+HRESULT D3DTransformFilterBase::OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+										 void* pUserContext)
+{
+	D3DTransformFilterBase* pThis = (D3DTransformFilterBase*) pUserContext; 
+	if (pThis == NULL)
+		return S_FALSE;
+
+	if (pThis->m_pInTexture != NULL)
+	{
+		pThis->m_pInTexture->Release();
+		pThis->m_pInTexture = NULL;
+	}
+	if (pThis->m_pOutTexture != NULL)
+	{
+		pThis->m_pOutTexture->Release();
+		pThis->m_pOutTexture = NULL;
+	}
+	if (pThis->m_pRenderTarget != NULL)
+	{
+		pThis->m_pRenderTarget->Release();
+		pThis->m_pRenderTarget = NULL;
+	}
+
+	return S_OK;
+}
+HRESULT D3DTransformFilterBase::OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
+										  void* pUserContext)
+{
+	D3DTransformFilterBase* pThis = (D3DTransformFilterBase*) pUserContext; 
+	if (pThis == NULL)
+		return S_FALSE;
+	if (pd3dDevice == NULL)
+		return S_FALSE;
+	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
+	// Turn on ambient lighting 
+	pd3dDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
+
+	pd3dDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
+	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	pThis->CreateTextures(pThis->m_texW, pThis->m_texH);
+	return S_OK;
 }

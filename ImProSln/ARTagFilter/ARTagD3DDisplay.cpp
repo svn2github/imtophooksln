@@ -155,6 +155,7 @@ ARTagD3DDisplay::~ARTagD3DDisplay(void)
 
 BOOL ARTagD3DDisplay::Render(ARMarkerInfo* markinfos, int numMarkinfo, int imageW, int imageH)
 {
+	CAutoLock lck(&m_csResetDevice);
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);

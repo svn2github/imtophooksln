@@ -7,6 +7,7 @@
 #include <map>
 #include <D3DX9Effect.h>
 #include "MSD3DLib.h"
+#include "streams.h"
 using namespace std;
 
 class MSD3DLIB_API IEventManager
@@ -41,7 +42,6 @@ protected:
 	class cmp_wstr 
 	{
 	public:
-
 		bool operator()(const WCHAR  *a, const WCHAR *b) const 
 		{
 			return wcscmp(a, b) < 0;
@@ -254,7 +254,10 @@ public:
 			m_pTexture = NULL;
 		}
 		m_pTexture = pTexture;
-		pTexture->AddRef();
+		if (pTexture != NULL)
+		{
+			pTexture->AddRef();
+		}
 		return TRUE;
 	}
 };
@@ -342,22 +345,43 @@ public:
 
 class MSD3DLIB_API MS3DDisplay : public IRenderBase, public MSEventManager, public MSDXBase, public MSTextureBase
 {
+public:
+	typedef HRESULT (__stdcall* DeviceLostCallBack)(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+
 protected:
-	
+	CCritSec m_csResetDevice;
+
+	static vector<MS3DDisplay*> m_pAllInstances;
+	D3DPRESENT_PARAMETERS m_d3dpp;
 	MS3DPlane* m_pDisplayPlane;
 	MSCamera* m_pCamera;
 	ID3DXEffect* m_pEffect;
+	vector<DeviceLostCallBack> m_pBeforeReset;
+	vector<DeviceLostCallBack> m_pAfterReset;
+	vector<void*> m_pUserContext;
 	BOOL IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV);
 	virtual ID3DXEffect* GetEffect();
 	virtual HRESULT CreateD3DWindow(UINT winW, UINT winH);
 	virtual ATOM RegisterWndClass(HINSTANCE hInstance);
 	virtual BOOL CreateTexture(UINT rtWidth, UINT rtHeight);
+
+	virtual HRESULT OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+
+	virtual HRESULT OnDeviceLost(IDirect3DDevice9 * pd3dDevice, void* pUserContext);
+	virtual HRESULT OnActivateApp();
+
 private:
+	
+	int m_texW, m_texH; //Used for reCreate Texture when device lost.
 	HWND m_hDisplayWnd;
 	HANDLE m_hRenderThread;
 	BOOL InitDevice(IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0);
 	static BOOL _Run(void* _THIS);
-
+	HWND GetD3DWnd() { return m_hDisplayWnd;}
 
 public:
 	MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
@@ -371,7 +395,11 @@ public:
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)=0;
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	HWND GetDisplayWindow() { return m_hDisplayWnd;}
+	virtual HRESULT SetDeviceLostCallback(DeviceLostCallBack pBeforeReset, 
+		DeviceLostCallBack pAfterReset, void* pUserContext);
+
 	static LRESULT CALLBACK D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "MSSD3DClass.h"
-
 #include <math.h>
+#include <algorithm>
 
 extern HMODULE GetModule();
 
@@ -193,6 +193,7 @@ LPD3DXMESH MSMeshBase::GetMesh()
 {
 	return m_pMesh;
 }
+
 MS3DPlane::MS3DPlane(IDirect3DDevice9* pDevice) : MSMeshBase(pDevice)
 {
 	InitGeometry();
@@ -441,11 +442,16 @@ BOOL MSCamera::Screen2World(HWND hwnd, int x, int y, D3DXVECTOR3& vPos, D3DXVECT
 	return TRUE;
 }
 
+vector<MS3DDisplay*> MS3DDisplay::m_pAllInstances;
+
 MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(NULL)
 {
+	ZeroMemory(&m_d3dpp, sizeof(m_d3dpp));
+	m_pAllInstances.push_back(this);
 	m_hDisplayWnd = NULL;
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
+	m_texW = 0; m_texH = 0; 
 	RegisterWndClass(GetModule());
 	CreateD3DWindow(rtWidth, rtHeight);
 	InitDevice(pD3D, rtWidth, rtHeight);
@@ -453,6 +459,9 @@ MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEven
 }
 MS3DDisplay::MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) : MSEventManager(NULL), MSDXBase(pDevice)
 {
+	ZeroMemory(&m_d3dpp, sizeof(m_d3dpp));
+	m_texW = 0; m_texH = 0; 
+	m_pAllInstances.push_back(this);
 	m_hDisplayWnd = NULL;
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
@@ -488,9 +497,47 @@ ATOM MS3DDisplay::RegisterWndClass(HINSTANCE hInstance)
 
 	return ret;
 }
+HRESULT MS3DDisplay::SetDeviceLostCallback(DeviceLostCallBack pBeforeReset, 
+										   DeviceLostCallBack pAfterReset, void* pUsetContext)
+{
+	if (pBeforeReset == NULL || pAfterReset == NULL)
+		return S_FALSE;
+	m_pBeforeReset.push_back(pBeforeReset);
+	m_pAfterReset.push_back(pAfterReset);
+	m_pUserContext.push_back(pUsetContext);
+	return S_OK;
+}
+HRESULT MS3DDisplay::OnActivateApp()
+{
+	if (m_pDevice != NULL)
+	{
+		HRESULT state = m_pDevice->TestCooperativeLevel();
+		if (state == D3DERR_DEVICENOTRESET)
+		{
+			for (int i =0; i < m_pAllInstances.size(); i++)
+			{
+				if (m_pAllInstances[i] == NULL)
+					continue;
 
+				m_pAllInstances[i]->OnDeviceLost(m_pDevice, NULL);
+			}
+		}
+	}
+	return S_OK;
+}
 LRESULT MS3DDisplay::D3DDisplayWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (message == WM_ACTIVATEAPP && wParam)
+	{
+		for (int i =0 ;i < m_pAllInstances.size(); i++)
+		{
+			if (m_pAllInstances[i]->GetD3DWnd() == hWnd)
+			{
+				m_pAllInstances[i]->OnActivateApp();
+			}
+		}
+	}
+
 	switch (message)
 	{
 	default:
@@ -545,7 +592,11 @@ MS3DDisplay::~MS3DDisplay()
 		::DestroyWindow(m_hDisplayWnd);
 		m_hDisplayWnd = 0;
 	}
-	//DeleteCriticalSection(&m_CS);
+	vector<MS3DDisplay*>::iterator thisIter = ::find(m_pAllInstances.begin(), m_pAllInstances.end(), this);
+	if (thisIter != m_pAllInstances.end())
+	{
+		m_pAllInstances.erase(thisIter);
+	}
 }
 
 BOOL MS3DDisplay::Run()
@@ -607,11 +658,11 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	}
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
-	D3DPRESENT_PARAMETERS d3dpp;
-	ZeroMemory( &d3dpp, sizeof(d3dpp) );
-	d3dpp.Windowed = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+	DWORD tID = GetCurrentThreadId();
+	ZeroMemory( &m_d3dpp, sizeof(m_d3dpp) );
+	m_d3dpp.Windowed = TRUE;
+	m_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	m_d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
 	int screenW, screenH;
 	if (rtWidth == 0 || rtHeight == 0)
 	{
@@ -624,16 +675,16 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 		screenW = rtWidth;
 		screenH = rtHeight;
 	}
-	d3dpp.BackBufferWidth = screenW;
-	d3dpp.BackBufferHeight = screenH;
+	m_d3dpp.BackBufferWidth = screenW;
+	m_d3dpp.BackBufferHeight = screenH;
 
-	d3dpp.EnableAutoDepthStencil = TRUE;
-	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
-	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+	m_d3dpp.EnableAutoDepthStencil = TRUE;
+	m_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+	m_d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	// Create the D3DDevice
 	if( FAILED( pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
-		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &d3dpp, &m_pDevice )))
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &m_d3dpp, &m_pDevice )))
 	{
 		OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
 		return FALSE;
@@ -652,12 +703,12 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 		{
 			powerof2Height *= 2;
 		}
-		d3dpp.BackBufferWidth = powerof2Width;
-		d3dpp.BackBufferHeight = powerof2Height;
+		m_d3dpp.BackBufferWidth = powerof2Width;
+		m_d3dpp.BackBufferHeight = powerof2Height;
 		m_pDevice->Release();
 		m_pDevice = NULL;
 		if( FAILED( pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
-			D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &m_pDevice )))
+			D3DCREATE_HARDWARE_VERTEXPROCESSING, &m_d3dpp, &m_pDevice )))
 		{
 			OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
 			return FALSE;
@@ -694,17 +745,20 @@ BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 		m_pTexture = NULL;
 	}
 	HRESULT hr;
+	
 	HWND desktop = GetDesktopWindow();
 	HDC dc = GetDC(desktop);
 	int screenW = GetDeviceCaps(dc, HORZRES);
 	int screenH = GetDeviceCaps(dc, VERTRES);
 	if (rtWidth == 0 || rtHeight == 0)
 	{
+		m_texW = screenW; m_texH = screenH;
 		hr = D3DXCreateTexture(m_pDevice, screenW, screenH, 0, D3DUSAGE_DYNAMIC,
 		D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pTexture);
 	}
 	else
 	{
+		m_texW = rtWidth; m_texH = rtHeight;
 		hr = D3DXCreateTexture(m_pDevice, rtWidth, rtHeight, 0, D3DUSAGE_DYNAMIC,
 			D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pTexture);
 	}
@@ -714,11 +768,13 @@ BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 		OutputDebugStringW(L"@@@@@ D3DXCreateTexture Failed in MS3DDisplay::CreateTexture()!! \n");
 		return FALSE;
 	}
+	
 	return TRUE;
 }
 
 BOOL MS3DDisplay::Render()
 {
+	CAutoLock lck(&m_csResetDevice);
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 	m_pCamera->CameraOn();
@@ -740,6 +796,7 @@ BOOL MS3DDisplay::Render()
 
 BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture)
 {
+	CAutoLock lck(&m_csResetDevice);
 	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 
@@ -826,8 +883,87 @@ BOOL MS3DDisplay::HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 	return TRUE;
 }
 
+HRESULT MS3DDisplay::OnDeviceLost(IDirect3DDevice9 * pd3dDevice,
+							  void* pUserContext)
+{
+	HRESULT hr = S_OK;
+	CAutoLock lck(&m_csResetDevice);
+	if (m_pDevice == NULL)
+	{
+		return S_FALSE;
+	}
+	OnBeforeResetDevice(pd3dDevice, pUserContext);
+	for (int i =0; i< m_pBeforeReset.size(); i++)
+	{
+		m_pBeforeReset[i](pd3dDevice, m_pUserContext[i]);
+	}
+	
+	hr = m_pDevice->Reset(&m_d3dpp);
+	if (FAILED(hr))
+	{
+		return S_FALSE;
+	}
+	OnAfterResetDevice(pd3dDevice, pUserContext);
 
+	for (int i =0; i< m_pAfterReset.size(); i++)
+	{
+		m_pAfterReset[i](pd3dDevice, m_pUserContext[i]);
+	}
 
+	return S_OK;
+}
+
+HRESULT MS3DDisplay::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+									void* pUserContext)
+{
+	if (m_pEffect != NULL)
+	{
+		m_pEffect->OnLostDevice();
+	}
+	if (m_pDisplayPlane != NULL)
+	{
+		delete m_pDisplayPlane;
+		m_pDisplayPlane = NULL;
+	}
+	if (m_pTexture != NULL)
+	{
+		m_pTexture->Release();
+		m_pTexture = NULL;
+	}
+	return S_OK;
+}
+HRESULT MS3DDisplay::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+								    void* pUserContext)
+{
+	HRESULT hr = S_OK;
+	// Turn on the zbuffer
+	if (pd3dDevice == NULL)
+	{
+		return S_FALSE;
+	}
+	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
+	// Turn on ambient lighting 
+	pd3dDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
+
+	pd3dDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
+	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
+	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	if (m_pEffect != NULL)
+	{
+		hr = m_pEffect->OnResetDevice();
+	}
+	if (m_pDisplayPlane != NULL)
+	{
+		delete m_pDisplayPlane;
+		m_pDisplayPlane = NULL;
+	}
+	m_pDisplayPlane = new MS3DPlane(pd3dDevice);
+	CreateTexture(m_texW, m_texH);
+	return S_OK;
+}
 
 BOOL IEventManager::SetParent(IEventManager* parent)
 {

@@ -20,6 +20,7 @@ HomoD3DDisplay::~HomoD3DDisplay(void)
 
 BOOL HomoD3DDisplay::Render()
 {
+	CAutoLock lck(&m_csResetDevice);
 	if (m_pDisplayPlane == NULL)
 	{
 		return FALSE;

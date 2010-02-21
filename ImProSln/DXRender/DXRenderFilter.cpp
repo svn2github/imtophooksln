@@ -126,6 +126,7 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	m_pD3DDisplay->SetTexture(m_pInTexture);
 	m_pD3DDisplay->Render();
+	m_pD3DDisplay->SetTexture(NULL);
 	return S_OK;
 }
 

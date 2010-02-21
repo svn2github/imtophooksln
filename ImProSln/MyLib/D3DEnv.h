@@ -15,6 +15,7 @@ private:
 	static HRESULT CreateD3DWindow(UINT winW, UINT winH, HWND& hwnd);
 protected:
 	static vector<D3DEnv*> m_pAllInstances;
+	static D3DPRESENT_PARAMETERS m_d3dpp;
 	static IDirect3D9* GetD3D9();
 	static HWND GetD3DWnd();
 	static IDirect3DDevice9* GetD3DDevice();
@@ -27,8 +28,15 @@ protected:
 	virtual BOOL IsD3DReady();
 	virtual BOOL IsReadyCloseWindow() { return TRUE;};
 
-	static LRESULT CALLBACK D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	virtual HRESULT OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
 
+	virtual HRESULT OnActivateApp();
+	static LRESULT CALLBACK D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static HRESULT OnDeviceLost(IDirect3DDevice9 * pd3dDevice,	
+		 void* pUserContext);
 };
 
 

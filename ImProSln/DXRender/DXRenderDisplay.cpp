@@ -21,6 +21,7 @@ DXRenderDisplay::~DXRenderDisplay(void)
 
 BOOL DXRenderDisplay::Render()
 {
+	CAutoLock lck(&m_csResetDevice);
 	if (m_pDisplayPlane == NULL)
 	{
 		return FALSE;
@@ -57,6 +58,7 @@ BOOL DXRenderDisplay::Render()
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 	m_pCamera->CameraOff();
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+	return TRUE;
 }
 
 BOOL DXRenderDisplay::Render(IDirect3DBaseTexture9* pTexture)

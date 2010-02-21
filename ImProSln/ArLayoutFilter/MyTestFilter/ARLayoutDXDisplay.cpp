@@ -47,6 +47,11 @@ ARLayoutDXDisplay::~ARLayoutDXDisplay(void)
 }
 bool ARLayoutDXDisplay::CreateMarkerMesh()
 {
+	if (m_pMarkerMesh != NULL)
+	{
+		delete m_pMarkerMesh;
+		m_pMarkerMesh = NULL;
+	}
 	m_pMarkerMesh = new MS3DPlane(m_pDevice);
 	MSMeshBase::CUSTOMVERTEX* pVertices = new MSMeshBase::CUSTOMVERTEX[4];
 
@@ -113,6 +118,7 @@ ID3DXEffect* ARLayoutDXDisplay::GetEffect()
 
 BOOL ARLayoutDXDisplay::Render(const ARMultiMarkerInfoT* pMarkerConfig)
 {
+	CAutoLock lck(&m_csResetDevice);
 	HRESULT hr;
 	ID3DXEffect* pEffect = GetEffect();
 	if (pEffect == NULL)
@@ -166,6 +172,7 @@ BOOL ARLayoutDXDisplay::Render(const ARMultiMarkerInfoT* pMarkerConfig)
 	}
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 	m_pCamera->CameraOff();
+	
 	return TRUE;
 }
 BOOL ARLayoutDXDisplay::Render()
@@ -254,4 +261,33 @@ bool ARLayoutDXDisplay::LoadARMarkTexture()
 	}
 	
 	return true;
+}
+
+HRESULT ARLayoutDXDisplay::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+									void* pUserContext)
+{
+	for (map<int, LPDIRECT3DTEXTURE9>::iterator iter = m_pMarkerTextures.begin();
+		iter != m_pMarkerTextures.end(); iter++)
+	{
+		if (iter->second != NULL)
+		{
+			iter->second->Release();
+			iter->second = NULL;
+		}
+	}
+	m_pMarkerTextures.clear();
+	if (m_pMarkerMesh != NULL)
+	{
+		delete m_pMarkerMesh;
+		m_pMarkerMesh = NULL;
+	}
+
+	return __super::OnBeforeResetDevice(pd3dDevice,	 pUserContext);
+}
+HRESULT ARLayoutDXDisplay::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+								   void* pUserContext)
+{
+	LoadARMarkTexture();
+	CreateMarkerMesh();
+	return __super::OnAfterResetDevice(pd3dDevice, pUserContext);
 }

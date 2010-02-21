@@ -14,6 +14,12 @@ protected:
 	map<int, LPDIRECT3DTEXTURE9> m_pMarkerTextures;
 	bool LoadARMarkTexture();
 	bool CreateMarkerMesh();
+
+	virtual HRESULT OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+	virtual HRESULT OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+		void* pUserContext);
+
 public:
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL Render(const ARMultiMarkerInfoT* pMarkerConfig);

@@ -6,11 +6,13 @@ vector<D3DEnv*> D3DEnv::m_pAllInstances;
 IDirect3D9* g_pD3D = NULL;
 HWND		g_hWndD3D = 0;
 IDirect3DDevice9* g_pD3DDevice9 = NULL;
-extern HMODULE GetModule();
+D3DPRESENT_PARAMETERS D3DEnv::m_d3dpp;
 
+extern HMODULE GetModule();
 D3DEnv::D3DEnv()
 {
 	m_pAllInstances.push_back(this);
+	
 }
 
 D3DEnv::~D3DEnv()
@@ -70,9 +72,19 @@ IDirect3D9* D3DEnv::GetD3D9()
 
 LRESULT D3DEnv::D3DWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (message == WM_ACTIVATEAPP && wParam)
+	{
+		for (int i =0 ;i < m_pAllInstances.size(); i++)
+		{
+			if (m_pAllInstances[i]->GetD3DWnd() == hWnd)
+			{
+				m_pAllInstances[i]->OnActivateApp();
+			}
+		}
+	}
+
 	switch (message)
 	{
-
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -134,11 +146,10 @@ IDirect3DDevice9* D3DEnv::CreateD3DDevice(IDirect3D9* pD3D9, HWND hwnd,  UINT rt
 	IDirect3DDevice9* pDevice = NULL;
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
-	D3DPRESENT_PARAMETERS d3dpp;
-	ZeroMemory( &d3dpp, sizeof(d3dpp) );
-	d3dpp.Windowed = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+	ZeroMemory( &m_d3dpp, sizeof(m_d3dpp) );
+	m_d3dpp.Windowed = TRUE;
+	m_d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+	m_d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
 	int screenW, screenH;
 	if (rtWidth == 0 || rtHeight == 0)
 	{
@@ -151,16 +162,16 @@ IDirect3DDevice9* D3DEnv::CreateD3DDevice(IDirect3D9* pD3D9, HWND hwnd,  UINT rt
 		screenW = rtWidth;
 		screenH = rtHeight;
 	}
-	d3dpp.BackBufferWidth = screenW;
-	d3dpp.BackBufferHeight = screenH;
+	m_d3dpp.BackBufferWidth = screenW;
+	m_d3dpp.BackBufferHeight = screenH;
 
-	d3dpp.EnableAutoDepthStencil = TRUE;
-	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
-	d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+	m_d3dpp.EnableAutoDepthStencil = TRUE;
+	m_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+	m_d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
 	// Create the D3DDevice
 	if( FAILED( pD3D9->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,  hwnd,
-		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &d3dpp, &pDevice )))
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &m_d3dpp, &pDevice )))
 	{
 		OutputDebugStringW(L"@@@@ CreateDevice Failed!! in CreateD3DDevice() \n");
 		return FALSE;
@@ -179,12 +190,12 @@ IDirect3DDevice9* D3DEnv::CreateD3DDevice(IDirect3D9* pD3D9, HWND hwnd,  UINT rt
 		{
 			powerof2Height *= 2;
 		}
-		d3dpp.BackBufferWidth = powerof2Width;
-		d3dpp.BackBufferHeight = powerof2Height;
+		m_d3dpp.BackBufferWidth = powerof2Width;
+		m_d3dpp.BackBufferHeight = powerof2Height;
 		pDevice->Release();
 		pDevice = NULL;
 		if( FAILED( pD3D9->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd,
-			D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &pDevice )))
+			D3DCREATE_HARDWARE_VERTEXPROCESSING, &m_d3dpp, &pDevice )))
 		{
 			OutputDebugStringW(L"@@@@ CreateDevice Failed!! in MS3DDisplay::InitDevice() \n");
 			return FALSE;
@@ -204,4 +215,56 @@ IDirect3DDevice9* D3DEnv::CreateD3DDevice(IDirect3D9* pD3D9, HWND hwnd,  UINT rt
 	pDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 
 	return pDevice;
+}
+HRESULT D3DEnv::OnActivateApp()
+{
+	HRESULT hr = S_OK;
+	IDirect3DDevice9 *pDevice = g_pD3DDevice9;
+	if (pDevice != NULL)
+	{
+		HRESULT state = pDevice->TestCooperativeLevel();
+		if (state == D3DERR_DEVICENOTRESET)
+		{
+			for (int i =0; i < m_pAllInstances.size(); i++)
+			{
+				if (m_pAllInstances[i] == NULL)
+					continue;
+				m_pAllInstances[i]->OnBeforeResetDevice(pDevice, NULL);
+			}
+			
+			hr = OnDeviceLost(pDevice, NULL);
+			if (FAILED(hr))
+			{
+				return S_FALSE;
+			}
+			for (int i =0; i < m_pAllInstances.size(); i++)
+			{
+				if (m_pAllInstances[i] == NULL)
+					continue;
+				m_pAllInstances[i]->OnAfterResetDevice(pDevice, NULL);
+			}
+		}
+	}
+	return S_OK;
+}
+HRESULT D3DEnv::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+									void* pUserContext)
+{
+	return S_OK;
+}
+HRESULT D3DEnv::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+								   void* pUserContext)
+{
+	return S_OK;
+}
+HRESULT D3DEnv::OnDeviceLost(IDirect3DDevice9 * pd3dDevice,
+							 void* pUserContext)
+{
+	HRESULT hr = S_OK;
+	if (g_pD3DDevice9 != NULL)
+	{
+		hr = g_pD3DDevice9->Reset(&m_d3dpp);
+	}
+	
+	return hr;
 }

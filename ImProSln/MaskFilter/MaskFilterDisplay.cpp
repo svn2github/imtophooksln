@@ -69,6 +69,7 @@ MaskFilterDisplay::~MaskFilterDisplay(void)
 
 BOOL MaskFilterDisplay::Render()
 {
+	CAutoLock lck(&m_csResetDevice);
 	if (m_pDisplayPlane == NULL)
 	{
 		return FALSE;

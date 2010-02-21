@@ -23,6 +23,7 @@ BOOL HookDrawingDisplay::SetMatTTS(const D3DXMATRIX* mat)
 
 BOOL HookDrawingDisplay::Render()
 {
+	CAutoLock lck(&m_csResetDevice);
 	if (m_pDisplayPlane == NULL)
 	{
 		return FALSE;
