@@ -671,7 +671,6 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	}
 	// Set up the structure used to create the D3DDevice. Since we are now
 	// using more complex geometry, we will create a device with a zbuffer.
-	DWORD tID = GetCurrentThreadId();
 
 	ZeroMemory( &m_d3dpp, sizeof(m_d3dpp) );
 	m_d3dpp.Windowed = TRUE;
@@ -929,9 +928,10 @@ HRESULT MS3DDisplay::OnDeviceLost(IDirect3DDevice9 * pd3dDevice,
 HRESULT MS3DDisplay::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
 									void* pUserContext)
 {
+	HRESULT hr = S_OK;
 	if (m_pEffect != NULL)
 	{
-		m_pEffect->OnLostDevice();
+		hr = m_pEffect->OnLostDevice();
 	}
 	if (m_pDisplayPlane != NULL)
 	{
@@ -954,20 +954,21 @@ HRESULT MS3DDisplay::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,
 	{
 		return S_FALSE;
 	}
-	pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
+	hr = pd3dDevice->SetRenderState( D3DRS_ZENABLE, TRUE );
 	// Turn on ambient lighting 
-	pd3dDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
-	pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
+	hr = pd3dDevice->SetRenderState( D3DRS_AMBIENT, 0xffffffff );
+	hr = pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CW);
 
-	pd3dDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
-	pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
-	pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
-	pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
+	hr = pd3dDevice->SetTextureStageState(0, D3DTSS_CONSTANT, 0xfffffffff );
+	hr = pd3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+	hr = pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_CONSTANT);
+	hr = pd3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TEXTURE);
+	hr = pd3dDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
 	if (m_pEffect != NULL)
 	{
 		hr = m_pEffect->OnResetDevice();
 	}
+
 	if (m_pDisplayPlane != NULL)
 	{
 		delete m_pDisplayPlane;

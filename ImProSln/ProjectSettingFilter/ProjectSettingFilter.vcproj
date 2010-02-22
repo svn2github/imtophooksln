@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="DXRenderer"
-	ProjectGUID="{570792BF-0247-4B35-AF10-5725469DBFCE}"
-	RootNamespace="DXRender"
+	Name="ProjectSettingFilter"
+	ProjectGUID="{CDB4B69A-B3CC-4035-902D-3722671F545F}"
+	RootNamespace="ProjectSettingFilter"
 	Keyword="MFCDLLProj"
 	TargetFrameworkVersion="196613"
 	>
@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv;"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,10 +68,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib MSD3DLib.lib MSPersist.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib  CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;"
-				ModuleDefinitionFile=".\DXRender.def"
+				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin"
+				ModuleDefinitionFile=".\ProjectSettingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -96,11 +96,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="regsvr32.exe $(OutDir)\$(ProjectName).dll"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -128,9 +129,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
-				RuntimeLibrary="1"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -150,11 +150,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;"
-				ModuleDefinitionFile=".\DXRender.def"
+				ModuleDefinitionFile=".\ProjectSettingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -193,27 +190,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\DXRender.def"
+				RelativePath=".\ProjectSettingFilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderApp.cpp"
+				RelativePath=".\ProjectSettingFilter.def"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderDisplay.cpp"
+				RelativePath=".\ProjectSettingFilterApp.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderFilter.cpp"
+				RelativePath=".\ProjectSettingFilterProp.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderProp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\DXRenderReg.cpp"
+				RelativePath=".\ProjectSettingFilterReg.cpp"
 				>
 			</File>
 			<File
@@ -243,27 +236,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\DXRenderApp.h"
+				RelativePath=".\IProjectSettingFilter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderDisplay.h"
+				RelativePath=".\ProjectSettingFilter.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderFilter.h"
+				RelativePath=".\ProjectSettingFilterApp.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderProp.h"
+				RelativePath=".\ProjectSettingFilterProp.h"
 				>
 			</File>
 			<File
-				RelativePath=".\DXRenderReg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IDXRenderer.h"
+				RelativePath=".\ProjectSettingFilterReg.h"
 				>
 			</File>
 			<File
@@ -285,71 +274,19 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\DXRender.rc"
+				RelativePath=".\ProjectSettingFilter.rc"
 				>
 			</File>
 			<File
-				RelativePath=".\res\DXRender.rc2"
+				RelativePath=".\res\ProjectSettingFilter.rc2"
 				>
 			</File>
 		</Filter>
-		<Filter
-			Name="MyLib"
-			>
-			<File
-				RelativePath="..\MyLib\D3DEnv.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\D3DTransformFilterBase.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MFCBasePropertyPage.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MSSD3DClass.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MyMediaSample.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\MyLib\MyMediaSample.h"
-				>
-			</File>
-		</Filter>
-		<File
-			RelativePath="..\fx\DXRenderer.fx"
-			>
-		</File>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>
 	</Files>
 	<Globals>
-		<Global
-			Name="RESOURCE_FILE"
-			Value="DXRender.rc"
-		/>
 	</Globals>
 </VisualStudioProject>

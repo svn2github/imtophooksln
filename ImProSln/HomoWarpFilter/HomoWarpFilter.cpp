@@ -227,6 +227,7 @@ HRESULT HomoWarpFilter::CreatePins()
 		m_pInputPins.push_back(pInput1);
 		m_pOutputPins.push_back(pOutput);
 		m_pOutputPins.push_back(pOutput2);
+
 	}
 	return S_OK;
 }

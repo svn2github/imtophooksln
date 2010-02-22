@@ -5,11 +5,12 @@
 #include <initguid.h>
 #include "combase.h"
 #include "D3DTransformFilterBase.h"
-
+#include "MSPersist.h"
 
 class DXRenderFilter :
 	public CBaseRenderer, public IDXRenderer,
-	public ISpecifyPropertyPages, public D3DTransformFilterBase
+	public ISpecifyPropertyPages, public D3DTransformFilterBase,
+	public CMSPersist
 {
 protected:
 	CCritSec m_csDisplayState;
@@ -46,4 +47,8 @@ public:
 	virtual bool SetFlipX(bool v);
 	virtual bool GetFlipY();
 	virtual bool SetFlipY(bool v);
+	//from IMSPersist
+	virtual HRESULT SaveToFile(WCHAR* path);
+	virtual HRESULT LoadFromFile(WCHAR* path);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 };

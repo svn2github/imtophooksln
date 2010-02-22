@@ -202,3 +202,43 @@ bool DXRenderFilter::SetFlipY(bool v)
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY = v;
 	return true;
 }
+
+HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
+{
+	CAutoLock lck(&m_csDisplayState);
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	fwprintf_s(filestream, L"%d %d \n", GetFlipX(), GetFlipY());
+	fclose(filestream);
+	return S_OK;
+}
+HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int bFlipX =0, bFlipY = 0;
+	fwscanf_s(filestream, L"%d %d \n", &bFlipX, &bFlipY);
+	SetFlipX(bFlipX);
+	SetFlipY(bFlipY);
+	fclose(filestream);
+	return S_OK;
+}
+HRESULT DXRenderFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+	{
+		return S_FALSE;
+	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	return S_OK;
+}
