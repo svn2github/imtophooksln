@@ -17,7 +17,7 @@ public:
 	virtual ~ProjectSettingPropPage();
 
 	// Dialog Data
-
+	CEdit m_edPath;
 
 protected:
 	virtual BOOL OnInitDialog();
@@ -42,4 +42,7 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_ProjectSettingPropPage;}
 	virtual int GetTitileResourceID() { return IDS_ProjectSettingPropPage_Title;}
 
+	afx_msg void OnBnClickedbtnbrowse();
+	afx_msg void OnBnClickedBtnLoad();
+	afx_msg void OnBnClickedBtnSave();
 };

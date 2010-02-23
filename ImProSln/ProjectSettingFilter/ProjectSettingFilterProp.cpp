@@ -12,7 +12,7 @@ extern CProjectSettingFilterApp theApp;
 void ProjectSettingPropPage::DoDataExchange(CDataExchange* pDX)
 {
 	CMFCBasePropertyPage::DoDataExchange(pDX);
-
+	DDX_Control(pDX, IDC_EDPath, m_edPath);
 }
 BOOL ProjectSettingPropPage::OnInitDialog()
 {
@@ -22,10 +22,12 @@ BOOL ProjectSettingPropPage::OnInitDialog()
 }
 
 BEGIN_MESSAGE_MAP(ProjectSettingPropPage, CMFCBasePropertyPage)
+	ON_BN_CLICKED(IDC_btnBrowse, &ProjectSettingPropPage::OnBnClickedbtnbrowse)
+	ON_BN_CLICKED(IDC_BTN_LOAD, &ProjectSettingPropPage::OnBnClickedBtnLoad)
+	ON_BN_CLICKED(IDC_BTN_Save, &ProjectSettingPropPage::OnBnClickedBtnSave)
 END_MESSAGE_MAP()
 
 
-// CHomoWarpMFCPropertyPage message handlers
 
 
 ProjectSettingPropPage::ProjectSettingPropPage(IUnknown *pUnk) : 
@@ -78,6 +80,9 @@ HRESULT ProjectSettingPropPage::OnActivate(void)
 		EnableWindow(TRUE);
 	else
 		EnableWindow(FALSE);
+	CString path;
+	path = theApp.GetProfileString(L"MySetting",L"ProjectSettingPath", L"");
+	m_edPath.SetWindowText(path);
 
 	return S_OK;
 }
@@ -98,4 +103,62 @@ CUnknown *WINAPI ProjectSettingPropPage::CreateInstance(LPUNKNOWN punk, HRESULT 
 	}
 
 	return pNewObject;
+}
+
+void ProjectSettingPropPage::OnBnClickedbtnbrowse()
+{
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
+	OPENFILENAME openfn;
+	WCHAR cFname[256];
+	WCHAR szFilterOpn[]=TEXT("Config files (*.txt)\0*.txt\0All files (*.*)\0*.*\0\0");
+	DWORD nFilterIndex=1;
+	cFname[0]=0x00;
+	ZeroMemory(&openfn, sizeof(openfn));
+	openfn.hwndOwner=GetActiveWindow()->GetSafeHwnd();
+	openfn.lpstrFile=cFname;
+	openfn.nMaxFile=sizeof(cFname);
+	openfn.lStructSize=sizeof(openfn);
+	openfn.lpstrFilter=szFilterOpn; 
+	openfn.nFilterIndex=nFilterIndex;
+	//openfn.lpstrInitialDir=szCurDir;
+	openfn.Flags= OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
+	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
+	if (!hr)
+	{
+		return ;
+	}
+	m_edPath.SetWindowText(openfn.lpstrFile);
+}
+
+void ProjectSettingPropPage::OnBnClickedBtnLoad()
+{
+	CString path;
+	m_edPath.GetWindowText(path);
+	CComPtr<IMSPersist> pPersist = NULL;
+	m_pFilter->QueryInterface(IID_IMSPersist, (void**)&pPersist);
+	HRESULT ret = pPersist->LoadFromFile((WCHAR*)(LPCWSTR)path);
+	if (FAILED(ret))
+	{
+		MessageBox(L"LoadFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"ProjectSettingPath", path);
+}
+
+void ProjectSettingPropPage::OnBnClickedBtnSave()
+{
+	CString path;
+	m_edPath.GetWindowText(path);
+	CComPtr<IMSPersist> pPersist = NULL;
+	m_pFilter->QueryInterface(IID_IMSPersist, (void**)&pPersist);
+	HRESULT ret = pPersist->SaveToFile((WCHAR*)(LPCWSTR)path);
+	if (FAILED(ret))
+	{
+		MessageBox(L"LoadFile Failed!!", L"Error!!");
+		return;
+	}
+	theApp.WriteProfileString(L"MySetting",L"ProjectSettingPath", path);
+
 }

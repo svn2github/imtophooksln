@@ -23,11 +23,11 @@ CMSPersist::~CMSPersist()
 	return;
 }
 
-int CMSPersist::GetNumInstance()
+int CMSPersist::GetNumPersistInstance()
 {
 	return g_pInstances.size();
 }
-HRESULT CMSPersist::GetInstance(UINT idx, IMSPersist*& pInst)
+HRESULT CMSPersist::GetPersistInstance(UINT idx, IMSPersist*& pInst)
 {
 	if (idx >= g_pInstances.size())
 		return S_FALSE;

@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib  CMuxTransformFilter.lib CMFCBasePropertyPage.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib  CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSPersist.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\ProjectSettingFilter.def"
@@ -96,12 +96,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="regsvr32.exe $(OutDir)\$(ProjectName).dll"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -288,5 +288,9 @@
 		</File>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="ProjectSettingFilter.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

@@ -1,6 +1,6 @@
 #pragma once
 #include "streams.h"
-
+#include "IMSPersist.h"
 // {F82B96A4-08A1-4b61-91AB-13D869E80393}
 DEFINE_GUID(IID_IProjectSettingFilter, 
 			0xf82b96a4, 0x8a1, 0x4b61, 0x91, 0xab, 0x13, 0xd8, 0x69, 0xe8, 0x3, 0x93);

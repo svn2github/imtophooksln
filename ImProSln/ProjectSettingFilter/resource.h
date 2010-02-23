@@ -4,6 +4,11 @@
 //
 #define IDD_ProjectSettingPropPage      107
 #define IDS_ProjectSettingPropPage_Title 4000
+#define IDC_EDPath                      7020
+#define IDC_btnBrowse                   7021
+#define IDC_BTN_LOAD                    7022
+#define IDC_BTNSave                     7023
+#define IDC_BTN_Save                    7023
 
 // Next default values for new objects
 // 

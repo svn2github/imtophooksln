@@ -5,10 +5,11 @@
 #include <initguid.h>
 #include "combase.h"
 #include "CMuxTransformFilter.h"
+#include "MSPersist.h"
 
 class ProjectSettingFilter :
 	public CMuxTransformFilter, public IProjectSettingFilter,
-	public ISpecifyPropertyPages
+	public ISpecifyPropertyPages, public CMSPersist
 {
 
 public:
@@ -21,6 +22,11 @@ public:
 	virtual HRESULT CreatePins();
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
+	//from CMSPersist
+	virtual HRESULT SaveToFile(WCHAR* path);
+	virtual HRESULT LoadFromFile(WCHAR* path);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
+
 public:
 	ProjectSettingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ProjectSettingFilter();

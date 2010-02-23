@@ -33,10 +33,15 @@ HRESULT DXRenderFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	{
 		return GetInterface(static_cast<IDXRenderer*>(this), ppv);
 	}
-	if (iid == IID_ISpecifyPropertyPages)
+	else if (iid == IID_ISpecifyPropertyPages)
 	{
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+	else if (iid == IID_IMSPersist)
+	{
+		return GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
 	}
 	else
 	{
@@ -207,6 +212,7 @@ HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 {
 	CAutoLock lck(&m_csDisplayState);
 	FILE* filestream = NULL;
+
 	_wfopen_s(&filestream, path, L"w");
 	if (filestream == NULL)
 	{
@@ -240,5 +246,10 @@ HRESULT DXRenderFilter::GetName(WCHAR* name, UINT szName)
 	FILTER_INFO filterInfo;
 	this->QueryFilterInfo(&filterInfo);
 	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
 	return S_OK;
 }

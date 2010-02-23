@@ -7,20 +7,14 @@
 #pragma once
 
 #include "IMSPersist.h"
-#ifdef MSPERSIST_EXPORTS
-#define MSPERSIST_API __declspec(dllexport)
-#else
-#define MSPERSIST_API __declspec(dllimport)
-#endif
-
 // This class is exported from the MSPersist.dll
 class MSPERSIST_API CMSPersist : public IMSPersist
 {
 public:
 	CMSPersist(void);
 	~CMSPersist();
-	virtual int GetNumInstance();
-	virtual HRESULT GetInstance(UINT idx, IMSPersist*& pInst);
+	virtual int GetNumPersistInstance();
+	virtual HRESULT GetPersistInstance(UINT idx, IMSPersist*& pInst);
 	virtual HRESULT SaveToFile(WCHAR* filename) = 0;
 	virtual HRESULT LoadFromFile(WCHAR* filename) = 0;
 	virtual HRESULT GetName(WCHAR* name, UINT szName) = 0;
