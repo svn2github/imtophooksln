@@ -1211,7 +1211,7 @@ DWORD CMuxTransformStream::ThreadProc(void) {
 float CMuxTransformStream::GetFrameRateLimit()
 {
 	if (m_pFilter == NULL)
-		return 30.0; //default value
+		return 10000.0; //default value
 	return m_pFilter->GetFrameRateLimit(this);
 }
 //

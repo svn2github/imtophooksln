@@ -257,7 +257,7 @@ public:
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
 	// Source Filter Method
 	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };
-	virtual float GetFrameRateLimit(IPin* pPin) { return 30.0;}
+	virtual float GetFrameRateLimit(IPin* pPin) { return 10000.0;}
 	// =================================================================
 	// ----- Optional Override Methods           -----------------------
 	// =================================================================
