@@ -232,11 +232,13 @@ bool MaskFilterPropPage::GetSetting()
 	}
 
 	float fMaskScale = m_pFilter->GetMaskScale();
-	
+	BOOL bMaskFlipY = m_pFilter->GetMaskFlipY();
+
 	WCHAR str[MAX_PATH];
 	swprintf_s(str, MAX_PATH, L"%.2f", fMaskScale);
 	m_txtMaskScale.SetWindowText(str);
 	m_slrMaskScale.SetPos(fMaskScale*slrScaleValue);
+	m_ckMaskFlipY.SetCheck(bMaskFlipY);
 	return true;
 }
 bool MaskFilterPropPage::ApplySetting()

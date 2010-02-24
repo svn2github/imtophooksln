@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib MSPersist.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\MaskFilter.def"

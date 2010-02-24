@@ -8,9 +8,11 @@
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
 #include "MyMediaSample.h"
+#include "MSPersist.h"
 class MaskFilter :
 	public CMuxTransformFilter, public IMaskFilter,
-	public ISpecifyPropertyPages, public D3DTransformFilterBase
+	public ISpecifyPropertyPages, public D3DTransformFilterBase,
+	public CMSPersist
 {
 
 public:
@@ -32,6 +34,10 @@ public:
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
+	//from IMSPersist
+	virtual HRESULT SaveToFile(WCHAR* path);
+	virtual HRESULT LoadFromFile(WCHAR* path);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 	//implement IMaskFilterProperty
 	virtual BOOL SetMaskFlag(int flag);
 	virtual int GetMaskFlag();

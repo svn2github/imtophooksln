@@ -45,10 +45,15 @@ HRESULT MaskFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	{
 		return GetInterface(static_cast<IMaskFilter*>(this), ppv);
 	}
-	if (iid == IID_ISpecifyPropertyPages)
+	else if (iid == IID_ISpecifyPropertyPages)
 	{
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+	else if (iid == IID_IMSPersist)
+	{
+		return GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
 	}
 	else
 	{
@@ -661,4 +666,60 @@ BOOL MaskFilter::SetMaskScale(float fScale)
 	CAutoLock lck(&m_csMaskScale);
 	m_fMaskScale = fScale;
 	return TRUE;
+}
+
+HRESULT MaskFilter::SaveToFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int maskflag = GetMaskFlag();
+	float fMaskScale = GetMaskScale();
+	BOOL bMaskFlipY = GetMaskFlipY();
+
+	fwprintf_s(filestream, L"%f %d %d\n", fMaskScale, bMaskFlipY, maskflag);
+	
+	fclose(filestream);
+
+	return S_OK;
+}
+HRESULT MaskFilter::LoadFromFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int maskflag = 2;
+	double fMaskScale = 1.0;
+	BOOL bMaskFlipY = FALSE;
+
+	fwscanf_s(filestream, L"%lf %d %d\n", &fMaskScale, &bMaskFlipY, &maskflag);
+	
+	SetMaskScale(fMaskScale);
+	SetMaskFlipY(bMaskFlipY);
+	SetMaskFlag(maskflag);
+	fclose(filestream);
+
+	return S_OK;
+}
+HRESULT MaskFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+	{
+		return S_FALSE;
+	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
 }
