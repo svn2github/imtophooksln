@@ -34,4 +34,13 @@ public:
 	virtual bool getStartTracking(bool& bStart);
 	virtual bool getDrawFingers();
 	virtual bool setDrawFingers(bool drawing);
+
+	virtual bool SetBGThreshold(int threshold);
+	virtual bool GetBGThreshold(int& threshold);
+	virtual	bool SetSimpleHighPassDeNoise(int deNoise);
+	virtual bool GetSimpleHighPassDeNoise(int& deNoise);
+	virtual bool SetScaleLevel(int level);
+	virtual bool GetScaleLevel(int& level);
+	virtual bool SetRectifyLevel(int level);
+	virtual bool GetRectifyLevel(int& level);
 };

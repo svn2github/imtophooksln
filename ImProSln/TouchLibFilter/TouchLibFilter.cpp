@@ -7,6 +7,7 @@
 #include "d3dx9.h"
 #include "highgui.h"
 #include "BackgroundFilter.h"
+#include <algorithm>
 TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("TouchLib Filter"), 0, CLSID_TouchLibFilter)
 { 
@@ -389,6 +390,208 @@ bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundR
 	
 	return true;
 }
+bool TouchLibFilter::SetBGThreshold(int threshold)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_bgLabel == "null")
+	{
+		return false;
+	}
+	char para[MAX_PATH];
+	sprintf(para, "%d", threshold);
+	m_pTouchScreen->setParameter(m_bgLabel, "threshold", para);
+	return true;
+}
+
+bool TouchLibFilter::GetBGThreshold(int& threshold)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_bgLabel == "null")
+	{
+		return false;
+	}
+	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_bgLabel);
+	if (pFilterList.size() <= 0)
+		return false;
+	Filter* pBgFilter = *pFilterList.begin();
+	ParameterMap paraMap;
+	pBgFilter->getParameters(paraMap);
+
+	if (paraMap.find("threshold") == paraMap.end())
+		return false;
+	
+	sscanf_s(paraMap["threshold"].c_str(), "%d", &threshold);
+	return true;
+}
+bool TouchLibFilter::SetSimpleHighPassBlur(int blur)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_shpLabel == "null")
+	{
+		return false;
+	}
+	char para[MAX_PATH];
+	sprintf(para, "%d", blur);
+	m_pTouchScreen->setParameter(m_shpLabel, "blur", para);
+
+	return true;
+}
+
+bool TouchLibFilter::GetSimpleHighPassBlur(int& blur)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_shpLabel == "null")
+	{
+		return false;
+	}
+	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_shpLabel);
+	if (pFilterList.size() <= 0)
+		return false;
+
+	Filter* pSHPFilter = *pFilterList.begin();
+	ParameterMap paraMap;
+	pSHPFilter->getParameters(paraMap);
+
+	if (paraMap.find("blur") == paraMap.end())
+		return false;
+
+	sscanf_s(paraMap["blur"].c_str(), "%d", &blur);
+	return true;
+}
+
+bool TouchLibFilter::SetSimpleHighPassDeNoise(int deNoise)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_shpLabel == "null")
+	{
+		return false;
+	}
+	char para[MAX_PATH];
+	sprintf(para, "%d", deNoise);
+	m_pTouchScreen->setParameter(m_shpLabel, "noise", para);
+	return true;
+}
+bool TouchLibFilter::GetSimpleHighPassDeNoise(int& deNoise)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_shpLabel == "null")
+	{
+		return false;
+	}
+	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_shpLabel);
+	if (pFilterList.size() <= 0)
+		return false;
+
+	Filter* pSHPFilter = *pFilterList.begin();
+	ParameterMap paraMap;
+	pSHPFilter->getParameters(paraMap);
+
+	if (paraMap.find("noise") == paraMap.end())
+		return false;
+
+	sscanf_s(paraMap["noise"].c_str(), "%d", &deNoise);
+	return true;
+}
+
+bool TouchLibFilter::SetScaleLevel(int level)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_scalerLabel == "null")
+	{
+		return false;
+	}
+	char para[MAX_PATH];
+	sprintf(para, "%d", level);
+	m_pTouchScreen->setParameter(m_scalerLabel, "level", para);
+	return true;
+}
+bool TouchLibFilter::GetScaleLevel(int& level)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_scalerLabel == "null")
+	{
+		return false;
+	}
+	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_scalerLabel);
+	if (pFilterList.size() <= 0)
+		return false;
+
+	Filter* pScaleFilter = *pFilterList.begin();
+	ParameterMap paraMap;
+	pScaleFilter->getParameters(paraMap);
+
+	if (paraMap.find("level") == paraMap.end())
+		return false;
+
+	sscanf_s(paraMap["level"].c_str(), "%d", &level);
+	return true;
+}
+
+bool TouchLibFilter::SetRectifyLevel(int level)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_rectifyLabel == "null")
+	{
+		return false;
+	}
+	char para[MAX_PATH];
+	sprintf(para, "%d", level);
+	m_pTouchScreen->setParameter(m_rectifyLabel, "level", para);
+	return true;
+}
+
+bool TouchLibFilter::GetRectifyLevel(int& level)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	if (m_rectifyLabel == "null")
+	{
+		return false;
+	}
+	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_rectifyLabel);
+	if (pFilterList.size() <= 0)
+		return false;
+	Filter* pRectifyFilter = *pFilterList.begin();
+	ParameterMap paraMap;
+	pRectifyFilter->getParameters(paraMap);
+
+	if (paraMap.find("level") == paraMap.end())
+		return false;
+
+	sscanf_s(paraMap["level"].c_str(), "%d", &level);
+	return true;
+}
+
+
 bool TouchLibFilter::DestoryTouchScreen()
 {
 	TouchScreenDevice::destroy();
