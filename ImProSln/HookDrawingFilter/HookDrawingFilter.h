@@ -7,6 +7,7 @@
 #include "CMuxTransformFilter.h"
 #include "D3DTransformFilterBase.h"
 #include "IHookDrawingStream.h"
+#include "MSPersist.h"
 // {30A0104E-A12F-4238-9BA4-D195BA8FB58A}
 DEFINE_GUID(CLSID_HookDrawingFilter, 
 			0x30a0104e, 0xa12f, 0x4238, 0x9b, 0xa4, 0xd1, 0x95, 0xba, 0x8f, 0xb5, 0x8a);
@@ -49,7 +50,7 @@ public:
 
 class HookDrawingFilter :
 	public CMuxTransformFilter, public IHookDrawingFilter, public D3DTransformFilterBase
-	,public ISpecifyPropertyPages
+	,public ISpecifyPropertyPages, public CMSPersist
 {
 
 public:
@@ -74,7 +75,10 @@ public:
 
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
-
+	//from IMSPersist
+	virtual HRESULT SaveToFile(WCHAR* path);
+	virtual HRESULT LoadFromFile(WCHAR* path);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -89,6 +93,8 @@ public:
 	virtual BOOL IsHooked();
 	virtual HWND GetHookedWindow();
 	virtual BOOL SetHookedWindow(HWND hwnd);
+	virtual BOOL GetWarpMatrix(UINT idx, D3DXMATRIX& matWarp);
+	virtual BOOL SetWarpMatrix(UINT idx, const D3DXMATRIX& matWarp);
 	virtual BOOL GetResolution(IPin* pPin, UINT& resW, UINT& resH);
 	virtual BOOL SetResolution(IPin* pPin, UINT resW, UINT resH);
 	virtual BOOL GetSourceResolution(UINT& resW, UINT& resH);

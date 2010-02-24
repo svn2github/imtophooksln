@@ -213,6 +213,11 @@ HRESULT HookDrawingFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
 	}
+	else if (iid == IID_IMSPersist)
+	{
+		return GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
+	}
 	else
 	{
 		// Call the parent class.
@@ -250,10 +255,7 @@ HRESULT HookDrawingFilter::CreatePins()
 				&hr,              // Owner filter
 				this,               // Result code
 				strPinName);      // Pin name
-			if (i != 0)
-			{
-				pOutput0->m_bVisible = false;
-			}
+		
 			m_pStreamPins.push_back(pOutput0);
 		}
 		if (m_pD3DDisplay == NULL)
@@ -598,41 +600,10 @@ LRESULT HookDrawingFilter::HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wP
 
 HRESULT HookDrawingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
-	if ( direction == PINDIR_OUTPUT)
-	{
-		for (int i =0; i<m_pStreamPins.size(); i++)
-		{
-			if (!m_pStreamPins[i]->IsConnected() && !m_pStreamPins[i]->m_bVisible)
-			{
-				m_pStreamPins[i]->m_bVisible = true;
-				break;
-			}
-		}
-	}
 	return __super::CompleteConnect(direction, pMyPin, pOtherPin);
 }
 HRESULT HookDrawingFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 {
-	if ( dir == PINDIR_OUTPUT)
-	{
-		int unConnectCount = 0;
-		for (int i =0; i<m_pStreamPins.size(); i++)
-		{
-			if (m_pStreamPins[i]->m_bVisible && !m_pStreamPins[i]->IsConnected())
-			{
-				unConnectCount++;
-			}
-		}
-		
-		for (int i = m_pStreamPins.size() -1; i >= 0 && unConnectCount > 0; i--)
-		{
-			if (!m_pStreamPins[i]->IsConnected() && m_pStreamPins[i]->m_bVisible)
-			{
-				m_pStreamPins[i]->m_bVisible = false;
-				unConnectCount--;
-			}
-		}
-	}
 	return __super::BreakConnect(dir, pPin);
 }
 
@@ -652,6 +623,21 @@ HWND HookDrawingFilter::GetHookedWindow()
 BOOL HookDrawingFilter::SetHookedWindow(HWND hwnd)
 {
 	m_hHookedWnd = hwnd;
+	return TRUE;
+}
+BOOL HookDrawingFilter::GetWarpMatrix(UINT idx, D3DXMATRIX& matWarp)
+{
+	if (idx >= m_pStreamPins.size())
+		return FALSE;
+	const D3DXMATRIX* mat = ((HookDrawingStream*)m_pStreamPins[idx])->GetWarpMatrix();
+	matWarp = *mat;
+	return TRUE;
+}
+BOOL HookDrawingFilter::SetWarpMatrix(UINT idx, const D3DXMATRIX& matWarp)
+{
+	if (idx >= m_pStreamPins.size())
+		return FALSE;
+	((HookDrawingStream*)m_pStreamPins[idx])->SetWarpMatrix(matWarp);
 	return TRUE;
 }
 BOOL HookDrawingFilter::GetResolution(IPin* pPin, UINT& resW, UINT& resH)
@@ -909,5 +895,129 @@ HRESULT HookDrawingFilter::OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevi
 	if (pThis == NULL)
 		return S_FALSE;
 	pThis->initAddTextures(1024, 768);
+	return S_OK;
+}
+
+HRESULT HookDrawingFilter::SaveToFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+
+	UINT srcResW = 0, srcResH = 0;
+	GetSourceResolution(srcResW, srcResH);
+	UINT* pinResW = new UINT[m_numPins];
+	UINT* pinResH = new UINT[m_numPins];
+	D3DXMATRIX* matWarp = new D3DXMATRIX[m_numPins];
+	memset(pinResW, 0, sizeof(UINT)*m_numPins);
+	memset(pinResH, 0, sizeof(UINT)*m_numPins);
+	memset(matWarp, 0, sizeof(D3DXMATRIX)*m_numPins);
+
+	for (int i =0; i < m_numPins; i++)
+	{
+		GetResolution(m_pStreamPins[i], pinResW[i], pinResH[i]);
+		GetWarpMatrix(i, matWarp[i]);
+	}
+	fwprintf_s(filestream, L"%d\n", m_numPins);
+	fwprintf_s(filestream, L"%d %d \n", srcResW, srcResH);
+	for (int i = 0; i < m_numPins; i++)
+	{
+		fwprintf_s(filestream, L"%d %d \n", pinResW[i], pinResH[i]);
+		fwprintf_s(filestream, L"%f %f %f %f\n", 
+			matWarp[i].m[0][0], matWarp[i].m[0][1], matWarp[i].m[0][2], matWarp[i].m[0][3]);
+		fwprintf_s(filestream, L"%f %f %f %f\n", 
+			matWarp[i].m[1][0], matWarp[i].m[1][1], matWarp[i].m[1][2], matWarp[i].m[1][3]);
+		fwprintf_s(filestream, L"%f %f %f %f\n", 
+			matWarp[i].m[2][0], matWarp[i].m[2][1], matWarp[i].m[2][2], matWarp[i].m[2][3]);
+		fwprintf_s(filestream, L"%f %f %f %f\n", 
+			matWarp[i].m[3][0], matWarp[i].m[3][1], matWarp[i].m[3][2], matWarp[i].m[3][3]);
+	}
+
+	fclose(filestream);
+	delete [] pinResW; 
+	delete [] pinResH;
+	delete [] matWarp;
+	return S_OK;
+}
+HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+
+	int numPins = 0; 
+	int srcResW=0, srcResH = 0;
+	int* pinResW = NULL, *pinResH = NULL;
+	D3DXMATRIX* matWarp = NULL;
+
+	fwscanf_s(filestream, L"%d\n", &numPins);
+	if (numPins <= 0 || numPins > m_pStreamPins.size())
+	{
+		fclose(filestream);
+		return S_FALSE;
+	}
+	pinResW = new int[numPins];
+	pinResH = new int[numPins];
+	matWarp = new D3DXMATRIX[numPins];
+	
+	fwscanf_s(filestream, L"%d %d \n", &srcResW, &srcResH);
+	for (int i = 0; i < numPins; i++)
+	{
+		fwscanf_s(filestream, L"%d %d \n", &(pinResW[i]), &(pinResH[i]));
+		fwscanf_s(filestream, L"%f %f %f %f\n", 
+			&(matWarp[i].m[0][0]), &(matWarp[i].m[0][1]), &(matWarp[i].m[0][2]), &(matWarp[i].m[0][3]));
+		fwscanf_s(filestream, L"%f %f %f %f\n", 
+			&(matWarp[i].m[1][0]), &(matWarp[i].m[1][1]), &(matWarp[i].m[1][2]), &(matWarp[i].m[1][3]));
+		fwscanf_s(filestream, L"%f %f %f %f\n", 
+			&(matWarp[i].m[2][0]), &(matWarp[i].m[2][1]), &(matWarp[i].m[2][2]), &(matWarp[i].m[2][3]));
+		fwscanf_s(filestream, L"%f %f %f %f\n", 
+			&(matWarp[i].m[3][0]), &(matWarp[i].m[3][1]), &(matWarp[i].m[3][2]), &(matWarp[i].m[3][3]));
+	}
+	fclose(filestream);
+
+	this->SetSourceResolution(srcResW, srcResH);
+	for (int i =0; i<numPins; i++)
+	{
+		this->SetResolution(m_pStreamPins[i], pinResW[i], pinResH[i] );
+		this->SetWarpMatrix(i, matWarp[i]);
+	}
+
+	if (pinResW != NULL)
+	{	
+		delete [] pinResW; 
+		pinResW = NULL;
+	}
+	if (pinResH != NULL)
+	{
+		delete [] pinResH;
+		pinResH = NULL;
+	}
+	if (matWarp != NULL)
+	{
+		delete [] matWarp;
+		matWarp = NULL;
+	}
+	return S_OK;
+}
+HRESULT HookDrawingFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+	{
+		return S_FALSE;
+	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
 	return S_OK;
 }
