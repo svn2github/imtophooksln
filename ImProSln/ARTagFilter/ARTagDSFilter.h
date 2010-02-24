@@ -10,12 +10,12 @@
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
 #include "cv.h"
-
+#include "MSPersist.h"
 
 
 class ARTagDSFilter :
 	public CMuxTransformFilter, public IARTagFilter, public D3DTransformFilterBase,
-	public ISpecifyPropertyPages
+	public ISpecifyPropertyPages, public CMSPersist
 {
 private: 
 	bool initARSetting(int width, int height, const CMediaType* inputMT);
@@ -38,6 +38,10 @@ public:
 
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
+	//from IMSPersist
+	virtual HRESULT SaveToFile(WCHAR* path);
+	virtual HRESULT LoadFromFile(WCHAR* path);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 	//implement IARTagProperty
 	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,ARFloat nNearClip, ARFloat nFarClip);
 	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);

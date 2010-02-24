@@ -118,7 +118,12 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 	WCHAR tmpStr[MAX_PATH];
 	try
 	{
+		
 		GetWindowText(m_edXaxis, tmpStr, MAX_PATH);
+		if (wcscmp(tmpStr, L"") == 0)
+		{
+			return S_FALSE;
+		}
 		swscanf_s(tmpStr, L"%lf", &(basisscale[0]));
 
 		GetWindowText(m_edYaxis, tmpStr, MAX_PATH);
@@ -155,6 +160,7 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 	m_pARProperty->setCamera(xsize, ysize, mat, dist_factor, 1.0, 1000.0);
 	m_pARProperty->setWorldBasisScale(basisscale);
 	WriteProfileSetting();
+	return S_OK;
 }
 
 bool ARTagCameraSettingPage::WriteProfileSetting()

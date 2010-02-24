@@ -71,12 +71,16 @@ HRESULT ARTagDSFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 		return GetInterface(static_cast<IARTagFilter*>(this), ppv);
 	}
 	
-	if (iid == IID_ISpecifyPropertyPages)
+	else if (iid == IID_ISpecifyPropertyPages)
 	{
 		return GetInterface(
 				static_cast<ISpecifyPropertyPages*>(this),	ppv);
 	}
-
+	else if (iid == IID_IMSPersist)
+	{
+		return  GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
+	}
 	else
 	{
 		// Call the parent class.
@@ -1128,7 +1132,7 @@ double ARTagDSFilter::getBorderWidth()
 	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
-		return false;
+		return 0;
 	}
 	return m_ARTracker->getBorderWidth();
 }
@@ -1147,7 +1151,7 @@ int ARTagDSFilter::getThreshold()
 	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
-		return false;
+		return 0;
 	}
 	return m_ARTracker->getThreshold();
 }
@@ -1186,7 +1190,7 @@ int ARTagDSFilter::getUndistortionMode()
 	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
-		return false;
+		return 0;
 	}
 	return m_ARTracker->getUndistortionMode();
 }
@@ -1224,7 +1228,7 @@ int ARTagDSFilter::getPoseEstimator()
 	CAutoLock lck(&m_csARTracker);
 	if (m_ARTracker == NULL)
 	{
-		return false;
+		return 0;
 	}
 	return m_ARTracker->getPoseEstimator();
 }
@@ -1391,4 +1395,118 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	setMarkInfo(ARMarkers, numMarker);
 
 	return true;
+}
+
+HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int poseEstimator = this->getPoseEstimator();
+	int markermode = this->getMarkerMode();
+	int undistMode = this->getUndistortionMode();
+	int bDrawTag = this->getbDrawTag();
+	int bDrawReProj = this->getbDrawReproPt();
+	float confThreshold = this->getConfThreshold();
+	int threshold = this->getThreshold();
+	float borderWidth = this->getBorderWidth();
+	
+	int camXsize = 0, camYsize = 0;
+	double camMat[16] = {0};
+	double distFactor[4] = {0};
+	double worldScale[3] = {1};
+	this->getCamera(camXsize, camYsize, camMat, distFactor);
+	this->getWorldBasisScale(worldScale);
+
+	fwprintf_s(filestream, L"%d %d %d \n", poseEstimator, markermode, undistMode);
+	fwprintf_s(filestream, L"%d %d \n", bDrawTag,  bDrawReProj);
+	fwprintf_s(filestream, L"%f %d %f\n", confThreshold, threshold, borderWidth);
+	
+	fwprintf_s(filestream, L"%d %d \n", camXsize, camYsize);
+	fwprintf_s(filestream, L"%f %f %f %f\n", 
+		distFactor[0], distFactor[1], distFactor[2], distFactor[3]);
+	fwprintf_s(filestream, L"%f %f %f \n", 
+		 worldScale[0], worldScale[1],  worldScale[2]);
+
+	fwprintf_s(filestream, L"%lf %lf %lf %lf\n", camMat[0], camMat[1], camMat[2], camMat[3]);
+	fwprintf_s(filestream, L"%lf %lf %lf %lf\n", camMat[4], camMat[5], camMat[6], camMat[7]);
+	fwprintf_s(filestream, L"%lf %lf %lf %lf\n", camMat[8], camMat[9], camMat[10], camMat[11]);
+	fwprintf_s(filestream, L"%lf %lf %lf %lf\n", camMat[12], camMat[13], camMat[14], camMat[15]);
+	
+	fclose(filestream);
+
+	return S_OK;
+}
+HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int poseEstimator = 0;
+	int markermode = 0;
+	int undistMode = 0;
+	int bDrawTag = 1;
+	int bDrawReProj = 1;
+	double confThreshold = 0.9;
+	int threshold = 100;
+	double borderWidth = 0.125;
+
+	int camXsize = 640, camYsize = 480;
+	double camMat[16] = {0};
+	double distFactor[4] = {0};
+	double worldScale[3] = {1};
+
+	fwscanf_s(filestream, L"%d %d %d \n", &poseEstimator, &markermode, &undistMode);
+	fwscanf_s(filestream, L"%d %d \n", &bDrawTag, &bDrawReProj);
+	fwscanf_s(filestream, L"%lf %d %lf\n", &confThreshold, &threshold, &borderWidth);
+
+	fwscanf_s(filestream, L"%d %d \n", &camXsize, &camYsize);
+	fwscanf_s(filestream, L"%lf %lf %lf %lf\n", 
+		&(distFactor[0]), &(distFactor[1]), &(distFactor[2]), &(distFactor[3]));
+	fwscanf_s(filestream, L"%lf %lf %lf \n", 
+		&(worldScale[0]), &(worldScale[1]),  &(worldScale[2]));
+
+	fwscanf_s(filestream, L"%lf %lf %lf %lf\n", &(camMat[0]), &(camMat[1]), &(camMat[2]), &(camMat[3]));
+	fwscanf_s(filestream, L"%lf %lf %lf %lf\n", &(camMat[4]), &(camMat[5]), &(camMat[6]), &(camMat[7]));
+	fwscanf_s(filestream, L"%lf %lf %lf %lf\n", &(camMat[8]), &(camMat[9]), &(camMat[10]), &(camMat[11]));
+	fwscanf_s(filestream, L"%lf %lf %lf %lf\n", &(camMat[12]), &(camMat[13]), &(camMat[14]), &(camMat[15]));
+
+	fclose(filestream);
+
+
+	this->setPoseEstimator(poseEstimator);
+	this->setMarkerMode(markermode);
+	this->setUndistortionMode(undistMode);
+	this->setbDrawTag(bDrawTag);
+	this->setbDrawReproPt(bDrawReProj);
+	this->setConfThreshold(confThreshold);
+	this->setThreshold(threshold);
+	this->setBorderWidth(borderWidth);
+
+	this->setCamera(camXsize, camYsize, camMat, distFactor, 1, 1000);
+	this->setWorldBasisScale(worldScale);
+
+	return S_OK;
+}
+HRESULT ARTagDSFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+	{
+		return S_FALSE;
+	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
 }
