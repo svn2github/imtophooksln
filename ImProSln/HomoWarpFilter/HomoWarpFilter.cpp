@@ -36,10 +36,15 @@ HRESULT HomoWarpFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	{
 		return GetInterface(static_cast<IHomoWarpFilter*>(this), ppv);
 	}
-	if (iid == IID_ISpecifyPropertyPages)
+	else if (iid == IID_ISpecifyPropertyPages)
 	{
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+	else if (iid == IID_IMSPersist)
+	{
+		return GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
 	}
 	else
 	{
@@ -673,4 +678,36 @@ LPDIRECT3DTEXTURE9 HomoWarpFilter::GetInTexture()
 CCritSec* HomoWarpFilter::GetCSInTexture()
 {
 	return &m_csInTexture;
+}
+
+
+HRESULT HomoWarpFilter::SaveToFile(WCHAR* path)
+{
+	if (this->SaveConfigToFile(path))
+		return S_OK;
+	else
+		return S_FALSE;
+	return S_OK;
+}
+HRESULT HomoWarpFilter::LoadFromFile(WCHAR* path)
+{
+	if (this->LoadConfigFromFile(path))
+		return S_OK;
+	else
+		return S_FALSE;
+	return S_OK;
+}
+HRESULT HomoWarpFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+		return S_FALSE;
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
 }

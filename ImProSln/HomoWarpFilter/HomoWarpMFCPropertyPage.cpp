@@ -324,14 +324,7 @@ HRESULT CHomoWarpMFCPropertyPage::OnActivate(void)
 }
 HRESULT CHomoWarpMFCPropertyPage::OnApplyChanges(void)
 {
-	if (ApplySettingFromEdit())
-	{
-		return S_OK;
-	}
-	else
-	{
-		return S_FALSE;
-	}
+	return S_OK;
 }
 
 int CHomoWarpMFCPropertyPage::GetDialogResourceID() 
@@ -523,7 +516,7 @@ void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flag
 		{
 			int drawX = pInst->m_editWarpPt[i].x*pInst->m_pEditImage->width;
 			int drawY = pInst->m_editWarpPt[i].y*pInst->m_pEditImage->height;
-			cvDrawCircle(pInst->m_pEditImage, cvPoint(drawX, drawY), 5, cvScalar(255,0,0));
+			cvDrawCircle(pInst->m_pEditImage, cvPoint(drawX, drawY), 10, cvScalar(255,0,0), 4);
 		}
 		cvShowImage("HomoWarp Edit", pInst->m_pEditImage);
 		pInst->SetWarpByEditPts();
