@@ -37,10 +37,16 @@ public:
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);
+	virtual bool SetSimpleHighPassBlur(int blur);
+	virtual bool GetSimpleHighPassBlur(int& blur);
 	virtual	bool SetSimpleHighPassDeNoise(int deNoise);
 	virtual bool GetSimpleHighPassDeNoise(int& deNoise);
 	virtual bool SetScaleLevel(int level);
 	virtual bool GetScaleLevel(int& level);
 	virtual bool SetRectifyLevel(int level);
 	virtual bool GetRectifyLevel(int& level);
+
+	virtual HRESULT SaveToFile(WCHAR* filename);
+	virtual HRESULT LoadFromFile(WCHAR* filename);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 };

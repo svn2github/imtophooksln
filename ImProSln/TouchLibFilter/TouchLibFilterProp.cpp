@@ -271,3 +271,4 @@ void TouchLibPropPage::OnBnClickedckdrawfinger()
 		return;
 	m_pFilter->setDrawFingers(m_ckDrawFinger.GetCheck());
 }
+

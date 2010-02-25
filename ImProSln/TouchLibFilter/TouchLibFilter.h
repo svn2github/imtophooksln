@@ -7,11 +7,14 @@
 #include "CMuxTransformFilter.h"
 #include "TouchScreenDevice.h"
 #include "..\OSCSender\OSCSender.h"
+#include "MSPersist.h"
+
 using namespace touchlib;
 
 class TouchLibFilter :
 	public CMuxTransformFilter, public ITouchLibFilter,
-	public ISpecifyPropertyPages, public ITouchListener
+	public ISpecifyPropertyPages, public ITouchListener,
+	public CMSPersist
 {
 
 public:
@@ -33,8 +36,10 @@ public:
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//implement ITouchLibFilterProperty
-
+	//implement IMSPersist
+	virtual HRESULT SaveToFile(WCHAR* filename);
+	virtual HRESULT LoadFromFile(WCHAR* filename);
+	virtual HRESULT GetName(WCHAR* name, UINT szName);
 	//ITouchListener
 
 	virtual void fingerDown(TouchData data);

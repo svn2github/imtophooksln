@@ -49,10 +49,15 @@ HRESULT TouchLibFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	{
 		return GetInterface(static_cast<ITouchLibFilter*>(this), ppv);
 	}
-	if (iid == IID_ISpecifyPropertyPages)
+	else if (iid == IID_ISpecifyPropertyPages)
 	{
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
+	}
+	else if (iid == IID_IMSPersist)
+	{
+		return GetInterface(
+			static_cast<IMSPersist*>(this),	ppv);
 	}
 	else
 	{
@@ -932,4 +937,85 @@ bool TouchLibFilter::setDrawFingers(bool drawing)
 		return false;
 	}
 	return m_pTouchScreen->setDrawFingers(drawing);
+}
+
+HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int bgThreshold = 0;
+	int deNoise = 3;
+	int blur = 13;
+	int scaleLevel = 70;
+	int rectifyLevel = 75;
+	bool bStartTracking = false;
+	bool bDrawFinger = false;
+
+	GetBGThreshold(bgThreshold);
+	GetSimpleHighPassDeNoise(deNoise);
+	GetSimpleHighPassBlur(blur);
+	GetScaleLevel(scaleLevel);
+	GetRectifyLevel(rectifyLevel);
+	
+	getStartTracking(bStartTracking);
+	bDrawFinger = getDrawFingers();
+
+	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d \n",
+		bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
+		bStartTracking, bDrawFinger);
+	fclose(filestream);
+	return S_OK;
+}
+HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
+{
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	int bgThreshold = 0;
+	int deNoise = 3;
+	int blur = 13;
+	int scaleLevel = 70;
+	int rectifyLevel = 75;
+
+	int bStartTracking = false;
+	int bDrawFinger = false;
+
+	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d \n",
+		&bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
+		&bStartTracking, &bDrawFinger);
+	fclose(filestream);
+
+	SetBGThreshold(bgThreshold);
+	SetSimpleHighPassDeNoise(deNoise);
+	SetSimpleHighPassBlur(blur);
+	SetScaleLevel(scaleLevel);
+	SetRectifyLevel(rectifyLevel);
+
+	setStartTracking(bStartTracking);
+	setDrawFingers(bDrawFinger);
+	
+	return S_OK;
+}
+HRESULT TouchLibFilter::GetName(WCHAR* name, UINT szName)
+{
+	if (name == NULL)
+	{
+		return S_FALSE;
+	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	wcscpy_s(name, szName, filterInfo.achName);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
 }
