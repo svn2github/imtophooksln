@@ -1399,6 +1399,8 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 
 HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 {
+	if (m_ARTracker == NULL)
+		return S_FALSE;
 	FILE* filestream = NULL;
 	_wfopen_s(&filestream, path, L"w");
 	if (filestream == NULL)
@@ -1442,6 +1444,8 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 }
 HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 {
+	if (m_ARTracker == NULL)
+		return S_FALSE;
 	FILE* filestream = NULL;
 	_wfopen_s(&filestream, path, L"r");
 	if (filestream == NULL)
