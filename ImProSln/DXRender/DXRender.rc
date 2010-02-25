@@ -134,9 +134,21 @@ IDD_DXRenderFilterProp DIALOGEX 0, 0, 235, 156
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    CONTROL         "Hide Border",IDC_CKHideBorder,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,23,53,10
-    CONTROL         "FlipY",IDC_CK_FlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,31,10
-    CONTROL         "FlipX",IDC_CK_FlipX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,39,31,10
+    CONTROL         "Hide Border",IDC_CKHideBorder,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,108,53,10
+    CONTROL         "FlipY",IDC_CK_FlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,87,23,31,10
+    CONTROL         "FlipX",IDC_CK_FlipX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,23,31,10
+    EDITTEXT        IDC_edX,36,58,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "Window Position",IDC_STATIC,7,45,221,50
+    RTEXT           "x:",IDC_STATIC,28,59,8,10
+    GROUPBOX        "Image",IDC_STATIC,7,7,221,39
+    RTEXT           "y:",IDC_STATIC,110,58,8,10
+    RTEXT           "width:",IDC_STATIC,11,76,25,10
+    RTEXT           "height:",IDC_STATIC,93,75,25,10
+    EDITTEXT        IDC_edY,118,57,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edWidth,36,74,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edHeight,118,74,40,14,ES_AUTOHSCROLL
+    GROUPBOX        "Window Style",IDC_STATIC,7,95,221,32
+    CONTROL         "Maximize",IDC_CKMaxWnd,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,88,108,45,10
 END
 
 
@@ -153,8 +165,13 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 228
         VERTGUIDE, 18
+        VERTGUIDE, 36
+        VERTGUIDE, 88
+        VERTGUIDE, 118
         TOPMARGIN, 7
         BOTTOMMARGIN, 149
+        HORZGUIDE, 23
+        HORZGUIDE, 108
     END
 END
 #endif    // APSTUDIO_INVOKED

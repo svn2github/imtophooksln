@@ -218,7 +218,16 @@ HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 	{
 		return false;
 	}
+	
+	RECT rect;
+	GetWindowRect(rect);
+	BOOL isZoomed = IsWindowZoom();
+	BOOL isHideBorder = IsHideBorder();
+
 	fwprintf_s(filestream, L"%d %d \n", GetFlipX(), GetFlipY());
+	fwprintf_s(filestream, L"%d %d %d %d\n", rect.left, rect.top, rect.right, rect.bottom);
+	fwprintf_s(filestream, L"%d %d", isZoomed, isHideBorder);
+
 	fclose(filestream);
 	return S_OK;
 }
@@ -231,12 +240,27 @@ HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
 		return false;
 	}
 	int bFlipX =0, bFlipY = 0;
+	
+	RECT rect;
+	memset(&rect, 0, sizeof(RECT));
+	BOOL isZoomed = FALSE;;
+	BOOL isHideBorder = FALSE;
+
 	fwscanf_s(filestream, L"%d %d \n", &bFlipX, &bFlipY);
+	fwscanf_s(filestream, L"%d %d %d %d\n", &rect.left, &rect.top, &rect.right, &rect.bottom);
+	fwscanf_s(filestream, L"%d %d \n", &isZoomed, &isHideBorder);
+	
 	SetFlipX(bFlipX);
 	SetFlipY(bFlipY);
+	SetWindowRect(rect);
+	SetHideBorder(isHideBorder);
+	SetWindowZoom(isZoomed);
+	
+
 	fclose(filestream);
 	return S_OK;
 }
+
 HRESULT DXRenderFilter::GetName(WCHAR* name, UINT szName)
 {
 	if (name == NULL)
@@ -253,3 +277,86 @@ HRESULT DXRenderFilter::GetName(WCHAR* name, UINT szName)
 	}
 	return S_OK;
 }
+BOOL DXRenderFilter::IsHideBorder()
+{
+	HWND hwnd = GetDisplayWindow();
+	if (hwnd == 0)
+	{
+		return FALSE;
+	}
+	LONG wndStyle = GetWindowLong(hwnd, GWL_STYLE);
+	return !(WS_BORDER & wndStyle);
+}
+BOOL DXRenderFilter::SetHideBorder(BOOL bHideBorder)
+{
+	HWND hwnd = GetDisplayWindow();
+	if (hwnd == 0)
+	{
+		return FALSE;
+	}
+	LONG wndStyle = GetWindowLong(hwnd, GWL_STYLE);
+	LONG newStyle = 0;
+	bool checked = bHideBorder;
+	if (checked)
+	{
+		newStyle = WS_BORDER ^ wndStyle;
+		SetWindowLong(hwnd, GWL_STYLE, newStyle);
+	}
+	else
+	{
+		newStyle = WS_BORDER | wndStyle;
+		SetWindowLong(hwnd, GWL_STYLE, newStyle);
+	}
+	return TRUE;
+}
+BOOL DXRenderFilter::IsWindowZoom()
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HWND hwnd = m_pD3DDisplay->GetDisplayWindow();
+	if (hwnd == 0)
+		return S_FALSE;
+	return ::IsZoomed(hwnd);
+}
+HRESULT DXRenderFilter::SetWindowZoom(BOOL bZoom)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HWND hwnd = m_pD3DDisplay->GetDisplayWindow();
+	if (hwnd == 0)
+		return S_FALSE;
+	if (bZoom)
+		::ShowWindow(hwnd, SW_MAXIMIZE);
+	else
+		::ShowWindow(hwnd, SW_RESTORE);
+	return S_OK;
+}
+HRESULT DXRenderFilter::GetWindowRect(RECT& rect)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HWND hwnd = m_pD3DDisplay->GetDisplayWindow();
+	if (hwnd == 0)
+		return S_FALSE;
+	BOOL ret = ::GetWindowRect(hwnd, &rect);
+	if (ret)
+		return S_OK;
+	else
+		return S_FALSE;
+}
+HRESULT DXRenderFilter::SetWindowRect(RECT rect)
+{
+
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	HWND hwnd = m_pD3DDisplay->GetDisplayWindow();
+	if (hwnd == 0)
+		return S_FALSE;
+
+	BOOL ret = ::SetWindowPos(hwnd, HWND_NOTOPMOST, rect.left, rect.top, 
+		rect.right - rect.left, rect.bottom - rect.top, SWP_SHOWWINDOW | SWP_NOACTIVATE );
+
+	return S_OK;
+}
+
+

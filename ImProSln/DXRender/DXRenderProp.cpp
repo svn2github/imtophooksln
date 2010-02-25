@@ -10,6 +10,11 @@ void DXRenderFilterProp::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CKHideBorder, m_ckHideBorder);
 	DDX_Control(pDX, IDC_CK_FlipX, m_ckFlipX);
 	DDX_Control(pDX, IDC_CK_FlipY, m_ckFlipY);
+	DDX_Control(pDX, IDC_edX, m_edX);
+	DDX_Control(pDX, IDC_edY, m_edY);
+	DDX_Control(pDX, IDC_edWidth, m_edWidth);
+	DDX_Control(pDX, IDC_edHeight, m_edHeight);
+	DDX_Control(pDX, IDC_CKMaxWnd, m_ckMaxWnd);
 }
 
 
@@ -17,6 +22,19 @@ BEGIN_MESSAGE_MAP(DXRenderFilterProp, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_CKHideBorder, &DXRenderFilterProp::OnBnClickedCkhideborder)
 	ON_BN_CLICKED(IDC_CK_FlipX, &DXRenderFilterProp::OnBnClickedCkFlipx)
 	ON_BN_CLICKED(IDC_CK_FlipY, &DXRenderFilterProp::OnBnClickedCkFlipy)
+//	ON_EN_KILLFOCUS(IDC_edX, &DXRenderFilterProp::OnEnKillfocusedx)
+//	ON_EN_CHANGE(IDC_edX, &DXRenderFilterProp::OnEnChangeedx)
+ON_EN_KILLFOCUS(IDC_edX, &DXRenderFilterProp::OnEnKillfocusedx)
+ON_EN_KILLFOCUS(IDC_edY, &DXRenderFilterProp::OnEnKillfocusedy)
+ON_EN_KILLFOCUS(IDC_edWidth, &DXRenderFilterProp::OnEnKillfocusedwidth)
+ON_EN_KILLFOCUS(IDC_edHeight, &DXRenderFilterProp::OnEnKillfocusedheight)
+ON_BN_CLICKED(IDC_CKMaxWnd, &DXRenderFilterProp::OnBnClickedCkmaxwnd)
+//ON_EN_UPDATE(IDC_edX, &DXRenderFilterProp::OnEnUpdateedx)
+//ON_EN_CHANGE(IDC_edX, &DXRenderFilterProp::OnEnChangeedx)
+ON_EN_UPDATE(IDC_edX, &DXRenderFilterProp::OnEnUpdateedx)
+ON_EN_UPDATE(IDC_edY, &DXRenderFilterProp::OnEnUpdateedy)
+ON_EN_UPDATE(IDC_edWidth, &DXRenderFilterProp::OnEnUpdateedwidth)
+ON_EN_UPDATE(IDC_edHeight, &DXRenderFilterProp::OnEnUpdateedheight)
 END_MESSAGE_MAP()
 
 
@@ -77,11 +95,56 @@ bool DXRenderFilterProp::GetSetting()
 	{
 		return false;
 	}
+	WCHAR str[MAX_PATH] = {0};
 	bool flipX = m_pFilter->GetFlipX();
 	bool flipY = m_pFilter->GetFlipY();
 	m_ckFlipX.SetCheck(flipX);
 	m_ckFlipY.SetCheck(flipY);
+	BOOL isZoomed = m_pFilter->IsWindowZoom();
+	BOOL isHideBorder = m_pFilter->IsHideBorder();
+	m_ckHideBorder.SetCheck(isHideBorder);
+	m_ckMaxWnd.SetCheck(m_pFilter->IsWindowZoom());
 
+	BOOL bMaxWnd = m_pFilter->IsWindowZoom(); 
+	m_ckMaxWnd.SetCheck(bMaxWnd);
+	RECT rect;
+	if (FAILED(m_pFilter->GetWindowRect(rect)))
+		return false;
+
+	swprintf_s(str, MAX_PATH, L"%d", rect.left);
+	m_edX.SetWindowText(str);
+	swprintf_s(str, MAX_PATH, L"%d", rect.top);
+	m_edY.SetWindowText(str);
+	swprintf_s(str, MAX_PATH, L"%d", rect.right - rect.left);
+	m_edWidth.SetWindowText(str);
+	swprintf_s(str, MAX_PATH, L"%d", rect.bottom - rect.top);
+	m_edHeight.SetWindowText(str);
+	return true;
+}
+
+bool DXRenderFilterProp::ApplySetting()
+{
+	if (m_pFilter == NULL)
+		return false;
+	CString tmpStr;
+	int x = 0, y = 0, width =0, height = 0; 
+	m_edX.GetWindowText(tmpStr);
+	swscanf_s(tmpStr, L"%d", &x );
+	m_edY.GetWindowText(tmpStr);
+	swscanf_s(tmpStr, L"%d", &y );
+	m_edWidth.GetWindowText(tmpStr);
+	swscanf_s(tmpStr, L"%d", &width);
+	m_edHeight.GetWindowText(tmpStr);
+	swscanf_s(tmpStr, L"%d", &height);
+	
+	RECT rect;
+	rect.left = x;
+	rect.right =x+ width;
+	rect.top = y;
+	rect.bottom = y + height;
+	m_pFilter->SetWindowRect(rect);
+	
+	return true;
 }
 HRESULT DXRenderFilterProp::OnApplyChanges(void)
 {
@@ -105,24 +168,7 @@ void DXRenderFilterProp::OnBnClickedCkhideborder()
 {
 	if (m_pFilter == NULL)
 		return;
-	HWND hwnd = m_pFilter->GetDisplayWindow();
-	if (hwnd == 0)
-	{
-		return;
-	}
-	LONG wndStyle = GetWindowLong(hwnd, GWL_STYLE);
-	LONG newStyle = 0;
-	bool checked = m_ckHideBorder.GetCheck();
-	if (checked)
-	{
-		newStyle = WS_BORDER ^ wndStyle;
-		SetWindowLong(hwnd, GWL_STYLE, newStyle);
-	}
-	else
-	{
-		newStyle = WS_BORDER | wndStyle;
-		SetWindowLong(hwnd, GWL_STYLE, newStyle);
-	}
+	m_pFilter->SetHideBorder(m_ckHideBorder.GetCheck());
 }
 
 void DXRenderFilterProp::OnBnClickedCkFlipx()
@@ -137,4 +183,51 @@ void DXRenderFilterProp::OnBnClickedCkFlipy()
 	if (m_pFilter == NULL)
 		return;
 	m_pFilter->SetFlipY(m_ckFlipY.GetCheck());
+}
+
+void DXRenderFilterProp::OnEnKillfocusedx()
+{
+	ApplySetting();
+}
+
+void DXRenderFilterProp::OnEnKillfocusedy()
+{
+	ApplySetting();
+}
+
+void DXRenderFilterProp::OnEnKillfocusedwidth()
+{
+	ApplySetting();
+}
+
+void DXRenderFilterProp::OnEnKillfocusedheight()
+{
+	ApplySetting();
+}
+
+void DXRenderFilterProp::OnBnClickedCkmaxwnd()
+{
+	m_pFilter->SetWindowZoom(m_ckMaxWnd.GetCheck());
+	GetSetting();
+}
+
+
+void DXRenderFilterProp::OnEnUpdateedx()
+{
+	SetDirty();
+}
+
+void DXRenderFilterProp::OnEnUpdateedy()
+{
+	SetDirty();
+}
+
+void DXRenderFilterProp::OnEnUpdateedwidth()
+{
+	SetDirty();
+}
+
+void DXRenderFilterProp::OnEnUpdateedheight()
+{
+	SetDirty();
 }

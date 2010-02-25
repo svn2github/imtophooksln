@@ -27,7 +27,7 @@ protected:
 protected:
 	IDXRenderer *m_pFilter;
 	bool GetSetting();
-
+	bool ApplySetting();
 public:
 	// Dialog Data
 	enum {IDD = IDD_DXRenderFilterProp};
@@ -49,4 +49,22 @@ public: //inherit from CMFCBaseProperty Page
 	CButton m_ckFlipY;
 	afx_msg void OnBnClickedCkFlipx();
 	afx_msg void OnBnClickedCkFlipy();
+//	afx_msg void OnEnKillfocusedx();
+	CEdit m_edX;
+	CEdit m_edY;
+	CEdit m_edWidth;
+	CEdit m_edHeight;
+	CButton m_ckMaxWnd;
+//	afx_msg void OnEnChangeedx();
+	afx_msg void OnEnKillfocusedx();
+	afx_msg void OnEnKillfocusedy();
+	afx_msg void OnEnKillfocusedwidth();
+	afx_msg void OnEnKillfocusedheight();
+	afx_msg void OnBnClickedCkmaxwnd();
+//	afx_msg void OnEnUpdateedx();
+//	afx_msg void OnEnChangeedx();
+	afx_msg void OnEnUpdateedx();
+	afx_msg void OnEnUpdateedy();
+	afx_msg void OnEnUpdateedwidth();
+	afx_msg void OnEnUpdateedheight();
 };

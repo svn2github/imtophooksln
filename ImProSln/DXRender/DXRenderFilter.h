@@ -47,6 +47,13 @@ public:
 	virtual bool SetFlipX(bool v);
 	virtual bool GetFlipY();
 	virtual bool SetFlipY(bool v);
+
+	virtual BOOL IsWindowZoom();
+	virtual HRESULT GetWindowRect(RECT& rect);
+	virtual HRESULT SetWindowRect(RECT rect);
+	virtual HRESULT SetWindowZoom(BOOL bZoom);
+	virtual BOOL SetHideBorder(BOOL bHideBorder);
+	virtual BOOL IsHideBorder();
 	//from IMSPersist
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
