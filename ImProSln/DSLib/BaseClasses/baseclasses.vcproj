@@ -244,6 +244,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="strmiids.lib"
 				OutputFile="$(OutDir)\strmbase_mdd.lib"
 			/>
 			<Tool

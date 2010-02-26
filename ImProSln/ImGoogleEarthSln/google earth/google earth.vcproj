@@ -93,11 +93,11 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="..\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			CharacterSet="1"
-			ManagedExtensions="2"
+			ManagedExtensions="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -117,8 +117,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\DSLib\include\BaseClasses&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;..\..\ARTagFilter;..\..\OpenCV2.0\include\opencv;..\DSVL\src;..\include;..\..\MyLib"
 				PreprocessorDefinitions="WIN32;NDEBUG"
-				RuntimeLibrary="2"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -134,9 +135,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libAR.lib libARgsub.lib libARvideo.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9.lib d3dx10.lib d3d9.lib winmm.lib comctl32.lib"
+				AdditionalDependencies="strmbase_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9.lib d3d9.lib winmm.lib comctl32.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib"
 				GenerateDebugInformation="true"
+				AssemblyDebug="1"
 				SubSystem="2"
 				EntryPointSymbol="main"
 				TargetMachine="1"
@@ -278,6 +281,14 @@
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\MyLib\ARTagCameraDS.h"
@@ -288,6 +299,14 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

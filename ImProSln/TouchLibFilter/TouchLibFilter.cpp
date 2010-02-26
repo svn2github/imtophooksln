@@ -656,7 +656,7 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	pSrc->imageData = (char*)pInData;
 	pDest->imageData = (char*)pOutData;
 	{
-		CAutoLock lck(&m_csTouchScreen);
+		CAutoLock lck(&m_csTouchScreen);		
 		m_pTouchScreen->processOnce(pSrc);
 		m_pTouchScreen->getEvents();
 	}
