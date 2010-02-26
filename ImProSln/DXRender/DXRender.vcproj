@@ -151,9 +151,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib MSPersist.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;"
 				ModuleDefinitionFile=".\DXRender.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

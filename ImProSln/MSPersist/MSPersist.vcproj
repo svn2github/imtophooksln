@@ -116,7 +116,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\MyLib"
+				AdditionalIncludeDirectories="..\DSLib\include\BaseClasses;..\MyLib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MSPERSIST_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"

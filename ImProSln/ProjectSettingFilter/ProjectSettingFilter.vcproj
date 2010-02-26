@@ -129,8 +129,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
-				RuntimeLibrary="0"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -150,7 +151,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="strmbase.lib  winmm.lib  CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSPersist.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\ProjectSettingFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
