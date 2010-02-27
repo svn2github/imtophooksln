@@ -177,3 +177,39 @@ public:
 	}
 
 };
+
+class ROIData
+{
+public:
+	fRECT* m_pRECTs;
+	int m_nRECTs;
+	ROIData() : m_pRECTs(NULL), m_nRECTs(0) 
+	{
+
+	}
+	~ROIData()
+	{
+		if (m_pRECTs != NULL)
+		{
+			delete [] m_pRECTs;
+			m_pRECTs = NULL;
+		}
+		m_nRECTs = 0;
+	}
+	ROIData& operator = (const ROIData &rhs)
+	{
+		if (m_pRECTs != NULL)
+		{
+			delete [] m_pRECTs;
+			m_pRECTs = NULL;
+			m_nRECTs = 0;
+		}
+		this->m_nRECTs = rhs.m_nRECTs;
+		if (rhs.m_nRECTs != 0)
+		{
+			this->m_pRECTs = new fRECT[rhs.m_nRECTs];
+			memcpy(this->m_pRECTs, rhs.m_pRECTs, sizeof(fRECT)*rhs.m_nRECTs);
+		}
+		return *this;
+	}
+};

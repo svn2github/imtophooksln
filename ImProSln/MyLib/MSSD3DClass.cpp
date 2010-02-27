@@ -694,7 +694,7 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	m_d3dpp.EnableAutoDepthStencil = TRUE;
 	m_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
 	m_d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
+	m_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	// Create the D3DDevice
 	if( FAILED( pD3D->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, m_hDisplayWnd,
 		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_DISABLE_DRIVER_MANAGEMENT_EX, &m_d3dpp, &m_pDevice )))

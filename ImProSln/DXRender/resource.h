@@ -11,8 +11,8 @@
 #define IDC_edY                         12004
 #define IDC_edWidth                     12005
 #define IDC_edHeight                    12006
-#define IDC_CKHideBorder2               12007
 #define IDC_CKMaxWnd                    12007
+#define IDC_CHECK1                      12008
 
 // Next default values for new objects
 // 
@@ -20,7 +20,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        12001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         12004
+#define _APS_NEXT_CONTROL_VALUE         12009
 #define _APS_NEXT_SYMED_VALUE           12000
 #endif
 #endif

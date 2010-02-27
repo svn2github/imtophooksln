@@ -13,6 +13,7 @@
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "MyMediaSample.h"
 #include <vector>
+#include "cv.h"
 using namespace std;
 using namespace ARToolKitPlus;
 
@@ -56,7 +57,10 @@ protected:
 	ARLayoutStartegyData* m_pARStrategyData;
 	CCritSec m_csFrameRate;
 	float m_FrameRate;
-		
+
+	CCritSec m_csROIRects;
+	IplImage* m_pROIImage;
+	vector<fRECT> m_ROIRects;
 	vector<vector<int>> m_TagIntersectTable;
 	vector<fRECT> m_allMarkerRects;
 
@@ -65,7 +69,7 @@ protected:
 	bool generateIntersectTable(ARMultiEachMarkerInfoT* ARMarkers, int numMarker,
 		vector<vector<int>>& table);
 	bool sendConfigData();
-
+	bool sendROIData();
 public:
 	ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARLayoutDXFilter();
@@ -79,4 +83,8 @@ private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker, float fScale = 1.0);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);
 	HRESULT ReceiveConfig(IMediaSample *pSample, const IPin* pReceivePin);
+	HRESULT ComputeROIs(const ARMultiMarkerInfoT* pMarkerConfig);
+	HRESULT CreateROIImage(int width, int height);
+	HRESULT GetROIData(ROIData*& roiData);
+
 };

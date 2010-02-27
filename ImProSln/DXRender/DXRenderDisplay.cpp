@@ -4,19 +4,34 @@
 DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 : MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
+	HRESULT hr = S_OK;
+	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
+	m_pD3DFont = NULL;
+	hr = D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
 }
 DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
 : MS3DDisplay(pDevice, rtWidth, rtHeight)
 {
+	HRESULT hr = S_OK;
+	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
+	m_pD3DFont = NULL;
+	hr = D3DXCreateFont(m_pDevice, 50, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
 }
 
 
 DXRenderDisplay::~DXRenderDisplay(void)
 {
+	if (m_pD3DFont != NULL)
+	{
+		m_pD3DFont->Release();
+		m_pD3DFont = NULL;
+	}
 }
 
 BOOL DXRenderDisplay::Render()
@@ -35,6 +50,7 @@ BOOL DXRenderDisplay::Render()
 	{
 		return FALSE;
 	}
+	
 	m_pCamera->CameraOn();
 	UINT iPass, cPasses = 0;
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
@@ -50,14 +66,52 @@ BOOL DXRenderDisplay::Render()
 			m_pDisplayPlane->Render();			
 			hr = pEffect->EndPass();
 		}
-
 		hr = pEffect->End();
+		if (m_bDrawFPS)
+		{
+			static DWORD lasttime = timeGetTime();
+			static DWORD currtime = timeGetTime();
+			static int count = 0;
+			static float fps = 0; 
+			static int imgW = 0;
+			static int imgH = 0;
+			if (imgW == 0 && imgH == 0)
+			{
+				LPDIRECT3DSURFACE9 pBackBuffer = NULL;
+				D3DSURFACE_DESC desc;
+				m_pDevice->GetRenderTarget(0,&pBackBuffer);
+				pBackBuffer->GetDesc(&desc);
+				imgW = desc.Width;
+				imgH = desc.Height;
+				pBackBuffer->Release();
+				pBackBuffer = NULL;
+			}
+			count++;
+			if (count%30 == 0)
+			{
+				
+				currtime = timeGetTime();
+				float dt = max(1, currtime - lasttime) / 1000.0;
+				fps = 30.0 / dt;
+				count = 0;
+				lasttime = currtime;
+			}
 
+			WCHAR str[MAX_PATH] = {0};
+			RECT rect; 
+			rect.left = 0.05*imgW; rect.right =  rect.left + 0.1*imgW; rect.top = 0.05*imgH; rect.bottom = rect.top + 0.1*imgH;
+			swprintf_s(str, MAX_PATH, L"FPS: %.1f", fps);
+			if (m_pD3DFont != NULL)
+			{
+				hr = m_pD3DFont->DrawTextW(NULL, str, -1, &rect, DT_NOCLIP | DT_LEFT | DT_TOP, D3DXCOLOR( 1.0f, 0.0f, 0.0f, 1.0f ));	
+			}
+		}
 		m_pDevice->EndScene();
 	}
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 	m_pCamera->CameraOff();
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+
 	return TRUE;
 }
 
@@ -104,4 +158,27 @@ ID3DXEffect* DXRenderDisplay::GetEffect()
 		}
 	}
 	return m_pEffect;
+}
+
+
+HRESULT DXRenderDisplay::OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice,	
+											   void* pUserContext)
+{
+	HRESULT hr = S_OK;
+	if (m_pD3DFont != NULL)
+	{
+		hr = m_pD3DFont->OnLostDevice();
+	}
+	return __super::OnBeforeResetDevice(pd3dDevice,	 pUserContext);
+}
+
+HRESULT DXRenderDisplay::OnAfterResetDevice(IDirect3DDevice9 * pd3dDevice,	
+											  void* pUserContext)
+{
+	HRESULT hr = S_OK;
+	if (m_pD3DFont != NULL)
+	{
+		hr = m_pD3DFont->OnResetDevice();
+	}
+	return __super::OnAfterResetDevice(pd3dDevice, pUserContext);
 }

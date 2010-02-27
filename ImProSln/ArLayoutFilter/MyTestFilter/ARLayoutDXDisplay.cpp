@@ -175,45 +175,85 @@ BOOL ARLayoutDXDisplay::Render(const ARMultiMarkerInfoT* pMarkerConfig)
 	
 	return TRUE;
 }
-BOOL ARLayoutDXDisplay::Render()
+BOOL ARLayoutDXDisplay::RenderMask(const ARMultiMarkerInfoT* pMarkerConfig, float fMaskScale)
 {
-	if (m_pDisplayPlane == NULL)
-	{
+	CAutoLock lck(&m_csResetDevice);
+	if (m_pDevice == NULL)
 		return FALSE;
-	}
-	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
-		D3DCOLOR_XRGB(255,255,255), 1.0f, 0 );
-	/*m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
 	HRESULT hr;
+
+	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+		D3DCOLOR_ARGB(0, 255,255,255), 1.0f, 0);
 	ID3DXEffect* pEffect = GetEffect();
 	if (pEffect == NULL)
 	{
 		return FALSE;
 	}
-	m_pCamera->CameraOn();
 	UINT iPass, cPasses = 0;
-	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	m_pCamera->CameraOn();
+
+	MSMeshBase::CUSTOMVERTEX Vt[4];
+	D3DXMATRIX matTran, matT, matInvT, matS;
+	D3DXVECTOR3 center(0,0,0);
+	for(int i =0; i< 4; i++)
 	{
-		
-		hr = pEffect->SetTexture("g_Texture", m_pTexture);
-		hr = pEffect->SetTechnique("technique0");
-
-		hr = pEffect->Begin(&cPasses, 0);
-		for (iPass = 0; iPass < cPasses; iPass++)
-		{
-			pEffect->BeginPass(iPass);	
-			m_pDisplayPlane->Render();			
-			pEffect->EndPass();
-		}
-		
-		hr = pEffect->End();
-
-		m_pDevice->EndScene();
+		m_pMarkerMesh->GetVertex(i, Vt[i]);
+		center += Vt[i].position;
 	}
-	*/
+	center /= 4;
+
+	D3DXMatrixTranslation(&matT, -center.x, -center.y, -center.z);
+	D3DXMatrixTranslation(&matInvT, center.x, center.y, center.z);
+	D3DXMatrixScaling(&matS, fMaskScale, fMaskScale, fMaskScale);
+	matTran = matT*matS*matInvT;
+
+	if( SUCCEEDED( m_pDevice->BeginScene() ) )
+	{	
+		D3DXMATRIX tranMat, matScale;
+		for (int i =0; i < pMarkerConfig->marker_num; i++)
+		{
+			ARMultiEachMarkerInfoT* marker = &pMarkerConfig->marker[i];
+			if (!marker->visible)
+			{
+				continue;
+			}
+
+			D3DXMatrixIdentity(&tranMat);
+			D3DXMatrixScaling(&matScale, marker->width, marker->width, 1);
+			int id = marker->patt_id;
+
+			for (int row = 0; row <3; row++)
+			{
+				for (int col = 0; col < 4; col ++)
+				{
+					tranMat.m[col][row] = marker->trans[row][col];
+				}
+			}
+			tranMat = matTran * matScale * tranMat;
+			m_pMarkerMesh->SetTransform(&tranMat);
+			
+			hr = pEffect->SetTechnique("techniqueARMask");
+			hr = pEffect->Begin(&cPasses, 0);
+			for (iPass = 0; iPass < cPasses; iPass++)
+			{
+				pEffect->BeginPass(iPass);	
+				m_pMarkerMesh->Render();			
+				pEffect->EndPass();
+			}
+			hr = pEffect->End();
+		}
+
+		hr = m_pDevice->EndScene();
+	}
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
-	//m_pCamera->CameraOff();
-	m_pDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+	m_pCamera->CameraOff();
+
+	return TRUE;
+}
+
+BOOL ARLayoutDXDisplay::Render()
+{
+	return FALSE;
 }
 
 BOOL ARLayoutDXDisplay::Render(IDirect3DBaseTexture9* pTexture)

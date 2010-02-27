@@ -120,7 +120,6 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 	{
 		return S_FALSE;
 	}
-	OutputDebugStringW(L"@@@@  AR2WarpReceive; ---->");
 
 	CMuxTransformInputPin* pRecPin = (CMuxTransformInputPin*) pReceivePin;
 	HRESULT hr;
@@ -128,9 +127,7 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 		(m_pInputPins.size() >= 2 && m_pInputPins[1] == pReceivePin) || 
 		(m_pInputPins.size() >= 3 && m_pInputPins[2] == pReceivePin) )
 	{
-		OutputDebugStringW(L"@@@@  ReceiveARResult; ---->");
 		hr = ReceiveARResult(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@  ReceiveARResult; <----");
 
 		if (SUCCEEDED(hr))
 		{

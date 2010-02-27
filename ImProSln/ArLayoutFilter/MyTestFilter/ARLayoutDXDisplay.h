@@ -26,6 +26,7 @@ public:
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
+	virtual BOOL RenderMask(const ARMultiMarkerInfoT* pMarkerConfig, float fMaskScale);
 public:
 	ARLayoutDXDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight);
 	ARLayoutDXDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight);

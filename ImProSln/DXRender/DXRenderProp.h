@@ -67,4 +67,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnEnUpdateedy();
 	afx_msg void OnEnUpdateedwidth();
 	afx_msg void OnEnUpdateedheight();
+	CButton m_ckDrawFPS;
+	afx_msg void OnBnClickedCheck1();
 };

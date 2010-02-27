@@ -17,9 +17,10 @@ IDXRenderer: public IUnknown
 	virtual HWND GetDisplayWindow();
 	virtual bool GetFlipX();
 	virtual bool SetFlipX(bool v);
-
 	virtual bool GetFlipY();
 	virtual bool SetFlipY(bool v);
+	virtual bool GetbDrawFPS();
+	virtual bool SetbDrawFPS(bool v);
 
 	virtual BOOL IsWindowZoom();
 	virtual HRESULT GetWindowRect(RECT& rect);

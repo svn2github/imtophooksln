@@ -18,6 +18,7 @@ sampler2D g_Sampler = sampler_state {
     Texture = <g_Texture>;
 }; 
 
+
 float4 mainPS(VSOUT vin) : COLOR {
 	float4 ret = tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
 	ret.a = max(ret.a, minColor.a);
@@ -27,8 +28,18 @@ float4 mainPS(VSOUT vin) : COLOR {
 	return ret;
 }
 
+float4 maskPS(VSOUT vin) : COLOR {
+	return float4(0,0,0,1);
+}
+
 technique technique0 {
 	pass p0 {
 		PixelShader = compile ps_2_0 mainPS();
+	}
+}
+
+technique techniqueARMask {
+	pass p0 {
+		PixelShader = compile ps_2_0 maskPS();
 	}
 }

@@ -207,7 +207,21 @@ bool DXRenderFilter::SetFlipY(bool v)
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY = v;
 	return true;
 }
-
+bool DXRenderFilter::GetbDrawFPS()
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bDrawFPS;
+}
+bool DXRenderFilter::SetbDrawFPS(bool v)
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	((DXRenderDisplay*)m_pD3DDisplay)->m_bDrawFPS = v;
+	return true;
+}
 HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 {
 	CAutoLock lck(&m_csDisplayState);

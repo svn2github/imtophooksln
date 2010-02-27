@@ -15,6 +15,7 @@ void DXRenderFilterProp::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edWidth, m_edWidth);
 	DDX_Control(pDX, IDC_edHeight, m_edHeight);
 	DDX_Control(pDX, IDC_CKMaxWnd, m_ckMaxWnd);
+	DDX_Control(pDX, IDC_CHECK1, m_ckDrawFPS);
 }
 
 
@@ -35,6 +36,7 @@ ON_EN_UPDATE(IDC_edX, &DXRenderFilterProp::OnEnUpdateedx)
 ON_EN_UPDATE(IDC_edY, &DXRenderFilterProp::OnEnUpdateedy)
 ON_EN_UPDATE(IDC_edWidth, &DXRenderFilterProp::OnEnUpdateedwidth)
 ON_EN_UPDATE(IDC_edHeight, &DXRenderFilterProp::OnEnUpdateedheight)
+ON_BN_CLICKED(IDC_CHECK1, &DXRenderFilterProp::OnBnClickedCheck1)
 END_MESSAGE_MAP()
 
 
@@ -104,6 +106,9 @@ bool DXRenderFilterProp::GetSetting()
 	BOOL isHideBorder = m_pFilter->IsHideBorder();
 	m_ckHideBorder.SetCheck(isHideBorder);
 	m_ckMaxWnd.SetCheck(m_pFilter->IsWindowZoom());
+
+	bool bDrawFPS = m_pFilter->GetbDrawFPS();
+	m_ckDrawFPS.SetCheck(bDrawFPS);
 
 	BOOL bMaxWnd = m_pFilter->IsWindowZoom(); 
 	m_ckMaxWnd.SetCheck(bMaxWnd);
@@ -230,4 +235,11 @@ void DXRenderFilterProp::OnEnUpdateedwidth()
 void DXRenderFilterProp::OnEnUpdateedheight()
 {
 	SetDirty();
+}
+
+void DXRenderFilterProp::OnBnClickedCheck1()
+{
+	if (m_pFilter == NULL)
+		return ;
+	m_pFilter->SetbDrawFPS(m_ckDrawFPS.GetCheck());
 }

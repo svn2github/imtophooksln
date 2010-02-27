@@ -17,7 +17,7 @@ ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	m_numMarker = 0;
 	m_minMarkerWidth = 1.0;
 	m_pARStrategyData = NULL;
-
+	m_pROIImage = NULL;
 }
 ARLayoutDXFilter::~ARLayoutDXFilter()
 {
@@ -31,6 +31,11 @@ ARLayoutDXFilter::~ARLayoutDXFilter()
 	{
 		delete m_pARStrategyData;
 		m_pARStrategyData = NULL;
+	}
+	if (m_pROIImage != NULL)
+	{
+		cvReleaseImage(&m_pROIImage);
+		m_pROIImage = NULL;
 	}
 }
 
@@ -111,6 +116,7 @@ HRESULT ARLayoutDXFilter::CreatePins()
 		{
 			initD3D(800, 600);
 			initARMarkers();
+			CreateROIImage(800, 600);
 		}
 	}
 	return S_OK;
@@ -140,6 +146,93 @@ HRESULT ARLayoutDXFilter::ReceiveConfig(IMediaSample *pSample, const IPin* pRece
 
 	return S_OK;
 }
+HRESULT ARLayoutDXFilter::ComputeROIs(const ARMultiMarkerInfoT* pMarkerConfig)
+{
+	HRESULT hr = S_OK;
+	hr = SetRenderTarget();
+	((ARLayoutDXDisplay*)m_pD3DDisplay)->RenderMask(pMarkerConfig, 1.25);
+	hr = ResetRenderTarget();
+	hr = CopyRenderTarget2OutputTexture();
+	if (m_pOutTexture == NULL || m_pROIImage == NULL)
+		return S_FALSE;
+	LPDIRECT3DSURFACE9 pSurface = NULL;
+	D3DSURFACE_DESC outDesc;
+	D3DLOCKED_RECT d3dRect;
+	m_pOutTexture->GetLevelDesc(0, &outDesc);
+	m_pOutTexture->GetSurfaceLevel(0, &pSurface);
+	pSurface->LockRect(&d3dRect, NULL, 0);
+	
+	IplImage* pcvImage = cvCreateImageHeader(
+		cvSize(outDesc.Width, outDesc.Height), 8, 4);	
+	pcvImage->imageData = (char*)d3dRect.pBits;
+	cvCvtColor(pcvImage, m_pROIImage, CV_RGBA2GRAY);
+	cvThreshold(m_pROIImage, m_pROIImage, 128, 255, CV_THRESH_BINARY);
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	CvSeq* cont = 0; 
+	
+	
+	cvFindContours(m_pROIImage, storage, &cont, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+
+	m_ROIRects.clear();
+	CvRect cvROIRect;
+	fRECT fROIRect;
+	int imgW = m_pROIImage->width; int imgH = m_pROIImage->height;
+
+	for( ; cont != 0; cont = cont->h_next )	{
+		int count = cont->total; // This is number point in contour
+		cvROIRect = cvContourBoundingRect(cont);
+		fROIRect.left = cvROIRect.x /(float) imgW;
+		fROIRect.top = cvROIRect.y /(float) imgH;
+		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)imgW;
+		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)imgH;
+		m_ROIRects.push_back(fROIRect);
+	}
+
+	cvReleaseImageHeader(&pcvImage);
+	cvReleaseMemStorage(&storage);
+	storage = NULL;
+	pcvImage = NULL;
+	pSurface->UnlockRect();
+	pSurface->Release();
+	pSurface = NULL;
+	return S_OK;
+}
+HRESULT ARLayoutDXFilter::CreateROIImage(int width, int height)
+{
+	if (m_pROIImage != NULL)
+	{
+		cvReleaseImage(&m_pROIImage);
+		m_pROIImage = NULL;
+	}
+	m_pROIImage = cvCreateImage(cvSize(800, 600), 8, 1);
+	return S_OK;
+}
+HRESULT ARLayoutDXFilter::GetROIData(ROIData*& roiData)
+{
+	if (roiData != NULL)
+	{
+		delete roiData;
+		roiData = NULL;
+	}
+	roiData = new ROIData();
+
+	if (m_ROIRects.size() <= 0)
+	{
+		roiData->m_pRECTs = NULL;
+		roiData->m_nRECTs = 0;
+	}
+	else
+	{
+		roiData->m_pRECTs = new fRECT[m_ROIRects.size()];
+		roiData->m_nRECTs = m_ROIRects.size();
+		for (int i=0; i < m_ROIRects.size(); i++)
+		{
+			memcpy((void*)&(roiData->m_pRECTs[i]),  (void*)&(m_ROIRects.at(i)), sizeof(fRECT));
+		}
+	}
+	return S_OK;
+}
+
 HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
 	HRESULT hr = S_OK;
@@ -154,6 +247,17 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 				sendConfigData();
 				delete m_pARStrategyData;
 				m_pARStrategyData = NULL;
+				if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
+					!m_pOutputPins[1]->IsConnected()))
+				{
+					CAutoLock lck(&m_csARMarker);
+					ARMultiMarkerInfoT markerConfig;
+					memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
+					markerConfig.marker = m_ARMarkers;
+					markerConfig.marker_num = m_numMarker;
+					ComputeROIs(&markerConfig);
+					sendROIData();
+				}
 			}
 		}
 		hr = SetRenderTarget();
@@ -823,7 +927,41 @@ bool ARLayoutDXFilter::sendConfigData()
 
 	return true;
 }
+bool ARLayoutDXFilter::sendROIData()
+{
+	if (m_pOutputPins.size() <= 0 || !m_pOutputPins[1]->IsConnected()) 
+	{
+		return false;
+	}
+	ROIData* sendData = NULL;
+	{
+		CAutoLock lck(&m_csROIRects);
+		GetROIData(sendData);
+		if (sendData == NULL)
+			return false;
 
+		IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
+		CMediaSample* pSendSample = NULL;
+		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		if (pSendSample == NULL)
+		{
+			delete sendData;
+			sendData = NULL;
+			return S_FALSE;
+		}
+
+		pSendSample->SetPointer((BYTE*)sendData, sizeof(ROIData));
+		m_pOutputPins[1]->Deliver(pSendSample);
+		delete sendData;
+		sendData = NULL;
+		if (pSendSample != NULL)
+		{
+			pSendSample->Release();
+			pSendSample = NULL;
+		}
+	}
+	return true;
+}
 float ARLayoutDXFilter::GetFrameRateLimit(IPin* pPin)
 {
 	return GetFrameRate();
