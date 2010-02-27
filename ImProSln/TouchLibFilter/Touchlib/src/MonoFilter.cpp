@@ -27,7 +27,10 @@ void MonoFilter::kernel()
         destination->origin = source->origin;  // same vertical flip as source
 
 	} 
-
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvResetImageROI(source);
+	cvResetImageROI(destination);
 	// Note: the destination must have one channel.
 	if(source->nChannels != 1 && destination->nChannels == 1) 
 	{
@@ -37,7 +40,7 @@ void MonoFilter::kernel()
 			cvCvtColor(source, destination, CV_BGR2GRAY);
 		else if(strcmpi(source->colorModel, "RGB") == 0) 
 			cvCvtColor(source, destination, CV_RGB2GRAY);
-
-		
 	}
+	cvSetImageROI(source, roiRECT);
+	cvSetImageROI(destination, roiRECT);
 }

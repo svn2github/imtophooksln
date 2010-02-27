@@ -61,6 +61,10 @@ HRESULT DXRenderFilter::CheckMediaType(const CMediaType *pmt)
 		{
 			return E_FAIL;
 		}
+		if (!(IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo)))
+		{
+			return E_FAIL;
+		}
 		if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			return S_OK;
@@ -88,6 +92,7 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 	if (m_pD3DDisplay == NULL)
 	{
 		CMediaType mt = m_InputMT;
+		GUID fmt = *mt.FormatType();
 		if (IsEqualGUID(*mt.FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC))
 		{	
 			D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) mt.pbFormat;
@@ -99,7 +104,7 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 			initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		} 
-
+	
 	}
 	m_pD3DDisplay->ShowDisplayWnd(TRUE);
 	return __super::CompleteConnect(pReceivePin);

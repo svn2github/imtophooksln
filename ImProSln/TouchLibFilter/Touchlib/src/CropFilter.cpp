@@ -179,5 +179,5 @@ void CropFilter::kernel()
 
 	cvSetImageROI(source, img_rect);
 	cvCopy(source, destination);		
-	cvResetImageROI(source);
+	
 }

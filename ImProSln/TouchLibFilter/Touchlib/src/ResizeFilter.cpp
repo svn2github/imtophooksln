@@ -57,7 +57,10 @@ void ResizeFilter::kernel()
 
 		ownsImage = true;
 	} 
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
 
 	cvResize(source, destination, CV_INTER_LINEAR);
-
+	
 }

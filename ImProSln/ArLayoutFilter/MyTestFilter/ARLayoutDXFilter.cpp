@@ -74,7 +74,7 @@ HRESULT ARLayoutDXFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 HRESULT ARLayoutDXFilter::CreatePins()
 {
 	HRESULT hr;
-	if (m_pStreamPins.size() < 1) {
+	if (m_pStreamPins.size() < 1 || m_pOutputPins.size() < 2) {
 		for (int c = 0; c< m_pInputPins.size(); c++)
 		{
 			delete m_pInputPins[c];
@@ -105,13 +105,20 @@ HRESULT ARLayoutDXFilter::CreatePins()
 			this,               
 			L"Layout");      
 
-		CMuxTransformOutputPin* pOutput1 = new CSourceOutputPin(NAME("CMuxTransform stream pin"),
+		CMuxTransformOutputPin* pOutput1 = new CSourceOutputPin(NAME("ARLayout Markinfo pin"),
 			this,
 			&hr,                             
 			L"markinfo");     
+
+		CMuxTransformOutputPin* pOutput2 = new CSourceOutputPin(NAME("ARLayout ROI pin"),
+			this,
+			&hr,                             
+			L"ROI");     
 		m_pInputPins.push_back(pInput0);
 		m_pStreamPins.push_back(pOutput0);
 		m_pOutputPins.push_back(pOutput1);
+		m_pOutputPins.push_back(pOutput2);
+
 		if (m_pD3DDisplay == NULL)
 		{
 			initD3D(800, 600);
@@ -345,7 +352,19 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 		*pMediaType = mt;
 		return S_OK;
 	}
-
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	{
+		if (iPosition < 0  || iPosition > 0)
+		{	
+			return VFW_S_NO_MORE_ITEMS;
+		}
+		CMediaType mt;
+		mt.SetType(&GUID_MyMediaSample);
+		mt.SetSubtype(&GUID_ROIData);
+		mt.SetSampleSize(sizeof(ROIData));
+		*pMediaType = mt;
+		return S_OK;
+	}
 	return S_FALSE;
 }
 HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
@@ -369,6 +388,15 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 		CMediaType mt;
 		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutConfigData))
+		{
+			return NOERROR;
+		}
+	}
+	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
+	{
+		CMediaType mt;
+		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+			IsEqualGUID(*mtOut->Subtype(), GUID_ROIData))
 		{
 			return NOERROR;
 		}
@@ -423,30 +451,28 @@ HRESULT ARLayoutDXFilter::DecideBufferSize(
 		}
 	}
 
-	if (m_pOutputPins.size() > 0 && pOutPin == m_pOutputPins[0])
+	if ((m_pOutputPins.size() > 0 && pOutPin == m_pOutputPins[0]) || 
+		(m_pOutputPins.size() > 1 && pOutPin == m_pOutputPins[1]))
 	{
 		CMediaType mt = ((CMuxTransformOutputPin*)pOutPin)->CurrentMediaType();
-		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && 
-			IsEqualGUID(*mt.Subtype(), GUID_ARLayoutConfigData))
+		pProp->cBuffers = 1;
+		pProp->cbBuffer = mt.GetSampleSize();
+		if (pProp->cbAlign == 0)
 		{
-			pProp->cBuffers = 1;
-			pProp->cbBuffer = mt.GetSampleSize();
-			if (pProp->cbAlign == 0)
-			{
-				pProp->cbAlign = 1;
-			}
-			ALLOCATOR_PROPERTIES Actual;
-			hr = pAlloc->SetProperties(pProp,&Actual);
-			if (FAILED(hr)) {
-				return hr;
-			}
-			ASSERT( Actual.cBuffers == 1 );
-			if (pProp->cBuffers > Actual.cBuffers ||
-				pProp->cbBuffer > Actual.cbBuffer) {
-					return E_FAIL;
-			}
-			return S_OK;
+			pProp->cbAlign = 1;
 		}
+		ALLOCATOR_PROPERTIES Actual;
+		hr = pAlloc->SetProperties(pProp,&Actual);
+		if (FAILED(hr)) {
+			return hr;
+		}
+		ASSERT( Actual.cBuffers == 1 );
+		if (pProp->cBuffers > Actual.cBuffers ||
+			pProp->cbBuffer > Actual.cbBuffer) {
+				return E_FAIL;
+		}
+		return S_OK;
+		
 	}
 	return E_FAIL;
 }
@@ -708,7 +734,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 		
 		}
 	}
-	
+	/*
 	if (numCamRect > 0 && camRects != NULL)
 	{
 		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
@@ -718,7 +744,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			camRects[i].top = min((float)1.0, max((float)0.0, camRects[i].top));
 			camRects[i].bottom = min((float)1.0, max((float)0.0, camRects[i].bottom));
 		}
-		/*
+		
 		for (int i = 0; i < numCamRect; i++) // for each cam view
 		{
 			float camViewWidth = abs(camRects->right - camRects->left);
@@ -767,9 +793,9 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 				}
 			}
 			
-		}*/
+		}
 	}
-	
+	*/
 	for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 	{
 		int idx = undecideIdx.at(iterIdx);
@@ -929,7 +955,7 @@ bool ARLayoutDXFilter::sendConfigData()
 }
 bool ARLayoutDXFilter::sendROIData()
 {
-	if (m_pOutputPins.size() <= 0 || !m_pOutputPins[1]->IsConnected()) 
+	if (m_pOutputPins.size() <= 1 || !m_pOutputPins[1]->IsConnected()) 
 	{
 		return false;
 	}

@@ -43,6 +43,7 @@ namespace touchlib
 		virtual void unregisterListener(ITouchListener *listener);
 		// capture the frame and do the detection
 		virtual bool processOnce(IplImage* pSrc);
+		virtual bool processOnce(IplImage* pSrc, ROIData* roi);
 
 		virtual bool process();
 		// Gets the raw camera output
@@ -160,6 +161,8 @@ namespace touchlib
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html
 #endif
 		IplImage* pTrackingFrame;
+		IplImage* pBlackImage;
+
 		BwImage frame;
 		BwImage labelImg;
 		

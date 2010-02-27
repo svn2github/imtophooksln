@@ -99,7 +99,8 @@ bool CBlobTracker::findBlobs(BwImage &img)
 	foregroundLists.clear();
 	for( ; cont != 0; cont = cont->h_next )	{
 		int count = cont->total; // This is number point in contour
-		foregroundLists.push_back(cvContourBoundingRect(cont));
+		CvRect contourCvRect = cvContourBoundingRect(cont);
+		foregroundLists.push_back(contourCvRect);
 		// First we check to see if this contour looks like a square.. 
 		isSquare = false;
         result = cvApproxPoly( cont, sizeof(CvContour), storage,

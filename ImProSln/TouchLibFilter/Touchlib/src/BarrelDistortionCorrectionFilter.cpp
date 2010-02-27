@@ -74,7 +74,9 @@ void BarrelDistortionCorrectionFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, source->nChannels);
         destination->origin = source->origin;  // same vertical flip as source
     }
- 	
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
 	// Make option to choose method
 	if(border_size>0)
 		//destination = undistorted_with_border( source, camera, dist_coeffs, border_size );	
@@ -82,6 +84,7 @@ void BarrelDistortionCorrectionFilter::kernel()
 	else
 		//cvUndistort2( source, destination, camera, dist_coeffs );
 		destination = undistorted_with_border2( source, camera, dist_coeffs, 0);
+	
 }
 
 IplImage* BarrelDistortionCorrectionFilter::undistorted_with_border( const IplImage *image, const CvMat *intrinsic,const CvMat *distortion, short int border )

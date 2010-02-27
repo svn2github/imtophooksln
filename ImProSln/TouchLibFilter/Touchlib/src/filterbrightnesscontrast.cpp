@@ -73,6 +73,10 @@ void BrightnessContrastFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, source->nChannels);
         destination->origin = source->origin;  // same vertical flip as source
     }
- 
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
     cvLUT( source, destination, _lutmat ); 
+	
+	
 }

@@ -39,6 +39,7 @@ CTouchScreen::CTouchScreen()
 	frame = 0;
 	pTrackingFrame = NULL;
 	bDrawFinger = false;
+	pBlackImage = NULL;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -99,6 +100,7 @@ CTouchScreen::CTouchScreen(float cw, float ch)
 	frame = 0;
 	pTrackingFrame = NULL;
 	bDrawFinger = false;
+	pBlackImage = NULL;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -205,6 +207,11 @@ CTouchScreen::~CTouchScreen()
 	{
 		delete tracker;
 		tracker = NULL;
+	}
+	if (pBlackImage != NULL)
+	{
+		cvReleaseImage(&pBlackImage);
+		pBlackImage = NULL;
 	}
 }
 
@@ -382,7 +389,100 @@ bool CTouchScreen::processOnce(IplImage* pSrc)
 	}
 	return true;
 }
+bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
+{
+	if(filterChain.size() == 0)		// If there are no filters
+		return false;				// error out
+	//printf("Process chain\n");
+	if (roi == NULL)
+		return false;
+	IplImage *output = NULL;
+	if (roi->m_nRECTs <= 0)
+	{
+		if (pBlackImage == NULL)
+		{
+			pBlackImage = cvCreateImage(cvSize(pSrc->width, pSrc->height), 8, 1);
+			memset((void*)pBlackImage->imageData, 0, pBlackImage->imageSize);
+		}
+		output = pBlackImage;
+	}
+	else
+	{
+		for (int i =0; i < roi->m_nRECTs; i++)
+		{
+			CvRect roiRect;
+			roiRect.x = roi->m_pRECTs[i].left * pSrc->width;
+			roiRect.y = roi->m_pRECTs[i].top * pSrc->height;
+			roiRect.width = (roi->m_pRECTs[i].right - roi->m_pRECTs[i].left)*pSrc->width;
+			roiRect.height = (roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height;
 
+			if (roi->m_nRECTs != 1 || roi->m_pRECTs[0].left != 0)
+				int test = 0;
+			cvSetImageROI(pSrc, roiRect);
+			filterChain[0]->process(pSrc);	// Otherwise go to the first filter
+			cvResetImageROI(pSrc);
+		}
+		output = filterChain.back()->getOutput(); // and get the first frame
+		cvResetImageROI(output);
+	}
+	if(output != NULL) {			// If there is output to get
+		//printf("Process chain complete\n");
+
+		frame = output;		// assign it to the private CTouchScreen::frame variable
+
+		if(bTracking == true)		// If we are currently tracking blobs
+		{
+			if (pTrackingFrame == NULL)
+			{
+				pTrackingFrame = cvCloneImage(output);
+			}
+			
+			cvCopyImage(output, pTrackingFrame);
+			frame = pTrackingFrame;
+			//printf("Tracking 1\n");
+
+			tracker->findBlobs(frame);		// Locate the blobs
+			tracker->trackBlobs();			// and update their location
+
+			if (bDrawFinger)
+			{
+				tracker->drawFingers(pSrc);
+			}
+
+#ifdef WIN32
+			DWORD dw = WaitForSingleObject(eventListMutex, INFINITE);
+			//dw == WAIT_OBJECT_0
+			if(dw == WAIT_TIMEOUT || dw == WAIT_FAILED) {		// If locking the mutex failed
+				// handle time-out error
+				//throw TimeoutExcp();
+				printf("Failed %d", dw);						// output result to terminal
+
+			}
+			else 		// Locking the mutex succeeds
+			{
+				//printf("Tracking 2\n");
+
+				tracker->gatherEvents();			// then find out which blobs are new and track the old blob's movement
+
+				ReleaseMutex(eventListMutex);		// and unlock the mutex
+			}
+#else
+			int err;
+			if((err = pthread_mutex_lock(&eventListMutex)) != 0){
+				// some error occured
+				fprintf(stderr,"locking of mutex failed\n");
+			}else{
+				tracker->gatherEvents();	// then find out which blobs are new and track the old blob's movement
+				pthread_mutex_unlock(&eventListMutex);		// and unlock the mutex
+			}
+#endif
+
+		}
+
+		//return true;
+	}
+	return true;
+}
 bool CTouchScreen::process()
 {
 	// The main event loop for this CTouchScreen instance

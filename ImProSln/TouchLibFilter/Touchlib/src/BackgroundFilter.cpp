@@ -92,14 +92,18 @@ void BackgroundFilter::kernel()
 
 	if(count > -1)
 		count--;
-	
+
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
 	if( !reference || recapture || count == 0)
 	{
+		cvResetImageROI(source);
 		if(reference)
 			cvCopy(source, reference);
 		else
 			reference = cvCloneImage(source);
-
+		cvSetImageROI(source, roiRECT);
 		if(!mask) {
 			mask = cvCreateImage(cvSize(reference->width,reference->height), reference->depth, 1);
 			mask->origin = reference->origin;  // same vertical flip as reference
@@ -110,13 +114,6 @@ void BackgroundFilter::kernel()
 			cvSet(mask,cvScalar(255,255,255));			
 			cvFillConvexPoly(mask, polyMask,nPolyMask,cvScalar(0,0,0));
 		}
-
-		//cvAdd(reference,mask,reference);
-		/*if(updateThreshold != 0)
-		{
-			cvSubS(reference, cvScalar(updateThreshold,updateThreshold,updateThreshold), reference);
-		}*/
-
 		
 		recapture = false;
 	}
@@ -169,14 +166,13 @@ void BackgroundFilter::kernel()
 		currentRow = 0;
 #endif
 	// destination = source-reference
+	cvSetImageROI(reference, roiRECT);
 	cvSub(source, reference, destination);
 	if (updateThreshold != 0)
 	{
 		cvSubS(destination, cvScalar(updateThreshold, updateThreshold, updateThreshold),destination );
 	}
-/*
-
-	*/
+	cvResetImageROI(reference);
 
 }
 

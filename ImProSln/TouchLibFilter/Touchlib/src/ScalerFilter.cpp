@@ -53,7 +53,11 @@ void ScalerFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
         destination->origin = source->origin;  // same vertical flip as source
     }
-
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+	
 	cvMul(source, source, destination, (float)level / 128.0f);
-
+	
+	
 }

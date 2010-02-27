@@ -60,6 +60,9 @@ void RectifyFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
         destination->origin = source->origin;  // same vertical flip as source
     }
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
 
 	if(bAutoSet)
 	{
@@ -83,5 +86,4 @@ void RectifyFilter::kernel()
 	}
 
     cvThreshold(source, destination, level, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
-
 }

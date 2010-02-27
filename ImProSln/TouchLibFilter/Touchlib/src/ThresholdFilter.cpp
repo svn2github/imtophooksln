@@ -104,7 +104,10 @@ void ThresholdFilter::kernel()
 		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
 		destination->origin = source->origin;  // same vertical flip as source
 	}
-	
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+
 	float localMax = 0.0f;
 	float localAverage = 0.0f;
 
@@ -159,4 +162,6 @@ void ThresholdFilter::kernel()
 			cvSetTrackbarPos(TRACKBAR_LABEL_THRESHOLD, this->name.c_str(), level);
 		}
 	}
+
+	
 }

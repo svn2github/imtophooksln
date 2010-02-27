@@ -11,6 +11,7 @@
 #include <list>
 #include <vector>
 #include "cv.h"
+#include "MyMediaSample.h"
 using namespace std;
 namespace touchlib
 {
@@ -31,7 +32,7 @@ namespace touchlib
 		virtual bool process() = 0;
 
 		virtual bool processOnce(IplImage* pSrc) = 0;
-
+		virtual bool processOnce(IplImage* pSrc, ROIData* roi) = 0;
 		//! Gets the raw camera output
 		virtual void getRawImage(char **img, int &width, int &height) = 0;
 

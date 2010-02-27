@@ -6,6 +6,7 @@
 #include "combase.h"
 #include "CMuxTransformFilter.h"
 #include "TouchScreenDevice.h"
+#include "CTouchScreen.h"
 #include "..\OSCSender\OSCSender.h"
 #include "MSPersist.h"
 
@@ -52,14 +53,17 @@ protected:
 	ITouchScreen* m_pTouchScreen;
 	string m_monolabel, m_bgLabel, m_shpLabel, 
 		m_scalerLabel, m_rectifyLabel;
+	CCritSec m_csROIData;
+	ROIData m_ROIData;
 
 	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
 	bool DestoryTouchScreen();
 	virtual bool ShowConfigWindow(bool bShow);
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
+	HRESULT ReceiveROI(IMediaSample *pSample, const IPin* pReceivePin);
 	HRESULT TransformInput0(IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT SendForegroundSample();
-
+	
 
 	CMuxTransformInputPin* GetConnectedInputPin();
 	vector<ITouchListener*> m_listenerList;

@@ -1325,7 +1325,8 @@ CSourceOutputPin::~CSourceOutputPin()
 HRESULT
 CSourceOutputPin::CheckConnect(IPin *pPin)
 {
-	HRESULT hr = m_pTransformFilter->CheckConnect(PINDIR_OUTPUT,this, pPin);
+	HRESULT hr = S_OK;
+	hr = m_pTransformFilter->CheckConnect(PINDIR_OUTPUT,this, pPin);
 	if (FAILED(hr)) {
 		return hr;
 	}

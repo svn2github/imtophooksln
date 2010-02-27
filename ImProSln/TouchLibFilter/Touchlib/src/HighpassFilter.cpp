@@ -91,6 +91,12 @@ void HighpassFilter::kernel()
 		outra2->origin = source->origin;
     }
    
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+	cvSetImageROI(outra, roiRECT);
+	cvSetImageROI(outra2, roiRECT);
+
 	cvConvertScale( source, outra );
 	//CV_MEDIAN
 	cvSmooth( outra, outra2, CV_GAUSSIAN, (filterLevel*2) + 3, (filterLevel*2) + 3, 0, 0 );
@@ -110,7 +116,10 @@ void HighpassFilter::kernel()
 	    cvDilate(destination,destination,element2,1);
 	    cvDilate(destination,destination,element,1);
 	}
-
+	
+	cvResetImageROI(outra);
+	cvResetImageROI(outra2);
+	
 }
 
 
