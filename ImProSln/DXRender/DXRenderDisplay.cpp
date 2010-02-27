@@ -11,6 +11,13 @@ DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
+	
+	lasttime = timeGetTime();
+	currtime = timeGetTime();
+	count = 0;
+	fps = 0; 
+	imgW = 0;
+	imgH = 0;
 }
 DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
 : MS3DDisplay(pDevice, rtWidth, rtHeight)
@@ -69,12 +76,7 @@ BOOL DXRenderDisplay::Render()
 		hr = pEffect->End();
 		if (m_bDrawFPS)
 		{
-			static DWORD lasttime = timeGetTime();
-			static DWORD currtime = timeGetTime();
-			static int count = 0;
-			static float fps = 0; 
-			static int imgW = 0;
-			static int imgH = 0;
+
 			if (imgW == 0 && imgH == 0)
 			{
 				LPDIRECT3DSURFACE9 pBackBuffer = NULL;

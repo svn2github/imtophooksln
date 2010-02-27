@@ -4,6 +4,14 @@
 class DXRenderDisplay :
 	public MS3DDisplay
 {	
+private:
+	//variables for fps computing
+	DWORD lasttime;
+	DWORD currtime;
+	int count;
+	float fps; 
+	int imgW;
+	int imgH;
 public:
 	bool m_bFlipX;
 	bool m_bFlipY;
