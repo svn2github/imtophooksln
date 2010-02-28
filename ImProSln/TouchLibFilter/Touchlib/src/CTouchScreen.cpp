@@ -429,11 +429,22 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 			roiRect.x = roi->m_pRECTs[i].left * pSrc->width;
 			roiRect.y = roi->m_pRECTs[i].top * pSrc->height;
 			roiRect.width = (roi->m_pRECTs[i].right - roi->m_pRECTs[i].left)*pSrc->width;
-			roiRect.height = (roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height;
-
-			cvSetImageROI(pSrc, roiRect);
-			filterChain[0]->process(pSrc);	// Otherwise go to the first filter
-			cvResetImageROI(pSrc);
+			roiRect.height = (roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height;		
+			if (i >= 1)
+			{
+				//since mono filter we don't use ROI
+				IplImage* pMonoImg = filterChain[0]->getOutput();
+				cvSetImageROI(pMonoImg, roiRect);
+				filterChain[1]->process(pMonoImg);
+				cvResetImageROI(pMonoImg);
+			}
+			else
+			{
+				cvSetImageROI(pSrc, roiRect);
+				filterChain[0]->process(pSrc);	// Otherwise go to the first filter
+				cvResetImageROI(pSrc);
+			}
+			
 			IplImage* tmpOutput = filterChain.back()->getOutput();
 		
 			cvSetImageROI(pROIMergeResult, roiRect);
