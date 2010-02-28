@@ -243,7 +243,7 @@ HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 	BOOL isZoomed = IsWindowZoom();
 	BOOL isHideBorder = IsHideBorder();
 
-	fwprintf_s(filestream, L"%d %d \n", GetFlipX(), GetFlipY());
+	fwprintf_s(filestream, L"%d %d %d \n", GetFlipX(), GetFlipY(), GetbDrawFPS());
 	fwprintf_s(filestream, L"%d %d %d %d\n", rect.left, rect.top, rect.right, rect.bottom);
 	fwprintf_s(filestream, L"%d %d", isZoomed, isHideBorder);
 
@@ -258,19 +258,20 @@ HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
 	{
 		return false;
 	}
-	int bFlipX =0, bFlipY = 0;
+	int bFlipX =0, bFlipY = 0, bDrawFPS = 0;
 	
 	RECT rect;
 	memset(&rect, 0, sizeof(RECT));
 	BOOL isZoomed = FALSE;;
 	BOOL isHideBorder = FALSE;
 
-	fwscanf_s(filestream, L"%d %d \n", &bFlipX, &bFlipY);
+	fwscanf_s(filestream, L"%d %d %d\n", &bFlipX, &bFlipY, &bDrawFPS);
 	fwscanf_s(filestream, L"%d %d %d %d\n", &rect.left, &rect.top, &rect.right, &rect.bottom);
 	fwscanf_s(filestream, L"%d %d \n", &isZoomed, &isHideBorder);
 	
 	SetFlipX(bFlipX);
 	SetFlipY(bFlipY);
+	SetbDrawFPS(bDrawFPS);
 	SetWindowRect(rect);
 	SetHideBorder(isHideBorder);
 	SetWindowZoom(isZoomed);
@@ -318,7 +319,8 @@ BOOL DXRenderFilter::SetHideBorder(BOOL bHideBorder)
 	bool checked = bHideBorder;
 	if (checked)
 	{
-		newStyle = WS_BORDER ^ wndStyle;
+		LONG removeBORDER = 0xFFFFFFFF ^ WS_BORDER;
+		newStyle = removeBORDER & wndStyle;
 		SetWindowLong(hwnd, GWL_STYLE, newStyle);
 	}
 	else

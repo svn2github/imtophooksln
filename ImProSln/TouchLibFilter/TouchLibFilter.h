@@ -55,6 +55,7 @@ protected:
 		m_scalerLabel, m_rectifyLabel;
 	CCritSec m_csROIData;
 	ROIData m_ROIData;
+	bool m_bFingerFlipY;
 
 	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
 	bool DestoryTouchScreen();
@@ -70,6 +71,7 @@ protected:
 	CCritSec m_csListenerList;
 	CCritSec m_csTouchScreen;
 	OSCSender* m_oscSender;
+	CCritSec m_csFilterState;
 protected:
 	bool IsAcceptedType(const CMediaType *pmt);
 public:
@@ -101,4 +103,7 @@ public:
 	virtual bool GetScaleLevel(int& level);
 	virtual bool SetRectifyLevel(int level);
 	virtual bool GetRectifyLevel(int& level);
+
+	virtual bool GetbFlipY();
+	virtual bool SetbFlipY(bool v);
 };

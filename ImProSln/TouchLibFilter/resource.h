@@ -15,8 +15,8 @@
 #define IDC_btnClearBg                  16008
 #define IDC_ckBeginTrack                16009
 #define IDC_ckDrawFinger                16010
-#define IDC_BUTTON2                     16011
-#define IDC_BTNTest                     16011
+#define IDC_CHECK1                      16012
+#define IDC_CKFingerFlipY               16012
 
 // Next default values for new objects
 // 
@@ -24,7 +24,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        16001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         16012
+#define _APS_NEXT_CONTROL_VALUE         16013
 #define _APS_NEXT_SYMED_VALUE           16000
 #endif
 #endif

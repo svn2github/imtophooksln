@@ -18,6 +18,7 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT3, m_edPort);
 	DDX_Control(pDX, IDC_ckBeginTrack, m_ckBeginTrack);
 	DDX_Control(pDX, IDC_ckDrawFinger, m_ckDrawFinger);
+	DDX_Control(pDX, IDC_CKFingerFlipY, m_ckFingerFlipY);
 }
 
 
@@ -29,6 +30,7 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnClearBg, &TouchLibPropPage::OnBnClickedBtnClearBG)
 	ON_BN_CLICKED(IDC_ckBeginTrack, &TouchLibPropPage::OnBnClickedckbegintrack)
 	ON_BN_CLICKED(IDC_ckDrawFinger, &TouchLibPropPage::OnBnClickedckdrawfinger)
+	ON_BN_CLICKED(IDC_CKFingerFlipY, &TouchLibPropPage::OnBnClickedCkfingerflipy)
 END_MESSAGE_MAP()
 
 
@@ -203,7 +205,7 @@ bool TouchLibPropPage::GetSetting()
 	m_pFilter->getStartTracking(bStartTracking);
 	m_ckBeginTrack.SetCheck(bStartTracking);
 	m_ckDrawFinger.SetCheck(m_pFilter->getDrawFingers());
-
+	m_ckFingerFlipY.SetCheck(m_pFilter->GetbFlipY());
 	if (m_pFilter->IsOSCConnected())
 	{
 		m_edIP.EnableWindow(FALSE);
@@ -272,3 +274,10 @@ void TouchLibPropPage::OnBnClickedckdrawfinger()
 	m_pFilter->setDrawFingers(m_ckDrawFinger.GetCheck());
 }
 
+
+void TouchLibPropPage::OnBnClickedCkfingerflipy()
+{
+	if (m_pFilter == NULL)
+		return;
+	m_pFilter->SetbFlipY(m_ckFingerFlipY.GetCheck());
+}

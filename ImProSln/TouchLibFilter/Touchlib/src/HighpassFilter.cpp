@@ -81,13 +81,13 @@ void HighpassFilter::kernel()
     // derived class responsible for allocating storage for filtered image
     if( !destination )
     {
-        destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+        destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
         destination->origin = source->origin;  // same vertical flip as source
 
-		outra = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra = cvCreateImage( cvSize(source->width, source->height), IPL_DEPTH_16S, 1 );
 		outra->origin = source->origin;
 
-		outra2 = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra2 = cvCreateImage( cvSize(source->width, source->height), IPL_DEPTH_16S, 1 );
 		outra2->origin = source->origin;
     }
    
@@ -124,13 +124,13 @@ void HighpassFilter::kernelWithROI()
 	// derived class responsible for allocating storage for filtered image
 	if( !destination )
 	{
-		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		destination->origin = source->origin;  // same vertical flip as source
 
-		outra = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra = cvCreateImage( cvSize(source->width, source->height), IPL_DEPTH_16S, 1 );
 		outra->origin = source->origin;
 
-		outra2 = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra2 = cvCreateImage( cvSize(source->width, source->height), IPL_DEPTH_16S, 1 );
 		outra2->origin = source->origin;
 	}
 

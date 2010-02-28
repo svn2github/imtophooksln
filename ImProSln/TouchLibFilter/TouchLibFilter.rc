@@ -147,6 +147,7 @@ BEGIN
     PUSHBUTTON      "Clear BG",IDC_btnClearBg,111,84,50,14
     CONTROL         "Begin Track",IDC_ckBeginTrack,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,109,50,10
     CONTROL         "Draw Fingers",IDC_ckDrawFinger,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,120,58,10
+    CONTROL         "FlipY",IDC_CKFingerFlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,120,31,10
 END
 
 

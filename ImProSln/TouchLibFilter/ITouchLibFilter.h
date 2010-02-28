@@ -45,6 +45,8 @@ public:
 	virtual bool GetScaleLevel(int& level);
 	virtual bool SetRectifyLevel(int level);
 	virtual bool GetRectifyLevel(int& level);
+	virtual bool GetbFlipY();
+	virtual bool SetbFlipY(bool v);
 
 	virtual HRESULT SaveToFile(WCHAR* filename);
 	virtual HRESULT LoadFromFile(WCHAR* filename);

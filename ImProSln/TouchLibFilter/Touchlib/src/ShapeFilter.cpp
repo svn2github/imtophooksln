@@ -78,11 +78,11 @@ void ShapeFilter::kernel()
 
 	
 	if (destination == NULL) {
-		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		destination->origin = source->origin;  // same vertical flip as source
 	}
 	if (buffer == NULL) {
-		buffer = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		buffer = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		buffer->origin = source->origin;
 	}
 
@@ -107,11 +107,11 @@ void ShapeFilter::kernelWithROI()
 
 
 	if (destination == NULL) {
-		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		destination->origin = source->origin;  // same vertical flip as source
 	}
 	if (buffer == NULL) {
-		buffer = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		buffer = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		buffer->origin = source->origin;
 	}
 

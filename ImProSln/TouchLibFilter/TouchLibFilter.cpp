@@ -18,6 +18,7 @@ TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 	m_rectifyLabel = "null";
 	m_pTouchScreen = NULL;
 	m_oscSender = OSCSender::GetOSCSender();
+	m_bFingerFlipY = false;
 
 	m_ROIData.m_nRECTs = 1;
 	m_ROIData.m_pRECTs = new fRECT[1];
@@ -643,13 +644,17 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	}
 	pSrc = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
 	pDest = cvCreateImageHeader(cvSize(bitHeader.biWidth, bitHeader.biHeight), 8, channel);
-
+	
 
 
 	pSample->GetPointer(&pInData);
 	pOut->GetPointer(&pOutData);
 	pSrc->imageData = (char*)pInData;
 	pDest->imageData = (char*)pOutData;
+	if (GetbFlipY())
+	{
+		cvFlip(pSrc, NULL, 0);
+	}
 	{
 		CAutoLock lck(&m_csTouchScreen);
 		CAutoLock lck1(&m_csROIData);
@@ -658,7 +663,10 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 	}
 	
 	cvCopy(pSrc, pDest);
-
+	if (GetbFlipY())
+	{
+		cvFlip(pSrc, NULL, 0);
+	}
 	if (pSrc != NULL)
 	{
 		cvReleaseImageHeader(&pSrc);
@@ -967,7 +975,7 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	int rectifyLevel = 75;
 	bool bStartTracking = false;
 	bool bDrawFinger = false;
-
+	bool bFlipY = false;
 	GetBGThreshold(bgThreshold);
 	GetSimpleHighPassDeNoise(deNoise);
 	GetSimpleHighPassBlur(blur);
@@ -976,10 +984,10 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	
 	getStartTracking(bStartTracking);
 	bDrawFinger = getDrawFingers();
-
-	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d \n",
+	bFlipY = GetbFlipY();
+	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d %d \n",
 		bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
-		bStartTracking, bDrawFinger);
+		bStartTracking, bDrawFinger, bFlipY);
 	fclose(filestream);
 	return S_OK;
 }
@@ -999,10 +1007,10 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 
 	int bStartTracking = false;
 	int bDrawFinger = false;
-
-	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d \n",
+	int bFlipY = false;
+	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d %d\n",
 		&bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
-		&bStartTracking, &bDrawFinger);
+		&bStartTracking, &bDrawFinger, &bFlipY);
 	fclose(filestream);
 
 	SetBGThreshold(bgThreshold);
@@ -1013,7 +1021,7 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 
 	setStartTracking(bStartTracking);
 	setDrawFingers(bDrawFinger);
-	
+	SetbFlipY(bFlipY);
 	return S_OK;
 }
 HRESULT TouchLibFilter::GetName(WCHAR* name, UINT szName)
@@ -1031,4 +1039,16 @@ HRESULT TouchLibFilter::GetName(WCHAR* name, UINT szName)
 		filterInfo.pGraph = NULL;
 	}
 	return S_OK;
+}
+
+bool TouchLibFilter::GetbFlipY()
+{
+	CAutoLock lck(&m_csFilterState);
+	return m_bFingerFlipY;
+}
+bool TouchLibFilter::SetbFlipY(bool v)
+{
+	CAutoLock lck(&m_csFilterState);
+	m_bFingerFlipY = v;
+	return true;
 }
