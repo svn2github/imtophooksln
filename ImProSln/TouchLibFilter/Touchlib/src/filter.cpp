@@ -63,7 +63,11 @@ void Filter::process(IplImage* frame)
     if( show )
 	{
 		//printf("Show img\n");
+		CvRect roi;
+		roi = cvGetImageROI(destination);
+		cvResetImageROI(destination);
         cvShowImage(name.c_str(), destination); 
+		cvSetImageROI(destination, roi);
 	}
 
 }

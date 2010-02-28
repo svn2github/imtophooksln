@@ -22,8 +22,7 @@ using namespace touchlib;
 // If we are using Windows
 #ifdef WIN32
 // create a thread and mutex
-HANDLE CTouchScreen::hThread = 0;
-HANDLE CTouchScreen::eventListMutex = 0;
+
 // If Linux or Apple
 #else
 // create a thread and mutex
@@ -40,6 +39,9 @@ CTouchScreen::CTouchScreen()
 	pTrackingFrame = NULL;
 	bDrawFinger = false;
 	pBlackImage = NULL;
+	pROIMergeResult = NULL;
+	hThread = 0;
+	eventListMutex = 0;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -101,6 +103,9 @@ CTouchScreen::CTouchScreen(float cw, float ch)
 	pTrackingFrame = NULL;
 	bDrawFinger = false;
 	pBlackImage = NULL;
+	pROIMergeResult = NULL;
+	hThread = 0;
+	eventListMutex = 0;
 #ifdef WIN32
 	tracker = 0;	// just reset the pointer to be safe...
 	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
@@ -212,6 +217,11 @@ CTouchScreen::~CTouchScreen()
 	{
 		cvReleaseImage(&pBlackImage);
 		pBlackImage = NULL;
+	}
+	if (pROIMergeResult != NULL)
+	{
+		cvReleaseImage(&pROIMergeResult);
+		pROIMergeResult = NULL;
 	}
 }
 
@@ -408,6 +418,11 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 	}
 	else
 	{
+		if ( pROIMergeResult == NULL)
+		{
+			pROIMergeResult = cvCreateImage(cvSize(pSrc->width, pSrc->height), 8, 1);
+		}
+		cvZero(pROIMergeResult);
 		for (int i =0; i < roi->m_nRECTs; i++)
 		{
 			CvRect roiRect;
@@ -416,18 +431,22 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 			roiRect.width = (roi->m_pRECTs[i].right - roi->m_pRECTs[i].left)*pSrc->width;
 			roiRect.height = (roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height;
 
-			if (roi->m_nRECTs != 1 || roi->m_pRECTs[0].left != 0)
-				int test = 0;
 			cvSetImageROI(pSrc, roiRect);
 			filterChain[0]->process(pSrc);	// Otherwise go to the first filter
 			cvResetImageROI(pSrc);
+			IplImage* tmpOutput = filterChain.back()->getOutput();
+		
+			cvSetImageROI(pROIMergeResult, roiRect);
+			cvCopyImage(tmpOutput, pROIMergeResult);
+			cvResetImageROI(pROIMergeResult);
+		
 		}
-		output = filterChain.back()->getOutput(); // and get the first frame
+		output = pROIMergeResult; // and get the first frame
 		cvResetImageROI(output);
+	
 	}
 	if(output != NULL) {			// If there is output to get
 		//printf("Process chain complete\n");
-
 		frame = output;		// assign it to the private CTouchScreen::frame variable
 
 		if(bTracking == true)		// If we are currently tracking blobs
@@ -436,7 +455,7 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 			{
 				pTrackingFrame = cvCloneImage(output);
 			}
-			
+
 			cvCopyImage(output, pTrackingFrame);
 			frame = pTrackingFrame;
 			//printf("Tracking 1\n");

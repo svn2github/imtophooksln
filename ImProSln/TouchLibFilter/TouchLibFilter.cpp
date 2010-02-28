@@ -912,6 +912,7 @@ bool TouchLibFilter::setStartTracking(bool bStart)
 {
 	if (m_pTouchScreen == NULL)
 		return false;
+	CAutoLock lck(&m_csTouchScreen);
 	if (bStart)
 		m_pTouchScreen->beginTracking();
 	else
@@ -927,6 +928,7 @@ bool TouchLibFilter::getStartTracking(bool& bStart)
 		bStart = false;
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	bStart = m_pTouchScreen->isTracking();
 	return true;
 }
@@ -937,6 +939,7 @@ bool TouchLibFilter::getDrawFingers()
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	return m_pTouchScreen->getDrawFingers();
 }
 bool TouchLibFilter::setDrawFingers(bool drawing)
@@ -945,6 +948,7 @@ bool TouchLibFilter::setDrawFingers(bool drawing)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	return m_pTouchScreen->setDrawFingers(drawing);
 }
 

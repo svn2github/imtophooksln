@@ -147,8 +147,8 @@ namespace touchlib
 		bool debugMode;
 		bool volatile bTracking;
 
-		static THREAD_HANDLE hThread;
-		static THREAD_MUTEX_HANDLE eventListMutex;
+		THREAD_HANDLE hThread;
+		THREAD_MUTEX_HANDLE eventListMutex;
 
 
 		IBlobTracker* tracker;
@@ -162,7 +162,7 @@ namespace touchlib
 #endif
 		IplImage* pTrackingFrame;
 		IplImage* pBlackImage;
-
+		IplImage* pROIMergeResult;
 		BwImage frame;
 		BwImage labelImg;
 		
