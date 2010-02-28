@@ -13,6 +13,8 @@ public:
 
     RectifyFilter(char* name);
     void kernel();
+	void kernelWithROI();
+
     virtual ~RectifyFilter();
 
 	virtual void getParameters(ParameterMap& pMap);

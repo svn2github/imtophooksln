@@ -60,9 +60,6 @@ void RectifyFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
         destination->origin = source->origin;  // same vertical flip as source
     }
-	cvZero(destination);
-	CvRect roiRECT = cvGetImageROI(source);
-	cvSetImageROI(destination, roiRECT);
 
 	if(bAutoSet)
 	{
@@ -86,4 +83,41 @@ void RectifyFilter::kernel()
 	}
 
     cvThreshold(source, destination, level, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
+}
+
+void RectifyFilter::kernelWithROI()
+{
+	level = level_slider;
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+
+	if(bAutoSet)
+	{
+		touchlib::BwImage img(source);
+
+		int h, w;
+		h = img.getHeight();
+		w = img.getWidth();
+
+		unsigned char highest = 0;
+
+		for(int y=0; y<h; y++)
+			for(int x=0; x<w; x++)
+			{
+				if(img[y][x] > highest)
+					highest = img[y][x];
+			}
+
+			setLevel((unsigned int)highest);
+			bAutoSet = false;
+	}
+
+	cvThreshold(source, destination, level, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
 }

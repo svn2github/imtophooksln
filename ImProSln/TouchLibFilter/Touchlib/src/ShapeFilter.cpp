@@ -86,6 +86,35 @@ void ShapeFilter::kernel()
 		buffer->origin = source->origin;
 	}
 
+	// create the unsharp mask using a linear average filter
+	int blurParameter = blurLevel*2+1;
+	cvSmooth(source, buffer, CV_BLUR, blurParameter, blurParameter);
+
+	cvThreshold(source, source, levelLevel, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
+    cvCanny(source, destination, (float)blurParameter, (float)blurParameter*3, 3);
+	
+
+}
+
+
+void ShapeFilter::kernelWithROI()
+{
+	if (show) {
+		blurLevel = blurLevelSlider;
+		levelLevel = levelSlider;
+	}
+
+
+
+	if (destination == NULL) {
+		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
+	if (buffer == NULL) {
+		buffer = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		buffer->origin = source->origin;
+	}
+
 
 	cvZero(destination);
 	CvRect roiRECT = cvGetImageROI(source);
@@ -96,8 +125,8 @@ void ShapeFilter::kernel()
 	cvSmooth(source, buffer, CV_BLUR, blurParameter, blurParameter);
 
 	cvThreshold(source, source, levelLevel, 255, CV_THRESH_TOZERO);		//CV_THRESH_BINARY
-    cvCanny(source, destination, (float)blurParameter, (float)blurParameter*3, 3);
-	
+	cvCanny(source, destination, (float)blurParameter, (float)blurParameter*3, 3);
+
 	cvResetImageROI(buffer);
 }
 

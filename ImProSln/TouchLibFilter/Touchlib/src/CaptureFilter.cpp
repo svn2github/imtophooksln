@@ -100,3 +100,8 @@ void CaptureFilter::kernel()
 	if(!destination)
 		cvSetCaptureProperty(capture, CV_CAP_PROP_POS_MSEC, 0);
 }
+
+void CaptureFilter::kernelWithROI()
+{
+	kernel();
+}

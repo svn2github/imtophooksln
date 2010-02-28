@@ -12,6 +12,8 @@ public:
 
     MonoFilter(char* name);
     void kernel();
+	void kernelWithROI();
+
     virtual ~MonoFilter();
 private:
 

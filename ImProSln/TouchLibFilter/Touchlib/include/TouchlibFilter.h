@@ -21,7 +21,9 @@ public:
     Filter(char* name);
 	virtual ~Filter();
     void process(IplImage* frame);
+	void processWithROI(IplImage* frame);
     virtual void kernel() = 0;
+	virtual void kernelWithROI() = 0;
     void connectTo(Filter* chainedfilter);
     IplImage* getOutput() { return destination; }
     virtual void showOutput(bool value, int windowx=0, int windowy=0);

@@ -93,17 +93,14 @@ void BackgroundFilter::kernel()
 	if(count > -1)
 		count--;
 
-	cvZero(destination);
-	CvRect roiRECT = cvGetImageROI(source);
-	cvSetImageROI(destination, roiRECT);
 	if( !reference || recapture || count == 0)
 	{
-		cvResetImageROI(source);
+	
 		if(reference)
 			cvCopy(source, reference);
 		else
 			reference = cvCloneImage(source);
-		cvSetImageROI(source, roiRECT);
+
 		if(!mask) {
 			mask = cvCreateImage(cvSize(reference->width,reference->height), reference->depth, 1);
 			mask->origin = reference->origin;  // same vertical flip as reference
@@ -166,6 +163,101 @@ void BackgroundFilter::kernel()
 		currentRow = 0;
 #endif
 	// destination = source-reference
+	
+	cvSub(source, reference, destination);
+	if (updateThreshold != 0)
+	{
+		cvSubS(destination, cvScalar(updateThreshold, updateThreshold, updateThreshold),destination );
+	}
+
+}
+
+
+void BackgroundFilter::kernelWithROI()
+{
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
+
+	if(count > -1)
+		count--;
+
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+	if( !reference || recapture || count == 0)
+	{
+		cvResetImageROI(source);
+		if(reference)
+			cvCopy(source, reference);
+		else
+			reference = cvCloneImage(source);
+		cvSetImageROI(source, roiRECT);
+		if(!mask) {
+			mask = cvCreateImage(cvSize(reference->width,reference->height), reference->depth, 1);
+			mask->origin = reference->origin;  // same vertical flip as reference
+			cvSet(mask,cvScalar(0,0,0));
+		}
+
+		if(nPolyMask && updateThreshold == 0) {
+			cvSet(mask,cvScalar(255,255,255));			
+			cvFillConvexPoly(mask, polyMask,nPolyMask,cvScalar(0,0,0));
+		}
+
+		recapture = false;
+	}
+
+#ifdef ADAPTIVE_BACKGROUND
+	touchlib::BwImage imgSrc(source), imgRef(reference);
+
+	int x, y;
+	int h, w;
+	h = source->height;
+	w = source->width;
+
+	int stoprow = currentRow + ROWSTOSCAN;
+
+	if(stoprow > h)
+		stoprow = h;
+
+	// only do N number of rows per frame to speed up processing.. 
+	for(y=currentRow; y<stoprow; y++)
+	{
+		for(x=0; x<w; x++)
+		{
+			int pix, ref;
+			pix = imgSrc[y][x];
+			ref = imgRef[y][x];
+			if(pix - ref < updateThreshold)		// bright spots are assummed to be active fingers, not background..
+			{
+				if(pix > ref) 
+				{
+					ref += UPDATERATE_UP;
+					if(ref > pix)
+						ref = pix;
+
+					imgRef[y][x] = ref;		// update background
+				}
+
+				// In most cases we won't really need to go 'down'..
+				// as the screen gets dirtier, it gets brighter.. 
+				// 
+				//if(pix < ref)
+				//ref -= UPDATERATE_DOWN;
+
+			}
+
+		}
+	}
+	currentRow += ROWSTOSCAN;
+
+	if(currentRow >= h)
+		currentRow = 0;
+#endif
+	// destination = source-reference
 	cvSetImageROI(reference, roiRECT);
 	cvSub(source, reference, destination);
 	if (updateThreshold != 0)
@@ -175,7 +267,6 @@ void BackgroundFilter::kernel()
 	cvResetImageROI(reference);
 
 }
-
 void BackgroundFilter::setMask(void * vaPoints, int xGrid, int yGrid)
 {
 	touchlib::vector2df * aPoints = (touchlib::vector2df*)vaPoints;

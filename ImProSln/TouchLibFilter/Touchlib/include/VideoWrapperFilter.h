@@ -19,7 +19,8 @@ class  VideoWrapperFilter : public Filter
 		virtual ~VideoWrapperFilter();
 		bool isRunning();
 		void kernel();
-
+		void kernelWithROI();
+		
 		virtual void getParameters(ParameterMap& pMap);
 		virtual void setParameter(const char *name, const char *value);
 	private:

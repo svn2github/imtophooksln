@@ -16,6 +16,8 @@ public:
 
     BrightnessContrastFilter(char*);
     void kernel();
+	void kernelWithROI();
+	
     virtual ~BrightnessContrastFilter();
 
 	void setBrightness(float value);

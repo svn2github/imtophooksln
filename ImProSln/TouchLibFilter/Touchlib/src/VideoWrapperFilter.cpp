@@ -299,3 +299,8 @@ void VideoWrapperFilter::kernel()
 
 	VIDEO_releaseFrame( g_hVideo );
 }
+
+void VideoWrapperFilter::kernelWithROI()
+{
+	kernel();
+}

@@ -45,7 +45,7 @@ class  DsCaptureFilter : public CBaseVideoRenderer, public Filter
 		virtual ~DsCaptureFilter();
 		bool isRunning();
 		void kernel();
-
+		void kernelWithROI();
 		virtual void process(IplImage* frame);
 
 		virtual void getParameters(ParameterMap& pMap);

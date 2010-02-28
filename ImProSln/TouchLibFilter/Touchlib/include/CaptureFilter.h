@@ -24,7 +24,7 @@ class CaptureFilter : public Filter
 		~CaptureFilter();
 		bool isRunning();
 		void kernel();
-
+		void kernelWithROI();
 		virtual void process(IplImage* frame);
 
 		virtual void getParameters(ParameterMap& pMap);

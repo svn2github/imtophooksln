@@ -12,6 +12,8 @@ public:
 
     BackgroundFilter(char* name);
     void kernel();
+	void kernelWithROI();
+	
     virtual ~BackgroundFilter();
 	virtual void getParameters(ParameterMap& pMap);
 	virtual void setParameter(const char *name, const char *value);

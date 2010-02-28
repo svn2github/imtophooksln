@@ -181,3 +181,8 @@ void CropFilter::kernel()
 	cvCopy(source, destination);		
 	
 }
+
+void CropFilter::kernelWithROI()
+{
+	kernel();	
+}

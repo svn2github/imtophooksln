@@ -17,6 +17,8 @@ class  CropFilter : public Filter
 	public:
 		CropFilter(char* name);
 		void kernel();
+		void kernelWithROI();
+		
 		virtual ~CropFilter();
 
 		virtual void getParameters(ParameterMap& pMap);

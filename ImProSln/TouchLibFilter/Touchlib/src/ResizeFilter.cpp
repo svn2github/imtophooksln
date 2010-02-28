@@ -57,10 +57,24 @@ void ResizeFilter::kernel()
 
 		ownsImage = true;
 	} 
+
+	cvResize(source, destination, CV_INTER_LINEAR);
+}
+// We are assuming 8 bit depth, 1 channel.. so this filter should happen after the mono filter..
+void ResizeFilter::kernelWithROI()
+{
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvSize(sizeX,sizeY), 8, 1);
+		destination->origin = source->origin;  // same vertical flip as source
+
+		ownsImage = true;
+	} 
 	cvZero(destination);
 	CvRect roiRECT = cvGetImageROI(source);
 	cvSetImageROI(destination, roiRECT);
 
 	cvResize(source, destination, CV_INTER_LINEAR);
-	
+
 }

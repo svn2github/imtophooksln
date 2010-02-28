@@ -435,13 +435,13 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 				//since mono filter we don't use ROI
 				IplImage* pMonoImg = filterChain[0]->getOutput();
 				cvSetImageROI(pMonoImg, roiRect);
-				filterChain[1]->process(pMonoImg);
+				filterChain[1]->processWithROI(pMonoImg);
 				cvResetImageROI(pMonoImg);
 			}
 			else
 			{
 				cvSetImageROI(pSrc, roiRect);
-				filterChain[0]->process(pSrc);	// Otherwise go to the first filter
+				filterChain[0]->processWithROI(pSrc);	// Otherwise go to the first filter
 				cvResetImageROI(pSrc);
 			}
 			

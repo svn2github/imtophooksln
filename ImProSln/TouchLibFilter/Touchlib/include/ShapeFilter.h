@@ -24,6 +24,8 @@ public:
 
 
 	void kernel();
+	void kernelWithROI();
+	
 	void getParameters(ParameterMap &pMap);
 	void setParameter(const char *name, const char *value);
 	void showOutput(bool value, int windowx, int windowy);

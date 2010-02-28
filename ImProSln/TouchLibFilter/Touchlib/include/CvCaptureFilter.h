@@ -24,9 +24,9 @@ class  CvCaptureFilter : public Filter
 		virtual ~CvCaptureFilter();
 		bool isRunning();
 		void kernel();
-
+		void kernelWithROI();
 		virtual void process(IplImage* frame);
-
+		virtual void processWithROI(IplImage* frame);
 		virtual void getParameters(ParameterMap& pMap);
 		virtual void setParameter(const char *name, const char *value);
 

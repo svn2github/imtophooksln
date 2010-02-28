@@ -104,10 +104,7 @@ void ThresholdFilter::kernel()
 		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		destination->origin = source->origin;  // same vertical flip as source
 	}
-	cvZero(destination);
-	CvRect roiRECT = cvGetImageROI(source);
-	cvSetImageROI(destination, roiRECT);
-
+	
 	float localMax = 0.0f;
 	float localAverage = 0.0f;
 
@@ -164,4 +161,81 @@ void ThresholdFilter::kernel()
 	}
 
 	
+}
+
+void ThresholdFilter::kernelWithROI()
+{
+	if (show) {
+		if (!isDynamic) {
+			threshold = thresholdSlider / 255.0f;
+		}
+		if (mode != modeSlider) {
+			setMode(modeSlider);
+		}
+	}
+
+	if (destination == NULL) {
+		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+
+	float localMax = 0.0f;
+	float localAverage = 0.0f;
+
+	unsigned char *src = (unsigned char *) source->imageData;
+	unsigned char *srcEnd = src + source->imageSize;
+	unsigned char *dest = (unsigned char *) destination->imageData;
+
+	while (src < srcEnd) {
+		unsigned char pixel = *(src++);
+
+		// did we reach a new local max?
+		float pixelFloat = pixel / 255.0f;
+		if (pixelFloat > localMax)
+			localMax = pixelFloat;
+		localAverage += pixelFloat;
+
+		// drop pixels below threshold
+		if (pixelFloat < threshold)
+			*(dest++) = 0;
+		else
+			*(dest++) = pixel;
+	}
+
+	if (isDynamic) {
+		localAverage /= source->width * source->height;
+
+		if (reinitDynamicStatisticsFrames > 0) {
+			reinitDynamicStatisticsFrames--;
+			if (reinitDynamicStatisticsFrames == 0) {
+				// reset
+				threshold = localMax * 1.8f;
+				overallMax = 2 * threshold - localAverage;
+			} else {
+				threshold = 1.0f;
+			}
+		} else {
+			if (localMax > overallMax) {
+				overallMax = localMax;
+			} else if (localMax > threshold) {
+				overallMax = overallMax * 0.995f + localMax * 0.005f;
+			}
+
+			threshold = (localAverage + overallMax) * 0.5f;
+		}
+
+		if (show) {
+			int level = (int) (threshold * 255.0f);
+			if (level > 255) {
+				level = 255;
+			}
+
+			cvSetTrackbarPos(TRACKBAR_LABEL_THRESHOLD, this->name.c_str(), level);
+		}
+	}
+
+
 }

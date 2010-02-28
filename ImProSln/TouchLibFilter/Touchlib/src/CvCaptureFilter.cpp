@@ -45,7 +45,13 @@ void CvCaptureFilter::acquireImage(void *param)
 	}
 	*/
 }
+void CvCaptureFilter::processWithROI(IplImage* frame)
+{
+	Filter::processWithROI(frame);
 
+	acquiredImage = NULL;
+	destination = NULL;
+}
 void CvCaptureFilter::process(IplImage *frame)
 {
 	Filter::process(frame);
@@ -97,4 +103,9 @@ void CvCaptureFilter::kernel()
 	// rewind the movie.
 	if(!destination)
 		cvSetCaptureProperty(capture, CV_CAP_PROP_POS_MSEC, 0);
+}
+
+void CvCaptureFilter::kernelWithROI()
+{
+	kernel();
 }

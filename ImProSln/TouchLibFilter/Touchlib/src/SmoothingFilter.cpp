@@ -20,11 +20,19 @@ void SmoothingFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, source->nChannels);
         destination->origin = source->origin;  // same vertical flip as source
     }
+	cvSmooth( source, destination, CV_MEDIAN, 5, 5);		//CV_BLUR
+}
+void SmoothingFilter::kernelWithROI()
+{
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvSize(source->width,source->height), source->depth, source->nChannels);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
 	cvZero(destination);
 	CvRect roiRECT = cvGetImageROI(source);
 	cvSetImageROI(destination, roiRECT);
 
 	cvSmooth( source, destination, CV_MEDIAN, 5, 5);		//CV_BLUR
-
-	
 }

@@ -13,6 +13,8 @@ public:
 
     ScalerFilter(char* name);
     void kernel();
+	void kernelWithROI();
+	
     virtual ~ScalerFilter();
 
 	virtual void getParameters(ParameterMap& pMap);

@@ -17,6 +17,7 @@ public:
 
     BrightnessContrastFilter(char*);
     void kernel();
+	void kernelWithROI();
     ~BrightnessContrastFilter();
 
     void setBrightness(float value) {_brightness = value; updateLUT();}

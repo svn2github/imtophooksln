@@ -108,6 +108,36 @@ void SimpleHighpassFilter::kernel()
 		buffer = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
 		buffer->origin = source->origin;
 	}
+	// create the unsharp mask using a linear average filter
+	int blurParameter = blurLevel*2+1;
+	cvSmooth(source, buffer, CV_BLUR, blurParameter, blurParameter);
+	//cvAbsDiff(source, buffer, buffer);
+	cvSub(source, buffer, buffer);
+
+	// filter out the noise using a median filter
+	int noiseParameter = noiseLevel*2+1;
+	cvSmooth(buffer, destination, noiseSmoothType, noiseParameter, noiseParameter);
+	
+}
+
+
+void SimpleHighpassFilter::kernelWithROI()
+{
+	if (show) {
+		blurLevel = blurLevelSlider;
+		noiseLevel = noiseLevelSlider;
+		setNoiseSmoothType(noiseMethodSlider);
+	}
+
+	if (destination == NULL) {
+
+		destination = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
+	if (buffer == NULL) {
+		buffer = cvCreateImage(cvSize(source->width, source->height), source->depth, source->nChannels);
+		buffer->origin = source->origin;
+	}
 	cvZero(destination);
 	CvRect roiRECT = cvGetImageROI(source);
 	cvSetImageROI(destination, roiRECT);
@@ -121,8 +151,8 @@ void SimpleHighpassFilter::kernel()
 	// filter out the noise using a median filter
 	int noiseParameter = noiseLevel*2+1;
 	cvSmooth(buffer, destination, noiseSmoothType, noiseParameter, noiseParameter);
-	
+
 	cvResetImageROI(buffer);
-	
+
 }
 

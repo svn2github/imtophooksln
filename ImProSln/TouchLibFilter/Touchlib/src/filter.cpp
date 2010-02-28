@@ -46,28 +46,45 @@ void Filter::showOutput(bool value, int windowx, int windowy)
     }
 }
 
-
-void Filter::process(IplImage* frame)
+void Filter::processWithROI(IplImage* frame)
 {
-    source = frame;
+	source = frame;
 
-    // subclasses need to implement this abstract method.
-    this->kernel();
+	// subclasses need to implement this abstract method.
+	this->kernelWithROI();
 
 	if( !destination )
 		return;
 
-    if( chainedfilter )
-        chainedfilter->process(destination);
- 
-    if( show )
+	if( chainedfilter )
+		chainedfilter->processWithROI(destination);
+
+	if( show )
 	{
 		//printf("Show img\n");
 		CvRect roi;
 		roi = cvGetImageROI(destination);
 		cvResetImageROI(destination);
-        cvShowImage(name.c_str(), destination); 
+		cvShowImage(name.c_str(), destination); 
 		cvSetImageROI(destination, roi);
+	}
+}
+void Filter::process(IplImage* frame)
+{
+	source = frame;
+
+	// subclasses need to implement this abstract method.
+	this->kernel();
+
+	if( !destination )
+		return;
+
+	if( chainedfilter )
+		chainedfilter->process(destination);
+
+	if( show )
+	{
+		cvShowImage(name.c_str(), destination); 
 	}
 
 }

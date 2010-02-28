@@ -53,11 +53,27 @@ void ScalerFilter::kernel()
         destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
         destination->origin = source->origin;  // same vertical flip as source
     }
+	
+	cvMul(source, source, destination, (float)level / 128.0f);
+}
+
+void ScalerFilter::kernelWithROI()
+{
+	if (show) {
+		level = level_slider;
+	}
+
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvSize(source->width,source->height), source->depth, 1);
+		destination->origin = source->origin;  // same vertical flip as source
+	}
 	cvZero(destination);
 	CvRect roiRECT = cvGetImageROI(source);
 	cvSetImageROI(destination, roiRECT);
-	
+
 	cvMul(source, source, destination, (float)level / 128.0f);
-	
-	
+
+
 }

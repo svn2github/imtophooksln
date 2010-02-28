@@ -187,6 +187,10 @@ void DsCaptureFilter::kernel()
 	destination = acquiredImage;
 }
 
+void DsCaptureFilter::kernelWithROI()
+{
+	kernel();
+}
 HRESULT DsCaptureFilter::CheckMediaType(const CMediaType *media )
 {    
     VIDEOINFO* vi; 

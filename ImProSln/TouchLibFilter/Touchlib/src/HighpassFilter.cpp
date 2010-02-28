@@ -91,11 +91,7 @@ void HighpassFilter::kernel()
 		outra2->origin = source->origin;
     }
    
-	cvZero(destination);
-	CvRect roiRECT = cvGetImageROI(source);
-	cvSetImageROI(destination, roiRECT);
-	cvSetImageROI(outra, roiRECT);
-	cvSetImageROI(outra2, roiRECT);
+
 
 	cvConvertScale( source, outra );
 	//CV_MEDIAN
@@ -117,9 +113,56 @@ void HighpassFilter::kernel()
 	    cvDilate(destination,destination,element,1);
 	}
 	
+}
+
+void HighpassFilter::kernelWithROI()
+{
+
+	filterLevel = filterLevel_slider;
+	scale = scale_slider;
+
+	// derived class responsible for allocating storage for filtered image
+	if( !destination )
+	{
+		destination = cvCreateImage(cvGetSize(source), source->depth, source->nChannels);
+		destination->origin = source->origin;  // same vertical flip as source
+
+		outra = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra->origin = source->origin;
+
+		outra2 = cvCreateImage( cvGetSize(source), IPL_DEPTH_16S, 1 );
+		outra2->origin = source->origin;
+	}
+
+	cvZero(destination);
+	CvRect roiRECT = cvGetImageROI(source);
+	cvSetImageROI(destination, roiRECT);
+	cvSetImageROI(outra, roiRECT);
+	cvSetImageROI(outra2, roiRECT);
+
+	cvConvertScale( source, outra );
+	//CV_MEDIAN
+	cvSmooth( outra, outra2, CV_GAUSSIAN, (filterLevel*2) + 3, (filterLevel*2) + 3, 0, 0 );
+
+	cvSub(outra, outra2, outra2);
+
+	if(noErodeDialate)
+	{
+		cvConvertScale( outra2, destination, ((double)scale+1.0),  0);
+		cvErode(destination,destination,element,1);
+		cvSmooth( destination, destination, CV_GAUSSIAN, 11, 11, 0, 0 );
+		cvDilate(destination,destination,element,1);
+	} else {
+		cvConvertScale( outra2, destination, ((double)scale+1.0),  32);
+		cvErode(destination,destination,element,2);
+		cvSmooth( destination, destination, CV_GAUSSIAN, 7, 7, 0, 0 );
+		cvDilate(destination,destination,element2,1);
+		cvDilate(destination,destination,element,1);
+	}
+
 	cvResetImageROI(outra);
 	cvResetImageROI(outra2);
-	
+
 }
 
 

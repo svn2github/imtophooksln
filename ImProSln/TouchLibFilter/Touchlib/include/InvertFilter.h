@@ -13,7 +13,8 @@ public:
     InvertFilter(char*);
     virtual ~InvertFilter();
     void kernel();
-
+	void kernelWithROI();
+	
 private:
 
 

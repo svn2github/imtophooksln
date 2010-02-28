@@ -13,7 +13,8 @@ public:
     SmoothingFilter(char*);
     virtual ~SmoothingFilter();
     void kernel();
-
+	void kernelWithROI();
+	
 };
 
 #endif // __TOUCHSCREEN_FILTER_SMOOTHING__
