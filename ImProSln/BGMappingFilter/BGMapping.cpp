@@ -70,11 +70,6 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	IplImage *temp = cvCreateImage(cvGetSize(backgroundImg),8,1) ;
 
 	cvCopy(backgroundImg,temp);
-
-	/*if(isDilate){
-		cvDilate(temp,backgroundImg,kernelElement,1);
-	}
-	else*/
 	cvSmooth(temp,backgroundImg,2,5);
 
 	cvReleaseImage(&temp);
@@ -92,18 +87,24 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	if(camFlip ==true){
 	cvFlip(resultImg);
 	}
+
+	cvNamedWindow("background");
+	cvNamedWindow("src");
+	cvNamedWindow("result");
+
 	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
-	/*cvShowImage("background",backgroundImg);
-	cvShowImage("src",resultImg);*/
+	cvShowImage("background",backgroundImg);
+	cvShowImage("src",resultImg);
 	cvSub(resultImg,backgroundImg,resultImg);
-	/*cvShowImage("result",resultImg);
-	cvWaitKey(1);*/
+	cvShowImage("result",resultImg);
+	cvWaitKey(1);
+	cvCvtColor(resultImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
 	}
-	cvCvtColor( resultImg, result4CImg, CV_GRAY2RGB);
 	findForegroundRect(resultImg);
+
 	if(outputFlip == true){
 		cvFlip(result4CImg);
 	}

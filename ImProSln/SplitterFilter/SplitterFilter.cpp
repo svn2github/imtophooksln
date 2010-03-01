@@ -223,7 +223,7 @@ HRESULT SplitterFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 HRESULT SplitterFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
 
-	if (m_pStreamPins.size() > 0&& getData == true && m_pStreamPins[0] == pPin)
+	if (m_pStreamPins.size() > 0 && getData == true && m_pStreamPins[0] == pPin)
 	{
 		CMediaType mt;
 		mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
@@ -231,6 +231,8 @@ HRESULT SplitterFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		pSamp->GetPointer(&pOutData);
 		long size = pSamp->GetSize();
 		memcpy(pOutData,InData,size);
+		getData = false ;
+		
 			
 	}
 	return S_OK;
