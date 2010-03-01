@@ -641,7 +641,8 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::buildExtrinsicMat(CvMat* rotation, CvMat* t
 	return true;
 }
 
-AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* object3D, CvMat* camExtrin){
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* object3D, CvMat* camExtrin, 
+															bool bUseGuess, float* guessR, float* guessT){
 	float intriMat[9] = {1,0,0, 0,1,0, 0,0,1};
 	float dist_factor[4] = { this->arCamera->dist_factor[0], this->arCamera->dist_factor[1], this->arCamera->dist_factor[2], this->arCamera->dist_factor[3]};
 	float tranV[3] = {0, 0, 0 };
@@ -654,18 +655,27 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, 
 			intriMat[3*row + col] = this->arCamera->mat[row][col];
 		}
 	}
+	
 	CvMat camIntrinsic = cvMat(3, 3, CV_32F, (void*)intriMat);
 	CvMat camDisto = cvMat(4, 1, CV_32F, (void*)dist_factor);
 	CvMat transW2C = cvMat(3, 1, CV_32F, tranV);
 	CvMat rotateTmp = cvMat(3, 1, CV_32F, rotV);
 	CvMat rotateW2C = cvMat(3, 3, CV_32F, rotW2C);
-	cvFindExtrinsicCameraParams2(object3D, cameraPoint, &camIntrinsic, &camDisto, &rotateTmp, &transW2C);
+
+	if (bUseGuess && guessR != NULL && guessT != NULL)
+	{
+		rotateTmp = cvMat(3, 1, CV_32F, guessR);
+		transW2C = cvMat(3, 1, CV_32F, guessT);
+	}
+	cvFindExtrinsicCameraParams2(object3D, cameraPoint, &camIntrinsic, &camDisto, &rotateTmp, &transW2C, bUseGuess);
+	
 	cvRodrigues2(&rotateTmp, &rotateW2C);
 
 	buildExtrinsicMat(&rotateW2C, &transW2C, camExtrin);
 	return true;
 }
-AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detectedMarkers, int nDetected, ARMultiMarkerInfoT *config)
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detectedMarkers, int nDetected, ARMultiMarkerInfoT *config
+															,bool bUseLastGuess = false, double* lastExtrinsic = NULL)
 {
 	float w = this->screenWidth;
 	float h = this->screenHeight;
@@ -772,17 +782,53 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	cvPt2D = cvMat(nValidDetected*4, 2, CV_32F, pt2d); //t: virtual space, d: camera space
 	cv3DPts = cvMat(nValidDetected*4, 3, CV_32F, pos3d);
 	camExtrin = cvMat(4, 4, CV_32F, tmp);
-	findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin);
+
 	double bscale[3] = {0};
 	getBasisScale(bscale);
 	D3DXMATRIX matExtrin, matScale;
 	D3DXMatrixScaling(&matScale, bscale[0], bscale[1], bscale[2]);
+	
+	if (bUseLastGuess && lastExtrinsic != NULL &&  
+		bscale[0] != 0 && bscale[1] != 0 && bscale[2] != 0)
+	{
+		D3DXMATRIX matLastExtrin, matInvScale;
+		D3DXMatrixScaling(&matInvScale, 1.0/bscale[0], 1.0/bscale[1], 1.0/bscale[2]);
+		for (int row =0; row <4; row++)
+		{
+			for (int col =0; col <4; col++)
+			{
+				matLastExtrin.m[row][col] = lastExtrinsic[row*4 + col];
+			}
+		}
+		matLastExtrin = matLastExtrin * matInvScale;
+
+		float lastTVec[3] = {matLastExtrin.m[3][0], matLastExtrin.m[3][1], matLastExtrin.m[3][2]};
+		float lastRotVec[3] = {0};
+		float initV1[3] = {0,0,0};
+		float initV2[9] = {1,0,0, 0,1,0, 0,0,1};
+		CvMat cvlastRotMat = cvMat(3, 3, CV_32F, (void*)initV2);
+		CvMat cvlastRotVec = cvMat(3, 1, CV_32F, (void*)initV1);
+		for (int row = 0; row <3; row ++)
+			for (int col =0; col<3; col++)	
+				cvmSet(&cvlastRotMat, row, col, matLastExtrin.m[row][col]);
+		cvRodrigues2(&cvlastRotMat, &cvlastRotVec);
+		for (int i =0; i <3; i++)
+		{
+			lastRotVec[i] = cvmGet(&cvlastRotVec, i, 0);
+		}
+		findWorld2CamExtrinsic(&cvPt2D, &cv3DPts, &camExtrin, true, lastRotVec, lastTVec);
+	}
+	else
+	{
+		findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin, false, NULL, NULL);
+	}
+
 
 	for (int row =0 ; row < 4; row++)
 	{
 		for(int col =0; col<4; col++)
 		{
-			matExtrin.m[row][col] = cvmGet(&camExtrin, row, col);
+			matExtrin.m[col][row] = cvmGet(&camExtrin, row, col);
 		}
 	}
 	matExtrin = matExtrin * matScale;
@@ -791,7 +837,7 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	{
 		for (int col =0; col < 4; col++)
 		{
-			config->cvTrans[row][col] = matExtrin.m[col][row];
+			config->cvTrans[row][col] = matExtrin.m[row][col];
 		}
 	}
 	

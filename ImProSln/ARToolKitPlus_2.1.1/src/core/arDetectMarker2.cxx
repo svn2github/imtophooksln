@@ -75,7 +75,6 @@ AR_TEMPL_TRACKER::arDetectMarker2(ARInt16 *limage, int label_num, int *label_ref
         if( warea[i] < area_min || warea[i] > area_max ) continue;
         if( wclip[i*4+0] == 1 || wclip[i*4+1] == xsize-2 ) continue;
         if( wclip[i*4+2] == 1 || wclip[i*4+3] == ysize-2 ) continue;
-
         ret = arGetContour( limage, label_ref, i+1,
                             &(wclip[i*4]), &(marker_infoTWO[marker_num2]));
         if( ret < 0 ) continue;

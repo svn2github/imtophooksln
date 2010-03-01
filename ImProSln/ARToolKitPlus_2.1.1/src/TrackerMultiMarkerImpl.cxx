@@ -60,6 +60,7 @@ ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 
 	useDetectLite = true;
 	numDetected = 0;
+	m_numLastDetected = 0;
 
 	config = 0;
 
@@ -213,6 +214,7 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
 	{
 		return 0;
 	}
+	m_numLastDetected = numDetected;
 	numDetected = 0;
 	int				tmpNumDetected;
     ARMarkerInfo    *tmp_markers;
@@ -240,8 +242,22 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
 
 	if(executeMultiMarkerPoseEstimator(tmp_markers, tmpNumDetected, config) < 0)
 		return 0;
-	
-	executeCVPoseEstimator(tmp_markers, tmpNumDetected, config);
+	if (m_numLastDetected > 0 )
+	{
+		double lastExtrinsic[16];
+		for (int row =0; row < 4; row++)
+		{
+			for(int col =0; col < 4; col++)
+			{
+				lastExtrinsic[row*4 + col] = config->cvTrans[row][col];
+			}
+		}
+		executeCVPoseEstimator(tmp_markers, tmpNumDetected, config, true, lastExtrinsic);
+	}
+	else
+	{
+		executeCVPoseEstimator(tmp_markers, tmpNumDetected, config, false, NULL);
+	}
 	convertTransformationMatrixToOpenGLStyle(config->trans, this->gl_para);
 	return numDetected;
 }

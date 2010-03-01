@@ -7,19 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#ifndef __APPLE__
-#include <GL/gl.h>
-#include <GL/glut.h>
-#else
-#include <OpenGL/gl.h>
-#include <GLUT/glut.h>
-#endif
+
 #include "ARTagCameraDS.h"
-/*#include <AR/gsub.h>
-#include <AR/video.h>
-#include <AR/param.h>
-#include <AR/ar.h>*/
-//#include "draw_object.h"
 #include <d3dx9math.h>
 #include <vcclr.h>
 #include "Streams.h"
@@ -208,7 +197,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 
-			setupSocket();
+			//setupSocket();
 			
 		}
 
@@ -1020,7 +1009,7 @@ bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMu
 			{
 				cam_trans[row][col] = config->cvTrans[row][col];
 			}
-			d3d_camTrans.m[row][col] = config->cvTrans[col][row];
+			d3d_camTrans.m[row][col] = config->cvTrans[row][col];
 		}
 	}
 	D3DXMatrixInverse(&d3dTarget_trans, NULL, &d3d_camTrans);

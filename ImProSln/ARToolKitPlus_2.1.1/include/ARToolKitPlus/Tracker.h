@@ -297,7 +297,8 @@ public:
 
 	/// Calls the pose estimator set with setPoseEstimator() for multi marker tracking
 	virtual ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config) = 0;
-	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config) = 0;
+	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config,
+		bool bUseLastGuess = false, double* lastExtrinsic = NULL) = 0;
 };
 
 

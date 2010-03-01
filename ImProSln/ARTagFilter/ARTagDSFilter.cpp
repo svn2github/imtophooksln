@@ -624,10 +624,16 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	{
 		for(int col =0; col<4; col++)
 		{
-			matExtrin.m[col][row] = config->cvTrans[col][row];
+			matExtrin.m[row][col] = config->cvTrans[row][col];
 		}
 	}
+	double bscale[3] = {0};
+	m_ARTracker->getBasisScale(bscale);
+	D3DXMATRIX matScale, matInvScale;
+	D3DXMatrixScaling(&matScale, bscale[0], bscale[1], bscale[2]);
+	D3DXMatrixScaling(&matInvScale, 1.0/ bscale[0], 1.0/bscale[1], 1.0/bscale[2]);
 
+	matExtrin = matScale * matExtrin * matInvScale;
 	for (int i =0; i< nValidDetected; i++)
 	{
 		for (int j =0; j<4;j++)
@@ -639,8 +645,10 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 			v3d.z = pos3d[4*3*i + 3*j + 2]; 
 			
 			D3DXVec3Transform(&vtmp, &v3d, &matExtrin);
+			vtmp.x /= vtmp.z;
+			vtmp.y  /= vtmp.z;
 			D3DXVec4Transform(&vtmp, &vtmp, &m_matIntri);
-			vtmp /= vtmp.z;
+			
 			int x = vtmp.x;
 			int y = vtmp.y;
 			cvDrawCircle(srcImage, cvPoint(x, y), 3, cvScalar(255,0,0), 2);	
@@ -789,6 +797,18 @@ bool ARTagDSFilter::setCamera(int xsize, int ysize, double* mat, double* dist_fa
 			m_matIntri.m[col][row] = mat[row*4 + col];
 		}
 	}
+	m_matIntri.m[0][3] =m_matIntri.m[0][2];
+	m_matIntri.m[1][3] =m_matIntri.m[1][2];
+	m_matIntri.m[3][3] =m_matIntri.m[2][2];
+	m_matIntri.m[3][0] =m_matIntri.m[2][0];
+	m_matIntri.m[3][1] =m_matIntri.m[2][1];
+	
+	m_matIntri.m[0][2] = 0;
+	m_matIntri.m[1][2] = 0;
+	m_matIntri.m[2][2] = 0;
+	m_matIntri.m[2][0] = 0;
+	m_matIntri.m[2][1] = 0;
+
 	return m_ARTracker->setCamera(xsize, ysize, mat, dist_factor, nNearClip, nFarClip);
 }
 
@@ -1355,8 +1375,8 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	int numMarker = 0;
 	float markerBits = 8;
 	float borderBits = 2;
-	float WidthBits = 40;
-	int numLevel = 3;
+	float WidthBits = 80;
+	int numLevel = 2;
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = markerBits/WidthBits/level;

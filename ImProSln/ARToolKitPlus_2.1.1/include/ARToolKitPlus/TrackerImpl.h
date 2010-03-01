@@ -321,11 +321,13 @@ public:
 
 
 	virtual ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
-	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
+	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config,
+		bool bUseLastGuess = false, double* lastExtrinsic = NULL);
 
 protected:
 	bool buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat);
-	bool findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* objectPoint, CvMat* camExtrin);
+	bool findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* objectPoint, CvMat* camExtrin, 
+				bool bUseGuess = false, float* guessR = NULL, float* guessT = NULL);
 	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	bool checkPixelFormat();
 
