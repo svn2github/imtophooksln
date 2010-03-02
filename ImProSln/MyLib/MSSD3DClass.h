@@ -393,7 +393,7 @@ public:
 	virtual BOOL Stop();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
-	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)=0;
+	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	HWND GetDisplayWindow() { return m_hDisplayWnd;}
 	virtual HRESULT SetDeviceLostCallback(DeviceLostCallBack pBeforeReset, 

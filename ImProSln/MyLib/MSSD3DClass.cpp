@@ -826,7 +826,10 @@ BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture)
 	m_pCamera->CameraOff();
 	return TRUE;
 }
-
+BOOL MS3DDisplay::Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect)
+{
+	return S_FALSE;
+}
 
 BOOL MS3DDisplay::IntersectWithPlane(D3DXVECTOR3 vPos, D3DXVECTOR3 vDir, BOOL& bHit, float& tU, float& tV)
 {

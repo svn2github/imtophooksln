@@ -48,7 +48,6 @@ ARTagDSFilter::~ARTagDSFilter()
 		delete[] m_callbackArgv;
 		m_callbackArgv = NULL;
 	}
-
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
@@ -1377,7 +1376,7 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = markerBits/WidthBits/level;
-		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
+		int numX = cvRound( 1.0  / (markerWidth + borderBits/WidthBits/level));
 		int numY = numX;
 		numMarker += numX * numY;
 
@@ -1391,7 +1390,7 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	{
 		float markerWidth = markerBits/WidthBits/level;
 		
-		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
+		int numX = cvRound(1.0  / (markerWidth + borderBits/WidthBits/level));
 		int numY = numX;
 		for (int i = 0; i < numY; i++)
 		{
