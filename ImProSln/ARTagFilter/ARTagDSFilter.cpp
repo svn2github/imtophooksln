@@ -32,6 +32,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_callbackArgv = NULL;
 	m_bDrawTag = true;
 	m_bDrawReproPt = true;
+	m_bGuessPose = true;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 }
@@ -363,7 +364,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	cvFlip(imgOut, NULL, 0);
 	if (m_ARTracker != NULL)
 	{
-		numDetected = m_ARTracker->calc(pOutData);
+		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
@@ -1269,7 +1270,15 @@ bool ARTagDSFilter::setbDrawReproPt(bool v)
 	m_bDrawReproPt = v;
 	return true;
 }
-
+bool ARTagDSFilter::getbGuessPose()
+{
+	return m_bGuessPose;
+}
+bool ARTagDSFilter::setbGuessPose(bool v)
+{
+	m_bGuessPose = v;
+	return true;
+}
 bool ARTagDSFilter::IsReady()
 {
 	if (m_ARTracker == NULL)
@@ -1431,6 +1440,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	int undistMode = this->getUndistortionMode();
 	int bDrawTag = this->getbDrawTag();
 	int bDrawReProj = this->getbDrawReproPt();
+	int bGuessPose = this->getbGuessPose();
 	float confThreshold = this->getConfThreshold();
 	int threshold = this->getThreshold();
 	float borderWidth = this->getBorderWidth();
@@ -1443,7 +1453,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	this->getWorldBasisScale(worldScale);
 
 	fwprintf_s(filestream, L"%d %d %d \n", poseEstimator, markermode, undistMode);
-	fwprintf_s(filestream, L"%d %d \n", bDrawTag,  bDrawReProj);
+	fwprintf_s(filestream, L"%d %d %d \n", bDrawTag,  bDrawReProj, bGuessPose);
 	fwprintf_s(filestream, L"%f %d %f\n", confThreshold, threshold, borderWidth);
 	
 	fwprintf_s(filestream, L"%d %d \n", camXsize, camYsize);
@@ -1476,6 +1486,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	int undistMode = 0;
 	int bDrawTag = 1;
 	int bDrawReProj = 1;
+	int bGuessPose = 1;
 	double confThreshold = 0.9;
 	int threshold = 100;
 	double borderWidth = 0.125;
@@ -1486,7 +1497,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	double worldScale[3] = {1};
 
 	fwscanf_s(filestream, L"%d %d %d \n", &poseEstimator, &markermode, &undistMode);
-	fwscanf_s(filestream, L"%d %d \n", &bDrawTag, &bDrawReProj);
+	fwscanf_s(filestream, L"%d %d %d \n", &bDrawTag, &bDrawReProj, &bGuessPose);
 	fwscanf_s(filestream, L"%lf %d %lf\n", &confThreshold, &threshold, &borderWidth);
 
 	fwscanf_s(filestream, L"%d %d \n", &camXsize, &camYsize);
@@ -1508,6 +1519,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	this->setUndistortionMode(undistMode);
 	this->setbDrawTag(bDrawTag);
 	this->setbDrawReproPt(bDrawReProj);
+	this->setbGuessPose(bGuessPose);
 	this->setConfThreshold(confThreshold);
 	this->setThreshold(threshold);
 	this->setBorderWidth(borderWidth);

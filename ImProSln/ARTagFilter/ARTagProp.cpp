@@ -365,6 +365,7 @@ m_pARProperty(0)
 	m_cbUnDistortMode = 0;
 	m_ckDrawTag = 0;
 	m_ckDrawReProj = 0;
+	m_ckGuessPose = 0;
 	m_slrThreshold = 0;
 	m_slrBorderW = 0;
 	m_txtThreshold = 0;
@@ -431,6 +432,10 @@ bool ARTagGeneralPage::GetSetting()
 	Button_SetCheck(m_ckDrawReProj, bDrawReproj);
 	bool bDrawTag = m_pARProperty->getbDrawTag();
 	Button_SetCheck(m_ckDrawTag, bDrawTag);
+	bool bGuessPose = m_pARProperty->getbGuessPose();
+	Button_SetCheck(m_ckGuessPose, bGuessPose);
+
+
 	int poseEstimator = m_pARProperty->getPoseEstimator();
 	ComboBox_SetCurSel(m_cbPoseEstimator, poseEstimator);
 	int markermode = m_pARProperty->getMarkerMode();
@@ -465,6 +470,8 @@ bool ARTagGeneralPage::ApplySetting()
 	m_pARProperty->setbDrawReproPt(bDrawReproj);
 	bool bDrawTag = Button_GetCheck(m_ckDrawTag);
 	m_pARProperty->setbDrawTag(bDrawTag);
+	bool bGuessPose = Button_GetCheck(m_ckGuessPose);
+	m_pARProperty->setbGuessPose(bGuessPose);
 
 	int poseEstimator = ComboBox_GetCurSel(m_cbPoseEstimator);
 	m_pARProperty->setPoseEstimator(poseEstimator);
@@ -645,7 +652,7 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 		return S_OK;
 	}
 	::EnableWindow(this->m_Dlg, TRUE);
-
+	m_ckGuessPose = GetDlgItem(m_Dlg, IDC_CKGuessPose);
 	m_ckDrawReProj = GetDlgItem(m_Dlg, IDC_CKReProj);
 	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
 	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);

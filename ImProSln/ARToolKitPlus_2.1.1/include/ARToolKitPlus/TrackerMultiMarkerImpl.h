@@ -91,7 +91,7 @@ public:
 	/**
 	 *	pass the image as RGBX (32-bits) in 320x240 pixels.
 	 */
-	virtual int calc(const unsigned char* nImage);
+	virtual int calc(const unsigned char* nImage, bool bGuessPose);
 
 	/// Returns the number of detected markers used for multi-marker tracking
 	virtual int getNumDetectedMarkers() const  {  return numDetected;  }

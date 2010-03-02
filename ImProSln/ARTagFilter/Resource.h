@@ -49,9 +49,10 @@
 #define IDC_BTN_Load                    2029
 #define IDC_BtnLoadARTag                2030
 #define IDC_edXaxis                     2031
-#define IDC_CHECK1                      2032
 #define IDC_CKReProj                    2032
 #define IDC_edYaxis                     2033
+#define IDC_CHECK1                      2033
+#define IDC_CKGuessPose                 2033
 #define IDC_EDIT3                       2034
 #define IDC_edZaxis                     2034
 
@@ -61,7 +62,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        2003
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         2033
+#define _APS_NEXT_CONTROL_VALUE         2034
 #define _APS_NEXT_SYMED_VALUE           2015
 #endif
 #endif

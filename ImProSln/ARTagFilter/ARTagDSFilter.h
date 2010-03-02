@@ -62,10 +62,13 @@ public:
 	virtual int getMarkerMode();
 	virtual bool setPoseEstimator(int rpp);
 	virtual int getPoseEstimator();
+
 	virtual bool getbDrawTag();
 	virtual bool setbDrawTag(bool v);
 	virtual bool getbDrawReproPt();
 	virtual bool setbDrawReproPt(bool v);
+	virtual bool getbGuessPose();
+	virtual bool setbGuessPose(bool v);
 
 	virtual bool IsReady();
 	virtual bool setWorldBasisScale(double v[3]);
@@ -82,6 +85,7 @@ protected:
 	CCritSec m_csWorldBasisScale;
 	double m_WorldBasisScale[3];
 
+	bool             m_bGuessPose;
 	bool			 m_bDrawTag;
 	bool             m_bDrawReproPt;
 	CallbackFuncPtr  m_pCallback;

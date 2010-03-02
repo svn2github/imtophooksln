@@ -208,7 +208,7 @@ ARMM_TEMPL_TRACKER::setBasisScale(ARFloat basisScale[3])
 	return true;
 }
 ARMM_TEMPL_FUNC int
-ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
+ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 {
 	if (this->config == NULL)
 	{
@@ -242,7 +242,7 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage)
 
 	if(executeMultiMarkerPoseEstimator(tmp_markers, tmpNumDetected, config) < 0)
 		return 0;
-	if (m_numLastDetected > 0)
+	if (bGuessPose && m_numLastDetected > 0)
 	{
 		double lastExtrinsic[16];
 		for (int row =0; row < 4; row++)
