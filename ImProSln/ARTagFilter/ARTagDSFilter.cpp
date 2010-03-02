@@ -619,12 +619,11 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	}
 
 	D3DXMATRIX matExtrin;
-
 	for (int row =0 ; row < 4; row++)
 	{
 		for(int col =0; col<4; col++)
 		{
-			matExtrin.m[row][col] = config->cvTrans[row][col];
+			matExtrin.m[col][row] = config->cvTrans[row][col];
 		}
 	}
 	double bscale[3] = {0};
@@ -633,14 +632,14 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	D3DXMatrixScaling(&matScale, bscale[0], bscale[1], bscale[2]);
 	D3DXMatrixScaling(&matInvScale, 1.0/ bscale[0], 1.0/bscale[1], 1.0/bscale[2]);
 
-	matExtrin = matScale * matExtrin * matInvScale;
+	matExtrin = matScale * matExtrin;
 	for (int i =0; i< nValidDetected; i++)
 	{
 		for (int j =0; j<4;j++)
 		{
 			D3DXVECTOR4 vtmp(0,0,0,0);
 			D3DXVECTOR3 v3d;
-			v3d.x = pos3d[4*3*i + 3*j + 0];  
+			v3d.x = pos3d[4*3*i + 3*j + 0]; 
 			v3d.y = pos3d[4*3*i + 3*j + 1]; 
 			v3d.z = pos3d[4*3*i + 3*j + 2]; 
 			

@@ -391,120 +391,52 @@ namespace googleearth {
 		//計算lookat的向量(camera看的方向)
 		public: void countLookat(void)
 		{
-			D3DXVECTOR3 lookat000;
-			D3DXVECTOR3 lookat001;
-	
-			D3DXVECTOR3 temp;
-			temp.x = 0;
-			temp.y = 0;
-			temp.z = 0;
-			D3DXVec3TransformCoord(&lookat000,&temp,&camera);
-
-			temp.x = 0;
-			temp.y = 0;
-			temp.z = 1;
-			D3DXVec3TransformCoord(&lookat001,&temp,&camera);
-
-			lookat.x = lookat001.x - lookat000.x;
-			lookat.y = lookat001.y - lookat000.y;
-			lookat.z = lookat001.z - lookat000.z;
-
+			lookat.x = -camera.m[0][2];
+			lookat.y = -camera.m[1][2];
+			lookat.z = -camera.m[2][2];;
+			D3DXVec3Normalize(&lookat, &lookat);
+			int test = 0;
 		}
 
 		//計算lookat的垂直向量
 		//計算lookat的垂直向量
 		public: void countLookup(void)
 		{
-			D3DXVECTOR3 lookup000;
-			D3DXVECTOR3 lookup010;
-	
-			D3DXVECTOR3 temp;
-			
-			temp.x = 0;
-			temp.y = 0;
-			temp.z = 0;
-			D3DXVec3TransformCoord(&lookup000,&temp,&camera);
-
-			temp.x = 0;
-			temp.y = 1;
-			temp.z = 0;
-			D3DXVec3TransformCoord(&lookup010,&temp,&camera);
-
-			/*lookup.x = lookup010.x - lookup000.x;
-			lookup.y = lookup010.y - lookup000.y;
-			lookup.z = lookup010.z - lookup000.z;*/
-
-			lookup.x = lookup000.x - lookup010.x;
-			lookup.y = lookup000.y - lookup010.y;
-			lookup.z = lookup000.z - lookup010.z;
-
+			lookup.x = camera.m[0][1];
+			lookup.y = camera.m[1][1];
+			lookup.z = camera.m[2][1];
 			D3DXVec3Normalize(&lookup,&lookup);
 		}
 
 		//用z軸的向量與lookat的向量求夾角算出tilt的值
 		public: void countTilt(void)
 		{
-			D3DXVECTOR3 normal;
-
-			double dist_lookat = 0;
 			double cosin = 0;
 			double arcosin = 0;
 
-			normal.x = 0;
-			normal.y = 0;
-			normal.z = -1;
-
-			dist_lookat = (double)sqrt( (double)pow((double)lookat.x,2)+(double)pow((double)lookat.y,2)+(double)pow((double)lookat.z,2) );
-	
-			cosin = (double)D3DXVec3Dot(&lookat,&normal) / (double)dist_lookat; 
+			D3DXVECTOR3 normalLookat;
+		
+			D3DXVec3Normalize(&normalLookat,&lookat);
+			D3DXVECTOR3 viewDown(0, 0, -1);
+			cosin = D3DXVec3Dot(&lookat,&viewDown);
 			arcosin = acos(cosin);
-	
 			tilt = (double)180*(double)arcosin / (double)PI;
-
+			int test = 0;
 		}	
 
 		//用y軸的向量與lookat的xy向量求夾角來計算heading的值
 		public: void countHeading(void)
 		{
-			D3DXVECTOR3 yaxis;
-			D3DXVECTOR3 lookatXY;
-			D3DXVECTOR3 result;
-			double angle = 0;
-			double dist_lookatXY = 0;
-			double cosin = 0;
-			double arcosin = 0;
-
-			yaxis.x = 0;
-			yaxis.y = 1;
-			yaxis.z = 0;
-
-			lookatXY.x = lookat.x;
-			lookatXY.y = lookat.y;
-			lookatXY.z = 0;
-
-			/*testxy.x = lookat.x;
-			testxy.y = lookat.y;
-			testxy.z = 0;*/
-		
-			//D3DXVec3Cross(&test,&yaxis,&testxy);
-			D3DXVec3Cross(&result,&yaxis,&lookatXY);
-
-			dist_lookatXY = (double)sqrt( (double)pow((double)lookatXY.x,2)+(double)pow((double)lookatXY.y,2)+(double)pow((double)lookatXY.z,2) );
-			if (dist_lookatXY == 0)
-			{
-				return;
-			}
-			cosin = (double)D3DXVec3Dot(&lookat,&yaxis) / (double)dist_lookatXY; 
-			arcosin = acos(cosin);
-	
-			angle = (double)180*(double)arcosin / (double)PI;
-
-			if(result.z <= 0)	heading = angle;
-			else	heading = (double)360 - (double)angle;
-			if (Double::IsNaN(heading))
-			{
-				int test = 0 ;
-			}
+			
+			D3DXVECTOR3 lookatXY(lookat.x, lookat.y, 0);
+			D3DXVec3Normalize(&lookatXY, &lookatXY);
+			D3DXVECTOR3 north(0, 1, 0);
+			double cosin = D3DXVec3Dot(&lookatXY, &north);
+			double arccosin = acos(cosin);
+			if (lookatXY.x < 0)
+				arccosin = 2*D3DX_PI - arccosin;
+			heading = (double)180*(double)arccosin / (double)PI;
+			int test = 0;
 		}
 
 		public: void countRoll(void)
@@ -523,25 +455,16 @@ namespace googleearth {
 			zaxis.y = 0;
 			zaxis.z = 1;
 
-			D3DXVec3Cross(&axis3,&zaxis,&lookat);
-			D3DXVec3Cross(&origin_lookup,&lookat,&axis3);
+			D3DXVec3Cross(&axis3, &lookat, &zaxis);
+			D3DXVec3Cross(&origin_lookup,&axis3, &lookat);
 			D3DXVec3Normalize(&origin_lookup,&origin_lookup);
-
 			D3DXVec3Cross(&result,&origin_lookup,&lookup);
 
-			dist_lookup = (double)sqrt( (double)pow((double)lookup.x,2)+(double)pow((double)lookup.y,2)+(double)pow((double)lookup.z,2) );
-			dist_origin_lookup = (double)sqrt( (double)pow((double)origin_lookup.x,2)+(double)pow((double)origin_lookup.y,2)+(double)pow((double)origin_lookup.z,2) );
-
-			cosin = (double)D3DXVec3Dot(&lookup,&origin_lookup) / (double)dist_lookup*(double)dist_origin_lookup; 
-			if (cosin <-1 || cosin > 1)
-			{
-				return;
-			}
-			else
-			{
-				arcosin = acos(cosin);
-				angle = (double)180*(double)arcosin / (double)PI;
-			}
+			cosin = D3DXVec3Dot(&lookup,&origin_lookup); 
+		
+			arcosin = acos(cosin);
+			angle = (double)180*(double)arcosin / (double)PI;
+			
 			if(result.x * lookat.x <= 0 || result.y * lookat.y <=0)	roll = angle;
 			else	roll = -angle;
 			if (Double::IsNaN(roll))
@@ -987,65 +910,61 @@ bool animTimerTickFunc()
 
 bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
-	
-
-	double      target_trans[3][4];
-	double      cam_trans[3][4];
 	char        string[256];
 	double det = 0;
-	D3DXMATRIX d3dTarget_trans, d3d_camTrans;
-	D3DXMatrixIdentity(&d3dTarget_trans);
+	D3DXMATRIX d3d_camTrans, matInvYZ, matSwitchYZ;
+	D3DXMatrixScaling(&matInvYZ, 1, -1, -1);
+
+	/*matSwitchYZ.m[0][0] = 0; matSwitchYZ.m[0][1] = 0; matSwitchYZ.m[0][2] = 1; matSwitchYZ.m[0][3] = 0; 
+	matSwitchYZ.m[1][0] = 1; matSwitchYZ.m[1][1] = 0; matSwitchYZ.m[1][2] = 0; matSwitchYZ.m[1][3] = 0; 
+	matSwitchYZ.m[2][0] = 0; matSwitchYZ.m[2][1] = 1; matSwitchYZ.m[2][2] = 0; matSwitchYZ.m[2][3] = 0; 
+	matSwitchYZ.m[3][0] = 0; matSwitchYZ.m[3][1] = 0; matSwitchYZ.m[3][2] = 0; matSwitchYZ.m[3][3] = 1; 
+*/
+
+
 	D3DXMatrixIdentity(&d3d_camTrans);
 
-	for (int row = 0; row < 3; row ++)
+	for (int row = 0; row < 4; row ++)
 	{
 		for (int col =0; col < 4; col++)
 		{
-			if (col == 3)
-			{
-				cam_trans[row][col] = config->cvTrans[col][row];
-			}
-			else
-			{
-				cam_trans[row][col] = config->cvTrans[row][col];
-			}
-			d3d_camTrans.m[row][col] = config->cvTrans[row][col];
-		}
-	}
-	D3DXMatrixInverse(&d3dTarget_trans, NULL, &d3d_camTrans);
-
-	for (int row = 0; row < 3; row ++)
-	{
-		for (int col =0; col < 4; col++)
-		{
-			if (col == 3)
-			{
-				target_trans[row][col] = d3d_camTrans.m[col][row];
-			}
-			else
-			{
-				target_trans[row][col] = d3d_camTrans.m[row][col];
-			}
+			d3d_camTrans.m[col][row] = config->cvTrans[row][col];
 		}
 	}
 
-	camera = d3d_camTrans ;
+	d3d_camTrans = d3d_camTrans * matInvYZ;
 
+	
+	camera = d3d_camTrans;
+	//from right hand to left hand
+
+	
 	//計算google earth中需要的各個參數
-	g_formPtr->countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
+	g_formPtr->countLoc(-camera.m[3][0], -camera.m[3][2], -camera.m[3][1]);
 	g_formPtr->countLookat();
 	g_formPtr->countLookup();
 	g_formPtr->countTilt();
 	g_formPtr->countHeading();
 	g_formPtr->countRoll();
-
+	/*WCHAR str[MAX_PATH] = {0};
+	
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	swprintf_s(str, MAX_PATH, L"@@@@ lookat = ( %.2f, %.2f, %.2f) \n", 
+		lookat.x, lookat.y, lookat.z);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ ViewUp = ( %.2f, %.2f, %.2f) \n", 
+		lookup.x, lookup.y, lookup.z);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ Tilt, Heading, Roll = ( %.2f, %.2f, %.2f) \n", 
+		tilt, heading, roll);
+	OutputDebugStringW(str);
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	*/
 	longitude = google_earth_point.x;
 	latitude = google_earth_point.z;
 	altitude = google_earth_point.y;
 	altitude *= 111000;  //一度 = 111000 公尺
 	altitude *= altitude_scale;
 
-	sprintf(string," RAW: Cam Pos x: %f  y: %f  z: %f\n long:%f alt:%f lat:%f\n tilt:%f heading:%f roll:%f \n",
-		cam_trans[0][3], cam_trans[1][3], cam_trans[2][3],longitude,altitude,latitude,tilt,heading,roll);
 	return true;
 }

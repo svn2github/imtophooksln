@@ -783,26 +783,10 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	cv3DPts = cvMat(nValidDetected*4, 3, CV_32F, pos3d);
 	camExtrin = cvMat(4, 4, CV_32F, tmp);
 
-	double bscale[3] = {0};
-	getBasisScale(bscale);
-	D3DXMATRIX matExtrin, matScale;
-	D3DXMatrixScaling(&matScale, bscale[0], bscale[1], bscale[2]);
 	
-	if (bUseLastGuess && lastExtrinsic != NULL &&  
-		bscale[0] != 0 && bscale[1] != 0 && bscale[2] != 0)
+	if (bUseLastGuess && lastExtrinsic != NULL)
 	{
-		D3DXMATRIX matLastExtrin, matInvScale;
-		D3DXMatrixScaling(&matInvScale, 1.0/bscale[0], 1.0/bscale[1], 1.0/bscale[2]);
-		for (int row =0; row <4; row++)
-		{
-			for (int col =0; col <4; col++)
-			{
-				matLastExtrin.m[row][col] = lastExtrinsic[row*4 + col];
-			}
-		}
-		matLastExtrin = matLastExtrin * matInvScale;
-
-		float lastTVec[3] = {matLastExtrin.m[3][0], matLastExtrin.m[3][1], matLastExtrin.m[3][2]};
+		float lastTVec[3] = {lastExtrinsic[0*4 + 3], lastExtrinsic[1*4 + 3], lastExtrinsic[2*4 + 3]};
 		float lastRotVec[3] = {0};
 		float initV1[3] = {0,0,0};
 		float initV2[9] = {1,0,0, 0,1,0, 0,0,1};
@@ -810,7 +794,7 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 		CvMat cvlastRotVec = cvMat(3, 1, CV_32F, (void*)initV1);
 		for (int row = 0; row <3; row ++)
 			for (int col =0; col<3; col++)	
-				cvmSet(&cvlastRotMat, row, col, matLastExtrin.m[row][col]);
+				cvmSet(&cvlastRotMat, row, col, lastExtrinsic[row*4 + col]);
 		cvRodrigues2(&cvlastRotMat, &cvlastRotVec);
 		for (int i =0; i <3; i++)
 		{
@@ -823,28 +807,16 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 		findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin, false, NULL, NULL);
 	}
 
-
 	for (int row =0 ; row < 4; row++)
 	{
 		for(int col =0; col<4; col++)
 		{
-			matExtrin.m[col][row] = cvmGet(&camExtrin, row, col);
-		}
-	}
-	matExtrin = matExtrin * matScale;
-
-	for (int row =0; row <4; row++)
-	{
-		for (int col =0; col < 4; col++)
-		{
-			config->cvTrans[row][col] = matExtrin.m[row][col];
+			config->cvTrans[row][col] = cvmGet(&camExtrin, row, col);
 		}
 	}
 	
 	free(pt2d);
 	free(pos3d);
-
-
 	return true;
 }
 
