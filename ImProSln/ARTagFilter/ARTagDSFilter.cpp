@@ -266,7 +266,6 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		initARSetting(bitHeader.biWidth, bitHeader.biHeight, &inputMT);
 	}
 	return S_OK;
@@ -274,15 +273,13 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
-	if (m_pD3DDisplay != NULL)
-	{
-		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
-		CMediaType outputMT = m_pOutputPins[0]->CurrentMediaType();
-		if (pIn->GetSize() != pOut->GetSize())
-			return S_FALSE;
-		return DoTransform(pIn, &inputMT, pOut, &outputMT);
-	}
-	return S_OK;
+
+	CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
+	CMediaType outputMT = m_pOutputPins[0]->CurrentMediaType();
+	if (pIn->GetSize() != pOut->GetSize())
+		return S_FALSE;
+	return DoTransform(pIn, &inputMT, pOut, &outputMT);
+	
 }
 HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo)
 {
@@ -1321,14 +1318,6 @@ BOOL ARTagDSFilter::SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[])
 	m_callbackArgv = new void*[argc];
 	memcpy(m_callbackArgv, argv, sizeof(void*)*argc);
 	return TRUE;
-}
-MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
-{
-	return new ARTagD3DDisplay(pD3D, rtWidth, rtHeight);
-}
-MS3DDisplay* ARTagDSFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
-{
-	return new ARTagD3DDisplay(pDevice, rtWidth, rtHeight);
 }
 
 bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* inputMT)
