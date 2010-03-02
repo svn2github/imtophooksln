@@ -1327,7 +1327,7 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 		delete m_ARTracker;
 		m_ARTracker = NULL;
 	}
-	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 32>(width, height);
+	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 100>(width, height);
 	
 	m_ARTracker->setBasisScale(m_WorldBasisScale);
 

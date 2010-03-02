@@ -219,7 +219,6 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 	int				tmpNumDetected;
     ARMarkerInfo    *tmp_markers;
 
-
 	if(useDetectLite)
 	{
 		if(arDetectMarkerLite(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected) < 0)
@@ -239,9 +238,12 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 			if(numDetected>=__MAX_IMAGE_PATTERNS)							// increase this value if more markers should be possible to be detected in one image...
 				break;
 		}
-
+	/*
 	if(executeMultiMarkerPoseEstimator(tmp_markers, tmpNumDetected, config) < 0)
 		return 0;
+
+	*/
+	
 	if (bGuessPose && m_numLastDetected > 0)
 	{
 		double lastExtrinsic[16];
@@ -258,7 +260,15 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 	{
 		executeCVPoseEstimator(tmp_markers, tmpNumDetected, config, false, NULL);
 	}
-	convertTransformationMatrixToOpenGLStyle(config->trans, this->gl_para);
+	ARFloat cvTran[3][4] = {0};
+	for (int row = 0; row <3; row++)
+	{
+		for (int col = 0; col < 4; col++)
+		{
+			cvTran[row][col] = config->cvTrans[row][col];
+		}
+	}
+	convertTransformationMatrixToOpenGLStyle(cvTran, this->gl_para);
 	return numDetected;
 }
 
