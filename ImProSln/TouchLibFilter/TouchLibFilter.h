@@ -92,6 +92,9 @@ public:
 
 	virtual bool getDrawFingers();
 	virtual bool setDrawFingers(bool drawing);
+	virtual bool getDrawROI();
+	virtual bool setDrawROI(bool drawing);
+
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);

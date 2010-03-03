@@ -37,7 +37,8 @@ CTouchScreen::CTouchScreen()
 	// Initialize BwImage frame
 	frame = 0;
 	pTrackingFrame = NULL;
-	bDrawFinger = false;
+	bDrawFinger = true;
+	bDrawROI = true;
 	pBlackImage = NULL;
 	pROIMergeResult = NULL;
 	hThread = 0;
@@ -454,7 +455,7 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 		}
 		output = pROIMergeResult; // and get the first frame
 		cvResetImageROI(output);
-	
+
 	}
 	if(output != NULL) {			// If there is output to get
 		//printf("Process chain complete\n");
@@ -510,6 +511,10 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 		}
 
 		//return true;
+	}
+	if (bDrawROI && roi != NULL && roi->m_nRECTs > 0)
+	{
+		drawROIs(pSrc, roi);
 	}
 	return true;
 }
@@ -823,7 +828,24 @@ void CTouchScreen::doTouchEvent(TouchData data)
 	}
 }
 
-
+bool CTouchScreen::drawROIs(IplImage* img, ROIData* roiData)
+{
+	if (img == NULL || roiData == NULL)
+	{
+		return false;
+	}
+	float x =0, y = 0, width = 0, height = 0;
+	for (int i =0; i< roiData->m_nRECTs; i++)
+	{
+		x = roiData->m_pRECTs[i].left * img->width;
+		y = roiData->m_pRECTs[i].top * img->height;
+		width = (roiData->m_pRECTs[i].right - roiData->m_pRECTs[i].left)*img->width;
+		height = (roiData->m_pRECTs[i].bottom - roiData->m_pRECTs[i].top)*img->height;
+		cvDrawRect(img, cvPoint(x,y), 
+			cvPoint(x + width, y + height), cvScalar(0, 255, 0), 3);
+	}
+	return true;
+}
 void CTouchScreen::doUpdateEvent(TouchData data)
 {
 	unsigned int i;

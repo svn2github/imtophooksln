@@ -105,6 +105,9 @@ namespace touchlib
 
 		virtual bool setDrawFingers(bool bDraw) { bDrawFinger = bDraw; return true;};
 		virtual bool getDrawFingers() { return bDrawFinger;};
+		
+		virtual bool setDrawROI(bool bDraw) { bDrawROI = bDraw; return true;};
+		virtual bool getDrawROI() { return bDrawROI;};
 
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
@@ -140,10 +143,12 @@ namespace touchlib
 
 
 	private:
+		bool drawROIs(IplImage* pImg, ROIData* roiData);
 		void doTouchEvent(TouchData data);
 		void doUpdateEvent(TouchData data);
 		void doUntouchEvent(TouchData data);
-
+		
+		
 		bool debugMode;
 		bool volatile bTracking;
 
@@ -156,6 +161,7 @@ namespace touchlib
 		bool bCalibrating;		
 		int calibrationStep;
 		bool bDrawFinger;
+		bool bDrawROI;
 
 #ifdef WIN32
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html

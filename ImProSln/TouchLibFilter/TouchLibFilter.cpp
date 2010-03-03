@@ -965,6 +965,26 @@ bool TouchLibFilter::setDrawFingers(bool drawing)
 	return m_pTouchScreen->setDrawFingers(drawing);
 }
 
+
+bool TouchLibFilter::getDrawROI()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	return m_pTouchScreen->getDrawROI();
+}
+bool TouchLibFilter::setDrawROI(bool drawing)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	return m_pTouchScreen->setDrawROI(drawing);
+}
+
 HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 {
 	FILE* filestream = NULL;
@@ -980,6 +1000,7 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	int rectifyLevel = 75;
 	bool bStartTracking = false;
 	bool bDrawFinger = false;
+	bool bDrawROI = false;
 	bool bFlipY = false;
 	GetBGThreshold(bgThreshold);
 	GetSimpleHighPassDeNoise(deNoise);
@@ -989,10 +1010,11 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	
 	getStartTracking(bStartTracking);
 	bDrawFinger = getDrawFingers();
+	bDrawROI = getDrawROI();
 	bFlipY = GetbFlipY();
-	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d %d \n",
+	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d %d %d\n",
 		bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
-		bStartTracking, bDrawFinger, bFlipY);
+		bStartTracking, bDrawFinger, bDrawROI, bFlipY);
 	fclose(filestream);
 	return S_OK;
 }
@@ -1012,10 +1034,11 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 
 	int bStartTracking = false;
 	int bDrawFinger = false;
+	int bDrawROI = false;
 	int bFlipY = false;
-	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d %d\n",
+	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d %d %d\n",
 		&bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
-		&bStartTracking, &bDrawFinger, &bFlipY);
+		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY);
 	fclose(filestream);
 
 	SetBGThreshold(bgThreshold);
@@ -1026,6 +1049,7 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 
 	setStartTracking(bStartTracking);
 	setDrawFingers(bDrawFinger);
+	setDrawROI(bDrawROI);
 	SetbFlipY(bFlipY);
 	return S_OK;
 }

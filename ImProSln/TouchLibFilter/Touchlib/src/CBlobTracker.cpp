@@ -514,7 +514,7 @@ bool CBlobTracker::drawFingers(IplImage* img)
 		width = current[i].box.getWidth();
 		height = current[i].box.getHeight();
 		cvDrawRect(img, cvPoint(x - 0.5*width, y-0.5*height), 
-			cvPoint(x+ 0.5*width, y+0.5*height), cvScalar(0, 0, 255));
+			cvPoint(x+ 0.5*width, y+0.5*height), cvScalar(0, 0, 255), 3);
 	}
 	return true;
 }

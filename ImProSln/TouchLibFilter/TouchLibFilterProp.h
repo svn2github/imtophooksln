@@ -68,4 +68,6 @@ public: //inherit from CMFCBaseProperty Page
 	CButton m_ckDrawFinger;
 	CButton m_ckFingerFlipY;
 	afx_msg void OnBnClickedCkfingerflipy();
+	CButton m_ckDrawROI;
+	afx_msg void OnBnClickedCkdrawroi();
 };
