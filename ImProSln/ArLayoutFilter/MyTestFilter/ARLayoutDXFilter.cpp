@@ -246,14 +246,24 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		{
-			CAutoLock lck(&m_csARStrategyData);
-			if (m_pARStrategyData != NULL)
+			ARLayoutStartegyData* strategyData = NULL;
 			{
-				DecideLayout(m_pARStrategyData->camViews, m_pARStrategyData->numCamView,
-					m_pARStrategyData->fingerRects, m_pARStrategyData->numFingers);
+				CAutoLock lck(&m_csARStrategyData);
+				if (m_pARStrategyData != NULL)
+				{
+					strategyData = new ARLayoutStartegyData();
+					*strategyData = *m_pARStrategyData;
+					delete m_pARStrategyData;
+					m_pARStrategyData = NULL;
+				}
+			}
+			if (strategyData != NULL)
+			{
+				DecideLayout(strategyData->camViews, strategyData->numCamView,
+					strategyData->fingerRects, strategyData->numFingers);
 				sendConfigData();
-				delete m_pARStrategyData;
-				m_pARStrategyData = NULL;
+				delete strategyData;
+				strategyData = NULL;
 				if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
 					!m_pOutputPins[1]->IsConnected()))
 				{
