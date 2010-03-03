@@ -383,8 +383,9 @@ HRESULT MaskFilter::UpdateMask()
 			if (m_pMaskVertexData != NULL)
 			{
 				pMaskVertexData = new MaskVertexData();
+				*pMaskVertexData = *m_pMaskVertexData;
 			}
-			*pMaskVertexData = *m_pMaskVertexData;
+			
 		}
 		
 		if (pMaskVertexData != NULL)
