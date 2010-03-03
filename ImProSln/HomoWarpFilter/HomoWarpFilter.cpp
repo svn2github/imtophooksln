@@ -558,10 +558,11 @@ HRESULT HomoWarpFilter::GetWarpVertex(float& LTx, float& LTy, float& LBx, float&
 	D3DXVECTOR4 v2(0,1,1,1);
 	D3DXVECTOR4 v3(1,0,1,1);
 	D3DXVECTOR4 v4(1,1,1,1);
-	m_accessWarpMatCS.Lock();
 	D3DXMATRIX matInvTTS;
-	D3DXMatrixInverse(&matInvTTS, NULL, &m_matTTS);
-	m_accessWarpMatCS.Unlock();
+	{
+		CAutoLock lck(&m_accessWarpMatCS);
+		D3DXMatrixInverse(&matInvTTS, NULL, &m_matTTS);
+	}
 	D3DXVec4Transform(&v1, &v1, &matInvTTS);
 	D3DXVec4Transform(&v2, &v2, &matInvTTS);
 	D3DXVec4Transform(&v3, &v3, &matInvTTS);

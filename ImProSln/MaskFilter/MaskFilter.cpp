@@ -377,10 +377,19 @@ HRESULT MaskFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 HRESULT MaskFilter::UpdateMask()
 {
 	{
-		CAutoLock lck(&m_csMaskVertexData);
-		if (m_pMaskVertexData != NULL)
+		MaskVertexData* pMaskVertexData = NULL;
 		{
-			int nCol = m_pMaskVertexData->m_nPoints/4;
+			CAutoLock lck(&m_csMaskVertexData);
+			if (m_pMaskVertexData != NULL)
+			{
+				pMaskVertexData = new MaskVertexData();
+			}
+			*pMaskVertexData = *m_pMaskVertexData;
+		}
+		
+		if (pMaskVertexData != NULL)
+		{
+			int nCol = pMaskVertexData->m_nPoints/4;
 			D3DXVECTOR2** pt = new D3DXVECTOR2*[nCol];
 			for (int i =0; i < nCol; i++)
 			{
@@ -390,11 +399,11 @@ HRESULT MaskFilter::UpdateMask()
 			{
 				for (int j = 0 ; j< 4; j++)
 				{
-					pt[i][j].x = m_pMaskVertexData->m_points[i*4*2 + j*2 + 0];
-					pt[i][j].y = m_pMaskVertexData->m_points[i*4*2 + j*2 + 1];
+					pt[i][j].x = pMaskVertexData->m_points[i*4*2 + j*2 + 0];
+					pt[i][j].y = pMaskVertexData->m_points[i*4*2 + j*2 + 1];
 				}
 			}
-			SetMaskFlag(m_pMaskVertexData->m_maskflag);
+			SetMaskFlag(pMaskVertexData->m_maskflag);
 			GenerateMaskFromVertices(pt, nCol, m_fMaskScale);
 			for (int i =0; i < nCol; i++)
 			{
@@ -403,8 +412,8 @@ HRESULT MaskFilter::UpdateMask()
 			}
 			delete pt;
 			pt = NULL;
-			delete m_pMaskVertexData;
-			m_pMaskVertexData = NULL;
+			delete pMaskVertexData;
+			pMaskVertexData = NULL;
 		}
 	}
 	{
