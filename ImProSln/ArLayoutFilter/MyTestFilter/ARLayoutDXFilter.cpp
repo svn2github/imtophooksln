@@ -524,7 +524,7 @@ bool ARLayoutDXFilter::initARMarkers(UINT numLevel, UINT intMarkerBits, UINT int
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = markerBits/WidthBits/level;
-		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
+		int numX = cvRound( 1.0  / (markerWidth + borderBits/WidthBits/level));
 		int numY = numX;
 		numMarker += numX * numY;
 	}
@@ -553,7 +553,7 @@ bool ARLayoutDXFilter::initARMarkers(UINT numLevel, UINT intMarkerBits, UINT int
 		{
 			m_minMarkerWidth = markerWidth;
 		}
-		int numX = 1.0  / (markerWidth + borderBits/WidthBits/level);
+		int numX = cvRound( 1.0  / (markerWidth + borderBits/WidthBits/level));
 		int numY = numX;
 		for (int i = 0; i < numY; i++)
 		{
