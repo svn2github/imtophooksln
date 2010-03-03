@@ -656,9 +656,14 @@ HRESULT TouchLibFilter::TransformInput0(IMediaSample *pSample, IMediaSample *pOu
 		cvFlip(pSrc, NULL, 0);
 	}
 	{
+		ROIData roiData;
+		{
+			CAutoLock lck(&m_csROIData);
+			roiData = m_ROIData;
+		}
 		CAutoLock lck(&m_csTouchScreen);
-		CAutoLock lck1(&m_csROIData);
-		m_pTouchScreen->processOnce(pSrc, &m_ROIData);
+		
+		m_pTouchScreen->processOnce(pSrc, &roiData);
 		m_pTouchScreen->getEvents();
 	}
 	
