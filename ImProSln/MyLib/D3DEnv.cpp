@@ -167,7 +167,6 @@ IDirect3DDevice9* D3DEnv::CreateD3DDevice(IDirect3D9* pD3D9, HWND hwnd,  UINT rt
 
 	m_d3dpp.EnableAutoDepthStencil = TRUE;
 	m_d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
-	m_d3dpp.Flags |= D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 	m_d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 	// Create the D3DDevice
 	if( FAILED( pD3D9->CreateDevice( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,  hwnd,

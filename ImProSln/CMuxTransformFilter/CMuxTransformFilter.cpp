@@ -1236,7 +1236,7 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 			
 			if (elapsedTime < idealElapsedTime )
 			{
-				Sleep(1);
+				//Sleep(1);
 				continue;
 			}
 			lastTime = currTime;
