@@ -259,21 +259,25 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			}
 			if (strategyData != NULL)
 			{
+				bool bLayoutChange = false;
 				DecideLayout(strategyData->camViews, strategyData->numCamView,
-					strategyData->fingerRects, strategyData->numFingers);
-				sendConfigData();
-				delete strategyData;
-				strategyData = NULL;
-				if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
-					!m_pOutputPins[1]->IsConnected()))
+					strategyData->fingerRects, strategyData->numFingers, bLayoutChange);
+				if (bLayoutChange)
 				{
-					CAutoLock lck(&m_csARMarker);
-					ARMultiMarkerInfoT markerConfig;
-					memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
-					markerConfig.marker = m_ARMarkers;
-					markerConfig.marker_num = m_numMarker;
-					ComputeROIs(&markerConfig);
-					sendROIData();
+					sendConfigData();
+					delete strategyData;
+					strategyData = NULL;
+					if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
+						!m_pOutputPins[1]->IsConnected()))
+					{
+						CAutoLock lck(&m_csARMarker);
+						ARMultiMarkerInfoT markerConfig;
+						memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
+						markerConfig.marker = m_ARMarkers;
+						markerConfig.marker_num = m_numMarker;
+						ComputeROIs(&markerConfig);
+						sendROIData();
+					}
 				}
 			}
 		}
@@ -705,12 +709,12 @@ bool ARLayoutDXFilter::SaveConfigToFile(WCHAR* path)
 }
 
 bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fingerRects, 
-									UINT numFingerRects, float fingerExtend)
+									UINT numFingerRects,bool& bChanged, float fingerExtend)
 {
 	CAutoLock lck(&m_csARMarker);
 	map<int, bool> decisionMap; // idx, visible, have decided?
 	vector<int> undecideIdx;
-	
+	bChanged = false;
 	for (int idx = 0; idx < m_numMarker; idx++)
 	{
 		undecideIdx.push_back(idx);
@@ -839,6 +843,10 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 	for (map<int, bool>::iterator iter = decisionMap.begin(); 
 		iter != decisionMap.end(); iter++)
 	{
+		if (m_ARMarkers[iter->first].visible != iter->second)
+		{
+			bChanged = true;
+		}
 		m_ARMarkers[iter->first].visible = iter->second;
 	}
 	return true;

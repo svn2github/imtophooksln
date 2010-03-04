@@ -72,7 +72,7 @@ public:
 	virtual bool LoadConfigFromFile(WCHAR* filename);
 	virtual bool SaveConfigToFile(WCHAR* filename);
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
-		fRECT* fingerRects, UINT numFingerRects,  float fingerExtend = 0.07 );
+		fRECT* fingerRects, UINT numFingerRects, bool& bLayoutChanged, float fingerExtend = 0.07);
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();

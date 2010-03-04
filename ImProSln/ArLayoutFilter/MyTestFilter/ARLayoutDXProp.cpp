@@ -204,8 +204,8 @@ void ARLayoutDXPropPage::OnBnClickedBtntest()
 	fRECT camView[1];
 	camView[0].left = l;  camView[0].right = r;
 	camView[0].bottom = b; camView[0].top = t;
-
-	m_pFilter->DecideLayout(camView, 1, NULL, 0);
+	bool bLayoutChange = false;
+	m_pFilter->DecideLayout(camView, 1, NULL, 0, bLayoutChange);
 
 }
 
