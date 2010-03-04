@@ -231,9 +231,7 @@ HRESULT SplitterFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		pSamp->GetPointer(&pOutData);
 		long size = pSamp->GetSize();
 		memcpy(pOutData,InData,size);
-		getData = false ;
-		
-			
+		getData = false ;	
 	}
 	return S_OK;
 }

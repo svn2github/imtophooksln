@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "SyncFilter.h"
 #include "SyncFilterApp.h"
+#include "MyMediaSample.h"
+#include "MyARTagMediaSample.h"
+
 
 
 SyncFilter::SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
@@ -93,7 +96,6 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 	}
 
 	pOutSample->Release();
-	setDirty(false);
 	return S_OK;
 }
 
@@ -134,8 +136,10 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			hr = GetConnectedOutputPin(1)->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
-			hr = GetConnectedOutputPin(2)->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			if(Dirty == true){
+				hr = GetConnectedOutputPin(1)->Deliver(pOutSample);// Pin1 :: BG  only deliver in layout change
+			}
+			hr = GetConnectedOutputPin(2)->Deliver(pOutSample);// Pin2 :: Render every frame deliver
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 		
@@ -151,6 +155,9 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		}
 	}
 	pOutSample->Release();
+	setDirty(false);
+	setBlock(false);
+
 	return S_OK;
 }
 
@@ -171,25 +178,34 @@ CMuxTransformOutputPin* SyncFilter::GetConnectedOutputPin(int i )
 
 HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
-	HRESULT hr;
-	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0]&& !getDirty())
+	HRESULT hr = S_OK;
+	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0] && !getBlock())
 	{
 		pSample->GetPointer(&CamData);
-		return ReceiveCameraImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@ ReceiveCam ---->");
+		hr = ReceiveCameraImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@ ReceiveCam <----");
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
-		return ReceiveDirty();
+		OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
+		hr = ReceiveDirty();
+		OutputDebugStringW(L"@@@@ ReceiveDirty <----");
+
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
 	{
+		if(getDirty() == true){
+			setBlock(true);
+		}
 		pSample->GetPointer(&LayoutData);	
-		return ReceiveLayoutImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
+		hr = ReceiveLayoutImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@ ReceiveLayout <----");
 	}
-	return S_OK;
-
-
+	return hr;
 }
+
 HRESULT SyncFilter::CreatePins()
 {
 	HRESULT hr = S_OK;
@@ -270,7 +286,10 @@ HRESULT SyncFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 
 	else if (m_pInputPins.size() >= 1 && m_pInputPins[1] == pPin)    // dirty Pin
 	{
+		if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+			(IsEqualGUID(GUID_ARLayoutConfigData, *pmt->Subtype()) ))
 			return NOERROR;
+
 	}
 
 	if (m_pInputPins.size() >= 1 && m_pInputPins[2] == pPin)      // layout image
@@ -397,7 +416,6 @@ HRESULT SyncFilter::LayoutTransform( IMediaSample *pIn, IMediaSample *pOut)
 }
 
 
-
 HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin, ALLOCATOR_PROPERTIES *pProp)
 {
 	HRESULT hr = NOERROR;
@@ -438,7 +456,7 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputPin2MT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
+		pProp->cbBuffer = inputPin2MT.GetSampleSize();
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -496,7 +514,7 @@ HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMe
 		*pMediaType = inputMT;
 		return S_OK;
 	}
-	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
+	else if (m_pOutputPins.size() > 1 && m_pOutputPins[2] != NULL && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
@@ -504,7 +522,7 @@ HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMe
 		*pMediaType = inputMT;
 		return S_OK;
 	}
-	else if (m_pOutputPins.size() > 2 && m_pOutputPins[2] == pOutPin)
+	else if (m_pOutputPins.size() > 2 && m_pOutputPins[2] != NULL && m_pOutputPins[2] == pOutPin)
 	{
 		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
@@ -525,16 +543,14 @@ HRESULT SyncFilter::setDirty(bool isDirty){
 	Dirty = isDirty;
 	return S_OK;
 }
-//
-//HRESULT SyncFilter::GetPages(CAUUID *pPages)
-//{
-//	pPages->cElems = 1;
-//	pPages->pElems = (GUID*)CoTaskMemAlloc(sizeof(GUID));
-//	if (pPages->pElems == NULL) 
-//	{
-//		return E_OUTOFMEMORY;
-//	}
-////	pPages->pElems[0] = CLSID_BGMappingPropertyPage;
-//	return S_OK;
-//}
-//
+
+bool SyncFilter::getBlock(){
+	CAutoLock lck(&locBlock);
+	return Block;
+}
+
+HRESULT SyncFilter::setBlock(bool isBlock){
+	CAutoLock lck(&locBlock);
+	Block = isBlock;
+	return S_OK;
+}

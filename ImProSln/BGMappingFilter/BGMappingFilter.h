@@ -69,7 +69,7 @@ public:
 
 
 private:
-
+	CCritSec m_csBGSetting;
 	BackGroundMapping* BG ;
 	CCritSec m_cSharedState;            // Protects our internal state
 	IplImage* backgroundIplImg;
@@ -82,6 +82,7 @@ private:
 	int camChannel;
 	int layoutChannel;
 	bool isReceiveCam ; 
+	bool isReceiveBG;
 
 
 };

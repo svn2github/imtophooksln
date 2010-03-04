@@ -17,6 +17,7 @@ public:
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
 	void setBackground(IplImage* BGImg);  
+	void initKernel(float center, float inner , float outer);
 
 public:
 	std::vector<CvRect> foregroundLists;
@@ -29,6 +30,8 @@ public:
 	CvMat srcPoint;
 	CvMat dstPoint;
 	CvMat* MatHomography;
+	CvMat* kerMat;
+
 
 	IplImage*mappingTable;
 	IplImage*backgroundImg;

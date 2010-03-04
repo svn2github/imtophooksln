@@ -17,6 +17,7 @@ BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifies
 	 layoutW  = 800;
 	 layoutH  = 600;
 	isReceiveCam = false ;
+	isReceiveBG = false ;
 	
 }
 BGMappingFilter::~BGMappingFilter()
@@ -69,6 +70,11 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 	{
 		return S_FALSE;
 	}
+
+	//if(isReceiveBG == true){
+	//	BG->setBackground(backgroundIplImg);
+	//	isReceiveBG = false ;
+	//}
 
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
 	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
@@ -146,11 +152,12 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	BYTE* backgroundByteData;
 	pSample->GetPointer(&backgroundByteData);
 	IplImage* backgroundtmp = cvCreateImageHeader(cvSize(layoutW, layoutH), 8, layoutChannel);
-
 	backgroundtmp->imageData = (char*)backgroundByteData;
+
 	cvResize(backgroundtmp,backgroundIplImg);
 
 	CAutoLock cAutoLockShared(&m_cSharedState);
+	//isReceiveBG = true ;
 	BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 
@@ -176,15 +183,14 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	HRESULT hr = S_OK;
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
-		isReceiveCam = true ;
+		CAutoLock lck(&m_csBGSetting);
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		isReceiveCam = false ;
 
 	}
-	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1]&& isReceiveCam == true)
+	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
 	{
+		CAutoLock lck(&m_csBGSetting);
 		hr = ReceiveBackground(pSample, pReceivePin);
-		isReceiveCam = false ;
 	}
 	return hr;
 

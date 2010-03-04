@@ -45,6 +45,7 @@ protected:
 	BYTE* LayoutData;
 	BYTE* CamData;
 	bool Dirty;
+	bool Block;
 
 private:
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
@@ -52,6 +53,8 @@ private:
 	virtual HRESULT ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceivePin);
 	bool getDirty();
 	HRESULT setDirty(bool isDirty);
+	bool getBlock();
+	HRESULT setBlock(bool isBlock);
 
 
 	virtual CMuxTransformOutputPin* GetConnectedOutputPin(int index);
@@ -63,6 +66,7 @@ private:
 
 	CCritSec m_cSharedState;            // Protects our internal state
 	CCritSec locDirty;
+	CCritSec locBlock;
 	IplImage* backgroundIplImg;
 	IplImage* foregroundIplImg;
 	IplImage* cameraInputIplImg;

@@ -11,6 +11,9 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	WhiteValue = 0 ;
 	camFlip = false; 
 	layoutFlip = false ;
+    kerMat = cvCreateMat(5,5,CV_32F);
+	initKernel(0.5,0.3,0.2);
+
 
 	char settingFile[100];
 
@@ -69,9 +72,10 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	}		
 	IplImage *temp = cvCreateImage(cvGetSize(backgroundImg),8,1) ;
 
-	cvCopy(backgroundImg,temp);
-	cvSmooth(temp,backgroundImg,2,5);
+	//cvCopy(backgroundImg,temp);
 
+	cvFilter2D(backgroundImg,temp,kerMat);
+	cvSmooth(temp,backgroundImg,2,3);
 	cvReleaseImage(&temp);
 }
 
@@ -88,10 +92,6 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	cvFlip(resultImg);
 	}
 
-	cvNamedWindow("background");
-	cvNamedWindow("src");
-	cvNamedWindow("result");
-
 	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
 	cvShowImage("background",backgroundImg);
 	cvShowImage("src",resultImg);
@@ -102,6 +102,8 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	if(BGthreshold != 0){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
+		cvShowImage("threshold",resultImg);
+		cvWaitKey(1);
 	}
 	findForegroundRect(resultImg);
 
@@ -109,6 +111,25 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvFlip(result4CImg);
 	}
 	return result4CImg;
+}
+
+void BackGroundMapping::initKernel(float center, float inner , float outer){
+
+	outer = outer /16;   // average to all the outer block in 5*5 and there are 16 blocks 
+	inner = inner /8 ;
+	
+	for(int i = 0 ; i < 5 ; i ++){
+		for(int j = 0 ; j < 5 ; j ++){
+			if(i == 0 || i == 4 || j == 0 || j == 4){
+				cvmSet(kerMat,i,j,outer);
+			}
+			else if(i == 2 && j == 2){
+				cvmSet(kerMat,i,j,center);
+			}
+			else 
+				cvmSet(kerMat,i,j,inner);
+		}
+	}
 }
 
 void  BackGroundMapping::findForegroundRect(IplImage *FGImage){
