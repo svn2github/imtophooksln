@@ -21,9 +21,9 @@ package impro
 //				new IMView(0, 1024, 0, 1024, 768)	// high relosution 1
 //				);
 
-		public static var LRes:IMView = new IMView(-1, 0, 0, 600, 450);		
+		public static var LRes:IMView = new IMView(-1, 0, 0, 600, 1024);		
 		public static var HRes:Array = new Array(
-				new IMView(0, 600, 0, 600, 450)	// high relosution 1
+				new IMView(0, 600, 0, 600, 1024)	// high relosution 1
 				);
 
 	}
