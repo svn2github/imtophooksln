@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--////////////////////////////////////////////////////////////////////////////
+
+    OpenZoom SDK Example
+    Copyright (c) 2007-2009, Daniel Gasienica <daniel@gasienica.ch>
+
+    License: MPL 1.1/GPL 3/LGPL 3
+
+/////////////////////////////////////////////////////////////////////////////-->
+<mx:Application
+    xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:openzoom="org.openzoom.flex.components.*"
+    xmlns:controllers="org.openzoom.flash.viewport.controllers.*"
+    xmlns:constraints="org.openzoom.flash.viewport.constraints.*"
+    xmlns:transformers="org.openzoom.flash.viewport.transformers.*"
+    backgroundGradientColors="[0x333333, 0x000000]"
+    layout="absolute"
+    initialize="initializeHandler(event)"
+    applicationComplete="applicationCompleteHandler(event)"
+    >
+    <mx:Script>
+        <![CDATA[
+
+            import mx.events.FlexEvent
+
+            import org.openzoom.flash.descriptors.IMultiScaleImageDescriptor
+            import org.openzoom.flash.descriptors.openstreetmap.OpenStreetMapDescriptor;
+            import org.openzoom.flash.events.ViewportEvent
+            import org.openzoom.flash.utils.ExternalMouseWheel
+            import org.openzoom.flash.utils.math.clamp;
+            import org.openzoom.flash.viewport.IViewportTransform;
+            import org.openzoom.flash.viewport.constraints.MapConstraint
+            import org.openzoom.flash.viewport.transformers.SmoothTransformer;
+
+            private var transformer:SmoothTransformer
+
+            private function initializeHandler(event:FlexEvent):void
+            {
+                Security.loadPolicyFile("http://tile.openstreetmap.org/crossdomain.xml")
+
+                var descriptor:IMultiScaleImageDescriptor = new OpenStreetMapDescriptor()
+                map.source = descriptor
+
+                if (descriptor)
+                    scaleConstraint.maxScale = descriptor.width / map.sceneWidth
+            }
+
+            private function applicationCompleteHandler(event:FlexEvent):void
+            {
+                // Enable mouse wheel support on Mac OS
+                ExternalMouseWheel.initialize(stage)
+                transformer = SmoothTransformer.getInstance(map.viewport)
+            }
+
+            private function show(x:Number, y:Number, width:Number, height:Number):void
+            {
+                var bounds:Rectangle = new Rectangle(x, y, width, height)
+
+                var t:IViewportTransform = map.viewport.transform
+                t.fitToBounds(bounds)
+                transformer.transform(t)
+
+//                map.fitToBounds(bounds)
+            }
+
+        ]]>
+    </mx:Script>
+
+    <openzoom:MultiScaleImage
+        id="map"
+        top="0"
+        right="0"
+        bottom="0"
+        left="0"
+        >
+        <openzoom:controllers>
+            <controllers:ContextMenuController/>
+            <controllers:MouseController/>
+            <controllers:KeyboardController
+                zoomInFactor="2.01"
+                zoomOutFactor="0.49"
+                />
+        </openzoom:controllers>
+        <openzoom:constraint>
+            <constraints:CompositeConstraint>
+                <constraints:ScaleConstraint id="scaleConstraint"/>
+                <constraints:MapConstraint/>
+            </constraints:CompositeConstraint>
+        </openzoom:constraint>
+        <openzoom:transformer>
+            <transformers:TweenerTransformer/>
+        </openzoom:transformer>
+    </openzoom:MultiScaleImage>
+
+    <mx:HBox
+        left="12"
+        bottom="12"
+        >
+        <mx:Button
+            label="Istanbul"
+            click="show(0.57948166050644870, 0.37435587377383410, 0.00181674957275390630, 0.00110912322998046880)"
+            focusEnabled="false"
+            />
+        <mx:Button
+            label="New York"
+            click="show(0.29405297655437930, 0.37569955237029380, 0.00085360322460293410, 0.00051234154617146130)"
+            focusEnabled="false"
+            />
+        <mx:Button
+            label="Dallas"
+            click="show(0.23106636945910183, 0.40349788488762667, 0.00009783149740140344, 0.00005871948371120533)"
+            focusEnabled="false"
+            />
+        <mx:Button
+            label="Zürich"
+            click="show(0.52368800733271430, 0.35020113902615230, 0.00008156161479865066, 0.00004895413071291973)"
+            focusEnabled="false"
+            />
+    </mx:HBox>
+
+    <mx:ProgressBar
+        source="{map.loader}"
+        right="12"
+        bottom="12"
+        labelPlacement="left"
+        color="#FFFFFF"
+        />
+</mx:Application>
