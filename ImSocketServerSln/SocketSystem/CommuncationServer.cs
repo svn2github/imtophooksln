@@ -92,10 +92,11 @@ namespace SocketSystem
                                 {
                                     //tSocket.Send(msg);
                                     tSocket.Send(strMessages[i]);
-                                    Console.WriteLine("From Client [" + pSocket.GetClientName + "], send msg[" + strMessages[i] + "] to Clietn [" + tSocket.GetClientName + "].");
+                                    
+                                    Console.WriteLine("From [" + pSocket.GetClientName + "], send msg[" + strMessages[i] + "] to [" + tSocket.GetClientName + "].");
                                 }
                                 else
-                                    Console.WriteLine("Client[" + target + "] dose not exist");
+                                    Console.WriteLine("[" + target + "] dose not exist");
 
 
                                 break;

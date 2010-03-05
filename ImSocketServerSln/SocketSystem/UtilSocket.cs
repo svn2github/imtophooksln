@@ -264,6 +264,8 @@ namespace SocketSystem
                     GetTcpClient.LingerState = new System.Net.Sockets.LingerOption(false, 0);
                     // Start to receive messages
                     Receive();
+
+           
                 }
             }
             catch (System.Net.Sockets.SocketException e)
@@ -294,10 +296,13 @@ namespace SocketSystem
         {
             if ((GetNetworkStream != null) && (GetNetworkStream.CanWrite))
             {
+                strMessage += "\0"; // for flash
+
                 // Convert the string into a Raw Buffer
                 Byte[] pRawBuffer = System.Text.Encoding.ASCII.GetBytes(strMessage);
                 // Issue an asynchronus write
                 GetNetworkStream.BeginWrite(pRawBuffer, 0, pRawBuffer.GetLength(0), GetCallbackWriteMethod, null);
+                GetNetworkStream.Flush();
             }
             else
                 throw new Exception("Socket Closed");
