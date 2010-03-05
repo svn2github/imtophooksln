@@ -350,7 +350,7 @@ HRESULT HookDrawingFilter::CopyRenderTarget2OutputTexture(int idx)
 	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
 	D3DSURFACE_DESC surRenderDesc, surOutDesc;
 	m_pAddOutTexture[idx]->GetSurfaceLevel(0, &pOutSurface);
-	pRenderTarget = m_pAddRenderTarget[idx];
+	m_pAddRenderTarget[idx]->GetSurfaceLevel(0, &pRenderTarget);
 	pRenderTarget->AddRef();
 	pRenderTarget->GetDesc(&surRenderDesc);
 	pOutSurface->GetDesc(&surOutDesc);
@@ -537,8 +537,9 @@ HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
 	{
 		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
 	}
-	hr=	pDevice->CreateRenderTarget(w, h, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
-		0, FALSE, &m_pAddRenderTarget[idx], NULL);
+	hr = D3DXCreateTexture(pDevice, w, h, 
+		0, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &(m_pAddOutTexture[idx]));
+
 	if (FAILED(hr))
 	{
 		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
@@ -558,7 +559,7 @@ HRESULT HookDrawingFilter::SetRenderTarget(int idx)
 	}
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 	LPDIRECT3DSURFACE9 pRTSurface = NULL;
-	pRTSurface = m_pAddRenderTarget[idx];
+	m_pAddRenderTarget[idx]->GetSurfaceLevel(0, &pRTSurface);
 	pRTSurface->AddRef();
 
 	hr = pDevice->GetRenderTarget(0, &m_pBackupRenderTarget);
@@ -622,7 +623,7 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 	for (int i =0 ;i< NUMHOOKPIN; i++)
 	{
 		LPDIRECT3DTEXTURE9 pAddTexture = NULL;
-		IDirect3DSurface9* pAddRenderTarget = NULL;
+		LPDIRECT3DTEXTURE9 pAddRenderTarget = NULL;
 		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
 			0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &pAddTexture);
 		if (FAILED(hr))
@@ -630,8 +631,8 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 			return hr;
 		}
 		m_pAddOutTexture.push_back(pAddTexture);
-		hr=	m_pD3DDisplay->GetD3DDevice()->CreateRenderTarget(w, h, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
-			0, FALSE, &pAddRenderTarget, NULL);
+		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &pAddRenderTarget);
 
 		if (FAILED(hr))
 		{

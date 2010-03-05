@@ -111,7 +111,7 @@ protected:
 	CCritSec m_csHookDirty[NUMHOOKPIN];
 	BOOL m_bHookDirty[NUMHOOKPIN];
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
-	vector<IDirect3DSurface9*> m_pAddRenderTarget;
+	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL CopyInTexture2OutTexture(int idx);
 	BOOL CopyOutputTexture2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = false);
 	void onHookedWindowDestory();
