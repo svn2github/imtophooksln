@@ -43,18 +43,13 @@ void ARTagCameraDS::CloseCamera()
 HRESULT ARTagCameraDS::ConnectGraph()
 {
 	HRESULT hr;
-	hr = m_pGraph->Connect(m_pCameraOutput, m_pSmartTeeInputPin);
+	hr = m_pGraph->Connect(m_pCameraOutput, m_pARTagInputPin);
 	if (FAILED(hr))
 		return hr;
-	hr = m_pGraph->Connect(m_pSmartTeePreviewPin, m_pARTagInputPin);
+	hr = m_pGraph->Connect(m_pARTagOutputPin, m_pRenderInputPin);
 	if (FAILED(hr))
 		return hr;
-	hr = m_pGraph->Connect(m_pARTagOutputPin, m_pGrabberInput);
-	if (FAILED(hr))
-		return hr;
-	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
-	
-	
+
 	CComPtr<ISpecifyPropertyPages> pPages;
 
 	hr = m_pARTagFilter->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);

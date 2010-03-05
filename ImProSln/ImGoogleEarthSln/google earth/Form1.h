@@ -12,6 +12,8 @@
 #include <d3dx9math.h>
 #include <vcclr.h>
 #include "Streams.h"
+#include "countAllData.h"
+
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;
@@ -37,14 +39,14 @@ D3DXVECTOR3 google_earth_point;
 D3DXMATRIX camera;
 
 CCritSec g_State;
-/*
-double LeftTopLong = 121.564422;
-double LeftTopLat = 25.033828;
-double LeftDownLong = 121.564423;
-double LeftDownLat = 25.033341;
-double RightDownLong = 121.565153;
-double RightDownLat = 25.033338;
-*/
+
+//double LeftTopLong = 121.564422;
+//double LeftTopLat = 25.033828;
+//double LeftDownLong = 121.564423;
+//double LeftDownLat = 25.033341;
+//double RightDownLong = 121.565153;
+//double RightDownLat = 25.033338;
+
 
 // Zoomout to 101
 double LeftTopLong = 121.55607268966645;
@@ -68,12 +70,12 @@ double ttilt = 0;
 double theading = 0;
 double troll = 0;
 
-double clongitude = 0;
-double clatitude = 0;
-double caltitude = 0;
-double ctilt = 0;
-double cheading = 0;
-double croll = 0;
+double clongitude = tlongitude;
+double clatitude = tlatitude;
+double caltitude = taltitude;
+double ctilt = ttilt;
+double cheading = theading;
+double croll = troll;
 
 double altitude_scale = 1.0;
 
@@ -98,30 +100,46 @@ double          target_center[2] = {0.5, 0.5};
 double          target_width = 1.0;
 //double          target_center[2] = {0, 0};
 //double          target_width = 80.0;
+float g_cvTrans[4][4];
+
 namespace googleearth{
 	ref class Form1;
 };
+
 gcroot<googleearth::Form1^> g_formPtr = NULL;
 ARTagCameraDS* g_pARCam = NULL;
-bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
+
+bool computeNeedData(float cvTrans[4][4]);
 bool arTimerTickFunc();
 bool animTimerTickFunc();
 
+
+//create Google Earth Data class
+countAllData GEData;
+
+
 BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
-	CAutoLock lck(&g_State);
+	
+	{
+		CAutoLock lck(&g_State);
+		for (int row = 0; row < 4; row++)
+		{
+			for(int col = 0; col < 4; col++)
+			{
+				GEData.g_cvTrans[row][col] = config->cvTrans[row][col];
+			}
+		}
+	}
 
-	computeNeedData(numDetected, markinfos, config, matView, matProj, argc, argv);	
-	arTimerTickFunc();
-	//animTimerTickFunc();
+	getFstTag = true;
+
 	return TRUE;
 }
 
 
 bool arTimerTickFunc()
 {
-	
-
 	// set target camera
 	tlatitude = latitude;
 	tlongitude = longitude;
@@ -154,8 +172,6 @@ bool arTimerTickFunc()
 
 namespace googleearth {
 
-
-
 	//using namespace System::Windows::Forms::HtmlDocument;
 	/// <summary>
 	/// Form1 的摘要
@@ -173,7 +189,7 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress = "10.102.118.255";
+		private: static String^ ipAddress = "192.168.1.26";
 		private: static Int32 port = 5000;
 	private: System::Windows::Forms::Timer^  animTimer;
 
@@ -198,7 +214,7 @@ namespace googleearth {
 			setupArtoolkit();
 
 			//setupSocket();
-			
+						
 		}
 
 		private: System::Void setFullScreen(){
@@ -399,7 +415,6 @@ namespace googleearth {
 		}
 
 		//計算lookat的垂直向量
-		//計算lookat的垂直向量
 		public: void countLookup(void)
 		{
 			lookup.x = camera.m[0][1];
@@ -472,186 +487,6 @@ namespace googleearth {
 				int test = 0;
 			}
 		}
-//
-//void mainLoop(void)
-//{
-//	ARUint8         *dataPtr;
-//    ARMarkerInfo    *marker_info;
-//    int             marker_num;
-//    int             j, k;
-//
-//    /* grab a vide frame */
-//    if( (dataPtr = (ARUint8 *)arVideoGetImage()) == NULL ) {
-//        arUtilSleep(2);
-//        return;
-//    }
-//
-//    //glClearColor( 0.0, 0.0, 0.0, 0.0 );
-//    //glClearDepth( 1.0 );
-//    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//    argDrawMode2D();
-//    if( disp_mode ) {
-//        argDispImage( dataPtr, 0, 0 );
-//    }
-//    else {
-//        argDispImage( dataPtr, 1, 1 );
-//    }
-//
-//    /* detect the markers in the video frame */
-//    if( arDetectMarker(dataPtr, thresh, &marker_info, &marker_num) < 0 ) {
-//        cleanup();
-//        exit(0);
-//    }
-//    arVideoCapNext();
-//
-//    /* if the debug mode is on draw squares 
-//       around the detected squares in the video image */
-//    if( arDebug ) {
-//        if( arImageProcMode == AR_IMAGE_PROC_IN_HALF )
-//            argDispHalfImage( arImage, 2, 1 );
-//        else
-//            argDispImage( arImage, 2, 1);
-//    }
-//
-//    /* check for object visibility */
-//    k = -1;
-//    for( j = 0; j < marker_num; j++ ) {
-//        if( marker_info[j].id == target_id ) {
-//            if( k == -1 ) k = j;
-//            else {
-//                if( marker_info[k].cf < marker_info[j].cf ) k = j;
-//            }
-//        }
-//    }
-//	if( k != -1 ) {
-//        glDisable(GL_DEPTH_TEST);
-//        switch( outputMode ) {
-//            case 0:
-//                getResultRaw( &marker_info[k] );
-//                break;
-//            case 1:
-//                getResultQuat( &marker_info[k] );
-//                break;
-//        }
-//    }
-//
-//    argSwapBuffers();
-//}
-//
-//void getResultRaw( ARMarkerInfo *marker_info )
-//{
-//    double      target_trans[3][4];
-//    double      cam_trans[3][4];
-//    char        string[256];
-//	double det = 0;
-//
-//	//cam_trans矩陣資料將camera的位置轉成世界座標 =>求出camera在tag座標系中的位置
-//    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
-//    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
-//
-//	//將openGL中的矩陣(column major)轉成directX中的矩陣(row major)
-//	camera._11 = cam_trans[0][0];
-//	camera._12 = cam_trans[1][0]; 
-//	camera._13 = cam_trans[2][0];
-//	camera._14 = 0;
-//	camera._21 = cam_trans[0][1];
-//	camera._22 = cam_trans[1][1];
-//	camera._23 = cam_trans[2][1];
-//	camera._24 = 0;
-//	camera._31 = cam_trans[0][2];
-//	camera._32 = cam_trans[1][2];
-//	camera._33 = cam_trans[2][2];
-//	camera._34 = 0;
-//	camera._41 = cam_trans[0][3];
-//	camera._42 = cam_trans[1][3];
-//	camera._43 = cam_trans[2][3];
-//	camera._44 = 1;
-//
-//	//計算google earth中需要的各個參數
-//	countLoc(cam_trans[0][3],cam_trans[2][3],cam_trans[1][3]);
-//	countLookat();
-//	countLookup();
-//	countTilt();
-//	countHeading();
-//	countRoll();
-//
-//	longitude = google_earth_point.x;
-//	latitude = google_earth_point.z;
-//	altitude = google_earth_point.y;
-//	altitude *= 111000;  //一度 = 111000 公尺
-//	altitude *= altitude_scale;
-//
-//	sprintf(string," RAW: Cam Pos x: %f  y: %f  z: %f\n long:%f alt:%f lat:%f\n tilt:%f heading:%f roll:%f \n",
-//		cam_trans[0][3], cam_trans[1][3], cam_trans[2][3],longitude,altitude,latitude,tilt,heading,roll);
-//
-//	return;
-//}
-//
-//void getResultQuat( ARMarkerInfo *marker_info )
-//{
-//    double      target_trans[3][4];
-//    double      cam_trans[3][4];
-//    double      quat[4], pos[3];
-//    char        string1[256];
-//    char        string2[256];
-//
-//    if( arGetTransMat(marker_info, target_center, target_width, target_trans) < 0 ) return;
-//    if( arUtilMatInv(target_trans, cam_trans) < 0 ) return;
-//    if( arUtilMat2QuatPos(cam_trans, quat, pos) < 0 ) return;
-//
-//    sprintf(string1," QUAT: Pos x: %3.1f  y: %3.1f  z: %3.1f\n",
-//            pos[0], pos[1], pos[2]);
-//    sprintf(string2, "      Quat qx: %3.2f qy: %3.2f qz: %3.2f qw: %3.2f ",
-//            quat[0], quat[1], quat[2], quat[3]);
-//    strcat( string1, string2 );
-//
-//    return;
-//}
-//
-//int init(void)
-//{
-//    char     cparaname[256];
-//    char     pattname[256];
-//    ARParam  wparam;
-//
-//    strcpy( cparaname, "Data/camera_para.dat" );
-//    strcpy( pattname,  "Data/patt.hiro" );
-//    
-//    /* open the video path */
-//    if( arVideoOpen( vconf ) < 0 ) exit(0);
-//    /* find the size of the window */
-//    if( arVideoInqSize(&xsize, &ysize) < 0 ) exit(0);
-//    printf("Image size (x,y) = (%d,%d)\n", xsize, ysize);
-//
-//    /* set the initial camera parameters */
-//    if( arParamLoad(cparaname, 1, &wparam) < 0 ) {
-//       printf("Camera parameter load error !!\n");
-//        exit(0);
-//    }
-//    arParamChangeSize( &wparam, xsize, ysize, &cparam );
-//    arInitCparam( &cparam );
-//    printf("*** Camera Parameter ***\n");
-//    arParamDisp( &cparam );
-//
-//    /* open the graphics window */
-//    argInit( &cparam, 1.0, 0, 2, 1, 0 );
-//
-//    if( (target_id = arLoadPatt(pattname)) < 0 ) {
-//        printf("Target pattern load error!!\n");
-//        exit(0);
-//    }
-//
-//    arDebug = 0;
-//
-//    return 0;
-//}			
-//
-//void cleanup(void)
-//{
-//    arVideoCapStop();
-//    arVideoClose();
-//    argCleanup();
-//}
 
 	protected:
 		/// <summary>
@@ -726,28 +561,6 @@ namespace googleearth {
 
 #pragma endregion
 	
-	private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
-				 
-				 array<Object^>^ parameter = gcnew array<Object^>(6); 
-
-				 parameter[0] = latitude;
-				 parameter[1] = longitude;
-				 parameter[2] = altitude;
-				 parameter[3] = heading;
-				 parameter[4] = tilt;
-				 parameter[5] = roll;
-
-				 webBrowser1->Document->InvokeScript("cameraView",parameter);
-				
-			 }
-
-	
-private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) 
-		 {
-			 //this->arTimer->Start();
-		 }
-
-
 		private: System::Void arTimer_Tick(System::Object^  sender, System::EventArgs^  e) 
 		{
 			 //mainLoop();	
@@ -773,17 +586,48 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 		}
 
 		private: System::Void animTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
-			CAutoLock lck(&g_State);
-			if(!getFstTag)
-				return;
-			 
-			
-			 clatitude = tlatitude;
-			 clongitude = tlongitude;
-			 caltitude = taltitude;
-			 cheading = theading;
-			 ctilt = ttilt;
- 			 croll = troll;
+
+			 if(!getFstTag)		return;
+				
+			 else{
+
+				double tmpcvTrans[4][4];
+				{
+					CAutoLock lck(&g_State);
+					for (int row = 0; row < 4; row++)
+					{
+						for(int col = 0; col < 4; col++)
+						{
+							tmpcvTrans[row][col] = GEData.g_cvTrans[row][col];
+						}
+					}
+				}
+
+				GEData.computeNeedData(tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
+
+				tlatitude = GEData.getLatitude();
+				tlongitude = GEData.getLongitude();
+				taltitude = GEData.getAltitude();
+				theading = GEData.getHeading();
+				ttilt = GEData.getTilt();
+				troll = GEData.getRoll();
+
+				D3DXVECTOR3 intersect_origin_point = GEData.getIntersect_origin_point();
+				D3DXVECTOR3 intersect_point = GEData.getIntersect_point();
+
+				double vspaceX = intersect_origin_point.x;
+				double vspaceY = intersect_origin_point.y;
+				double lat = intersect_point.y;
+				double lng = intersect_point.x;
+
+				sendData("11,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
+				
+				clatitude = tlatitude;
+				clongitude = tlongitude;
+				caltitude = taltitude;
+				cheading = theading;
+				ctilt = ttilt;
+ 				croll = troll;
 			
 			/*
 			 double alpha = 0.2;
@@ -805,23 +649,26 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
  			 croll += ((troll - croll)/2);
 			 */ 
 
-			 array<Object^>^ parameter = gcnew array<Object^>(6); 
+				array<Object^>^ parameter = gcnew array<Object^>(6); 
 			
-			 parameter[0] = clatitude;
-			 parameter[1] = clongitude;
-			 parameter[2] = caltitude;
-			 parameter[3] = cheading;
-			 parameter[4] = ctilt;
-			 parameter[5] = croll;
-			 double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
-			 for (int i =0; i<6; i++)
-			 {
-				 if (Double::IsNaN(para[i]))
-				 {
-					 return ;
-				 }
+				parameter[0] = clatitude;
+				parameter[1] = clongitude;
+				parameter[2] = caltitude;
+				parameter[3] = cheading;
+				parameter[4] = ctilt;
+				parameter[5] = croll;
+
+				double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
+				for (int i =0; i < 6; i++)
+				{
+					if (Double::IsNaN(para[i]))
+					{
+						return ;
+					}
+				}
+
+				webBrowser1->Document->InvokeScript("cameraView",parameter);
 			 }
-			 webBrowser1->Document->InvokeScript("cameraView",parameter);
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		
@@ -830,6 +677,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 				altitude_scale = 0;
 
 		}
+
 		private: System::Void zoomoutBtn_Click(System::Object^  sender, System::EventArgs^  e) {
 			altitude_scale += 0.1;
 			if(altitude_scale > 1.0)
@@ -908,63 +756,61 @@ bool animTimerTickFunc()
 }
 
 
-bool computeNeedData(int numDetected, const ARMarkerInfo* markinfos,  const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
-{
-	char        string[256];
-	double det = 0;
-	D3DXMATRIX d3d_camTrans, matInvYZ, matSwitchYZ;
-	D3DXMatrixScaling(&matInvYZ, 1, -1, -1);
-
-	/*matSwitchYZ.m[0][0] = 0; matSwitchYZ.m[0][1] = 0; matSwitchYZ.m[0][2] = 1; matSwitchYZ.m[0][3] = 0; 
-	matSwitchYZ.m[1][0] = 1; matSwitchYZ.m[1][1] = 0; matSwitchYZ.m[1][2] = 0; matSwitchYZ.m[1][3] = 0; 
-	matSwitchYZ.m[2][0] = 0; matSwitchYZ.m[2][1] = 1; matSwitchYZ.m[2][2] = 0; matSwitchYZ.m[2][3] = 0; 
-	matSwitchYZ.m[3][0] = 0; matSwitchYZ.m[3][1] = 0; matSwitchYZ.m[3][2] = 0; matSwitchYZ.m[3][3] = 1; 
-*/
-
-
-	D3DXMatrixIdentity(&d3d_camTrans);
-
-	for (int row = 0; row < 4; row ++)
-	{
-		for (int col =0; col < 4; col++)
-		{
-			d3d_camTrans.m[col][row] = config->cvTrans[row][col];
-		}
-	}
-
-	d3d_camTrans = d3d_camTrans * matInvYZ;
-
-	
-	camera = d3d_camTrans;
-	//from right hand to left hand
-
-	
-	//計算google earth中需要的各個參數
-	g_formPtr->countLoc(-camera.m[3][0], -camera.m[3][2], -camera.m[3][1]);
-	g_formPtr->countLookat();
-	g_formPtr->countLookup();
-	g_formPtr->countTilt();
-	g_formPtr->countHeading();
-	g_formPtr->countRoll();
-	/*WCHAR str[MAX_PATH] = {0};
-	
-	OutputDebugStringW(L"@@@@@@@@@@@@\n");
-	swprintf_s(str, MAX_PATH, L"@@@@ lookat = ( %.2f, %.2f, %.2f) \n", 
-		lookat.x, lookat.y, lookat.z);
-	OutputDebugStringW(str);
-	swprintf_s(str, MAX_PATH, L"@@@@ ViewUp = ( %.2f, %.2f, %.2f) \n", 
-		lookup.x, lookup.y, lookup.z);
-	OutputDebugStringW(str);
-	swprintf_s(str, MAX_PATH, L"@@@@ Tilt, Heading, Roll = ( %.2f, %.2f, %.2f) \n", 
-		tilt, heading, roll);
-	OutputDebugStringW(str);
-	OutputDebugStringW(L"@@@@@@@@@@@@\n");
-	*/
-	longitude = google_earth_point.x;
-	latitude = google_earth_point.z;
-	altitude = google_earth_point.y;
-	altitude *= 111000;  //一度 = 111000 公尺
-	altitude *= altitude_scale;
-
-	return true;
-}
+//bool computeNeedData(float cvTrans[4][4])
+//{
+//	char        string[256];
+//	double det = 0;
+//	D3DXMATRIX d3d_camTrans, matInvYZ, matSwitchYZ;
+//	D3DXMatrixScaling(&matInvYZ, 1, -1, -1);
+//
+//	/*matSwitchYZ.m[0][0] = 0; matSwitchYZ.m[0][1] = 0; matSwitchYZ.m[0][2] = 1; matSwitchYZ.m[0][3] = 0; 
+//	matSwitchYZ.m[1][0] = 1; matSwitchYZ.m[1][1] = 0; matSwitchYZ.m[1][2] = 0; matSwitchYZ.m[1][3] = 0; 
+//	matSwitchYZ.m[2][0] = 0; matSwitchYZ.m[2][1] = 1; matSwitchYZ.m[2][2] = 0; matSwitchYZ.m[2][3] = 0; 
+//	matSwitchYZ.m[3][0] = 0; matSwitchYZ.m[3][1] = 0; matSwitchYZ.m[3][2] = 0; matSwitchYZ.m[3][3] = 1; 
+//*/
+//
+//	D3DXMatrixIdentity(&d3d_camTrans);
+//
+//	for (int row = 0; row < 4; row ++)
+//	{
+//		for (int col = 0; col < 4; col++)
+//		{
+//			d3d_camTrans.m[col][row] = cvTrans[row][col];
+//		}
+//	}
+//
+//	d3d_camTrans = d3d_camTrans * matInvYZ;
+//
+//	
+//	camera = d3d_camTrans;
+//	//from right hand to left hand
+//	
+//	//計算google earth中需要的各個參數
+//	countLoc(-camera.m[3][0], -camera.m[3][2], -camera.m[3][1]);
+//	countLookat();
+//	countLookup();
+//	countTilt();
+//	countHeading();
+//	countRoll();
+//	/*WCHAR str[MAX_PATH] = {0};
+//	
+//	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+//	swprintf_s(str, MAX_PATH, L"@@@@ lookat = ( %.2f, %.2f, %.2f) \n", 
+//		lookat.x, lookat.y, lookat.z);
+//	OutputDebugStringW(str);
+//	swprintf_s(str, MAX_PATH, L"@@@@ ViewUp = ( %.2f, %.2f, %.2f) \n", 
+//		lookup.x, lookup.y, lookup.z);
+//	OutputDebugStringW(str);
+//	swprintf_s(str, MAX_PATH, L"@@@@ Tilt, Heading, Roll = ( %.2f, %.2f, %.2f) \n", 
+//		tilt, heading, roll);
+//	OutputDebugStringW(str);
+//	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+//	*/
+//	longitude = google_earth_point.x;
+//	latitude = google_earth_point.z;
+//	altitude = google_earth_point.y;
+//	altitude *= 111000;  //一度 = 111000 公尺
+//	altitude *= altitude_scale;
+//
+//	return true;
+//}
