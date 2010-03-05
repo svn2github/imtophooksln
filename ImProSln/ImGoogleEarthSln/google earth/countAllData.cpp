@@ -20,7 +20,7 @@ countAllData::countAllData()
 
 void countAllData::countLoc(double x, double y, double z, double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat)
 {
-	google_earth_point.x = LeftTopLong + abs(RightDownLong - LeftDownLong) * x;
+	google_earth_point.x = LeftTopLong + abs(RightDownLong - LeftDownLong) * x * (3.0 / 4.0);
 	google_earth_point.y = LeftTopLat + abs(LeftDownLat - LeftTopLat) * y;
 	google_earth_point.z = abs(LeftDownLat - LeftTopLat) * z;
 

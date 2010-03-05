@@ -189,7 +189,7 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress = "192.168.1.26";
+		private: static String^ ipAddress = "192.168.1.6";
 		private: static Int32 port = 5000;
 	private: System::Windows::Forms::Timer^  animTimer;
 
@@ -213,7 +213,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 
-			//setupSocket();
+			setupSocket();
 						
 		}
 
@@ -603,6 +603,8 @@ namespace googleearth {
 					}
 				}
 
+				getFstTag = false;
+
 				GEData.computeNeedData(tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
 
 				tlatitude = GEData.getLatitude();
@@ -615,12 +617,12 @@ namespace googleearth {
 				D3DXVECTOR3 intersect_origin_point = GEData.getIntersect_origin_point();
 				D3DXVECTOR3 intersect_point = GEData.getIntersect_point();
 
-				double vspaceX = intersect_origin_point.x;
-				double vspaceY = intersect_origin_point.y;
+				double vspaceX = (double)intersect_origin_point.x / (double)1.33;
+				double vspaceY = -intersect_origin_point.y;
 				double lat = intersect_point.y;
 				double lng = intersect_point.x;
 
-				sendData("11,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
+				sendData("15,flashGE,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
