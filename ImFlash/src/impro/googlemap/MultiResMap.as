@@ -154,7 +154,9 @@ package impro.googlemap
 			geControl.x = lresX;
 			geControl.y = lresY;
 			
-			var debugPoint:Point = map.fromLatLngToPoint(new LatLng(lat, lng));
+			var debugPoint:Point = map.fromLatLngToViewport(new LatLng(lat, lng));
+			
+//			var debugPoint:Point = map.fromLatLngToPoint(new LatLng(lng, lat));
 			debugPoint.x -= geControl.x;
 			debugPoint.y -= geControl.y;
 			

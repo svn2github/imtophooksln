@@ -120,12 +120,13 @@ package {
 			var cmd:String = data[3];
 			if(cmd=="geLogin"){
 				multiResMap.addGeControl(socket, from, 150, 150);
-			}else if(cmd=="geCenter"){
+			}else if(cmd=="geDebug"){
 				var vspaceX:Number = Number(data[4]);
 				var vspaceY:Number = Number(data[5]);
 				var lat:Number = Number(data[6]);
 				var lng:Number = Number(data[7]);
 				multiResMap.recvGeCenter(from, vspaceX, vspaceY, lat, lng);
+				trace("vspace: " + vspaceX + ", " + vspaceY);
 			}
 		}
 		private function onConnect(e:Event):void{

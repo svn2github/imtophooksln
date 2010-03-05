@@ -189,7 +189,7 @@ package impro.googlemap
 			// calculate best zoom level regarding the screen resolution
 			if(useBestZoom){
 				var bestZoom:Number = calBestZoom(stableViewportW, stableViewportH, screenWidth, screenHeight);
-				childMap.setZoom(parentMap.getZoom() + bestZoom -2);				
+				childMap.setZoom(parentMap.getZoom() + bestZoom -1);
 			}
 			
 			var pow:Number = Math.pow(2, childMap.getZoom() - parentMap.getZoom());			

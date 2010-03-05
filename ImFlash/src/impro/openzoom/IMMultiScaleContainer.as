@@ -82,8 +82,10 @@ public final class IMMultiScaleContainer extends Sprite
     //
     //--------------------------------------------------------------------------
 
-    private static const DEFAULT_VIEWPORT_WIDTH:Number = 600
-    private static const DEFAULT_VIEWPORT_HEIGHT:Number = 450
+    private static const DEFAULT_VIEWPORT_WIDTH:Number = 600;
+    private static const DEFAULT_VIEWPORT_HEIGHT:Number = 450;
+//    private static const DEFAULT_VIEWPORT_WIDTH:Number = 600
+//    private static const DEFAULT_VIEWPORT_HEIGHT:Number = 450
 
     private static const DEFAULT_SCENE_WIDTH:Number = 24000 * 5.2
     private static const DEFAULT_SCENE_HEIGHT:Number = 18000 * 5.2
