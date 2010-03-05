@@ -2,6 +2,9 @@
 #include "countAllData.h"
 #include "d3dx9math.h"
 #include "math.h"
+#include <string.h>
+#include "Streams.h"
+#include <stdio.h>
 
 #define PI 3.1416
 
@@ -23,6 +26,7 @@ void countAllData::countLoc(double x, double y, double z, double LeftDownLong, d
 	google_earth_point.x = LeftTopLong + abs(RightDownLong - LeftDownLong) * x * (3.0 / 4.0);
 	google_earth_point.y = LeftTopLat + abs(LeftDownLat - LeftTopLat) * y;
 	google_earth_point.z = abs(LeftDownLat - LeftTopLat) * z;
+	//google_earth_point.z = 500 * z;
 
 	//D3DXMATRIX Transform;
 
@@ -180,7 +184,7 @@ void countAllData::countIntersectPoint(D3DXVECTOR3 origin_point,D3DXVECTOR3 look
 
 	D3DXPlaneIntersectLine(&intersect_origin_point,&ground,&origin_point,&ending_point);
 	
-	intersect_point.x = LeftTopLong + abs(RightDownLong - LeftDownLong) * intersect_origin_point.x;
+	intersect_point.x = LeftTopLong + abs(RightDownLong - LeftDownLong) * intersect_origin_point.x * (3.0 / 4.0);
 	intersect_point.y = LeftTopLat + abs(LeftDownLat - LeftTopLat) * intersect_origin_point.y;
 	intersect_point.z = 0;
 
@@ -212,14 +216,24 @@ void countAllData::computeNeedData(double cvTrans[4][4],double LeftDownLong, dou
 	d3d_camTrans = d3d_camTrans * matInvYZ;
 	
 	camera = d3d_camTrans;
-	//from right hand to left hand
+	D3DXMatrixInverse(&cameraInv,NULL,&camera);
 
-	origin_point.x = -camera.m[3][0];
-	origin_point.y = -camera.m[3][1];
-	origin_point.z = -camera.m[3][2];
+	origin_point.x = 0;
+	origin_point.y = 0;
+	origin_point.z = 0;
+
+	D3DXVec3TransformCoord(&origin_point,&origin_point,&cameraInv);
+
+	/*WCHAR str[MAX_PATH] = {0};
+	
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	swprintf_s(str, MAX_PATH, L"@@@@ google_earth_point = ( %.2f, %.2f, %.2f) \n", 
+		google_earth_point.x, google_earth_point.y, google_earth_point.z);
+	OutputDebugStringW(str);
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");*/
 	
 	//計算google earth中需要的各個參數
-	countLoc(-camera.m[3][0], -camera.m[3][1], -camera.m[3][2], LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);
+	countLoc(origin_point.x, origin_point.y, origin_point.z, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);
 	countLookat(camera);
 	countLookup(camera);
 	countTilt();
@@ -245,6 +259,18 @@ void countAllData::computeNeedData(double cvTrans[4][4],double LeftDownLong, dou
 	altitude = google_earth_point.z;
 	altitude *= 111000;  //一度 = 111000 公尺
 	altitude *= altitude_scale;
+
+	WCHAR str[MAX_PATH] = {0};
+	
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
+		origin_point.x, origin_point.y, origin_point.z);
+	OutputDebugStringW(str);
+
+	swprintf_s(str, MAX_PATH, L"@@@@ google_earth = ( %f, %f, %f) \n", 
+		longitude, latitude, altitude);
+	OutputDebugStringW(str);
+	OutputDebugStringW(L"@@@@@@@@@@@@\n");
 
 }
 

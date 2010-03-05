@@ -32,12 +32,6 @@ char    *vconf = "";
 
 #define PI 3.1416
 
-D3DXVECTOR3 lookat;  //camera看的方向的vector
-D3DXVECTOR3 lookup;  //camera的 up vector
-D3DXVECTOR3 origin_lookup;  //原始的camera up vector
-D3DXVECTOR3 google_earth_point;
-D3DXMATRIX camera;
-
 CCritSec g_State;
 
 //double LeftTopLong = 121.564422;
@@ -62,6 +56,7 @@ double altitude = 0;
 double tilt = 0;
 double heading = 0;
 double roll = 0;
+double altitude_scale = 1.0;
 
 double tlongitude = 0;
 double tlatitude = 0;
@@ -76,8 +71,6 @@ double caltitude = taltitude;
 double ctilt = ttilt;
 double cheading = theading;
 double croll = troll;
-
-double altitude_scale = 1.0;
 
 bool getFstTag = false;
 
@@ -100,7 +93,6 @@ double          target_center[2] = {0.5, 0.5};
 double          target_width = 1.0;
 //double          target_center[2] = {0, 0};
 //double          target_width = 80.0;
-float g_cvTrans[4][4];
 
 namespace googleearth{
 	ref class Form1;
@@ -114,8 +106,10 @@ bool arTimerTickFunc();
 bool animTimerTickFunc();
 
 
-//create Google Earth Data class
+//create Google Earth Data class//
 countAllData GEData;
+//////////////////////////////////
+
 
 
 BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
@@ -213,7 +207,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 
-			setupSocket();
+			//setupSocket();
 						
 		}
 
@@ -346,146 +340,6 @@ namespace googleearth {
 			LeftDownLat = LDLat;
 			RightDownLong = RDLong;
 			RightDownLat = RDLat;
-		}
-
-		//計算camera在tag座標系中的位置(tag左下角為(0,0))
-		public: void countLoc(double x,double y,double z)
-		{
-			D3DXMATRIX Transform;
-
-			D3DXVECTOR3 eye;
-			D3DXVECTOR3 X;
-			D3DXVECTOR3 Y;
-			D3DXVECTOR3 Z;
-			D3DXVECTOR3 marker_point;
-			marker_point.x = x;
-			marker_point.y = y;
-			marker_point.z = z;
-	
-			eye.x = LeftDownLong;
-			eye.y = 0;
-			eye.z = LeftDownLat;
-	
-			X.x = RightDownLong - LeftDownLong;
-			X.y = 0;
-			X.z = RightDownLat - LeftDownLat;
-
-			//D3DXVec3Cross(&Y,&X,&Z);
-
-			Y.x = 0;
-			Y.y = RightDownLong - LeftDownLong;
-			Y.z = 0;
-
-			Z.x = LeftTopLong - LeftDownLong;
-			Z.y = 0;
-			Z.z = LeftTopLat - LeftDownLat;
-
-			Transform._11 = X.x;
-			Transform._12 = Y.x;
-			Transform._13 = Z.x;
-			Transform._14 = 0;
-
-			Transform._21 = X.y;
-			Transform._22 = Y.y;
-			Transform._23 = Z.y;
-			Transform._24 = 0;
-
-			Transform._31 = X.z;
-			Transform._32 = Y.z;
-			Transform._33 = Z.z;
-			Transform._34 = 0;
-
-			Transform._41 = eye.x;
-			Transform._42 = eye.y;
-			Transform._43 = eye.z;
-			Transform._44 = 1;
-
-			D3DXVec3TransformCoord(&google_earth_point,&marker_point,&Transform);
-
-		}
-
-		//計算lookat的向量(camera看的方向)
-		public: void countLookat(void)
-		{
-			lookat.x = -camera.m[0][2];
-			lookat.y = -camera.m[1][2];
-			lookat.z = -camera.m[2][2];;
-			D3DXVec3Normalize(&lookat, &lookat);
-			int test = 0;
-		}
-
-		//計算lookat的垂直向量
-		public: void countLookup(void)
-		{
-			lookup.x = camera.m[0][1];
-			lookup.y = camera.m[1][1];
-			lookup.z = camera.m[2][1];
-			D3DXVec3Normalize(&lookup,&lookup);
-		}
-
-		//用z軸的向量與lookat的向量求夾角算出tilt的值
-		public: void countTilt(void)
-		{
-			double cosin = 0;
-			double arcosin = 0;
-
-			D3DXVECTOR3 normalLookat;
-		
-			D3DXVec3Normalize(&normalLookat,&lookat);
-			D3DXVECTOR3 viewDown(0, 0, -1);
-			cosin = D3DXVec3Dot(&lookat,&viewDown);
-			arcosin = acos(cosin);
-			tilt = (double)180*(double)arcosin / (double)PI;
-			int test = 0;
-		}	
-
-		//用y軸的向量與lookat的xy向量求夾角來計算heading的值
-		public: void countHeading(void)
-		{
-			
-			D3DXVECTOR3 lookatXY(lookat.x, lookat.y, 0);
-			D3DXVec3Normalize(&lookatXY, &lookatXY);
-			D3DXVECTOR3 north(0, 1, 0);
-			double cosin = D3DXVec3Dot(&lookatXY, &north);
-			double arccosin = acos(cosin);
-			if (lookatXY.x < 0)
-				arccosin = 2*D3DX_PI - arccosin;
-			heading = (double)180*(double)arccosin / (double)PI;
-			int test = 0;
-		}
-
-		public: void countRoll(void)
-		{
-			D3DXVECTOR3 zaxis;
-			D3DXVECTOR3 axis3;
-			D3DXVECTOR3 result;
-	
-			double dist_lookup = 0;
-			double dist_origin_lookup = 0;
-			double cosin = 0;
-			double arcosin = 0;
-			double angle = 0;
-
-			zaxis.x = 0;
-			zaxis.y = 0;
-			zaxis.z = 1;
-
-			D3DXVec3Cross(&axis3, &lookat, &zaxis);
-			D3DXVec3Cross(&origin_lookup,&axis3, &lookat);
-			D3DXVec3Normalize(&origin_lookup,&origin_lookup);
-			D3DXVec3Cross(&result,&origin_lookup,&lookup);
-
-			cosin = D3DXVec3Dot(&lookup,&origin_lookup); 
-		
-			arcosin = acos(cosin);
-			angle = (double)180*(double)arcosin / (double)PI;
-			
-			if(result.x * lookat.x <= 0 || result.y * lookat.y <=0)	roll = angle;
-			else	roll = -angle;
-			if (Double::IsNaN(roll))
-			{
-				int test = 0;
-			}
 		}
 
 	protected:
@@ -621,8 +475,9 @@ namespace googleearth {
 				double vspaceY = -intersect_origin_point.y;
 				double lat = intersect_point.y;
 				double lng = intersect_point.x;
-
-				sendData("15,flashGE,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
+				
+				if(GetNetworkStream != nullptr)
+					sendData("15,flashGE,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;

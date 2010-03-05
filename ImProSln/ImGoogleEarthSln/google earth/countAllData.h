@@ -33,6 +33,7 @@ public:
 private:
 
 	D3DXMATRIX camera;
+	D3DXMATRIX cameraInv;
 
 	D3DXVECTOR3 lookat;  //camera看的方向的vector 
 	D3DXVECTOR3 lookup;  //camera的 up vector
