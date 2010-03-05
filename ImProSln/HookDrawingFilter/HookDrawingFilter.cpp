@@ -150,7 +150,7 @@ HRESULT HookDrawingStream::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 
 
 HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter), m_numPins(4)
+: CMuxTransformFilter(NAME("HookDrawing Filter"), 0, CLSID_HookDrawingFilter)
 {
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
@@ -247,7 +247,7 @@ HRESULT HookDrawingFilter::CreatePins()
 			m_pStreamPins[c] = NULL;
 		}
 		m_pStreamPins.clear();
-		for ( int i =0; i < m_numPins; i++)
+		for ( int i =0; i < NUMHOOKPIN; i++)
 		{
 			WCHAR strPinName[MAX_PATH];
 			swprintf_s(strPinName, MAX_PATH, L"d3dsurf%d", i);
@@ -274,11 +274,6 @@ HRESULT HookDrawingFilter::CreatePins()
 }
 HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
-	if (!IsHooked())
-	{
-		return S_FALSE;
-	}
-	CAutoLock lck2(&m_csFillBuffer);
 	int idx = -1;
 	for(int i =0; i< m_pStreamPins.size(); i++)
 	{
@@ -292,25 +287,103 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	{
 		return S_FALSE;
 	}
-	SwitchRenderTarget(idx);
-	SwitchOutTexture(idx);
-	SetRenderTarget();
+	HRESULT hr = S_OK;
+	
+	CAutoLock lck(&m_csFillBuffer);
+	
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"@@@@@@ FillBuffer %d  ---> \n", idx);
+	OutputDebugStringW(str);
+	if (GetHookDirty(idx))
 	{
-		CAutoLock lck(&m_csInTexture);
-		const D3DXMATRIX* matTTS = ((HookDrawingStream*)pPin)->GetWarpMatrix();
-		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(matTTS);
-			
-		m_pD3DDisplay->SetTexture(m_pInTexture);
-		m_pD3DDisplay->Render();
+		{
+			CAutoLock lck0(&m_csD3DDisplay);
+			CAutoLock lck(&m_csInTexture);
+			SetRenderTarget(idx);
+			const D3DXMATRIX* matTTS = ((HookDrawingStream*)pPin)->GetWarpMatrix();
+			((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(matTTS);
+
+			m_pD3DDisplay->SetTexture(m_pInTexture);
+			m_pD3DDisplay->Render();
+			ResetRenderTarget();
+		}
+		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyRenderTarget2OutputTexture %d--->\n", idx);
+		//OutputDebugStringW(str);
+		CopyRenderTarget2OutputTexture(idx);	
+		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyRenderTarget2OutputTexture %d--->\n", idx);
+		//OutputDebugStringW(str);
+		/*
+		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyInTexture2OutTexture %d--->\n", idx);
+		//OutputDebugStringW(str);
+		CopyInTexture2OutTexture(idx);
+		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyInTexture2OutTexture %d<---\n", idx);
+		//OutputDebugStringW(str);
+		*/
+		SetHookDirty(idx, FALSE);
 	}
-	ResetRenderTarget();
-	CopyRenderTarget2OutputTexture();	
 	CMediaType mt;
 	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-	CopyOutputTexture2OutputData(pSamp, &mt, true);
+
+	//swprintf_s(str, MAX_PATH, L"@@@@@@  CopyOutputTexture2OutputData %d --->\n", idx);
+	//OutputDebugStringW(str);
+	CopyOutputTexture2OutputData(idx, pSamp, &mt, true);
+	//swprintf_s(str, MAX_PATH, L"@@@@@@  CopyOutputTexture2OutputData %d <---\n", idx);
+	//OutputDebugStringW(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@@@ FillBuffer %d  <--- \n", idx);
+	//OutputDebugStringW(str);
+	
 	return S_OK;
 }
 
+HRESULT HookDrawingFilter::CopyRenderTarget2OutputTexture(int idx)
+{
+	HRESULT hr;
+	if (m_pD3DDisplay == NULL || m_pAddOutTexture.size() <= idx || m_pAddRenderTarget.size() <= idx ||
+		m_pAddOutTexture[idx] == NULL || m_pAddRenderTarget[idx] == NULL)
+		return S_FALSE;
+	if (FAILED(TestDisplayDeviceLost()))
+		return S_FALSE;
+	CAutoLock lck1(&m_csAddTextures[idx]);
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+
+	LPDIRECT3DSURFACE9 pOutSurface = NULL;
+	LPDIRECT3DSURFACE9 pRenderTarget = NULL;
+	D3DSURFACE_DESC surRenderDesc, surOutDesc;
+	m_pAddOutTexture[idx]->GetSurfaceLevel(0, &pOutSurface);
+	pRenderTarget = m_pAddRenderTarget[idx];
+	pRenderTarget->AddRef();
+	pRenderTarget->GetDesc(&surRenderDesc);
+	pOutSurface->GetDesc(&surOutDesc);
+
+	hr = pDevice->GetRenderTargetData(pRenderTarget, pOutSurface);
+	//D3DCAPS9 cap;
+	//pDevice->GetDeviceCaps(&cap);
+	/*if (cap.DevCaps2 & D3DDEVCAPS2_STREAMOFFSET)
+	{
+		hr = pDevice->StretchRect(pRenderTarget, NULL, pOutSurface, NULL, D3DTEXF_NONE);
+	}*/
+	/*HDC rtDC = 0, outDC = 0;
+	hr = pRenderTarget->GetDC(&rtDC);
+	hr = pOutSurface->GetDC(&outDC);
+	StretchBlt(outDC, 0, 0, surOutDesc.Width, surOutDesc.Height, 
+		rtDC, 0, 0, surRenderDesc.Width, surRenderDesc.Height, SRCCOPY);*/
+	
+
+	if (pOutSurface != NULL)
+	{
+		//pOutSurface->ReleaseDC(outDC);
+		pOutSurface->Release();
+		pOutSurface = NULL;
+	}
+	if (pRenderTarget != NULL)
+	{
+		//pRenderTarget->ReleaseDC(rtDC);
+		pRenderTarget->Release();
+		pRenderTarget = NULL;
+	}
+	
+	return S_OK;
+}
 HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout CMediaType *pMediaType)
 {
 	bool isStreamPin = false;
@@ -318,18 +391,47 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 	{
 		if (m_pStreamPins[i] == pPin)
 		{
-			CAutoLock lck(&m_csAddTextures);
-			CMediaType mt;
-			mt.SetType(&GUID_MyMediaSample);
-			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
-			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
-			D3DSURFACE_DESC desc;
-			m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
-			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
-			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
-			*pMediaType = mt;
-			return S_OK;
+			if (iPosition == 1)
+			{
+				if (m_pOutTexture == NULL)
+					return S_FALSE;
+				CMediaType mt;
+				D3DSURFACE_DESC desc;
+				m_pOutTexture->GetLevelDesc(0, &desc);
+				mt.SetType(&MEDIATYPE_Video);
+				mt.SetFormatType(&FORMAT_VideoInfo);
+				mt.SetTemporalCompression(FALSE);
+				mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+				mt.SetSampleSize(desc.Width*desc.Height*4);
+
+				VIDEOINFOHEADER pvi;
+				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+				pvi.bmiHeader.biWidth = desc.Width;
+				pvi.bmiHeader.biHeight = desc.Height;
+				pvi.bmiHeader.biBitCount = 32;
+				SetRectEmpty(&(pvi.rcSource));
+				SetRectEmpty(&(pvi.rcTarget));
+				mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+				*pMediaType = mt;
+				return S_OK;
+			}
+			else if (iPosition == 0)
+			{
+				CAutoLock lck(&m_csAddTextures[i]);
+				CMediaType mt;
+				mt.SetType(&GUID_MyMediaSample);
+				mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+				mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+				D3DSURFACE_DESC desc;
+				m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
+				mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+				mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+				*pMediaType = mt;
+				return S_OK;
+			}
 		}
+		
 	}
 
 	return S_FALSE;
@@ -350,6 +452,11 @@ HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* 
 		CheckPointer(mtOut, E_POINTER);
 		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			return NOERROR;
+		}
+		else if (IsEqualGUID(*mtOut->Type(), MEDIATYPE_Video) && 
+			IsEqualGUID(*mtOut->Subtype(), MEDIASUBTYPE_RGB32))
 		{
 			return NOERROR;
 		}
@@ -406,9 +513,9 @@ MS3DDisplay* HookDrawingFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int r
 }
 HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
 {
-	CAutoLock lck(&m_csAddTextures);
-	if (idx < 0 || idx >= m_numPins || m_pAddOutTexture.size() < m_numPins || 
-		m_pAddRenderTarget.size() < m_numPins)
+	CAutoLock lck(&m_csAddTextures[idx]);
+	if (idx < 0 || idx >= NUMHOOKPIN || m_pAddOutTexture.size() < NUMHOOKPIN || 
+		m_pAddRenderTarget.size() < NUMHOOKPIN)
 	{
 		return S_FALSE;
 	}
@@ -423,19 +530,64 @@ HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
 		m_pAddRenderTarget[idx] = NULL;
 	}
 	HRESULT hr;
-	hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	hr = D3DXCreateTexture(pDevice, w, h, 
 		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &(m_pAddOutTexture[idx]));
 	if (FAILED(hr))
 	{
 		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
 	}
-	hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
-		0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &(m_pAddRenderTarget[idx]));
+	hr=	pDevice->CreateRenderTarget(w, h, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
+		0, FALSE, &m_pAddRenderTarget[idx], NULL);
 	if (FAILED(hr))
 	{
 		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
 	}
 	return hr;
+}
+HRESULT HookDrawingFilter::SetRenderTarget(int idx)
+{
+	HRESULT hr;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
+	if (m_pAddRenderTarget.size() <= idx || m_pAddRenderTarget[idx] == NULL || m_pD3DDisplay == NULL)
+	{
+		return S_FALSE;
+	}
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	LPDIRECT3DSURFACE9 pRTSurface = NULL;
+	pRTSurface = m_pAddRenderTarget[idx];
+	pRTSurface->AddRef();
+
+	hr = pDevice->GetRenderTarget(0, &m_pBackupRenderTarget);
+	hr = pDevice->SetRenderTarget(0, pRTSurface);
+
+	if (pRTSurface != NULL)
+	{
+		pRTSurface->Release();
+		pRTSurface = NULL;
+	}
+	return S_OK;
+}
+HRESULT HookDrawingFilter::ResetRenderTarget()
+{
+	
+	if (FAILED(TestDisplayDeviceLost()))
+		return S_FALSE;
+	HRESULT hr = S_OK;
+	if (m_pBackupRenderTarget == NULL || m_pD3DDisplay == NULL)
+	{
+		return S_FALSE;
+	}
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	pDevice->SetRenderTarget(0, m_pBackupRenderTarget);
+
+	m_pBackupRenderTarget->Release();
+	m_pBackupRenderTarget = NULL;
+	return S_OK;
+	
 }
 HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
 {
@@ -447,8 +599,8 @@ HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
 }
 HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 {
-	CAutoLock lck(&m_csAddTextures);
 	HRESULT hr = S_FALSE;
+	
 	for (int i =0; i< m_pAddOutTexture.size(); i++)
 	{
 		m_pAddOutTexture[i]->Release();
@@ -467,10 +619,10 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 		w = GetDeviceCaps(dc, HORZRES);
 		h = GetDeviceCaps(dc, VERTRES);
 	}
-	for (int i =0 ;i< m_numPins; i++)
+	for (int i =0 ;i< NUMHOOKPIN; i++)
 	{
 		LPDIRECT3DTEXTURE9 pAddTexture = NULL;
-		LPDIRECT3DTEXTURE9 pAddRenderTarget = NULL;
+		IDirect3DSurface9* pAddRenderTarget = NULL;
 		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
 			0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &pAddTexture);
 		if (FAILED(hr))
@@ -478,13 +630,15 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 			return hr;
 		}
 		m_pAddOutTexture.push_back(pAddTexture);
-		hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
-			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &pAddRenderTarget);
+		hr=	m_pD3DDisplay->GetD3DDevice()->CreateRenderTarget(w, h, D3DFMT_X8R8G8B8, D3DMULTISAMPLE_NONE,
+			0, FALSE, &pAddRenderTarget, NULL);
+
 		if (FAILED(hr))
 		{
 			return hr;
 		}
 		m_pAddRenderTarget.push_back(pAddRenderTarget);
+		
 	}
 
 	return S_OK;
@@ -643,7 +797,7 @@ BOOL HookDrawingFilter::SetWarpMatrix(UINT idx, const D3DXMATRIX& matWarp)
 BOOL HookDrawingFilter::GetResolution(IPin* pPin, UINT& resW, UINT& resH)
 {
 	int idx = -1;
-	for (int i =0; i< m_numPins; i++)
+	for (int i =0; i< NUMHOOKPIN; i++)
 	{
 		if (pPin == m_pStreamPins[i])
 		{
@@ -656,7 +810,7 @@ BOOL HookDrawingFilter::GetResolution(IPin* pPin, UINT& resW, UINT& resH)
 		return FALSE;
 	}
 	{
-		CAutoLock lck(&m_csAddTextures);
+		CAutoLock lck(&m_csAddTextures[idx]);
 		if (m_pAddOutTexture.size() <= idx || m_pAddOutTexture[idx] == NULL)
 		{
 			return FALSE;
@@ -672,7 +826,7 @@ BOOL HookDrawingFilter::GetResolution(IPin* pPin, UINT& resW, UINT& resH)
 BOOL HookDrawingFilter::SetResolution(IPin* pPin, UINT resW, UINT resH)
 {
 	int idx = -1;
-	for (int i =0; i< m_numPins; i++)
+	for (int i =0; i< NUMHOOKPIN; i++)
 	{
 		if (pPin == m_pStreamPins[i])
 		{
@@ -687,7 +841,7 @@ BOOL HookDrawingFilter::SetResolution(IPin* pPin, UINT resW, UINT resH)
 		return FALSE;
 	}
 	{
-		CAutoLock lck(&m_csAddTextures);
+		CAutoLock lck(&m_csAddTextures[idx]);
 		if (m_pAddOutTexture.size() <= idx || m_pAddOutTexture[idx] == FALSE)
 		{
 			return FALSE;
@@ -756,6 +910,8 @@ void HookDrawingFilter::onBitBltCalled()
 		int dcH = rect.bottom - rect.top;
 
 		DrawBitBlt(myhdc, x, y, width, height, dcW, dcH, hdcSrc, x1, y1, width, height, rop);
+		for (int i =0; i < NUMHOOKPIN; i++)
+			SetHookDirty(i, true);
 		ReleaseDC(hClientWnd, myhdc);
 		return;
 	}
@@ -839,30 +995,130 @@ BOOL HookDrawingFilter::CaptureHookWnd()
 	pSurface = NULL;
 	return TRUE;
 }
-BOOL HookDrawingFilter::SwitchOutTexture(int idx)
+BOOL HookDrawingFilter::CopyOutputTexture2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY)
 {
-	CAutoLock lck(&m_csAddTextures);
-	if (idx < 0 || idx >= m_pAddOutTexture.size())
+	if (pOut == NULL || m_pAddOutTexture.size() <= idx || m_pAddOutTexture[idx] == NULL)
 	{
-		return FALSE;
+		return S_FALSE;
 	}
-	if (m_pOutTexture != NULL)
-		m_pOutTexture->Release();
-	m_pOutTexture = m_pAddOutTexture[idx];
-	m_pAddOutTexture[idx]->AddRef();
-	return TRUE;
+	HRESULT hr = S_OK;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
+	CAutoLock lck(&m_csAddTextures[idx]);
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	GUID guidSubType = pOutMediaType->subtype;
+
+	LPDIRECT3DSURFACE9 pOutSurface = NULL;
+	D3DSURFACE_DESC surOutDesc;
+	m_pAddOutTexture[idx]->GetSurfaceLevel(0, &pOutSurface);
+	pOutSurface->GetDesc(&surOutDesc);
+	D3DLOCKED_RECT rect;
+
+	if (IsEqualGUID(*pOutMediaType->Type(), GUID_MyMediaSample) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DXTEXTURE9_POINTER))
+	{	
+		((CMediaSample*)pOut)->SetPointer((BYTE*)m_pAddOutTexture[idx], sizeof(LPDIRECT3DTEXTURE9));
+	}
+	else
+	{
+		BYTE* pOutData = NULL;
+		pOut->GetPointer(&pOutData);
+		int channel = 4;
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pOutMediaType->pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		int surHeight = surOutDesc.Height;
+		int surWidth = surOutDesc.Width;
+		int height = bitHeader.biHeight;
+		int width = bitHeader.biWidth;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			channel = 3;
+		}
+		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+		{
+			channel = 4;
+		}
+		pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+		if (bFlipY)
+		{	
+			int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+			float tmpW = ((float)surWidth) / width;
+			float tmpH = ((float)surHeight) / height;
+			for( y = 0; y < height; y++ )
+			{
+				for ( x = 0; x< width; x++)
+				{
+					dstX = x * tmpW;  dstY = y * tmpH;
+					pOutData[(height - y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+					pOutData[(height - y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+					pOutData[(height - y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
+				}
+			}
+		}
+		else
+		{
+			int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+			float tmpW = ((float)surWidth) / width;
+			float tmpH = ((float)surHeight) / height;
+			for( y = 0; y < height; y++ )
+			{
+				for ( x = 0; x< width; x++)
+				{
+					dstX = x * tmpW;  dstY = y * tmpH;
+					pOutData[y*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+					pOutData[y*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+					pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
+				}
+			}
+
+		}
+		pOutSurface->UnlockRect();
+	}
+	if (pOutSurface != NULL)
+	{
+		pOutSurface->Release();
+		pOutSurface = NULL;
+	}
 }
-BOOL HookDrawingFilter::SwitchRenderTarget(int idx)
+BOOL HookDrawingFilter::CopyInTexture2OutTexture(int idx)
 {
-	CAutoLock lck(&m_csAddTextures);
-	if (idx < 0 || idx >= m_pAddRenderTarget.size())
+	CAutoLock lck0(&m_csInTexture);
+	CAutoLock lck1(&m_csAddTextures[idx]);
+	if (m_pInTexture == NULL || m_pAddOutTexture.size() < idx || 
+		m_pAddOutTexture[idx] == NULL )
 	{
 		return FALSE;
 	}
-	if (m_pRenderTarget != NULL)
-		m_pRenderTarget->Release();
-	m_pRenderTarget = m_pAddRenderTarget[idx];
-	m_pAddRenderTarget[idx]->AddRef();
+	HRESULT hr = S_OK;
+	D3DXVECTOR2 lt, lb, rt, rb;
+	IDirect3DSurface9* pOutSurface = NULL, *pInSurface = NULL;
+	D3DSURFACE_DESC inDesc, outDesc;
+	RECT srcRECT;
+	((HookDrawingStream*)m_pStreamPins[idx])->GetWarpPts(lt, lb, rt, rb);
+
+	hr = m_pAddOutTexture[idx]->GetSurfaceLevel(0, &pOutSurface);
+	hr = m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+	pInSurface->GetDesc(&inDesc);
+	pOutSurface->GetDesc(&outDesc);
+	srcRECT.left = min((int)(inDesc.Width-1), (int)(lt.x * inDesc.Width));
+	srcRECT.right = min((int)(inDesc.Width -1), (int)(rb.x * inDesc.Width));
+	srcRECT.top = min((int)(inDesc.Height -1), (int)(lt.y * inDesc.Height));
+	srcRECT.bottom = min((int)(inDesc.Height -1), (int)(lb.y * inDesc.Height));
+	//hr = D3DXLoadSurfaceFromSurface(pOutSurface, NULL, NULL , pInSurface,
+	//	NULL, &srcRECT, D3DX_FILTER_POINT, 0);
+	
+	HDC InDC = 0, OutDC = 0;
+	pInSurface->GetDC(&InDC);
+	pOutSurface->GetDC(&OutDC);
+	StretchBlt(OutDC, 0, 0, outDesc.Width, outDesc.Height, InDC, 
+		srcRECT.left, srcRECT.top, srcRECT.right - srcRECT.left, 
+		srcRECT.bottom - srcRECT.top, SRCCOPY);
+
+	pInSurface->ReleaseDC(InDC);
+	pOutSurface->ReleaseDC(OutDC);
+	pOutSurface->Release();
+	pInSurface->Release();
 	return TRUE;
 }
 
@@ -873,9 +1129,10 @@ HRESULT HookDrawingFilter::OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDev
 	HookDrawingFilter* pThis = (HookDrawingFilter*)pUserContext;
 	if (pThis == NULL)
 		return S_FALSE;
-	CAutoLock lck(&pThis->m_csAddTextures);
+	
 	for (int i =0; i< pThis->m_pAddOutTexture.size(); i++)
 	{
+		CAutoLock lck(&pThis->m_csAddTextures[i]);
 		pThis->m_pAddOutTexture[i]->Release();
 		pThis->m_pAddOutTexture[i] = NULL;
 	}
@@ -909,21 +1166,21 @@ HRESULT HookDrawingFilter::SaveToFile(WCHAR* path)
 
 	UINT srcResW = 0, srcResH = 0;
 	GetSourceResolution(srcResW, srcResH);
-	UINT* pinResW = new UINT[m_numPins];
-	UINT* pinResH = new UINT[m_numPins];
-	D3DXMATRIX* matWarp = new D3DXMATRIX[m_numPins];
-	memset(pinResW, 0, sizeof(UINT)*m_numPins);
-	memset(pinResH, 0, sizeof(UINT)*m_numPins);
-	memset(matWarp, 0, sizeof(D3DXMATRIX)*m_numPins);
+	UINT* pinResW = new UINT[NUMHOOKPIN];
+	UINT* pinResH = new UINT[NUMHOOKPIN];
+	D3DXMATRIX* matWarp = new D3DXMATRIX[NUMHOOKPIN];
+	memset(pinResW, 0, sizeof(UINT)*NUMHOOKPIN);
+	memset(pinResH, 0, sizeof(UINT)*NUMHOOKPIN);
+	memset(matWarp, 0, sizeof(D3DXMATRIX)*NUMHOOKPIN);
 
-	for (int i =0; i < m_numPins; i++)
+	for (int i =0; i < NUMHOOKPIN; i++)
 	{
 		GetResolution(m_pStreamPins[i], pinResW[i], pinResH[i]);
 		GetWarpMatrix(i, matWarp[i]);
 	}
-	fwprintf_s(filestream, L"%d\n", m_numPins);
+	fwprintf_s(filestream, L"%d\n", NUMHOOKPIN);
 	fwprintf_s(filestream, L"%d %d \n", srcResW, srcResH);
-	for (int i = 0; i < m_numPins; i++)
+	for (int i = 0; i < NUMHOOKPIN; i++)
 	{
 		fwprintf_s(filestream, L"%d %d \n", pinResW[i], pinResH[i]);
 		fwprintf_s(filestream, L"%f %f %f %f\n", 
@@ -1020,4 +1277,20 @@ HRESULT HookDrawingFilter::GetName(WCHAR* name, UINT szName)
 		filterInfo.pGraph = NULL;
 	}
 	return S_OK;
+}
+
+BOOL HookDrawingFilter::GetHookDirty(int idx)
+{
+	if (idx < 0 || idx >= NUMHOOKPIN)
+		return FALSE;
+	CAutoLock lck(&m_csHookDirty[idx]);
+	return m_bHookDirty[idx];
+}
+BOOL HookDrawingFilter::SetHookDirty(int idx, BOOL v)
+{
+	if (idx <0 || idx >= NUMHOOKPIN)
+		return FALSE;
+	CAutoLock lck(&m_csHookDirty[idx]);
+	m_bHookDirty[idx] = v;
+	return TRUE;
 }

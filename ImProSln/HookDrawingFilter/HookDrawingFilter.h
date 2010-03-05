@@ -11,7 +11,7 @@
 // {30A0104E-A12F-4238-9BA4-D195BA8FB58A}
 DEFINE_GUID(CLSID_HookDrawingFilter, 
 			0x30a0104e, 0xa12f, 0x4238, 0x9b, 0xa4, 0xd1, 0x95, 0xba, 0x8f, 0xb5, 0x8a);
-
+#define NUMHOOKPIN 4
 class HookDrawingStream : public CMuxTransformStream, public IHookDrawingStream, 
 	public ISpecifyPropertyPages
 	
@@ -72,7 +72,9 @@ public:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
+	HRESULT SetRenderTarget(int idx);
+	HRESULT ResetRenderTarget();
+	HRESULT CopyRenderTarget2OutputTexture(int idx);
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//from IMSPersist
@@ -101,22 +103,25 @@ public:
 	virtual BOOL SetSourceResolution(UINT resW, UINT resH);
 	virtual	BOOL CaptureHookWnd();
 protected:
-	const int m_numPins;
+	
 	HWND m_hHookedWnd;
 	HWND m_hHookRecMsgWnd;
 	CCritSec m_csFillBuffer;
-	CCritSec m_csAddTextures;
+	CCritSec m_csAddTextures[NUMHOOKPIN];
+	CCritSec m_csHookDirty[NUMHOOKPIN];
+	BOOL m_bHookDirty[NUMHOOKPIN];
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
-	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
-	BOOL SwitchOutTexture(int idx);
-	BOOL SwitchRenderTarget(int idx);
+	vector<IDirect3DSurface9*> m_pAddRenderTarget;
+	BOOL CopyInTexture2OutTexture(int idx);
+	BOOL CopyOutputTexture2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = false);
 	void onHookedWindowDestory();
 	void onBitBltCalled();
 	BOOL DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop);
-
 	ATOM RegisterHookWndClass(HINSTANCE hInstance);
 	HRESULT CreateHookWindow(UINT winW, UINT winH);
 
+	BOOL GetHookDirty(int idx);
+	BOOL SetHookDirty(int idx, BOOL v);
 	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
 	static HRESULT CALLBACK OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 

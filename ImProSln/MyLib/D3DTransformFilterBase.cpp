@@ -128,17 +128,33 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	{
 		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
 		LPDIRECT3DSURFACE9 pInputSurface = NULL;
+		D3DSURFACE_DESC inputDesc;
 		pIn->GetPointer((BYTE**)&pInputTexture);
 		if (pInputTexture == NULL)
 		{
 			return E_FAIL;
 		}
-		DWORD filterFlag = D3DX_FILTER_POINT;
 		hr = pInputTexture->GetSurfaceLevel(0, &pInputSurface);
+		pInputSurface->GetDesc(&inputDesc);
+		
+		HDC inDC = 0, inputDC = 0;
+		hr = pInSurface->GetDC(&inDC);
+		hr = pInputSurface->GetDC(&inputDC);
+		
+		StretchBlt(inDC, 0, 0, surInDesc.Width, surInDesc.Height, 
+			inputDC, 0, 0, inputDesc.Width, inputDesc.Height, SRCCOPY);
+		
+		/*DWORD filterFlag = D3DX_FILTER_POINT;
+		
 		hr = D3DXLoadSurfaceFromSurface(pInSurface, NULL, NULL, pInputSurface, NULL, NULL,
-			filterFlag, 0);
+			filterFlag, 0);*/
+		if (pInSurface != NULL)
+		{
+			pInSurface->ReleaseDC(inDC);
+		}
 		if (pInputSurface != NULL)
 		{
+			pInputSurface->ReleaseDC(inputDC);
 			pInputSurface->Release();
 			pInputSurface = NULL;
 		}
@@ -349,8 +365,6 @@ HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)
 
 HRESULT D3DTransformFilterBase::SetRenderTarget()
 {
-
-
 	HRESULT hr;
 	if (FAILED(TestDisplayDeviceLost()))
 	{
