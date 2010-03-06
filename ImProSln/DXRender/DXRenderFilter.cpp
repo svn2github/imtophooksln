@@ -106,6 +106,11 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 		} 
 	
 	}
+	FILTER_INFO filterInfo;
+	this->QueryFilterInfo(&filterInfo);
+	HWND displayWnd = GetDisplayWindow();
+	SetWindowText(displayWnd, filterInfo.achName);
+
 	m_pD3DDisplay->ShowDisplayWnd(TRUE);
 	return __super::CompleteConnect(pReceivePin);
 }
