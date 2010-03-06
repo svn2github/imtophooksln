@@ -42,7 +42,9 @@ public:
 	DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~DXRenderFilter();
 	virtual HWND GetDisplayWindow();
-
+	
+	virtual int  GetSampleType();
+	virtual bool SetSampleType(int v);
 	virtual bool GetFlipX();
 	virtual bool SetFlipX(bool v);
 	virtual bool GetFlipY();

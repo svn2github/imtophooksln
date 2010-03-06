@@ -8,6 +8,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
+	m_sampleType = 1;
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
@@ -26,6 +27,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT r
 	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
+	m_sampleType = 1;
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 50, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
@@ -66,6 +68,7 @@ BOOL DXRenderDisplay::Render()
 		hr = pEffect->SetTechnique("technique0");
 		hr = pEffect->SetBool("bFlipX", m_bFlipX);
 		hr = pEffect->SetBool("bFlipY", m_bFlipY);
+		hr = pEffect->SetInt("g_sampleType", m_sampleType);
 		hr = pEffect->Begin(&cPasses, 0);
 		for (iPass = 0; iPass < cPasses; iPass++)
 		{
@@ -76,7 +79,6 @@ BOOL DXRenderDisplay::Render()
 		hr = pEffect->End();
 		if (m_bDrawFPS)
 		{
-
 			if (imgW == 0 && imgH == 0)
 			{
 				LPDIRECT3DSURFACE9 pBackBuffer = NULL;

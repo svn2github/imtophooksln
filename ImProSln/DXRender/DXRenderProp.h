@@ -69,4 +69,8 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnEnUpdateedheight();
 	CButton m_ckDrawFPS;
 	afx_msg void OnBnClickedCheck1();
+	CButton m_raPoint;
+//	afx_msg void OnBnHotItemChangeRapoint(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedRapoint();
+	afx_msg void OnBnClickedRalinear();
 };

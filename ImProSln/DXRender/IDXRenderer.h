@@ -15,6 +15,8 @@ MIDL_INTERFACE("5AE768BF-3EFB-418f-BFA4-4974586AC071")
 IDXRenderer: public IUnknown
 {
 	virtual HWND GetDisplayWindow();
+	virtual int  GetSampleType();
+	virtual bool SetSampleType(int v);
 	virtual bool GetFlipX();
 	virtual bool SetFlipX(bool v);
 	virtual bool GetFlipY();

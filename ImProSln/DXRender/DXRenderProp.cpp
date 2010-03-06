@@ -16,6 +16,8 @@ void DXRenderFilterProp::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edHeight, m_edHeight);
 	DDX_Control(pDX, IDC_CKMaxWnd, m_ckMaxWnd);
 	DDX_Control(pDX, IDC_CHECK1, m_ckDrawFPS);
+	DDX_Control(pDX, IDC_RAPoint, m_raPoint);
+	
 }
 
 
@@ -37,6 +39,9 @@ ON_EN_UPDATE(IDC_edY, &DXRenderFilterProp::OnEnUpdateedy)
 ON_EN_UPDATE(IDC_edWidth, &DXRenderFilterProp::OnEnUpdateedwidth)
 ON_EN_UPDATE(IDC_edHeight, &DXRenderFilterProp::OnEnUpdateedheight)
 ON_BN_CLICKED(IDC_CHECK1, &DXRenderFilterProp::OnBnClickedCheck1)
+//ON_NOTIFY(BCN_HOTITEMCHANGE, IDC_RAPoint, &DXRenderFilterProp::OnBnHotItemChangeRapoint)
+ON_BN_CLICKED(IDC_RAPoint, &DXRenderFilterProp::OnBnClickedRapoint)
+ON_BN_CLICKED(IDC_RALinear, &DXRenderFilterProp::OnBnClickedRalinear)
 END_MESSAGE_MAP()
 
 
@@ -98,6 +103,16 @@ bool DXRenderFilterProp::GetSetting()
 		return false;
 	}
 	WCHAR str[MAX_PATH] = {0};
+	int sampleType = m_pFilter->GetSampleType();
+	if (sampleType == 0)
+	{
+		m_raPoint.SetCheck(TRUE);
+	}
+	else
+	{
+		CButton* raLinear = (CButton*)GetDlgItem(IDC_RALinear);
+		raLinear->SetCheck(TRUE);
+	}
 	bool flipX = m_pFilter->GetFlipX();
 	bool flipY = m_pFilter->GetFlipY();
 	m_ckFlipX.SetCheck(flipX);
@@ -242,4 +257,47 @@ void DXRenderFilterProp::OnBnClickedCheck1()
 	if (m_pFilter == NULL)
 		return ;
 	m_pFilter->SetbDrawFPS(m_ckDrawFPS.GetCheck());
+}
+
+//void DXRenderFilterProp::OnBnHotItemChangeRapoint(NMHDR *pNMHDR, LRESULT *pResult)
+//{
+//	// This feature requires Internet Explorer 6 or greater.
+//	// The symbol _WIN32_IE must be >= 0x0600.
+//	LPNMBCHOTITEM pHotItem = reinterpret_cast<LPNMBCHOTITEM>(pNMHDR);
+//	// TODO: Add your control notification handler code here
+//	*pResult = 0;
+//}
+
+void DXRenderFilterProp::OnBnClickedRapoint()
+{
+	if (m_pFilter == NULL)
+		return;
+	CButton* raLinear = (CButton*)GetDlgItem(IDC_RALinear);
+	int idx = 0;
+	if (m_raPoint.GetCheck())
+	{
+		idx = 0;
+	}
+	else if (raLinear->GetCheck())
+	{
+		idx = 1;
+	}
+	m_pFilter->SetSampleType(idx);
+}
+
+void DXRenderFilterProp::OnBnClickedRalinear()
+{
+	if (m_pFilter == NULL)
+		return;
+	CButton* raLinear = (CButton*)GetDlgItem(IDC_RALinear);
+	int idx = 0;
+	if (m_raPoint.GetCheck())
+	{
+		idx = 0;
+	}
+	else if (raLinear->GetCheck())
+	{
+		idx = 1;
+	}
+	m_pFilter->SetSampleType(idx);
 }

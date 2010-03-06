@@ -1,14 +1,7 @@
 
 bool bFlipX = false;
 bool bFlipY = false;
-
-float4x4 g_matTexTransform   
-<
-	string UIWidget="matTTS";
-> = {1.0f, 0.0f, 0.0f, 0.0f, 
-     0.0f, 1.0f, 0.0f, 0.0f,
-	 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f, 1.0f}; 
+int g_sampleType = 1;
 	 
 struct VSOUT {
     float4 pos	: POSITION;
@@ -22,14 +15,20 @@ texture g_Texture : DIFFUSE <
     string ResourceType = "2D";
 >;
 
-sampler2D g_Sampler = sampler_state {
+sampler2D g_LinearSampler = sampler_state {
     MinFilter = Linear;
     MagFilter = Linear;
     Texture = <g_Texture>;
 }; 
 
+sampler2D g_PointSampler = sampler_state {
+    MinFilter = Point;
+    MagFilter = Point;
+    Texture = <g_Texture>;
+}; 
+
 float4 mainPS(VSOUT vin) : COLOR {
-	float4 uv = mul(float4(vin.UV , 1.0, 1.0), g_matTexTransform );
+	float2 uv = vin.UV;
 	if (bFlipY)
 	{
 		uv.y = 1 - uv.y;
@@ -38,16 +37,15 @@ float4 mainPS(VSOUT vin) : COLOR {
 	{
 		uv.x = 1 - uv.x;
 	}	
-	uv.x /= uv.z;
-	uv.y /= uv.z;
-	uv.z = 1;
-	if (uv.x > 1.0 || uv.x < 0 || uv.y > 1.0 || uv.y < 0 )
-		return float4(0,0,0,0);
-	else
-	{			
-		return tex2D(g_Sampler, float2(uv.x, uv.y));
+
+	if (g_sampleType == 0)		
+	{
+		return tex2D(g_PointSampler, float2(uv.x, uv.y));
 	}
-	
+	else
+	{
+		return tex2D(g_LinearSampler, float2(uv.x, uv.y));
+	}
 }
 
 technique technique0 {

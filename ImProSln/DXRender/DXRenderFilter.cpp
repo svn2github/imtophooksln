@@ -134,9 +134,14 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 		initD3D(desc->Width, desc->Height);
 	}
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
-	m_pD3DDisplay->SetTexture(m_pInTexture);
-	m_pD3DDisplay->Render();
-	m_pD3DDisplay->SetTexture(NULL);
+	//OutputDebugStringW(L"@@@@@ CopyInputImage2InputTexture <----\n");
+	{
+		CAutoLock lck(&m_csD3DDisplay);
+		m_pD3DDisplay->SetTexture(m_pInTexture);
+		m_pD3DDisplay->Render();
+		m_pD3DDisplay->SetTexture(NULL);
+	}
+
 	return S_OK;
 }
 
@@ -182,11 +187,28 @@ HWND DXRenderFilter::GetDisplayWindow()
 	return m_pD3DDisplay->GetDisplayWindow();
 }
 
+int DXRenderFilter::GetSampleType()
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	return ((DXRenderDisplay*)m_pD3DDisplay)->m_sampleType;
+}
+bool DXRenderFilter::SetSampleType(int v)
+{
+	if (m_pD3DDisplay == NULL)
+		return false;
+	CAutoLock lck(&m_csDisplayState);
+	((DXRenderDisplay*)m_pD3DDisplay)->m_sampleType = v;
+	return true;
+}
+
 bool DXRenderFilter::GetFlipX()
 {
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipX;
 }
 bool DXRenderFilter::SetFlipX(bool v)
@@ -194,6 +216,7 @@ bool DXRenderFilter::SetFlipX(bool v)
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipX = v;
 	return true;
 }
@@ -202,6 +225,7 @@ bool DXRenderFilter::GetFlipY()
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY;
 }
 bool DXRenderFilter::SetFlipY(bool v)
@@ -209,6 +233,7 @@ bool DXRenderFilter::SetFlipY(bool v)
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bFlipY = v;
 	return true;
 }
@@ -217,6 +242,7 @@ bool DXRenderFilter::GetbDrawFPS()
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	return ((DXRenderDisplay*)m_pD3DDisplay)->m_bDrawFPS;
 }
 bool DXRenderFilter::SetbDrawFPS(bool v)
@@ -224,6 +250,7 @@ bool DXRenderFilter::SetbDrawFPS(bool v)
 	if (m_pD3DDisplay == NULL)
 		return false;
 	CAutoLock lck(&m_csDisplayState);
+	CAutoLock lck0(&m_csD3DDisplay);
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bDrawFPS = v;
 	return true;
 }
@@ -245,8 +272,8 @@ HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 
 	fwprintf_s(filestream, L"%d %d %d \n", GetFlipX(), GetFlipY(), GetbDrawFPS());
 	fwprintf_s(filestream, L"%d %d %d %d\n", rect.left, rect.top, rect.right, rect.bottom);
-	fwprintf_s(filestream, L"%d %d", isZoomed, isHideBorder);
-
+	fwprintf_s(filestream, L"%d %d \n", isZoomed, isHideBorder);
+	fwprintf_s(filestream, L"%d \n", GetSampleType());
 	fclose(filestream);
 	return S_OK;
 }
@@ -259,7 +286,7 @@ HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
 		return false;
 	}
 	int bFlipX =0, bFlipY = 0, bDrawFPS = 0;
-	
+	int sampleType = 1;
 	RECT rect;
 	memset(&rect, 0, sizeof(RECT));
 	BOOL isZoomed = FALSE;;
@@ -268,7 +295,9 @@ HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
 	fwscanf_s(filestream, L"%d %d %d\n", &bFlipX, &bFlipY, &bDrawFPS);
 	fwscanf_s(filestream, L"%d %d %d %d\n", &rect.left, &rect.top, &rect.right, &rect.bottom);
 	fwscanf_s(filestream, L"%d %d \n", &isZoomed, &isHideBorder);
-	
+	fwscanf_s(filestream, L"%d \n", &sampleType);
+
+	SetSampleType(sampleType);
 	SetFlipX(bFlipX);
 	SetFlipY(bFlipY);
 	SetbDrawFPS(bDrawFPS);

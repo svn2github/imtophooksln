@@ -16,6 +16,7 @@ public:
 	bool m_bFlipX;
 	bool m_bFlipY;
 	bool m_bDrawFPS;
+	int m_sampleType;
 	LPD3DXFONT m_pD3DFont;
 public:
 	virtual ID3DXEffect* GetEffect();
