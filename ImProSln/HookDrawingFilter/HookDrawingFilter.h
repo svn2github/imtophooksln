@@ -50,7 +50,7 @@ public:
 
 class HookDrawingFilter :
 	public CMuxTransformFilter, public IHookDrawingFilter, public D3DTransformFilterBase
-	,public ISpecifyPropertyPages, public CMSPersist
+	,public ISpecifyPropertyPages, public CMSPersist, public CAMThread
 {
 
 public:
@@ -64,6 +64,7 @@ public:
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
+
 	//Derive from D3DTransformFilterBase
 	virtual HRESULT initD3D(UINT rtWidth, UINT rtHeight );
 	virtual HRESULT initAddTextures(UINT w, UINT h);
@@ -81,6 +82,22 @@ public:
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
+
+	//from CAMThread
+
+	HRESULT HookThreadActive(void);    // Starts up the worker thread
+	HRESULT HookThreadInactive(void);  // Exits the worker thread.
+	enum Command {CMD_INIT, CMD_PAUSE, CMD_RUN, CMD_STOP, CMD_EXIT};
+	HRESULT HookThreadInit(void) { return CallWorker(CMD_INIT); }
+	HRESULT HookThreadExit(void) { return CallWorker(CMD_EXIT); }
+	HRESULT HookThreadRun(void) { return CallWorker(CMD_RUN); }
+	HRESULT HookThreadPause(void) { return CallWorker(CMD_PAUSE); }
+	HRESULT HookThreadStop(void) { return CallWorker(CMD_STOP); }
+	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
+	BOOL    CheckRequest(Command *pCom) { return CAMThread::CheckRequest( (DWORD *) pCom); }
+	virtual DWORD ThreadProc(void); // the thread function
+	HRESULT DoHookProcessingLoop(void);
+	HRESULT DoHookRender();
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -109,7 +126,10 @@ protected:
 	CCritSec m_csFillBuffer;
 	CCritSec m_csAddTextures[NUMHOOKPIN];
 	CCritSec m_csHookDirty[NUMHOOKPIN];
+	CCritSec m_csHookThreadDirty;
+
 	BOOL m_bHookDirty[NUMHOOKPIN];
+	BOOL m_bHookThreadDirty;
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
 	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL CopyInTexture2OutTexture(int idx);
@@ -122,6 +142,9 @@ protected:
 
 	BOOL GetHookDirty(int idx);
 	BOOL SetHookDirty(int idx, BOOL v);
+	BOOL GetHookThreadDirty();
+	BOOL SetHookThreadDirty(BOOL v);
+
 	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
 	static HRESULT CALLBACK OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 

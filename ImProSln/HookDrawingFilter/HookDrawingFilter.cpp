@@ -154,6 +154,11 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 {
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
+	for (int i = 0; i <NUMHOOKPIN; i++)
+	{
+		m_bHookDirty[i] = FALSE;
+	}
+	m_bHookThreadDirty = FALSE;
 	RegisterHookWndClass(GetModule());
 
 }
@@ -268,6 +273,7 @@ HRESULT HookDrawingFilter::CreatePins()
 				HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
 			}
 		}
+
 	}
 	
 	return S_OK;
@@ -291,8 +297,6 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	
 	//CAutoLock lck(&m_csFillBuffer);
 	
-	WCHAR str[MAX_PATH] = {0};
-	OutputDebugStringW(str);
 	if (GetHookDirty(idx))
 	{
 		{
@@ -305,9 +309,10 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			m_pD3DDisplay->SetTexture(m_pInTexture);
 			m_pD3DDisplay->Render();
 			ResetRenderTarget();
+			SetHookDirty(idx, FALSE);
 		}
 		CopyRenderTarget2OutputTexture(idx);	
-		SetHookDirty(idx, FALSE);
+		
 	}
 	CMediaType mt;
 	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
@@ -519,7 +524,7 @@ HRESULT HookDrawingFilter::CreateAdditionalTexture(UINT idx, UINT w, UINT h)
 		OutputDebugStringW(L"@@@@@@ CreateAdditionalTexture Failed!! in HookDrawingFilter\n");
 	}
 	hr = D3DXCreateTexture(pDevice, w, h, 
-		0, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &(m_pAddOutTexture[idx]));
+		0, D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &(m_pAddRenderTarget[idx]));
 
 	if (FAILED(hr))
 	{
@@ -758,6 +763,18 @@ HWND HookDrawingFilter::GetHookedWindow()
 }
 BOOL HookDrawingFilter::SetHookedWindow(HWND hwnd)
 {
+	if (!ThreadExists())
+	{
+		/*if (m_pD3DDisplay != NULL)
+		{
+			FILTER_INFO filterInfo;
+			this->QueryFilterInfo(&filterInfo);
+			HWND displayWnd = m_pD3DDisplay->GetDisplayWindow();
+			SetWindowText(displayWnd, filterInfo.achName);
+			m_pD3DDisplay->ShowDisplayWnd(TRUE);
+		}*/
+		//HookThreadActive();
+	}
 	m_hHookedWnd = hwnd;
 	return TRUE;
 }
@@ -853,6 +870,10 @@ BOOL HookDrawingFilter::SetSourceResolution(UINT resW, UINT resH)
 void HookDrawingFilter::onHookedWindowDestory()
 {
 	m_hHookedWnd = NULL;
+	if (ThreadExists())
+	{
+		HookThreadInactive();
+	}
 	HOOKINJECT::ClearBitBltCmd();
 }
 void HookDrawingFilter::onBitBltCalled()
@@ -892,8 +913,10 @@ void HookDrawingFilter::onBitBltCalled()
 		int dcH = rect.bottom - rect.top;
 
 		DrawBitBlt(myhdc, x, y, width, height, dcW, dcH, hdcSrc, x1, y1, width, height, rop);
+		SetHookThreadDirty(TRUE);
 		for (int i =0; i < NUMHOOKPIN; i++)
-			SetHookDirty(i, true);
+			SetHookDirty(i, TRUE);
+		
 		ReleaseDC(hClientWnd, myhdc);
 		return;
 	}
@@ -1273,4 +1296,142 @@ BOOL HookDrawingFilter::SetHookDirty(int idx, BOOL v)
 	CAutoLock lck(&m_csHookDirty[idx]);
 	m_bHookDirty[idx] = v;
 	return TRUE;
+}
+BOOL HookDrawingFilter::GetHookThreadDirty()
+{
+	CAutoLock lck(&m_csHookThreadDirty);
+	return m_bHookThreadDirty;
+}
+BOOL HookDrawingFilter::SetHookThreadDirty(BOOL v)
+{
+	CAutoLock lck(&m_csHookThreadDirty);
+	m_bHookThreadDirty = v;
+	return TRUE;
+}
+
+HRESULT HookDrawingFilter::HookThreadActive(void)
+{
+	CAutoLock lock(pStateLock());
+	HRESULT hr = S_OK;
+	ASSERT(!ThreadExists());
+
+	// start the thread
+	if (!Create()) {
+		return E_FAIL;
+	}
+
+	// Tell thread to initialize. If OnThreadCreate Fails, so does this.
+	hr = HookThreadInit();
+	if (FAILED(hr))
+		return hr;
+
+	return HookThreadPause();
+	
+}
+HRESULT HookDrawingFilter::HookThreadInactive(void)
+{
+	CAutoLock lock(pStateLock());
+	HRESULT hr = S_OK;
+
+	if (ThreadExists()) {
+		hr = HookThreadStop();
+
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		hr = HookThreadExit();
+		if (FAILED(hr)) {
+			return hr;
+		}
+
+		Close();	// Wait for the thread to exit, then tidy up.
+	}
+
+	return S_OK;
+}
+DWORD HookDrawingFilter::ThreadProc(void)
+{
+
+	HRESULT hr;  // the return code from calls
+	Command com;
+
+	do {
+		com = GetRequest();
+		if (com != CMD_INIT) {
+			DbgLog((LOG_ERROR, 1, TEXT("Thread expected init command")));
+			Reply((DWORD) E_UNEXPECTED);
+		}
+	} while (com != CMD_INIT);
+
+	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread initializing")));
+
+	// Initialisation suceeded
+	Reply(NOERROR);
+
+	Command cmd;
+	do {
+		cmd = GetRequest();
+
+		switch (cmd) {
+
+	case CMD_EXIT:
+		Reply(NOERROR);
+		break;
+
+	case CMD_RUN:
+		DbgLog((LOG_ERROR, 1, TEXT("CMD_RUN received before a CMD_PAUSE???")));
+		// !!! fall through???
+
+	case CMD_PAUSE:
+		Reply(NOERROR);
+		DoHookProcessingLoop();
+		break;
+
+	case CMD_STOP:
+		Reply(NOERROR);
+		break;
+
+	default:
+		DbgLog((LOG_ERROR, 1, TEXT("Unknown command %d received!"), cmd));
+		Reply((DWORD) E_NOTIMPL);
+		break;
+		}
+	} while (cmd != CMD_EXIT);
+
+
+	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread exiting")));
+	return 0;
+}
+
+HRESULT HookDrawingFilter::DoHookProcessingLoop(void) {
+
+	Command com;
+	HRESULT hr = S_OK;
+	do {
+
+		while (!CheckRequest(&com)) {
+			// Virtual function user will override.
+			hr = DoHookRender();
+		}
+
+		// For all commands sent to us there must be a Reply call!
+
+		if (com == CMD_RUN || com == CMD_PAUSE) {
+			Reply(NOERROR);
+		} else if (com != CMD_STOP) {
+			Reply((DWORD) E_UNEXPECTED);
+			DbgLog((LOG_ERROR, 1, TEXT("Unexpected command!!!")));
+		}
+	} while (com != CMD_STOP);
+
+	return S_FALSE;
+}
+HRESULT HookDrawingFilter::DoHookRender()
+{
+	CAutoLock lck0(&m_csD3DDisplay);
+	CAutoLock lck(&m_csInTexture);
+	m_pD3DDisplay->SetTexture(m_pInTexture);
+	m_pD3DDisplay->Render();
+	return S_OK;
 }
