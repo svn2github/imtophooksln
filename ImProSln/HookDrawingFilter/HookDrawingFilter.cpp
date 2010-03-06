@@ -289,7 +289,7 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	}
 	HRESULT hr = S_OK;
 	
-	CAutoLock lck(&m_csFillBuffer);
+	//CAutoLock lck(&m_csFillBuffer);
 	
 	WCHAR str[MAX_PATH] = {0};
 	OutputDebugStringW(str);
