@@ -64,7 +64,7 @@ public:
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
-
+	virtual float GetFrameRateLimit(IPin* pPin) { return 60.0;}
 	//Derive from D3DTransformFilterBase
 	virtual HRESULT initD3D(UINT rtWidth, UINT rtHeight );
 	virtual HRESULT initAddTextures(UINT w, UINT h);
@@ -130,6 +130,7 @@ protected:
 
 	BOOL m_bHookDirty[NUMHOOKPIN];
 	BOOL m_bHookThreadDirty;
+	float m_HookThreadFPS;
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
 	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL CopyInTexture2OutTexture(int idx);
@@ -144,7 +145,7 @@ protected:
 	BOOL SetHookDirty(int idx, BOOL v);
 	BOOL GetHookThreadDirty();
 	BOOL SetHookThreadDirty(BOOL v);
-
+	
 	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
 	static HRESULT CALLBACK OnAfterDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 

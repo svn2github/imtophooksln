@@ -154,6 +154,7 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 {
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
+	m_HookThreadFPS = 60.0;
 	for (int i = 0; i <NUMHOOKPIN; i++)
 	{
 		m_bHookDirty[i] = FALSE;
@@ -266,9 +267,10 @@ HRESULT HookDrawingFilter::CreatePins()
 		if (m_pD3DDisplay == NULL)
 		{
 			CreateHookWindow(320, 240); // size doesn't matter
-			HRESULT hr = initD3D(2048, 768);
+			HRESULT hr = initD3D(1024, 768);
 			if (SUCCEEDED(hr))
 			{
+				hr = CreateInTexture(2048, 768);
 				HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
 				HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
 			}
@@ -1409,9 +1411,20 @@ HRESULT HookDrawingFilter::DoHookProcessingLoop(void) {
 	Command com;
 	HRESULT hr = S_OK;
 	do {
-
+		DWORD currTime = 0;
+		DWORD lastTime = 0;
+		DWORD elapsedTime = 0;
+		DWORD idealElapsedTime = 1.0 / m_HookThreadFPS * 1000.0;
 		while (!CheckRequest(&com)) {
-			// Virtual function user will override.
+			currTime = timeGetTime();
+			elapsedTime = currTime - lastTime;
+			if (elapsedTime < idealElapsedTime )
+			{
+				//Sleep(1);
+				continue;
+			}
+			lastTime = currTime;
+
 			hr = DoHookRender();
 		}
 
