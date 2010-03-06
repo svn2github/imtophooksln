@@ -8,10 +8,12 @@
 #include "D3DTransformFilterBase.h"
 #include "IHookDrawingStream.h"
 #include "MSPersist.h"
+#include "MyMediaSample.h"
 // {30A0104E-A12F-4238-9BA4-D195BA8FB58A}
 DEFINE_GUID(CLSID_HookDrawingFilter, 
 			0x30a0104e, 0xa12f, 0x4238, 0x9b, 0xa4, 0xd1, 0x95, 0xba, 0x8f, 0xb5, 0x8a);
 #define NUMHOOKPIN 4
+#define RENDERSTEP 2
 class HookDrawingStream : public CMuxTransformStream, public IHookDrawingStream, 
 	public ISpecifyPropertyPages
 	
@@ -127,9 +129,17 @@ protected:
 	CCritSec m_csAddTextures[NUMHOOKPIN];
 	CCritSec m_csHookDirty[NUMHOOKPIN];
 	CCritSec m_csHookThreadDirty;
-
+	CCritSec m_csHookRenderState;
 	BOOL m_bHookDirty[NUMHOOKPIN];
 	BOOL m_bHookThreadDirty;
+
+	D3DXMATRIX m_matTTS_region;
+	D3DXMATRIX m_matTTS_warp;
+	MaskVertexData* m_pMaskVertexData;
+	LPDIRECT3DTEXTURE9 m_pHookMaskTexture;
+	LPDIRECT3DTEXTURE9 m_pHookThreadRenderTarget[RENDERSTEP];
+	
+
 	float m_HookThreadFPS;
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
 	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;

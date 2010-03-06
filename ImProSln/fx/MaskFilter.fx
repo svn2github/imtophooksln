@@ -1,5 +1,6 @@
 int maskFlag = 2;
 bool bMaskFlipY = 0;
+int g_sampleType = 0;
 
 struct appdata {
     float3 Position	: POSITION;
@@ -24,7 +25,7 @@ texture g_MaskTexture : DIFFUSE <
     string ResourceType = "2D";
 >;
 
-sampler2D g_Sampler = sampler_state {
+sampler2D g_LinearSampler = sampler_state {
     MinFilter = Linear;
     MagFilter = Linear;
     Texture = <g_Texture>;
@@ -32,9 +33,17 @@ sampler2D g_Sampler = sampler_state {
     AddressV = Wrap;
 }; 
 
-sampler2D g_MaskSampler = sampler_state {
+sampler2D g_PointSampler = sampler_state {
     MinFilter = Point;
     MagFilter = Point;
+    Texture = <g_Texture>;
+	AddressU = Wrap;
+    AddressV = Wrap;
+}; 
+
+sampler2D g_MaskSampler = sampler_state {
+    MinFilter = Linear;
+    MagFilter = Linear;
     Texture = <g_MaskTexture>;
 	AddressU = Wrap;
     AddressV = Wrap;
@@ -57,7 +66,14 @@ float4 mainPS(VSOUT vin) : COLOR {
 	}
 	else if (maskFlag == 1)
 	{
-		return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
+		if (g_sampleType == 0)
+		{
+			return tex2D(g_PointSampler, float2(vin.UV.x, vin.UV.y));
+		}
+		else
+		{
+			return tex2D(g_LinearSampler, float2(vin.UV.x, vin.UV.y));
+		}
 	}
 	else
 	{
@@ -66,7 +82,15 @@ float4 mainPS(VSOUT vin) : COLOR {
 		{
 			maskUV.y = 1 - maskUV.y; 
 		}
-		float4 texColor = tex2D(g_Sampler, vin.UV.xy);
+		float4 texColor = float4(0,0,0,0);
+		if (g_sampleType == 0)
+		{
+			texColor = tex2D(g_PointSampler, vin.UV.xy);
+		}
+		else
+		{
+			texColor = tex2D(g_LinearSampler, vin.UV.xy);
+		}	
 		float4 maskColor = tex2D(g_MaskSampler, maskUV);
 		float maskAlpha = maskColor.a;
 		return texColor*(1.0 - maskAlpha) + maskColor*maskAlpha;
@@ -80,7 +104,7 @@ float4 ARMaskPS(VSOUT vin) : COLOR {
 }
 
 float4 WarpMaskPS(VSOUT vin) : COLOR {
-	return tex2D(g_Sampler, float2(vin.UV.x, vin.UV.y));
+	return tex2D(g_LinearSampler, float2(vin.UV.x, vin.UV.y));
 }
 
 technique technique0 {

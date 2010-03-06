@@ -155,11 +155,18 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
 	m_HookThreadFPS = 60.0;
+
 	for (int i = 0; i <NUMHOOKPIN; i++)
 	{
 		m_bHookDirty[i] = FALSE;
 	}
 	m_bHookThreadDirty = FALSE;
+	m_pMaskVertexData = NULL;
+	for (int i =0; i < RENDERSTEP; i ++)
+		m_pHookThreadRenderTarget[i] = NULL;
+	m_pHookMaskTexture = NULL;
+	D3DXMatrixIdentity(&m_matTTS_region);
+	D3DXMatrixIdentity(&m_matTTS_warp);
 	RegisterHookWndClass(GetModule());
 
 }
@@ -187,6 +194,24 @@ HookDrawingFilter::~HookDrawingFilter()
 		m_pAddRenderTarget[i] = NULL;
 	}
 	m_pAddRenderTarget.clear();
+	if (m_pMaskVertexData != NULL)
+	{
+		delete m_pMaskVertexData;
+		m_pMaskVertexData = NULL;
+	}
+	for (int i =0; i< RENDERSTEP; i++)
+	{
+		if (m_pHookThreadRenderTarget[i] != NULL)
+		{
+			m_pHookThreadRenderTarget[i]->Release();
+			m_pHookThreadRenderTarget[i] = NULL;
+		}
+	}
+	if (m_pHookMaskTexture != NULL)
+	{
+		m_pHookMaskTexture->Release();
+		m_pHookMaskTexture = NULL;
+	}
 }
 
 CUnknown *WINAPI HookDrawingFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -629,7 +654,19 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 		m_pAddRenderTarget.push_back(pAddRenderTarget);
 		
 	}
-
+	for (int i =0 ; i<RENDERSTEP; i++)
+	{
+		if (m_pHookThreadRenderTarget[i] != NULL)
+		{
+			m_pHookThreadRenderTarget[i]->Release();
+			m_pHookThreadRenderTarget[i] = NULL;
+		}
+	}
+	for (int i =0 ; i<RENDERSTEP; i++)
+	{
+		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pHookThreadRenderTarget[i]);
+	}
 	return S_OK;
 }
 HRESULT HookDrawingFilter::CreateInTexture(UINT w, UINT h)
@@ -1443,8 +1480,78 @@ HRESULT HookDrawingFilter::DoHookProcessingLoop(void) {
 HRESULT HookDrawingFilter::DoHookRender()
 {
 	CAutoLock lck0(&m_csD3DDisplay);
-	CAutoLock lck(&m_csInTexture);
+	CAutoLock lck1(&m_csInTexture);
+	if (m_pD3DDisplay == NULL || m_pInTexture == NULL )
+		return S_FALSE;
+	for (int i =0; i < RENDERSTEP; i++)
+	{
+		if (m_pHookThreadRenderTarget[i] == NULL)
+		{
+			return S_FALSE;
+		}
+	}
+	HRESULT hr = S_OK;
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	IDirect3DSurface9* pBackBuffer = NULL;
+	IDirect3DSurface9* pHookRT[RENDERSTEP] = {NULL};
+	for (int i =0; i < RENDERSTEP; i++ )
+	{
+		m_pHookThreadRenderTarget[i]->GetSurfaceLevel(0, &pHookRT[i]);
+	}
+
+	hr = pDevice->GetRenderTarget(0, &pBackBuffer);
+	//Render Step1: clip region
+	pDevice->SetRenderTarget(0, pHookRT[0]);
+	{
+		CAutoLock lck2(&m_csHookRenderState);
+		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
+		((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::POINT;
+		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS_region);
+	}
 	m_pD3DDisplay->SetTexture(m_pInTexture);
 	m_pD3DDisplay->Render();
+	//Render Step2: add Mask
+	bool bRenderMask = false;
+	{	
+		CAutoLock lck3(&m_csHookRenderState);
+		if (m_pHookMaskTexture != NULL)
+		{
+			bRenderMask = true;
+			pDevice->SetRenderTarget(0, pHookRT[1]);
+			((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
+			((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::POINT;
+			((HookDrawingDisplay*)m_pD3DDisplay)->SetMaskTexture(m_pHookMaskTexture);
+			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[0]);
+			((HookDrawingDisplay*)m_pD3DDisplay)->RenderMask();
+		}
+	}
+
+	//Render Step3: Warp
+	{
+		CAutoLock lck3(&m_csHookRenderState);
+		if (bRenderMask)
+		{
+			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[1]);
+		}
+		else
+		{
+			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[0]);
+		}
+		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = true;
+		((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::LINEAR;
+		pDevice->SetRenderTarget(0, pBackBuffer);
+		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS_warp);
+		m_pD3DDisplay->Render();
+
+		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
+
+	}
+	pBackBuffer->Release();
+	pBackBuffer = NULL;
+	for (int i =0; i < RENDERSTEP; i++ )
+	{
+		pHookRT[i]->Release();
+		pHookRT[i] = NULL;
+	}
 	return S_OK;
 }
