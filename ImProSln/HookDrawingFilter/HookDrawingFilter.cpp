@@ -292,7 +292,6 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	CAutoLock lck(&m_csFillBuffer);
 	
 	WCHAR str[MAX_PATH] = {0};
-	swprintf_s(str, MAX_PATH, L"@@@@@@ FillBuffer %d  ---> \n", idx);
 	OutputDebugStringW(str);
 	if (GetHookDirty(idx))
 	{
@@ -307,30 +306,12 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			m_pD3DDisplay->Render();
 			ResetRenderTarget();
 		}
-		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyRenderTarget2OutputTexture %d--->\n", idx);
-		//OutputDebugStringW(str);
 		CopyRenderTarget2OutputTexture(idx);	
-		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyRenderTarget2OutputTexture %d--->\n", idx);
-		//OutputDebugStringW(str);
-		/*
-		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyInTexture2OutTexture %d--->\n", idx);
-		//OutputDebugStringW(str);
-		CopyInTexture2OutTexture(idx);
-		//swprintf_s(str, MAX_PATH, L"@@@@@@ CopyInTexture2OutTexture %d<---\n", idx);
-		//OutputDebugStringW(str);
-		*/
 		SetHookDirty(idx, FALSE);
 	}
 	CMediaType mt;
 	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-
-	//swprintf_s(str, MAX_PATH, L"@@@@@@  CopyOutputTexture2OutputData %d --->\n", idx);
-	//OutputDebugStringW(str);
 	CopyOutputTexture2OutputData(idx, pSamp, &mt, true);
-	//swprintf_s(str, MAX_PATH, L"@@@@@@  CopyOutputTexture2OutputData %d <---\n", idx);
-	//OutputDebugStringW(str);
-	//swprintf_s(str, MAX_PATH, L"@@@@@@ FillBuffer %d  <--- \n", idx);
-	//OutputDebugStringW(str);
 	
 	return S_OK;
 }
@@ -1106,8 +1087,6 @@ BOOL HookDrawingFilter::CopyInTexture2OutTexture(int idx)
 	srcRECT.right = min((int)(inDesc.Width -1), (int)(rb.x * inDesc.Width));
 	srcRECT.top = min((int)(inDesc.Height -1), (int)(lt.y * inDesc.Height));
 	srcRECT.bottom = min((int)(inDesc.Height -1), (int)(lb.y * inDesc.Height));
-	//hr = D3DXLoadSurfaceFromSurface(pOutSurface, NULL, NULL , pInSurface,
-	//	NULL, &srcRECT, D3DX_FILTER_POINT, 0);
 	
 	HDC InDC = 0, OutDC = 0;
 	pInSurface->GetDC(&InDC);
