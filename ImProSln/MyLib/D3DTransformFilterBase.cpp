@@ -136,25 +136,14 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 		}
 		hr = pInputTexture->GetSurfaceLevel(0, &pInputSurface);
 		pInputSurface->GetDesc(&inputDesc);
-		
-		HDC inDC = 0, inputDC = 0;
-		hr = pInSurface->GetDC(&inDC);
-		hr = pInputSurface->GetDC(&inputDC);
-		
-		StretchBlt(inDC, 0, 0, surInDesc.Width, surInDesc.Height, 
-			inputDC, 0, 0, inputDesc.Width, inputDesc.Height, SRCCOPY);
-		
-		/*DWORD filterFlag = D3DX_FILTER_POINT;
+
+		DWORD filterFlag = D3DX_FILTER_POINT;
 		
 		hr = D3DXLoadSurfaceFromSurface(pInSurface, NULL, NULL, pInputSurface, NULL, NULL,
-			filterFlag, 0);*/
-		if (pInSurface != NULL)
-		{
-			pInSurface->ReleaseDC(inDC);
-		}
+			filterFlag, 0);
+
 		if (pInputSurface != NULL)
 		{
-			pInputSurface->ReleaseDC(inputDC);
 			pInputSurface->Release();
 			pInputSurface = NULL;
 		}
