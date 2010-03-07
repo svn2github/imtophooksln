@@ -23,6 +23,7 @@ protected:
 
 	virtual HRESULT SetRenderTarget();
 	virtual HRESULT ResetRenderTarget();
+	virtual HRESULT CopyRenderTarget2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType);
 
 	virtual HRESULT CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY);
 	virtual HRESULT CopyRenderTarget2OutputTexture();
@@ -31,7 +32,7 @@ protected:
 	virtual HRESULT CreateTextures(UINT w, UINT h);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight) = 0;
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight) = 0;
-	virtual HRESULT initD3D(UINT rtWidth = 0, UINT rtHeight = 0);
+	virtual HRESULT initD3D(UINT rtWidth = 0, UINT rtHeight = 0, IDirect3DDevice9* pDevice = NULL);
 	virtual HRESULT ReleaseD3D();
 	virtual HRESULT OnBeforeResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);

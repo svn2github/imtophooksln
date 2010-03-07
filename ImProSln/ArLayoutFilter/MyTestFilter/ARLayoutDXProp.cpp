@@ -97,7 +97,9 @@ HRESULT ARLayoutDXPropPage::OnActivate(void)
 	m_cbARLevel.AddString(L"3 Level(4x4 8x8 16x16)");
 	m_cbARLevel.AddString(L"2 Level(8x8 16x16)");
 	m_cbARLevel.SetCurSel(0);
+	m_cbFPS.AddString(L"500");
 	m_cbFPS.AddString(L"100");
+	m_cbFPS.AddString(L"60");
 	m_cbFPS.AddString(L"30");
 	m_cbFPS.AddString(L"20");
 	m_cbFPS.AddString(L"15");

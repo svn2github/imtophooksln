@@ -1,6 +1,5 @@
 #include "CMuxTransformFilter.h"
 
-
 CMuxTransformFilter::CMuxTransformFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk, REFCLSID  clsid) :
 CBaseFilter(pName, pUnk, &m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE), 
 m_bSampleSkipped(FALSE)
@@ -505,7 +504,18 @@ CMuxTransformInputPin::~CMuxTransformInputPin()
 }
 #endif
 
-
+HRESULT CMuxTransformInputPin::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
+{
+	if (riid == IID_IDXBasePin) 
+	{
+		return GetInterface(static_cast<IDXBasePin*>(this), ppv);
+	}
+	else
+	{
+		// Call the parent class.
+		return __super::NonDelegatingQueryInterface(riid, ppv);
+	}
+}
 HRESULT
 CMuxTransformInputPin::CheckConnect(IPin *pPin)
 {
@@ -525,6 +535,7 @@ CMuxTransformInputPin::BreakConnect()
 	//  Can't disconnect unless stopped
 	ASSERT(IsStopped());
 	m_pTransformFilter->BreakConnect(PINDIR_INPUT, this);
+	SetConnectedPin(NULL);
 	return CBaseInputPin::BreakConnect();
 }
 
@@ -534,8 +545,18 @@ CMuxTransformInputPin::BreakConnect()
 HRESULT
 CMuxTransformInputPin::CompleteConnect(IPin *pReceivePin)
 {
-	HRESULT hr = m_pTransformFilter->CompleteConnect(PINDIR_INPUT, this, pReceivePin);
+	HRESULT hr = S_OK;
+	IDXBasePin* pDXPin = NULL;
+	hr = pReceivePin->QueryInterface(IID_IDXBasePin, (void**)&pDXPin);
+	if (pDXPin != NULL)
+	{
+		SetConnectedPin(pDXPin);
+		pDXPin->Release();
+		pDXPin = NULL;
+	}
+	hr = m_pTransformFilter->CompleteConnect(PINDIR_INPUT, this, pReceivePin);
 	if (FAILED(hr)) {
+		SetConnectedPin(NULL);
 		return hr;
 	}
 	return CBaseInputPin::CompleteConnect(pReceivePin);
@@ -690,7 +711,16 @@ CMuxTransformInputPin::NewSegment(
 	CBasePin::NewSegment(tStart, tStop, dRate);
 	return m_pTransformFilter->NewSegment(tStart, tStop, dRate);
 }
-
+HRESULT CMuxTransformInputPin::GetD3DFilter(IDXBaseFilter*& pFilter)
+{
+	pFilter = m_pTransformFilter;
+	return S_OK;
+}
+HRESULT CMuxTransformInputPin::GetConnectedPin(IPin*& pPin)
+{
+	pPin = m_Connected;
+	return S_OK;
+}
 
 CMuxTransformOutputPin::CMuxTransformOutputPin(
 	__in_opt LPCTSTR pObjectName,
@@ -760,8 +790,14 @@ CMuxTransformOutputPin::NonDelegatingQueryInterface(REFIID riid, __deref_out voi
 			}
 		}
 		return m_pPosition->QueryInterface(riid, ppv);
-	} else {
-		return CBaseOutputPin::NonDelegatingQueryInterface(riid, ppv);
+	} 
+	else if (riid == IID_IDXBasePin)
+	{
+		return GetInterface(static_cast<IDXBasePin*>(this), ppv);
+	}
+	else 
+	{
+		return __super::NonDelegatingQueryInterface(riid, ppv);
 	}
 }
 
@@ -794,6 +830,7 @@ CMuxTransformOutputPin::BreakConnect()
 	//  Can't disconnect unless stopped
 	ASSERT(IsStopped());
 	m_pTransformFilter->BreakConnect(PINDIR_OUTPUT, this);
+	SetConnectedPin(NULL);
 	return CBaseOutputPin::BreakConnect();
 }
 
@@ -803,8 +840,18 @@ CMuxTransformOutputPin::BreakConnect()
 HRESULT
 CMuxTransformOutputPin::CompleteConnect(IPin *pReceivePin)
 {
-	HRESULT hr = m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
+	HRESULT hr = S_OK;
+	IDXBasePin* pDXPin = NULL;
+	hr = pReceivePin->QueryInterface(IID_IDXBasePin, (void**)&pDXPin);
+	if (pDXPin != NULL)
+	{
+		SetConnectedPin(pDXPin);
+		pDXPin->Release();
+		pDXPin = NULL;
+	}
+	hr = m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
 	if (FAILED(hr)) {
+		SetConnectedPin(NULL);
 		return hr;
 	}
 	return CBaseOutputPin::CompleteConnect(pReceivePin);
@@ -909,8 +956,16 @@ CMuxTransformOutputPin::Notify(IBaseFilter * pSender, Quality q)
 	}
 	return errorHr;
 } // Notify
-
-
+HRESULT CMuxTransformOutputPin::GetD3DFilter(IDXBaseFilter*& pFilter)
+{
+	pFilter = m_pTransformFilter;
+	return S_OK;
+}
+HRESULT CMuxTransformOutputPin::GetConnectedPin(IPin*& pPin)
+{
+	pPin = m_Connected;
+	return S_OK;
+}
 
 CMuxTransformStream::CMuxTransformStream(
 							 __in_opt LPCTSTR pObjectName,
@@ -941,6 +996,20 @@ CMuxTransformStream::CMuxTransformStream(
 CMuxTransformStream::~CMuxTransformStream(void) {
 
 }
+
+// override to expose IMediaPosition
+HRESULT CMuxTransformStream::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
+{
+	if (riid == IID_IDXBasePin)
+	{
+		return GetInterface(static_cast<IDXBasePin*>(this), ppv);
+	}
+	else 
+	{
+		return __super::NonDelegatingQueryInterface(riid, ppv);
+	}
+}
+
 STDMETHODIMP CMuxTransformStream::Notify(IBaseFilter * pSender, Quality q)
 {
 	if (m_pFilter == NULL)
@@ -980,6 +1049,7 @@ HRESULT CMuxTransformStream::BreakConnect()
 	if (FAILED(hr)) {
 		return hr;
 	}
+	SetConnectedPin(NULL);
 	return __super::BreakConnect();
 }
 HRESULT CMuxTransformStream::CompleteConnect(IPin *pReceivePin)
@@ -988,8 +1058,18 @@ HRESULT CMuxTransformStream::CompleteConnect(IPin *pReceivePin)
 	{
 		return S_FALSE;
 	}
-	HRESULT hr = m_pFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
+	HRESULT hr = S_OK;
+	IDXBasePin* pDXPin = NULL;
+	hr = pReceivePin->QueryInterface(IID_IDXBasePin, (void**)&pDXPin);
+	if (pDXPin != NULL)
+	{
+		SetConnectedPin(pDXPin);
+		pDXPin->Release();
+		pDXPin = NULL;
+	}
+	hr = m_pFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
 	if (FAILED(hr)) {
+		SetConnectedPin(NULL);
 		return hr;
 	}
 	return __super::CompleteConnect(pReceivePin);
@@ -1292,6 +1372,16 @@ HRESULT CMuxTransformStream::DoBufferProcessingLoop(void) {
 
 	return S_FALSE;
 }
+HRESULT CMuxTransformStream::GetD3DFilter(IDXBaseFilter*& pFilter)
+{
+	pFilter = m_pFilter;
+	return S_OK;
+}
+HRESULT CMuxTransformStream::GetConnectedPin(IPin*& pPin)
+{
+	pPin = m_Connected;
+	return S_OK;
+}
 
 CSourceOutputPin::CSourceOutputPin(
 	__in_opt LPCTSTR pObjectName,
@@ -1361,6 +1451,6 @@ CSourceOutputPin::CompleteConnect(IPin *pReceivePin)
 	if (FAILED(hr)) {
 		return hr;
 	}
-	//for (int i=0; i< m_pOu
+	
 	return DecideAllocator(m_pInputPin, &m_pAllocator);
 }

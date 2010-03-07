@@ -284,7 +284,7 @@ HRESULT MaskFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 	}
 	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
+		if ( !IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || ! IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
 		{
 			return E_INVALIDARG;
 		}
@@ -292,7 +292,7 @@ HRESULT MaskFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 	}
 	else if (m_pInputPins.size() >= 3 && m_pInputPins[2] == pPin)
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_MaskVertexData))
+		if ( !IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || ! IsEqualGUID(*pmt->Subtype(), GUID_MaskVertexData))
 		{
 			return E_INVALIDARG;
 		}
@@ -325,7 +325,7 @@ HRESULT MaskFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin,
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		if (IsEqualGUID(*inputMT.Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
@@ -515,7 +515,7 @@ bool MaskFilter::IsAcceptedType(const CMediaType *pmt)
 			return true;
 		}
 	}
-	else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
 		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
 	{
 		return true;

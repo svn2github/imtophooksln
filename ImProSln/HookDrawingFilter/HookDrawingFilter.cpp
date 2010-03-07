@@ -433,7 +433,7 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 			{
 				CAutoLock lck(&m_csAddTextures[i]);
 				CMediaType mt;
-				mt.SetType(&GUID_MyMediaSample);
+				mt.SetType(&GUID_D3DMEDIATYPE);
 				mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
 				mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
 				D3DSURFACE_DESC desc;
@@ -463,7 +463,7 @@ HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	if (isStreamPin)
 	{
 		CheckPointer(mtOut, E_POINTER);
-		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			return NOERROR;
@@ -1060,7 +1060,7 @@ BOOL HookDrawingFilter::CopyOutputTexture2OutputData(int idx, IMediaSample *pOut
 	pOutSurface->GetDesc(&surOutDesc);
 	D3DLOCKED_RECT rect;
 
-	if (IsEqualGUID(*pOutMediaType->Type(), GUID_MyMediaSample) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DXTEXTURE9_POINTER))
+	if (IsEqualGUID(*pOutMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DXTEXTURE9_POINTER))
 	{	
 		((CMediaSample*)pOut)->SetPointer((BYTE*)m_pAddOutTexture[idx], sizeof(LPDIRECT3DTEXTURE9));
 	}

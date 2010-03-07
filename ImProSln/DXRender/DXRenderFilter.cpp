@@ -6,7 +6,7 @@
 #include "DXRenderDisplay.h"
 #include "CMuxTransformFilter.h"
 DXRenderFilter::DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
-: CBaseRenderer(CLSID_DXRenderFilter, NAME("DXRender Filter"), pOuter, phr)
+: DXBaseRenderer(CLSID_DXRenderFilter, NAME("DXRender Filter"), pOuter, phr)
 { 
 }
 DXRenderFilter::~DXRenderFilter()
@@ -75,8 +75,13 @@ HRESULT DXRenderFilter::CheckMediaType(const CMediaType *pmt)
 			return S_OK;
 		}
 	}
-	else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
 		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		return S_OK;
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
+		IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
 	{
 		return S_OK;
 	}
@@ -96,7 +101,25 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 		if (IsEqualGUID(*mt.FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC))
 		{	
 			D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) mt.pbFormat;
-			initD3D(desc->Width, desc->Height);
+			if (IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+			{
+				IDirect3DDevice9* pDevice = NULL;
+				m_pInputPin->QueryD3DDevice(pDevice);
+				if (pDevice == NULL)
+					return S_FALSE;
+				initD3D(desc->Width, desc->Height, pDevice);
+				pDevice->Release();
+				pDevice = NULL;
+			}
+			else if (IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+			{
+				initD3D(desc->Width, desc->Height);
+			}
+			else
+			{
+				return S_FALSE;
+			}
+
 		}
 		else if (IsEqualGUID(*mt.FormatType(), FORMAT_VideoInfo))
 		{
@@ -108,10 +131,16 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 	}
 	FILTER_INFO filterInfo;
 	this->QueryFilterInfo(&filterInfo);
+
 	HWND displayWnd = GetDisplayWindow();
 	SetWindowText(displayWnd, filterInfo.achName);
 
 	m_pD3DDisplay->ShowDisplayWnd(TRUE);
+	if (filterInfo.pGraph != NULL)
+	{
+		filterInfo.pGraph->Release();
+		filterInfo.pGraph = NULL;
+	}
 	return __super::CompleteConnect(pReceivePin);
 }
 HRESULT DXRenderFilter::BreakConnect()
@@ -133,13 +162,7 @@ HRESULT DXRenderFilter::GetPages(CAUUID *pPages)
 
 HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 {
-	if (!IsD3DReady())
-	{
-		D3DSURFACE_DESC *desc = (D3DSURFACE_DESC*) m_InputMT.pbFormat;
-		initD3D(desc->Width, desc->Height);
-	}
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
-	//OutputDebugStringW(L"@@@@@ CopyInputImage2InputTexture <----\n");
 	{
 		CAutoLock lck(&m_csD3DDisplay);
 		m_pD3DDisplay->SetTexture(m_pInTexture);

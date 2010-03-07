@@ -6,9 +6,10 @@
 #include "combase.h"
 #include "D3DTransformFilterBase.h"
 #include "MSPersist.h"
+#include "DXBaseRenderer.h"
 
 class DXRenderFilter :
-	public CBaseRenderer, public IDXRenderer,
+	public DXBaseRenderer, public IDXRenderer,
 	public ISpecifyPropertyPages, public D3DTransformFilterBase,
 	public CMSPersist
 {
@@ -38,6 +39,7 @@ public:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	virtual BOOL IsReadyCloseWindow();
+
 public:
 	DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~DXRenderFilter();

@@ -19,7 +19,7 @@ using namespace ARToolKitPlus;
 
 class ARLayoutDXFilter :
 	public CMuxTransformFilter, public IARLayoutDXFilter, ISpecifyPropertyPages,
-	public D3DTransformFilterBase
+	public D3DTransformFilterBase, D3DBaseFilter
 {
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
@@ -43,9 +43,11 @@ public:
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();
 	//Derive from D3DTransformFilter
-
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
+	//from D3DBaseFilter
+	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
+
 protected:
 	virtual float GetFrameRateLimit(IPin* pPin);
 protected:

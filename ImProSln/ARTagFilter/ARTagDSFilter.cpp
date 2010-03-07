@@ -247,7 +247,7 @@ HRESULT ARTagDSFilter::CheckOutputType(const CMediaType* pmt, const IPin* pPin)
 	}
 	else if (m_pOutputPins.size() >= 1 && m_pOutputPins[1] == pPin)
 	{
-		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ARResult)) {
+		if (!IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*pmt->Subtype(), GUID_ARResult)) {
 			return E_INVALIDARG;
 		}
 		// Can we transform this type
@@ -730,7 +730,7 @@ HRESULT ARTagDSFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_ARResult);
 		myMediaType.SetSampleSize(sizeof(ARTagResultData));
 		*pMediaType = myMediaType;

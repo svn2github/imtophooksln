@@ -328,7 +328,7 @@ HRESULT BGMappingFilter::CheckOutputType( const CMediaType * pmt , const IPin* p
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
-		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
+		if (!IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
 		{
 			return E_INVALIDARG;
 		}
@@ -531,7 +531,7 @@ HRESULT BGMappingFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inou
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
+		mt.SetType(&GUID_IMPRO_FeedbackTYPE);
 		mt.SetSubtype(&GUID_ForegroundRegion_Data);
 		mt.SetSampleSize(sizeof(ForegroundRegion));
 		*pMediaType = mt;

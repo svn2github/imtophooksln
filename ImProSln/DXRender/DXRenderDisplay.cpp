@@ -31,6 +31,12 @@ DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT r
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 50, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
+	lasttime = timeGetTime();
+	currtime = timeGetTime();
+	count = 0;
+	fps = 0; 
+	imgW = 0;
+	imgH = 0;
 }
 
 

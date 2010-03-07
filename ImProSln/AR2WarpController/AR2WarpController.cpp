@@ -533,7 +533,7 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 	}
 	if (bARResult)
 	{
-		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ARResult))
+		if (!IsEqualGUID(*mtIn->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtIn->Subtype(), GUID_ARResult))
 		{
 			return E_INVALIDARG;
 		}
@@ -541,7 +541,7 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 	}
 	if (((CMuxTransformInputPin*)pPin) == m_pInputPins.at(NUMCAM) )
 	{
-		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
+		if (!IsEqualGUID(*mtIn->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
 		{
 			return E_INVALIDARG;
 		}
@@ -549,7 +549,7 @@ HRESULT AR2WarpController::CheckInputType(const CMediaType* mtIn, const IPin* pP
 	}
 	else if (((CMuxTransformInputPin*)pPin) == GetBoardCastInputPin())
 	{
-		if (!IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
+		if (!IsEqualGUID(*mtIn->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtIn->Subtype(), GUID_ForegroundRegion_Data))
 		{
 			return E_INVALIDARG;
 		}
@@ -570,7 +570,7 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	}
 	if (bWarpConfigPin)
 	{
-		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_WarpConfig))
+		if (!IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtOut->Subtype(), GUID_WarpConfig))
 		{
 			return E_INVALIDARG;
 		}
@@ -578,7 +578,7 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	}
 	if (pPin == m_pOutputPins[NUMCAM])
 	{
-		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
+		if (!IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
 		{
 			return E_INVALIDARG;
 		}
@@ -586,7 +586,7 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	}
 	else if (pPin == GetBoardCastOutputPin())
 	{
-		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
+		if (!IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutStartegyData))
 		{
 			return E_INVALIDARG;
 		}
@@ -594,7 +594,7 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	}
 	else if (pPin == GetLowResMaskPin())
 	{
-		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_MaskVertexData))
+		if (!IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtOut->Subtype(), GUID_MaskVertexData))
 		{
 			return E_INVALIDARG;
 		}
@@ -611,7 +611,7 @@ HRESULT AR2WarpController::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	}
 	if (bHighResPin)
 	{
-		if (!IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) || !IsEqualGUID(*mtOut->Subtype(), GUID_MaskVertexData))
+		if (!IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*mtOut->Subtype(), GUID_MaskVertexData))
 		{
 			return E_INVALIDARG;
 		}
@@ -722,7 +722,7 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	if (bWarpConfigPin)
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_WarpConfig);
 		myMediaType.SetSampleSize(sizeof(WarpConfigData));
 		*pMediaType = myMediaType;
@@ -731,7 +731,7 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	if (m_pOutputPins[NUMCAM] == pOutPin)// ARLayout Pin
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_ARLayoutStartegyData);
 		myMediaType.SetSampleSize(sizeof(ARLayoutStartegyData));
 		*pMediaType = myMediaType;
@@ -740,7 +740,7 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	else if(GetBoardCastOutputPin() == pOutPin)
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_ARLayoutStartegyData);
 		myMediaType.SetSampleSize(sizeof(ARLayoutStartegyData));
 		*pMediaType = myMediaType;
@@ -749,7 +749,7 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	else if (GetLowResMaskPin() == pOutPin)
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_MaskVertexData);
 		myMediaType.SetSampleSize(sizeof(MaskVertexData));
 		*pMediaType = myMediaType;
@@ -767,7 +767,7 @@ HRESULT AR2WarpController::GetMediaType(int iPosition, const IPin* pOutPin, __in
 	if (bHighResPin)
 	{
 		CMediaType myMediaType;
-		myMediaType.SetType(&GUID_MyMediaSample);
+		myMediaType.SetType(&GUID_IMPRO_FeedbackTYPE);
 		myMediaType.SetSubtype(&GUID_MaskVertexData);
 		myMediaType.SetSampleSize(sizeof(MaskVertexData));
 		*pMediaType = myMediaType;

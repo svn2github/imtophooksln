@@ -296,13 +296,19 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		hr = ResetRenderTarget();
 		if (FAILED(hr))
 			return S_FALSE;
-		hr = CopyRenderTarget2OutputTexture();	
-		if (FAILED(hr))
-			return S_FALSE;
-		CMediaType mt;
-		mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-		
-		hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
+
+		CMediaType mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
+		if (IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			hr = CopyRenderTarget2OutputTexture();	
+			if (FAILED(hr))
+				return S_FALSE;
+			hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
+		}
+		else
+		{
+			hr = CopyRenderTarget2OutputData(pSamp, &mt);	
+		}
 	}
 	
 	return hr;
@@ -314,10 +320,25 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 	{
 		if (iPosition == 0 )
 		{	
+			if (m_pRenderTarget == NULL)
+				return S_FALSE;
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pRenderTarget->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		if (iPosition == 1 )
+		{	
 			if (m_pOutTexture == NULL)
 				return S_FALSE;
 			CMediaType mt;
-			mt.SetType(&GUID_MyMediaSample);
+			mt.SetType(&GUID_D3DMEDIATYPE);
 			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
 			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
 			D3DSURFACE_DESC desc;
@@ -327,7 +348,7 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 			*pMediaType = mt;
 			return S_OK;
 		}
-		else if (iPosition == 1)
+		else if (iPosition == 2)
 		{
 			if (m_pOutTexture == NULL)
 				return S_FALSE;
@@ -360,7 +381,7 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 			return VFW_S_NO_MORE_ITEMS;
 		}
 		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
+		mt.SetType(&GUID_IMPRO_FeedbackTYPE);
 		mt.SetSubtype(&GUID_ARLayoutConfigData);
 		mt.SetSampleSize(sizeof(ARLayoutConfigData));
 		*pMediaType = mt;
@@ -373,7 +394,7 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 			return VFW_S_NO_MORE_ITEMS;
 		}
 		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
+		mt.SetType(&GUID_IMPRO_FeedbackTYPE);
 		mt.SetSubtype(&GUID_ROIData);
 		mt.SetSampleSize(sizeof(ROIData));
 		*pMediaType = mt;
@@ -386,8 +407,13 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		CheckPointer(mtOut, E_POINTER);
-		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			return NOERROR;
+		}
+		else if (IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*mtOut->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
 		{
 			return NOERROR;
 		}
@@ -400,7 +426,7 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 	else if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
 	{
 		CMediaType mt;
-		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_ARLayoutConfigData))
 		{
 			return NOERROR;
@@ -409,7 +435,7 @@ HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* p
 	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
 	{
 		CMediaType mt;
-		if (IsEqualGUID(*mtOut->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*mtOut->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_ROIData))
 		{
 			return NOERROR;
@@ -423,7 +449,7 @@ HRESULT ARLayoutDXFilter::CheckInputType(const CMediaType* mtIn, const IPin* pPi
 	if (m_pInputPins.size() > 0 && m_pInputPins[0] == pPin)
 	{
 		CheckPointer(mtIn, E_POINTER);
-		if (IsEqualGUID(*mtIn->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*mtIn->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			IsEqualGUID(*mtIn->Subtype(), GUID_ARLayoutStartegyData))
 		{
 			return NOERROR;
@@ -440,8 +466,9 @@ HRESULT ARLayoutDXFilter::DecideBufferSize(
 	if (m_pStreamPins.size() > 0 && pOutPin == m_pStreamPins[0])
 	{
 		CMediaType mt = ((CMuxTransformStream*)pOutPin)->CurrentMediaType();
-		if ((IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && 
-			(IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))) ||
+		if ((IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE) && 
+			(IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER) || 
+			IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))) ||
 			((IsEqualGUID(*mt.Type(), MEDIATYPE_Video) && 
 			(IsEqualGUID(*mt.Subtype(), MEDIASUBTYPE_RGB32)))))
 		{
@@ -504,7 +531,17 @@ MS3DDisplay* ARLayoutDXFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rt
 {
 	return new ARLayoutDXDisplay(pDevice, rtWidth, rtHeight);
 }
-
+HRESULT ARLayoutDXFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	outDevice = m_pD3DDisplay->GetD3DDevice();
+	if (outDevice != NULL)
+	{
+		outDevice->AddRef();
+	}
+	return S_OK;
+}
 HRESULT ARLayoutDXFilter::GetPages(CAUUID *pPages)
 {
 	pPages->cElems = 1;

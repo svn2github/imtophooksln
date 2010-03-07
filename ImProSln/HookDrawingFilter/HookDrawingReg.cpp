@@ -6,7 +6,37 @@
 static WCHAR g_wszName[] = L"HookDrawing Filter";
 const AMOVIESETUP_PIN psudHookDrawingFilterPins[] =
 {
-{ L"output"           // strName
+{ L"output0"           // strName
+, FALSE               // bRendered
+, TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"output1"           // strName
+, FALSE               // bRendered
+, TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"output2"           // strName
+, FALSE               // bRendered
+, TRUE                // bOutput
+, FALSE               // bZero
+, FALSE               // bMany
+, &CLSID_NULL         // clsConnectsToFilter
+, L""                 // strConnectsToPin
+, 0                   // nTypes
+, NULL                // lpTypes
+},
+{ L"output3"           // strName
 , FALSE               // bRendered
 , TRUE                // bOutput
 , FALSE               // bZero
@@ -22,7 +52,7 @@ const AMOVIESETUP_PIN psudHookDrawingFilterPins[] =
 const REGFILTER2 sudHookDrawingFilter =
 { 	1,                // Version number.
 MERIT_DO_NOT_USE, // Merit.
-1,                // Number of pins.
+4,                // Number of pins.
 psudHookDrawingFilterPins };         // lpPin
 
 

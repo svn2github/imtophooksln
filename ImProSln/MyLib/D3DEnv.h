@@ -23,7 +23,7 @@ public:
 	D3DEnv();
 	virtual ~D3DEnv();
 protected:
-	virtual HRESULT initD3D(UINT winW, UINT winH);
+	virtual HRESULT initD3D(UINT winW, UINT winH, IDirect3DDevice9* pDevice = NULL);
 	virtual HRESULT ReleaseD3D();
 	virtual BOOL IsD3DReady();
 	virtual BOOL IsReadyCloseWindow() { return TRUE;};

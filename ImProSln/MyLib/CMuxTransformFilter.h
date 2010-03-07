@@ -1,15 +1,15 @@
 #pragma once
-
-
 #include "dshow.h"
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
 #include <vector>
-using namespace std;
+#include "D3DBaseFilter.h"
 
+using namespace std;
 class CMuxTransformFilter;
-class CMuxTransformInputPin : public CBaseInputPin
+
+class CMuxTransformInputPin : public CBaseInputPin, public D3DBaseInputPin
 {
 	friend class CMuxTransformFilter;
 public:
@@ -17,7 +17,9 @@ public:
 protected:
 	CMuxTransformFilter *m_pTransformFilter;
 public:
-
+	// override to expose IDXBasePin
+	DECLARE_IUNKNOWN
+	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
 	CMuxTransformInputPin(
 		__in_opt LPCTSTR pObjectName,
 		__inout CMuxTransformFilter *pTransformFilter,
@@ -76,8 +78,10 @@ public:
 	// Media type
 public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
+	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter);
+	virtual HRESULT GetConnectedPin(IPin*& pPin);
 };
-class CMuxTransformOutputPin : public CBaseOutputPin
+class CMuxTransformOutputPin : public CBaseOutputPin, public D3DBaseOutputPin
 {
 	friend class CMuxTransformFilter;
 public:
@@ -104,6 +108,7 @@ public:
 #endif
 	virtual ~CMuxTransformOutputPin();
 
+	DECLARE_IUNKNOWN;
 	// override to expose IMediaPosition
 	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
 
@@ -141,12 +146,19 @@ public:
 public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
 	virtual IMemAllocator* Allocator() {return m_pAllocator;};
+	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter);
+	virtual HRESULT GetConnectedPin(IPin*& pPin);
+
 };
 
-class CMuxTransformStream : public CAMThread, public CBaseOutputPin {
+class CMuxTransformStream : public CAMThread, public CBaseOutputPin, public D3DBaseOutputPin
+	
+{
 	friend class CMuxTransformFilter;
 public:
-
+	// override to expose IDXBasePin
+	DECLARE_IUNKNOWN;
+	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
 	CMuxTransformStream(__in_opt LPCTSTR pObjectName,
 		__inout HRESULT *phr,
 		__inout CMuxTransformFilter *pms,
@@ -205,6 +217,9 @@ public:
 	HRESULT Stop(void) { return CallWorker(CMD_STOP); }
 	virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
+
+	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter);
+	virtual HRESULT GetConnectedPin(IPin*& pPin);
 protected:
 	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
 	BOOL    CheckRequest(Command *pCom) { return CAMThread::CheckRequest( (DWORD *) pCom); }
@@ -231,7 +246,7 @@ protected:
 
 
 
-class CMuxTransformFilter : public CBaseFilter
+class CMuxTransformFilter : public CBaseFilter, public D3DBaseFilter
 {
 public:
 	virtual int GetPinCount();

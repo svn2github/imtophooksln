@@ -152,7 +152,7 @@ HRESULT TouchLibFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 	{	
 		CheckPointer(pmt, E_POINTER);
 		
-		if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			IsEqualGUID(*pmt->Subtype(), GUID_ROIData))
 		{
 			return NOERROR;
@@ -178,7 +178,7 @@ HRESULT TouchLibFilter::CheckOutputType( const CMediaType * pmt , const IPin* pP
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
-		if (!IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
+		if (!IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || !IsEqualGUID(*pmt->Subtype(), GUID_ForegroundRegion_Data))
 		{
 			return E_INVALIDARG;
 		}
@@ -192,7 +192,7 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType mt = m_pInputPins[0]->CurrentMediaType();
-		if (IsEqualGUID(*mt.Type(), GUID_MyMediaSample) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
 			CreateTouchScreen(desc->Width, desc->Height, false);
@@ -304,7 +304,7 @@ HRESULT TouchLibFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
+		mt.SetType(&GUID_IMPRO_FeedbackTYPE);
 		mt.SetSubtype(&GUID_ForegroundRegion_Data);
 		mt.SetSampleSize(sizeof(ForegroundRegion));
 		*pMediaType = mt;

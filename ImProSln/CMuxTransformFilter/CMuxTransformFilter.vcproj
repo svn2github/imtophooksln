@@ -323,6 +323,30 @@
 				>
 			</File>
 			<File
+				RelativePath=".\D3DBaseFilter.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\DXBaseRenderer.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\MuxSourceFilter.cpp"
 				>
 			</File>
@@ -369,6 +393,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\MyLib\D3DBaseFilter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\MyLib\DXBaseRenderer.h"
+				>
+			</File>
+			<File
 				RelativePath="..\MyLib\MuxSourceFilter.h"
 				>
 			</File>
@@ -398,6 +430,10 @@
 				RelativePath=".\res\CMuxTransformFilter.rc2"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="MyLib"
+			>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

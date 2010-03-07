@@ -255,7 +255,7 @@ HRESULT HomoWarpFilter::CheckInputType( const CMediaType * pmt , const IPin* pPi
 	}
 	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) || ! IsEqualGUID(*pmt->Subtype(), GUID_WarpConfig))
+		if ( !IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || ! IsEqualGUID(*pmt->Subtype(), GUID_WarpConfig))
 		{
 			return E_INVALIDARG;
 		}
@@ -294,7 +294,7 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		if (IsEqualGUID(*inputMT.Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
@@ -435,7 +435,7 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType mt;
-		mt.SetType(&GUID_MyMediaSample);
+		mt.SetType(&GUID_D3DMEDIATYPE);
 		mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
 		mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
 		D3DSURFACE_DESC desc;
@@ -472,7 +472,7 @@ bool HomoWarpFilter::IsAcceptedType(const CMediaType *pmt)
 			return true;
 		}
 	}
-	else if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
 		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
 	{
 		return true;

@@ -45,16 +45,23 @@ HRESULT D3DTransformFilterBase::ReleaseD3D()
 	__super::ReleaseD3D();
 	return S_OK;
 }
-HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight)
+HRESULT D3DTransformFilterBase::initD3D(UINT rtWidth, UINT rtHeight, IDirect3DDevice9* pDevice)
 {
 	HRESULT hr;
-	hr = D3DEnv::initD3D(rtWidth, rtHeight);
+	hr = D3DEnv::initD3D(rtWidth, rtHeight, pDevice);
 	if (m_pD3DDisplay != NULL)
 	{
 		delete m_pD3DDisplay;
 		m_pD3DDisplay = NULL;
 	}
-	m_pD3DDisplay = Create3DDisplay(GetD3D9(), rtWidth, rtHeight);
+	if (pDevice == NULL)
+	{
+		m_pD3DDisplay = Create3DDisplay(GetD3D9(), rtWidth, rtHeight);
+	}
+	else
+	{
+		m_pD3DDisplay = Create3DDisplay(pDevice, rtWidth, rtHeight);
+	}
 	if (m_pD3DDisplay == NULL)
 	{
 		return S_FALSE;
@@ -123,8 +130,23 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	m_pInTexture->GetSurfaceLevel(0, &pInSurface);
 	pInSurface->GetDesc(&surInDesc);
 	IplImage* pImg = NULL;
-
-	if (IsEqualGUID(*pInMediaType->Type(), GUID_MyMediaSample) && IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
+		pIn->GetPointer((BYTE**)&pInputTexture);
+		if (pInputTexture == NULL)
+		{
+			return E_FAIL;
+		}
+		if (m_pInTexture != NULL)
+		{
+			m_pInTexture->Release();
+			m_pInTexture = NULL;
+		}
+		m_pInTexture = pInputTexture;
+		m_pInTexture->AddRef();
+	}
+	else if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
 	{
 		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
 		LPDIRECT3DSURFACE9 pInputSurface = NULL;
@@ -194,6 +216,36 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	}
 	return hr;
 }
+HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType)
+{
+	if (pOut == NULL || m_pRenderTarget == NULL)
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = S_OK;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
+	CAutoLock lck(&m_csOutTexture);
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	GUID guidSubType = pOutMediaType->subtype;
+
+
+	D3DSURFACE_DESC surOutDesc;
+	hr = m_pRenderTarget->GetLevelDesc(0, &surOutDesc);
+	D3DLOCKED_RECT rect;
+
+	if (IsEqualGUID(*pOutMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{	
+		((CMediaSample*)pOut)->SetPointer((BYTE*)m_pRenderTarget, sizeof(LPDIRECT3DTEXTURE9));
+	}
+	else
+	{
+		return S_FALSE;
+	}
+	return S_OK;
+}
 HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY = false)
 {
 	if (pOut == NULL || m_pOutTexture == NULL)
@@ -215,9 +267,13 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	pOutSurface->GetDesc(&surOutDesc);
 	D3DLOCKED_RECT rect;
 	
-	if (IsEqualGUID(*pOutMediaType->Type(), GUID_MyMediaSample) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DXTEXTURE9_POINTER))
+	if (IsEqualGUID(*pOutMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DXTEXTURE9_POINTER))
 	{	
 		((CMediaSample*)pOut)->SetPointer((BYTE*)m_pOutTexture, sizeof(LPDIRECT3DTEXTURE9));
+	}
+	else if(IsEqualGUID(*pOutMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		return S_FALSE;
 	}
 	else
 	{

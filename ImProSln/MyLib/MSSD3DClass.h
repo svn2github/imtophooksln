@@ -381,6 +381,7 @@ private:
 	HWND m_hDisplayWnd;
 	HANDLE m_hRenderThread;
 	BOOL InitDevice(IDirect3D9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0);
+	BOOL InitDevice(IDirect3DDevice9* pD3D, UINT rtWidth = 0, UINT rtHeight = 0);
 	static BOOL _Run(void* _THIS);
 	HWND GetD3DWnd() { return m_hDisplayWnd;}
 

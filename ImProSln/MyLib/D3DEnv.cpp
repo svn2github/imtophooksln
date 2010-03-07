@@ -57,7 +57,7 @@ IDirect3DDevice9* D3DEnv::GetD3DDevice()
 	return g_pD3DDevice9;
 }
 
-HRESULT D3DEnv::initD3D(UINT winW = 0, UINT winH = 0)
+HRESULT D3DEnv::initD3D(UINT winW, UINT winH, IDirect3DDevice9* pDevice)
 {
 	return S_OK;
 }

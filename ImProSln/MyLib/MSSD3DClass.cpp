@@ -469,6 +469,9 @@ MS3DDisplay::MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
 	CreateTexture(rtWidth, rtHeight);
+	InitDevice(pDevice, rtWidth, rtHeight);
+	if (D3DDEVICELOST == 0)
+		D3DDEVICELOST = RegisterWindowMessage(D3DDEVICELOST_MSG);
 }
 HRESULT	MS3DDisplay::ShowDisplayWnd(BOOL bShow)
 {
@@ -745,6 +748,26 @@ BOOL MS3DDisplay::InitDevice(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	return TRUE;
 }
 
+BOOL MS3DDisplay::InitDevice(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
+{
+	if (pDevice == NULL)
+	{
+		return FALSE;
+	}
+
+	m_pDisplayPlane = new MS3DPlane(m_pDevice);
+	m_pCamera = new MSCamera(m_pDevice);
+	IDirect3DSwapChain9* pSwapChain = NULL;
+	pDevice->GetSwapChain(0, &pSwapChain);
+	pSwapChain->GetPresentParameters(&m_d3dpp);
+	m_hDisplayWnd = m_d3dpp.hDeviceWindow; 
+	if (pSwapChain == NULL)
+		return FALSE;
+	
+	pSwapChain->Release();
+	pSwapChain = NULL;
+	return TRUE;
+}
 BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 {
 	if (m_pDevice == NULL)
