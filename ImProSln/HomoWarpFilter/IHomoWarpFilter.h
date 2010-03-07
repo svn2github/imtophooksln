@@ -1,5 +1,6 @@
 #pragma once
 #include <d3dx9.h>
+#include "cv.h"
 #include "streams.h"
 // {39D3E390-A98E-45ee-B496-ED6C69283C79}
 DEFINE_GUID(IID_IHomoWarpFilter, 
@@ -30,7 +31,9 @@ public:
 
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
+	
+	virtual IplImage* GetInIplmage();
+	virtual CCritSec* GetD3DCS();
 
-	virtual LPDIRECT3DTEXTURE9 GetInTexture();
-	virtual CCritSec* GetCSInTexture();
+	
 };

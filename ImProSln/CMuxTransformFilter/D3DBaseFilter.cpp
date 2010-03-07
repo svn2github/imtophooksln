@@ -44,6 +44,18 @@ HRESULT D3DBaseInputPin::QueryD3DDevice(IDirect3DDevice9*& outDevice)
 	return hr;
 }
 
+HRESULT D3DBaseInputPin::QueryD3DDeviceCS(CCritSec*& cs)
+{
+	HRESULT hr = S_OK;
+	IDXBasePin* connectedPin = NULL;
+	GetConnectedPin(connectedPin);
+	if (connectedPin == NULL)
+		return S_FALSE;
+
+	hr = connectedPin->QueryD3DDeviceCS(cs);
+	return hr;
+}
+
 HRESULT D3DBaseOutputPin::QueryD3DDevice(IDirect3DDevice9*& outDevice)
 {
 	IDXBaseFilter* pFilter = NULL;
@@ -52,4 +64,11 @@ HRESULT D3DBaseOutputPin::QueryD3DDevice(IDirect3DDevice9*& outDevice)
 		return S_FALSE;
 	return ((D3DBaseFilter*)pFilter)->QueryD3DDevice(this, outDevice);
 }
-
+HRESULT D3DBaseOutputPin::QueryD3DDeviceCS(CCritSec*& cs)
+{
+	IDXBaseFilter* pFilter = NULL;
+	GetD3DFilter(pFilter);
+	if (pFilter == NULL)
+		return S_FALSE;
+	return ((D3DBaseFilter*)pFilter)->QueryD3DDeviceCS(this, cs);
+}

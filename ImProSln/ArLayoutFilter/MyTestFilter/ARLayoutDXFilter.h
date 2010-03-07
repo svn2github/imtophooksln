@@ -47,7 +47,7 @@ public:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 	//from D3DBaseFilter
 	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
-
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 protected:
 	virtual float GetFrameRateLimit(IPin* pPin);
 protected:

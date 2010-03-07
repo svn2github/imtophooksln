@@ -435,4 +435,24 @@ HRESULT DXRenderFilter::SetWindowRect(RECT rect)
 	return S_OK;
 }
 
-
+HRESULT DXRenderFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay->IsDeviceFromOther())
+	{
+		IDXBasePin* pDXInPin = NULL;
+		m_pInputPin->QueryInterface(IID_IDXBasePin, (void**)&pDXInPin);
+		if (pDXInPin == NULL)
+			return S_FALSE;
+		pDXInPin->QueryD3DDeviceCS(cs);
+		pDXInPin->Release();
+		pDXInPin = NULL;
+		return S_OK;
+	}
+	else
+	{
+		cs = &m_csD3DDisplay;
+		return S_OK;
+	}
+}

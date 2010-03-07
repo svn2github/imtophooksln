@@ -933,6 +933,10 @@ BOOL MS3DDisplay::HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir)
 {
 	return TRUE;
 }
+bool MS3DDisplay::IsDeviceFromOther()
+{
+	return m_bDeviceFromOthers;
+}
 
 HRESULT MS3DDisplay::OnDeviceLost(IDirect3DDevice9 * pd3dDevice,
 							  void* pUserContext)

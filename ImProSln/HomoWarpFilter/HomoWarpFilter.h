@@ -37,6 +37,9 @@ public:
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
+	//from D3DBaseFilter
+	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 	//implement IHomoWarpFilterProperty
 	virtual HRESULT SetWarpVertex(float LTx, float LTy, float LBx, float LBy, 
 									float RBx, float RBy, float RTx, float RTy);
@@ -54,8 +57,8 @@ public:
 
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
-	virtual LPDIRECT3DTEXTURE9 GetInTexture();
-	virtual CCritSec* GetCSInTexture();
+	virtual IplImage* GetInIplmage();
+	virtual CCritSec* GetD3DCS();
 protected:
 	
 	bool m_bFlipY;

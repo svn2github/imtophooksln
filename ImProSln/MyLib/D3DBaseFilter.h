@@ -39,12 +39,14 @@ public:
 	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter) = 0;
 	virtual HRESULT GetConnectedPin(IDXBasePin*& pPin) = 0;
 	virtual HRESULT QueryD3DDevice(IDirect3DDevice9*& outDevice) = 0;
+	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs) = 0;
 };
 
 MIDL_INTERFACE("E8DD41CD-403F-4cf9-9C53-133767A0A2C4")
 IDXBaseFilter : public IUnknown
 {
 public:
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs) = 0;
 	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice) = 0;
 };
 
@@ -53,6 +55,7 @@ class D3DBaseFilter : public IDXBaseFilter
 {
 public:
 	/////have to be overwrite by child class////////
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs) {return E_NOTIMPL; };
 	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice) {return E_NOTIMPL; };
 };
 
@@ -69,6 +72,7 @@ public:
 	virtual HRESULT GetConnectedPin(IDXBasePin*& pPin);
 	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter) = 0;
 	virtual HRESULT QueryD3DDevice(IDirect3DDevice9*& outDevice) = 0;
+	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs) = 0;
 };
 
 class D3DBaseOutputPin : public D3DBasePin
@@ -76,6 +80,7 @@ class D3DBaseOutputPin : public D3DBasePin
 public:
 	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter){return E_NOTIMPL;};
 	virtual HRESULT QueryD3DDevice(IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
 };
 
 class D3DBaseInputPin : public D3DBasePin
@@ -83,4 +88,5 @@ class D3DBaseInputPin : public D3DBasePin
 public:
 	virtual HRESULT GetD3DFilter(IDXBaseFilter*& pFilter) {return E_NOTIMPL;};
 	virtual HRESULT QueryD3DDevice(IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
 };

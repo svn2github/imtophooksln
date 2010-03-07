@@ -447,38 +447,27 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 {
 	if (m_pFilter == NULL)
 		return;
-	LPDIRECT3DTEXTURE9 pTexture = m_pFilter->GetInTexture();
-	CCritSec* csInTexture = m_pFilter->GetCSInTexture();
-	CAutoLock lck(csInTexture);
-	LPDIRECT3DSURFACE9 pSurface = NULL;
-	if (pTexture == NULL)
-		return; 
-	pTexture->GetSurfaceLevel(0, &pSurface);
-	D3DSURFACE_DESC desc;
-	pSurface->GetDesc(&desc);
-	D3DLOCKED_RECT rect;
-	pSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
-	IplImage* imgIn = NULL;
-	imgIn = cvCreateImageHeader(cvSize(desc.Width, desc.Height),8, 4);
-	imgIn->imageData = (char*)rect.pBits;
+
+	IplImage* cvInImg = m_pFilter->GetInIplmage();
+	if (cvInImg == NULL)
+	{
+		return;
+	}
 	if (m_pEditImage == NULL)
 	{
-		m_pEditImage = cvCreateImage(cvSize(desc.Width, desc.Height),8, 4);
-		m_pEditImage_bk = cvCreateImage(cvSize(desc.Width, desc.Height),8, 4);
+		m_pEditImage = cvCloneImage(cvInImg);
+		m_pEditImage_bk = cvCloneImage(cvInImg);
 	}
-	cvCopy(imgIn, m_pEditImage);
+	cvCopy(cvInImg, m_pEditImage);
 	cvCopy(m_pEditImage, m_pEditImage_bk);
 	cvNamedWindow("HomoWarp Edit", 0);
 	cvShowImage("HomoWarp Edit", m_pEditImage);
 	cvSetMouseCallback( "HomoWarp Edit", MouseCallback, this);
 	GetEditPtsByWarpMatrix();
-	pSurface->UnlockRect();
-	if (pSurface != NULL)
+	if (cvInImg != NULL)
 	{
-		pSurface->Release();
-		pSurface = NULL;
+		cvReleaseImageHeader(&cvInImg);
 	}
-
 }
 
 void CHomoWarpMFCPropertyPage::MouseCallback(int eventID, int x, int y, int flags, void* param)

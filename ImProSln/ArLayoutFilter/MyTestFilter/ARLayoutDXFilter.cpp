@@ -542,6 +542,12 @@ HRESULT ARLayoutDXFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& ou
 	}
 	return S_OK;
 }
+
+HRESULT ARLayoutDXFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	cs = &m_csD3DDisplay;
+	return S_OK;
+}
 HRESULT ARLayoutDXFilter::GetPages(CAUUID *pPages)
 {
 	pPages->cElems = 1;

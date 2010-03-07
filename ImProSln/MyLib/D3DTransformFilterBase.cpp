@@ -127,8 +127,8 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 
 	LPDIRECT3DSURFACE9 pInSurface = NULL;
 	D3DSURFACE_DESC surInDesc;
-	m_pInTexture->GetSurfaceLevel(0, &pInSurface);
-	pInSurface->GetDesc(&surInDesc);
+	m_pInTexture->GetLevelDesc(0, &surInDesc);
+	
 	IplImage* pImg = NULL;
 	if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
 	{
@@ -148,6 +148,7 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	}
 	else if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
 	{
+		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
 		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
 		LPDIRECT3DSURFACE9 pInputSurface = NULL;
 		D3DSURFACE_DESC inputDesc;
@@ -358,10 +359,18 @@ HRESULT D3DTransformFilterBase::DoTransform(IMediaSample *pIn, IMediaSample *pOu
 	hr = ResetRenderTarget();
 	if (FAILED(hr))
 		return S_FALSE;
-	hr = CopyRenderTarget2OutputTexture();
-	if (FAILED(hr))
-		return S_FALSE;
-	hr = CopyOutputTexture2OutputData(pOut, pOutType, true);
+	if (IsEqualGUID(*pOutType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutType->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		hr = CopyRenderTarget2OutputData(pOut, pOutType);
+	}
+	else
+	{
+		hr = CopyRenderTarget2OutputTexture();
+		if (FAILED(hr))
+			return S_FALSE;
+		hr = CopyOutputTexture2OutputData(pOut, pOutType, true);
+	}
+
 	return S_OK;
 }
 HRESULT D3DTransformFilterBase::CreateTextures(UINT w, UINT h)

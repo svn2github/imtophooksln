@@ -70,8 +70,10 @@ HRESULT HomoWarpFilter::ReceiveInput0(IMediaSample *pSample, const IPin* pReceiv
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr;
 	// Set up the output sample
-
-	hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(), &pOutSample);
+	IPin* pConnectPin = GetConnectedOutputPin();
+	if (pConnectPin == NULL)
+		return S_FALSE;
+	hr = InitializeOutputSample(pSample, pReceivePin, pConnectPin, &pOutSample);
 
 	if (FAILED(hr)) {
 		return hr;
@@ -299,12 +301,27 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 		{
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
 			initD3D(desc->Width, desc->Height);
+			return S_OK;
+		}
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			IDirect3DDevice9* pDevice = NULL;
+			m_pInputPins[0]->QueryD3DDevice(pDevice);
+			if (pDevice == NULL)
+				return S_FALSE;
+			initD3D(desc->Width, desc->Height, pDevice);
+			pDevice->Release();
+			pDevice = NULL;
+			return S_OK;
 		}
 		else
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 			initD3D(bitHeader.biWidth, bitHeader.biHeight);
+			return S_OK;
 		}
 	}
 	if (direction == PINDIR_OUTPUT && m_pOutputPins.size() > 1)
@@ -318,6 +335,7 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 		}
 		return S_OK;
 	}
+	return S_OK;
 }
 
 HRESULT HomoWarpFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
@@ -416,15 +434,9 @@ HRESULT HomoWarpFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOut
 
 HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
-	if (iPosition < 0) {
-		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) { // WATCH OUT !!
-		return VFW_S_NO_MORE_ITEMS;
-	}
 	if (m_pInputPins.size() <= 0)
 	{
-		return VFW_S_NO_MORE_ITEMS;
+		return S_FALSE;
 	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
 	{
@@ -434,16 +446,32 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 	}
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
-		CMediaType mt;
-		mt.SetType(&GUID_D3DMEDIATYPE);
-		mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
-		mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
-		D3DSURFACE_DESC desc;
-		m_pOutTexture->GetLevelDesc(0, &desc);
-		mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
-		mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
-		*pMediaType = mt;
-		return S_OK;
+		if (iPosition == 0)
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pRenderTarget->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 1)
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
 	}
 	return VFW_S_NO_MORE_ITEMS;
 }
@@ -474,6 +502,11 @@ bool HomoWarpFilter::IsAcceptedType(const CMediaType *pmt)
 	}
 	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
 		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		return true;
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
+		IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
 	{
 		return true;
 	}
@@ -672,16 +705,74 @@ bool HomoWarpFilter::LoadConfigFromFile(WCHAR* path)
 	}
 	return true;
 }
-LPDIRECT3DTEXTURE9 HomoWarpFilter::GetInTexture()
+IplImage* HomoWarpFilter::GetInIplmage()
 {
-	return m_pInTexture;
+	if (m_pD3DDisplay == NULL)
+		return NULL;
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	if (pDevice == NULL)
+		return NULL;
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+	{
+		return NULL;
+	}
+	CAutoLock lck0(pD3DCS);
+	CAutoLock lck(&m_csInTexture);
+	HRESULT hr = S_OK;
+	D3DSURFACE_DESC inDesc;
+	m_pInTexture->GetLevelDesc(0, &inDesc);
+
+	IplImage* cvImg = NULL, *d3dImg = NULL;
+	LPDIRECT3DTEXTURE9 pTmpTexture = NULL;
+	IDirect3DSurface9* pTmpSurface = NULL;
+	IDirect3DSurface9* pInSurface = NULL;
+	hr = D3DXCreateTexture(pDevice, inDesc.Width, inDesc.Height, 
+		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &pTmpTexture);
+	if (FAILED(hr))
+		return NULL;
+	hr = pTmpTexture->GetSurfaceLevel(0, &pTmpSurface);
+	if (FAILED(hr))
+		return NULL;
+	hr = m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+	hr = D3DXLoadSurfaceFromSurface(pTmpSurface, NULL, NULL, pInSurface, NULL, NULL,
+		D3DX_FILTER_POINT, 0);
+	D3DLOCKED_RECT rect;
+	hr = pTmpSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+	cvImg = cvCreateImage(cvSize(inDesc.Width, inDesc.Height), 8, 4);
+	d3dImg = cvCreateImageHeader(cvSize(inDesc.Width, inDesc.Height), 8, 4);
+	d3dImg->imageData = (char*)rect.pBits;
+	cvCopyImage(d3dImg, cvImg);
+	if (d3dImg != NULL)
+	{
+		cvReleaseImageHeader(&d3dImg);
+		d3dImg = NULL;
+	}
+	if (pInSurface != NULL)
+	{
+		pInSurface->Release();
+		pInSurface = NULL;
+	}
+	if (pTmpSurface != NULL)
+	{
+		pTmpSurface->Release();
+		pTmpSurface = NULL;
+	}
+	if (pTmpTexture != NULL)
+	{
+		pTmpTexture->Release();
+		pTmpTexture = NULL;
+	}
+
+	return cvImg;
 }
-CCritSec* HomoWarpFilter::GetCSInTexture()
+CCritSec* HomoWarpFilter::GetD3DCS()
 {
-	return &m_csInTexture;
+	CCritSec* cs = NULL;
+	this->QueryD3DDeviceCS(NULL, cs);
+	return cs;
 }
-
-
 HRESULT HomoWarpFilter::SaveToFile(WCHAR* path)
 {
 	if (this->SaveConfigToFile(path))
@@ -709,6 +800,41 @@ HRESULT HomoWarpFilter::GetName(WCHAR* name, UINT szName)
 	{
 		filterInfo.pGraph->Release();
 		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
+}
+
+HRESULT HomoWarpFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	outDevice = m_pD3DDisplay->GetD3DDevice();
+	if (outDevice != NULL)
+	{
+		outDevice->AddRef();
+	}
+	return S_OK;
+}
+
+HRESULT HomoWarpFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	if (m_pD3DDisplay == NULL || m_pInputPins.size() <= 0 || m_pInputPins[0] == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay->IsDeviceFromOther())
+	{
+		IDXBasePin* pDXInPin = NULL;
+		m_pInputPins[0]->QueryInterface(IID_IDXBasePin, (void**)&pDXInPin);
+		if (pDXInPin == NULL)
+			return S_FALSE;
+		pDXInPin->QueryD3DDeviceCS(cs);
+		pDXInPin->Release();
+		pDXInPin = NULL;
+		return S_OK;
+	}
+	else
+	{
+		cs = &m_csD3DDisplay;
+		return S_OK;
 	}
 	return S_OK;
 }
