@@ -452,6 +452,7 @@ MS3DDisplay::MS3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : MSEven
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
 	m_texW = 0; m_texH = 0; 
+	m_bDeviceFromOthers = false;
 	RegisterWndClass(GetModule());
 	
 	CreateD3DWindow(rtWidth, rtHeight);
@@ -468,6 +469,8 @@ MS3DDisplay::MS3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight)
 	m_hDisplayWnd = NULL;
 	m_hRenderThread = 0;
 	m_pEffect = NULL;
+	m_texW = 0; m_texH = 0; 
+	m_bDeviceFromOthers = true;
 	CreateTexture(rtWidth, rtHeight);
 	InitDevice(pDevice, rtWidth, rtHeight);
 	if (D3DDEVICELOST == 0)
@@ -603,11 +606,21 @@ MS3DDisplay::~MS3DDisplay()
 		delete m_pCamera;
 		m_pCamera = NULL;
 	}
+	
 	if (m_hDisplayWnd != 0)
 	{
-		::DestroyWindow(m_hDisplayWnd);
-		m_hDisplayWnd = 0;
+		if (!m_bDeviceFromOthers)
+		{
+			::DestroyWindow(m_hDisplayWnd);
+			m_hDisplayWnd = 0;
+		}
+		else
+		{
+			::ShowWindow(m_hDisplayWnd, FALSE);
+			m_hDisplayWnd = 0;
+		}
 	}
+	
 	vector<MS3DDisplay*>::iterator thisIter = ::find(m_pAllInstances.begin(), m_pAllInstances.end(), this);
 	if (thisIter != m_pAllInstances.end())
 	{

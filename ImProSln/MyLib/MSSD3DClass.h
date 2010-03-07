@@ -376,7 +376,7 @@ protected:
 	virtual HRESULT OnActivateApp();
 
 private:
-	
+	bool m_bDeviceFromOthers;
 	int m_texW, m_texH; //Used for reCreate Texture when device lost.
 	HWND m_hDisplayWnd;
 	HANDLE m_hRenderThread;

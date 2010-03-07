@@ -175,16 +175,14 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 
 void DXRenderFilter::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
-	if (!IsWindowVisible(GetD3DWnd()));
+	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	{
-		EnableWindow(GetD3DWnd(), TRUE);
+		CAutoLock lck(&m_csD3DDisplay);
+		m_pD3DDisplay->SetTexture(m_pInTexture);
+		m_pD3DDisplay->Render();
+		m_pD3DDisplay->SetTexture(NULL);
 	}
-	LPDIRECT3DTEXTURE9 pInputTexture = NULL;
-	((CMediaSample*)pMediaSample)->GetPointer((BYTE**)&pInputTexture);
-	if (pInputTexture != NULL)
-	{
-		m_pD3DDisplay->Render(pInputTexture);
-	}
+
 	return ;
 }
 
