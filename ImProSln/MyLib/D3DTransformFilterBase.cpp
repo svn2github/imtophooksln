@@ -196,7 +196,7 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 			hr = E_FAIL;
 		}
 	}
-	if (bFlipY)
+	if (bFlipY && !IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
 	{
 		D3DLOCKED_RECT surRect;
 		pInSurface->LockRect(&surRect, NULL, 0);
