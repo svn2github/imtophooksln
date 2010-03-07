@@ -4,7 +4,7 @@ package impro
 	
 	public class Setting
 	{
-		public static const DEBUG:Boolean = true;
+		public static const DEBUG:Boolean = false;
 		
 		// this is for GEControl to communicate with googleEarth via a socket server
 		public static var ServerIP:String = "192.168.1.6";
@@ -21,9 +21,10 @@ package impro
 //				new IMView(0, 1024, 0, 1024, 768)	// high relosution 1
 //				);
 
-		public static var LRes:IMView = new IMView(-1, 0, 0, 600, 1024);		
+		public static var LRes:IMView = new IMView("lres", 0, 0, 400, 600);		
 		public static var HRes:Array = new Array(
-				new IMView(0, 600, 0, 600, 1024)	// high relosution 1
+				new IMView("hres1", 400, 0, 400, 600)	// high relosution 1
+				,new IMView("hres2", 800, 0, 400, 600)	// high relosution 1
 				);
 
 	}

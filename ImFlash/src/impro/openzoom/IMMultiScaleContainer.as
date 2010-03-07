@@ -47,6 +47,9 @@ import flash.events.Event;
 import flash.geom.Point;
 import flash.geom.Rectangle;
 
+import impro.Setting;
+import impro.googlemap.ViewportControl;
+
 import org.openzoom.flash.core.openzoom_internal;
 import org.openzoom.flash.events.ViewportEvent;
 import org.openzoom.flash.net.ILoaderClient;
@@ -64,8 +67,6 @@ import org.openzoom.flash.viewport.IViewportConstraint;
 import org.openzoom.flash.viewport.IViewportController;
 import org.openzoom.flash.viewport.IViewportTransformer;
 import org.openzoom.flash.viewport.NormalizedViewport;
-
-import impro.Setting;
 
 use namespace openzoom_internal;
 
@@ -89,14 +90,13 @@ public final class IMMultiScaleContainer extends Sprite
 //    private static const DEFAULT_VIEWPORT_WIDTH:Number = 600
 //    private static const DEFAULT_VIEWPORT_HEIGHT:Number = 450
 
-    private static const DEFAULT_SCENE_WIDTH:Number = 24000 * 5.2
-    private static const DEFAULT_SCENE_HEIGHT:Number = DEFAULT_SCENE_WIDTH
+    public static const DEFAULT_SCENE_WIDTH:Number = 24000 * 5.2;
+    public static const DEFAULT_SCENE_HEIGHT:Number = DEFAULT_SCENE_WIDTH
     													 * Setting.LRes.stageHeight
-    													 / Setting.LRes.stageHeight;
-//    private static const DEFAULT_SCENE_HEIGHT:Number = 18000 * 5.2
-    private static const DEFAULT_SCENE_BACKGROUND_COLOR:uint = 0x333333
-    
-    private static const DEFAULT_SCENE_BACKGROUND_ALPHA:Number = 0
+    													 / Setting.LRes.stageWidth;
+//    public static const DEFAULT_SCENE_HEIGHT:Number = 18000 * 5.2;
+    private static const DEFAULT_SCENE_BACKGROUND_COLOR:uint = 0x333333;    
+    private static const DEFAULT_SCENE_BACKGROUND_ALPHA:Number = 0;
 
     //--------------------------------------------------------------------------
     //
@@ -160,6 +160,15 @@ public final class IMMultiScaleContainer extends Sprite
     public function get viewport():NormalizedViewport
     {
         return _viewport
+    }
+    
+    private var _viewportControl:ViewportControl;
+    public function get viewportControl():ViewportControl
+    {
+        return _viewportControl
+    }
+    public function set viewportControl(value:ViewportControl):void{
+    	_viewportControl = value;
     }
 
     //----------------------------------

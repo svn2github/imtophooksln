@@ -22,7 +22,7 @@
 		public function NUIPad():void
 		{		
 			//--------Connect to TUIO-----------------
-	            TUIO.init(new IMView(-1, 0, 0, 1024, 768), this, 'localhost', 3000, '', Setting.DEBUG);
+	            TUIO.init(new IMView("-1", 0, 0, 1024, 768), this, 'localhost', 3000, "", Setting.DEBUG);
 	//            TUIO.init(this,'localhost',3000,'',true);
 	            trace("Application Initialized");
 	        //----------------------------------------

@@ -75,7 +75,7 @@ package {
 		private function addMultiResMap():void{
 			// add low resolution views
 			var lres:IMView = Setting.LRes;
-			multiResMap = new MultiResMap(lres.id, 0, lres.stageWidth, lres.stageHeight, Setting.DEBUG);
+			multiResMap = new MultiResMap(0, 0, lres.stageWidth, lres.stageHeight, Setting.DEBUG);
 			// add high resolution views
 			for each (var view:IMView in Setting.HRes)
 				multiResMap.addViewport(view.id, view.stageX, view.stageY, view.stageWidth, view.stageHeight) 

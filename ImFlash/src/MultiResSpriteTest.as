@@ -92,7 +92,7 @@ package
 			
 			multiResSprite.updateViewport();
 			
-			TUIO.init(new IMView(-2, 0, 0, 1366, 768), this, 'localhost', 3000, '', Setting.DEBUG);
+			TUIO.init(new IMView("-2", 0, 0, 1366, 768), this, 'localhost', 3000, '', Setting.DEBUG);
 		}
 		
 		public function close():void{

@@ -122,7 +122,7 @@ package impro.googlemap
 			getViewport(he.ID).update();
 		}
 		
-		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number):MapViewport{			
+		public function addViewport(id:String, x:Number, y:Number, width:Number, height:Number):MapViewport{			
  			var viewport:MapViewport = new MapViewport(map, x, y, width, height, DEBUG);
 			addChild(viewport);			
 			viewportDict[id] = viewport;
@@ -154,7 +154,10 @@ package impro.googlemap
 			geControl.x = lresX;
 			geControl.y = lresY;
 			
-			var debugPoint:Point = map.fromLatLngToViewport(new LatLng(lat, lng));
+			var latlng:LatLng = map.fromViewportToLatLng(new Point(geControl.x, geControl.y));
+			var latlng2:LatLng = new LatLng(lat, lng);
+			var debugPoint:Point = map.fromLatLngToViewport(latlng2);
+			trace(latlng + " == " + latlng2);
 			
 //			var debugPoint:Point = map.fromLatLngToPoint(new LatLng(lng, lat));
 			debugPoint.x -= geControl.x;

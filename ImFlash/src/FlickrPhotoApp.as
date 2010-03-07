@@ -72,7 +72,7 @@ package {
 			addChild(multiResSprite);
 			
 			// add keyborad widget
-			TUIO.init(new IMView(-2, 0, 0, flickrPlateWidth, flickrPlateHeight), flickrPlate, 'localhost', 3000, '', Setting.DEBUG );
+			TUIO.init(new IMView("-2", 0, 0, flickrPlateWidth, flickrPlateHeight), flickrPlate, 'localhost', 3000, '', Setting.DEBUG );
 			Multitouchable.touchMoveCallback = touchMoveCallback;
 //			Multitouchable.touchDownCallback = touchDownCallback;
 //			Multitouchable.touchUpCallback = touchUpCallback;

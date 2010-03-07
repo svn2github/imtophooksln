@@ -62,7 +62,7 @@ package impro.multiview
 				renderTargetMask.graphics.drawRect(0, 0, renderTargetWidth, renderTargetHeight);
 				renderTargetMask.graphics.endFill();
 				addChild(renderTargetMask);				
-				addViewport(-1, 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);				
+				addViewport("-1", 0, 0, lresWidth, lresHeight, renderTargetWidth/2, renderTargetHeight/2, renderTargetWidth, renderTargetHeight);				
 			}
 			
 			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
@@ -79,7 +79,7 @@ package impro.multiview
 			getViewport(he.ID).update();
 		}		
 						
-		public function addViewport(id:Number, x:Number, y:Number, width:Number, height:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100):void{			
+		public function addViewport(id:String, x:Number, y:Number, width:Number, height:Number, vpCx:Number = 50, vpCy:Number = 50, vpWidth:Number = 100, vpHeight:Number = 100):void{			
 			var viewport:IMViewport = new IMViewport(renderTarget, renderTargetWidth, renderTargetHeight, x, y, width, height, vpCx, vpCy, vpWidth, vpHeight, DEBUG);			
 			viewportDict[id] = viewport; 
 			addChild(viewport);

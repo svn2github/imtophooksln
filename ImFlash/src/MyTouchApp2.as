@@ -22,7 +22,7 @@ package
 		public function MyTouchApp2()
 		{
 			//--------connect to TUIO-----------------
-			TUIO.init(new IMView(-1, 0, 0, 1024, 768) , this, 'localhost',3000,'',true);
+			TUIO.init(new IMView("-1", 0, 0, 1024, 768) , this, 'localhost',3000,'',true);
 			trace("MyTouchApp Initialized");
 			//----------------------------------------        
 			
