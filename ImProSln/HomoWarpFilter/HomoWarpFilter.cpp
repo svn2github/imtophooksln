@@ -370,7 +370,11 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 				((HomoD3DDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS);
 			}
 		}
-		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType(), m_bFlipY);
+		{
+			CAutoLock lck(&m_csD3DDisplay);
+			((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = m_bFlipY;
+		}
+		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType());
 	}
 	return S_OK;
 }

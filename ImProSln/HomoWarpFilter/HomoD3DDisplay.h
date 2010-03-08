@@ -5,8 +5,11 @@ class HomoD3DDisplay :
 	public MS3DDisplay
 {
 protected:
+	
+
 	D3DXMATRIX m_matTTS;
 public:
+	BOOL m_bFlipY;
 	virtual BOOL SetMatTTS(const D3DXMATRIX* mat);
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL Render();

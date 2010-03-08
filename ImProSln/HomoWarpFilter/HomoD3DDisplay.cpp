@@ -4,12 +4,14 @@
 HomoD3DDisplay::HomoD3DDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight) : 
 MS3DDisplay(pD3D, rtWidth, rtHeight)
 {
+	m_bFlipY = FALSE;
 	D3DXMatrixIdentity(&m_matTTS);
 	GetEffect();
 }
 HomoD3DDisplay::HomoD3DDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHeight) :
 MS3DDisplay(pDevice, rtWidth, rtHeight)
 {
+	m_bFlipY = FALSE;
 	D3DXMatrixIdentity(&m_matTTS);
 	GetEffect();
 }
@@ -38,7 +40,7 @@ BOOL HomoD3DDisplay::Render()
 	UINT iPass, cPasses = 0;
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
-		
+		hr = pEffect->SetBool("bFlipY", m_bFlipY);
 		hr = pEffect->SetMatrix("g_matTexTransform", &m_matTTS);
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
 		hr = pEffect->SetTechnique("technique0");

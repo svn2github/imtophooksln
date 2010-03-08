@@ -458,8 +458,18 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 		m_pEditImage = cvCloneImage(cvInImg);
 		m_pEditImage_bk = cvCloneImage(cvInImg);
 	}
-	cvCopy(cvInImg, m_pEditImage);
+	bool bFlipY = m_pFilter->GetIsFlipY();
+	
+	if (bFlipY)
+	{
+		cvFlip(cvInImg, m_pEditImage, 0 );
+	}
+	else
+	{
+		cvCopy(cvInImg, m_pEditImage);
+	}
 	cvCopy(m_pEditImage, m_pEditImage_bk);
+	
 	cvNamedWindow("HomoWarp Edit", 0);
 	cvShowImage("HomoWarp Edit", m_pEditImage);
 	cvSetMouseCallback( "HomoWarp Edit", MouseCallback, this);

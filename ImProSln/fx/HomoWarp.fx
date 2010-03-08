@@ -1,3 +1,4 @@
+bool bFlipY = false;
 
 float4x4 g_matTexTransform   
 <
@@ -26,7 +27,12 @@ sampler2D g_Sampler = sampler_state {
 }; 
 
 float4 mainPS(VSOUT vin) : COLOR {
-	float4 uv = mul(float4(vin.UV , 1.0, 1.0), g_matTexTransform );
+	float2 preUV = vin.UV;
+	if (bFlipY)
+	{
+		preUV.y = 1- preUV.y;
+	} 
+	float4 uv = mul(float4(preUV , 1.0, 1.0), g_matTexTransform );
 	
 	uv.x /= uv.z;
 	uv.y /= uv.z;

@@ -285,6 +285,7 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 		if (FAILED(hr))
 			return S_FALSE;
 		{
+			CAutoLock lck0(&m_csD3DDisplay);
 			CAutoLock lck(&m_csARMarker);
 			ARMultiMarkerInfoT markerConfig;
 			memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
