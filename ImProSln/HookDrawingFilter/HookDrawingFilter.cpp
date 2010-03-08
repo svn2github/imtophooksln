@@ -154,19 +154,12 @@ HookDrawingFilter::HookDrawingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 {
 	m_hHookedWnd = 0;
 	m_hHookRecMsgWnd = 0;
-	m_HookThreadFPS = 60.0;
 
 	for (int i = 0; i <NUMHOOKPIN; i++)
 	{
 		m_bHookDirty[i] = FALSE;
 	}
-	m_bHookThreadDirty = FALSE;
-	m_pMaskVertexData = NULL;
-	for (int i =0; i < RENDERSTEP; i ++)
-		m_pHookThreadRenderTarget[i] = NULL;
-	m_pHookMaskTexture = NULL;
-	D3DXMatrixIdentity(&m_matTTS_region);
-	D3DXMatrixIdentity(&m_matTTS_warp);
+
 	RegisterHookWndClass(GetModule());
 
 }
@@ -194,24 +187,7 @@ HookDrawingFilter::~HookDrawingFilter()
 		m_pAddRenderTarget[i] = NULL;
 	}
 	m_pAddRenderTarget.clear();
-	if (m_pMaskVertexData != NULL)
-	{
-		delete m_pMaskVertexData;
-		m_pMaskVertexData = NULL;
-	}
-	for (int i =0; i< RENDERSTEP; i++)
-	{
-		if (m_pHookThreadRenderTarget[i] != NULL)
-		{
-			m_pHookThreadRenderTarget[i]->Release();
-			m_pHookThreadRenderTarget[i] = NULL;
-		}
-	}
-	if (m_pHookMaskTexture != NULL)
-	{
-		m_pHookMaskTexture->Release();
-		m_pHookMaskTexture = NULL;
-	}
+	
 }
 
 CUnknown *WINAPI HookDrawingFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -654,19 +630,7 @@ HRESULT HookDrawingFilter::initAddTextures(UINT w, UINT h)
 		m_pAddRenderTarget.push_back(pAddRenderTarget);
 		
 	}
-	for (int i =0 ; i<RENDERSTEP; i++)
-	{
-		if (m_pHookThreadRenderTarget[i] != NULL)
-		{
-			m_pHookThreadRenderTarget[i]->Release();
-			m_pHookThreadRenderTarget[i] = NULL;
-		}
-	}
-	for (int i =0 ; i<RENDERSTEP; i++)
-	{
-		hr = D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
-			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT, &m_pHookThreadRenderTarget[i]);
-	}
+
 	return S_OK;
 }
 HRESULT HookDrawingFilter::CreateInTexture(UINT w, UINT h)
@@ -802,18 +766,6 @@ HWND HookDrawingFilter::GetHookedWindow()
 }
 BOOL HookDrawingFilter::SetHookedWindow(HWND hwnd)
 {
-	if (!ThreadExists())
-	{
-		/*if (m_pD3DDisplay != NULL)
-		{
-			FILTER_INFO filterInfo;
-			this->QueryFilterInfo(&filterInfo);
-			HWND displayWnd = m_pD3DDisplay->GetDisplayWindow();
-			SetWindowText(displayWnd, filterInfo.achName);
-			m_pD3DDisplay->ShowDisplayWnd(TRUE);
-		}*/
-		//HookThreadActive();
-	}
 	m_hHookedWnd = hwnd;
 	return TRUE;
 }
@@ -909,10 +861,7 @@ BOOL HookDrawingFilter::SetSourceResolution(UINT resW, UINT resH)
 void HookDrawingFilter::onHookedWindowDestory()
 {
 	m_hHookedWnd = NULL;
-	if (ThreadExists())
-	{
-		HookThreadInactive();
-	}
+
 	HOOKINJECT::ClearBitBltCmd();
 }
 void HookDrawingFilter::onBitBltCalled()
@@ -952,7 +901,7 @@ void HookDrawingFilter::onBitBltCalled()
 		int dcH = rect.bottom - rect.top;
 
 		DrawBitBlt(myhdc, x, y, width, height, dcW, dcH, hdcSrc, x1, y1, width, height, rop);
-		SetHookThreadDirty(TRUE);
+		
 		for (int i =0; i < NUMHOOKPIN; i++)
 			SetHookDirty(i, TRUE);
 		
@@ -1336,222 +1285,4 @@ BOOL HookDrawingFilter::SetHookDirty(int idx, BOOL v)
 	m_bHookDirty[idx] = v;
 	return TRUE;
 }
-BOOL HookDrawingFilter::GetHookThreadDirty()
-{
-	CAutoLock lck(&m_csHookThreadDirty);
-	return m_bHookThreadDirty;
-}
-BOOL HookDrawingFilter::SetHookThreadDirty(BOOL v)
-{
-	CAutoLock lck(&m_csHookThreadDirty);
-	m_bHookThreadDirty = v;
-	return TRUE;
-}
 
-HRESULT HookDrawingFilter::HookThreadActive(void)
-{
-	CAutoLock lock(pStateLock());
-	HRESULT hr = S_OK;
-	ASSERT(!ThreadExists());
-
-	// start the thread
-	if (!Create()) {
-		return E_FAIL;
-	}
-
-	// Tell thread to initialize. If OnThreadCreate Fails, so does this.
-	hr = HookThreadInit();
-	if (FAILED(hr))
-		return hr;
-
-	return HookThreadPause();
-	
-}
-HRESULT HookDrawingFilter::HookThreadInactive(void)
-{
-	CAutoLock lock(pStateLock());
-	HRESULT hr = S_OK;
-
-	if (ThreadExists()) {
-		hr = HookThreadStop();
-
-		if (FAILED(hr)) {
-			return hr;
-		}
-
-		hr = HookThreadExit();
-		if (FAILED(hr)) {
-			return hr;
-		}
-
-		Close();	// Wait for the thread to exit, then tidy up.
-	}
-
-	return S_OK;
-}
-DWORD HookDrawingFilter::ThreadProc(void)
-{
-
-	HRESULT hr;  // the return code from calls
-	Command com;
-
-	do {
-		com = GetRequest();
-		if (com != CMD_INIT) {
-			DbgLog((LOG_ERROR, 1, TEXT("Thread expected init command")));
-			Reply((DWORD) E_UNEXPECTED);
-		}
-	} while (com != CMD_INIT);
-
-	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread initializing")));
-
-	// Initialisation suceeded
-	Reply(NOERROR);
-
-	Command cmd;
-	do {
-		cmd = GetRequest();
-
-		switch (cmd) {
-
-	case CMD_EXIT:
-		Reply(NOERROR);
-		break;
-
-	case CMD_RUN:
-		DbgLog((LOG_ERROR, 1, TEXT("CMD_RUN received before a CMD_PAUSE???")));
-		// !!! fall through???
-
-	case CMD_PAUSE:
-		Reply(NOERROR);
-		DoHookProcessingLoop();
-		break;
-
-	case CMD_STOP:
-		Reply(NOERROR);
-		break;
-
-	default:
-		DbgLog((LOG_ERROR, 1, TEXT("Unknown command %d received!"), cmd));
-		Reply((DWORD) E_NOTIMPL);
-		break;
-		}
-	} while (cmd != CMD_EXIT);
-
-
-	DbgLog((LOG_TRACE, 1, TEXT("CMuxTransformStream worker thread exiting")));
-	return 0;
-}
-
-HRESULT HookDrawingFilter::DoHookProcessingLoop(void) {
-
-	Command com;
-	HRESULT hr = S_OK;
-	do {
-		DWORD currTime = 0;
-		DWORD lastTime = 0;
-		DWORD elapsedTime = 0;
-		DWORD idealElapsedTime = 1.0 / m_HookThreadFPS * 1000.0;
-		while (!CheckRequest(&com)) {
-			currTime = timeGetTime();
-			elapsedTime = currTime - lastTime;
-			if (elapsedTime < idealElapsedTime )
-			{
-				//Sleep(1);
-				continue;
-			}
-			lastTime = currTime;
-
-			hr = DoHookRender();
-		}
-
-		// For all commands sent to us there must be a Reply call!
-
-		if (com == CMD_RUN || com == CMD_PAUSE) {
-			Reply(NOERROR);
-		} else if (com != CMD_STOP) {
-			Reply((DWORD) E_UNEXPECTED);
-			DbgLog((LOG_ERROR, 1, TEXT("Unexpected command!!!")));
-		}
-	} while (com != CMD_STOP);
-
-	return S_FALSE;
-}
-HRESULT HookDrawingFilter::DoHookRender()
-{
-	CAutoLock lck0(&m_csD3DDisplay);
-	CAutoLock lck1(&m_csInTexture);
-	if (m_pD3DDisplay == NULL || m_pInTexture == NULL )
-		return S_FALSE;
-	for (int i =0; i < RENDERSTEP; i++)
-	{
-		if (m_pHookThreadRenderTarget[i] == NULL)
-		{
-			return S_FALSE;
-		}
-	}
-	HRESULT hr = S_OK;
-	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
-	IDirect3DSurface9* pBackBuffer = NULL;
-	IDirect3DSurface9* pHookRT[RENDERSTEP] = {NULL};
-	for (int i =0; i < RENDERSTEP; i++ )
-	{
-		m_pHookThreadRenderTarget[i]->GetSurfaceLevel(0, &pHookRT[i]);
-	}
-
-	hr = pDevice->GetRenderTarget(0, &pBackBuffer);
-	//Render Step1: clip region
-	pDevice->SetRenderTarget(0, pHookRT[0]);
-	{
-		CAutoLock lck2(&m_csHookRenderState);
-		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
-		((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::POINT;
-		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS_region);
-	}
-	m_pD3DDisplay->SetTexture(m_pInTexture);
-	m_pD3DDisplay->Render();
-	//Render Step2: add Mask
-	bool bRenderMask = false;
-	{	
-		CAutoLock lck3(&m_csHookRenderState);
-		if (m_pHookMaskTexture != NULL)
-		{
-			bRenderMask = true;
-			pDevice->SetRenderTarget(0, pHookRT[1]);
-			((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
-			((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::POINT;
-			((HookDrawingDisplay*)m_pD3DDisplay)->SetMaskTexture(m_pHookMaskTexture);
-			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[0]);
-			((HookDrawingDisplay*)m_pD3DDisplay)->RenderMask();
-		}
-	}
-
-	//Render Step3: Warp
-	{
-		CAutoLock lck3(&m_csHookRenderState);
-		if (bRenderMask)
-		{
-			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[1]);
-		}
-		else
-		{
-			((HookDrawingDisplay*)m_pD3DDisplay)->SetTexture(m_pHookThreadRenderTarget[0]);
-		}
-		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = true;
-		((HookDrawingDisplay*)m_pD3DDisplay)->m_sampleType = HookDrawingDisplay::SampleType::LINEAR;
-		pDevice->SetRenderTarget(0, pBackBuffer);
-		((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(&m_matTTS_warp);
-		m_pD3DDisplay->Render();
-
-		((HookDrawingDisplay*)m_pD3DDisplay)->m_bDrawFPS = false;
-
-	}
-	pBackBuffer->Release();
-	pBackBuffer = NULL;
-	for (int i =0; i < RENDERSTEP; i++ )
-	{
-		pHookRT[i]->Release();
-		pHookRT[i] = NULL;
-	}
-	return S_OK;
-}

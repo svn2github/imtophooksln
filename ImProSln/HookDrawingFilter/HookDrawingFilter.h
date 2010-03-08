@@ -52,7 +52,7 @@ public:
 
 class HookDrawingFilter :
 	public CMuxTransformFilter, public IHookDrawingFilter, public D3DTransformFilterBase
-	,public ISpecifyPropertyPages, public CMSPersist, public CAMThread
+	,public ISpecifyPropertyPages, public CMSPersist
 {
 
 public:
@@ -85,21 +85,7 @@ public:
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
 
-	//from CAMThread
 
-	HRESULT HookThreadActive(void);    // Starts up the worker thread
-	HRESULT HookThreadInactive(void);  // Exits the worker thread.
-	enum Command {CMD_INIT, CMD_PAUSE, CMD_RUN, CMD_STOP, CMD_EXIT};
-	HRESULT HookThreadInit(void) { return CallWorker(CMD_INIT); }
-	HRESULT HookThreadExit(void) { return CallWorker(CMD_EXIT); }
-	HRESULT HookThreadRun(void) { return CallWorker(CMD_RUN); }
-	HRESULT HookThreadPause(void) { return CallWorker(CMD_PAUSE); }
-	HRESULT HookThreadStop(void) { return CallWorker(CMD_STOP); }
-	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
-	BOOL    CheckRequest(Command *pCom) { return CAMThread::CheckRequest( (DWORD *) pCom); }
-	virtual DWORD ThreadProc(void); // the thread function
-	HRESULT DoHookProcessingLoop(void);
-	HRESULT DoHookRender();
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -128,19 +114,10 @@ protected:
 	CCritSec m_csFillBuffer;
 	CCritSec m_csAddTextures[NUMHOOKPIN];
 	CCritSec m_csHookDirty[NUMHOOKPIN];
-	CCritSec m_csHookThreadDirty;
 	CCritSec m_csHookRenderState;
 	BOOL m_bHookDirty[NUMHOOKPIN];
-	BOOL m_bHookThreadDirty;
 
-	D3DXMATRIX m_matTTS_region;
-	D3DXMATRIX m_matTTS_warp;
-	MaskVertexData* m_pMaskVertexData;
-	LPDIRECT3DTEXTURE9 m_pHookMaskTexture;
-	LPDIRECT3DTEXTURE9 m_pHookThreadRenderTarget[RENDERSTEP];
-	
 
-	float m_HookThreadFPS;
 	vector<LPDIRECT3DTEXTURE9> m_pAddOutTexture;
 	vector<LPDIRECT3DTEXTURE9> m_pAddRenderTarget;
 	BOOL CopyInTexture2OutTexture(int idx);
@@ -153,8 +130,6 @@ protected:
 
 	BOOL GetHookDirty(int idx);
 	BOOL SetHookDirty(int idx, BOOL v);
-	BOOL GetHookThreadDirty();
-	BOOL SetHookThreadDirty(BOOL v);
 	
 	static HRESULT CALLBACK OnBeforeDisplayResetDevice(IDirect3DDevice9 * pd3dDevice, 
 		void* pUserContext);
