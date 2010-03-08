@@ -299,16 +299,17 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			return S_FALSE;
 
 		CMediaType mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-		if (IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		if (IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			hr = CopyRenderTarget2OutputData(pSamp, &mt);	
+		}
+		else
 		{
 			hr = CopyRenderTarget2OutputTexture();	
 			if (FAILED(hr))
 				return S_FALSE;
 			hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
-		}
-		else
-		{
-			hr = CopyRenderTarget2OutputData(pSamp, &mt);	
+			
 		}
 	}
 	
