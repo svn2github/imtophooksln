@@ -1,7 +1,7 @@
 
 bool bFlipX = false;
 bool bFlipY = false;
-int g_sampleType = 1;
+int g_sampleType = 0;
 	 
 struct VSOUT {
     float4 pos	: POSITION;

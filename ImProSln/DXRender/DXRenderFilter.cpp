@@ -164,12 +164,21 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 {
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	{
-		CAutoLock lck(&m_csD3DDisplay);
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return S_FALSE;
+		CAutoLock lck(pD3DCS);
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		m_pD3DDisplay->Render();
 		m_pD3DDisplay->SetTexture(NULL);
 	}
-
+	/*HRESULT hr = S_OK;
+	int tid = GetCurrentThreadId();
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"d:\testRenderIn%d.jpg", tid);
+	hr = D3DXSaveTextureToFile(str, D3DXIFF_JPG, m_pInTexture, NULL);
+	*/
 	return S_OK;
 }
 
@@ -177,7 +186,11 @@ void DXRenderFilter::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	{
-		CAutoLock lck(&m_csD3DDisplay);
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return ;
+		CAutoLock lck(pD3DCS);
 		m_pD3DDisplay->SetTexture(m_pInTexture);
 		m_pD3DDisplay->Render();
 		m_pD3DDisplay->SetTexture(NULL);
@@ -312,7 +325,7 @@ HRESULT DXRenderFilter::LoadFromFile(WCHAR* path)
 		return false;
 	}
 	int bFlipX =0, bFlipY = 0, bDrawFPS = 0;
-	int sampleType = 1;
+	int sampleType = 0;
 	RECT rect;
 	memset(&rect, 0, sizeof(RECT));
 	BOOL isZoomed = FALSE;;

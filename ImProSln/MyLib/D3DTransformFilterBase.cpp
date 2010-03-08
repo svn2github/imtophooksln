@@ -173,6 +173,7 @@ HRESULT D3DTransformFilterBase::CopyInputImage2InputTexture(IMediaSample *pIn, c
 	}
 	else
 	{
+		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
 		BYTE* pInData = NULL;
 		hr = pIn->GetPointer(&pInData);
 		if (FAILED(hr))
@@ -228,7 +229,7 @@ HRESULT D3DTransformFilterBase::CopyRenderTarget2OutputData(IMediaSample *pOut, 
 	{
 		return S_FALSE;
 	}
-	CAutoLock lck(&m_csOutTexture);
+	CAutoLock lck(&m_csRenderTarget);
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 	GUID guidSubType = pOutMediaType->subtype;
 

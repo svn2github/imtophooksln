@@ -8,7 +8,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
-	m_sampleType = 1;
+	m_sampleType = 0;
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
@@ -27,7 +27,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT r
 	m_bDrawFPS = false;
 	m_bFlipX = false;
 	m_bFlipY = false;
-	m_sampleType = 1;
+	m_sampleType = 0;
 	m_pD3DFont = NULL;
 	hr = D3DXCreateFont(m_pDevice, 50, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
@@ -56,10 +56,11 @@ BOOL DXRenderDisplay::Render()
 	{
 		return FALSE;
 	}
-	m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+	HRESULT hr = S_OK;
+	hr = m_pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
 		D3DCOLOR_XRGB(50,50,50), 1.0f, 0 );
 	m_pDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
-	HRESULT hr;
+	
 	ID3DXEffect* pEffect = GetEffect();
 	if (pEffect == NULL)
 	{
@@ -68,6 +69,7 @@ BOOL DXRenderDisplay::Render()
 	
 	m_pCamera->CameraOn();
 	UINT iPass, cPasses = 0;
+
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
 		hr = pEffect->SetTexture("g_Texture", m_pTexture);
@@ -116,7 +118,7 @@ BOOL DXRenderDisplay::Render()
 				hr = m_pD3DFont->DrawTextW(NULL, str, -1, &rect, DT_NOCLIP | DT_LEFT | DT_TOP, D3DXCOLOR( 1.0f, 0.0f, 0.0f, 1.0f ));	
 			}
 		}
-		m_pDevice->EndScene();
+		hr = m_pDevice->EndScene();
 	}
 	m_pDevice->Present(NULL,NULL,NULL,NULL);
 	m_pCamera->CameraOff();
