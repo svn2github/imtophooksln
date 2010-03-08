@@ -9,8 +9,8 @@
 SyncFilter::SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Sync Filter"), 0, CLSID_SyncFilter)
 { 
-	Dirty =false ;
-
+	setDirty(false);
+	setBlock(false);
 }
 SyncFilter::~SyncFilter()
 {
@@ -121,7 +121,12 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr;
 	// Set up the output sample
-	hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(1), &pOutSample);
+	if(GetConnectedOutputPin(1)!= NULL){
+		hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(1), &pOutSample);
+	}
+	else if(GetConnectedOutputPin(2) != NULL){
+		hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(2), &pOutSample);
+	}
 	if (FAILED(hr)) {
 		return hr;
 	}
@@ -136,10 +141,18 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			if(Dirty == true){
+			if(getDirty() == true && GetConnectedOutputPin(1)!= NULL){
+				OutputDebugStringW(L"@@@@ BGDeliver ---->");
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSample);// Pin1 :: BG  only deliver in layout change
+				OutputDebugStringW(L"@@@@ BGDeliver <----");
+				setDirty(false);
 			}
-			hr = GetConnectedOutputPin(2)->Deliver(pOutSample);// Pin2 :: Render every frame deliver
+			if(GetConnectedOutputPin(2)!= NULL){
+				OutputDebugStringW(L"@@@@ RenderDeliver ---->");
+				hr = GetConnectedOutputPin(2)->Deliver(pOutSample);// Pin2 :: Render every frame deliver
+				OutputDebugStringW(L"@@@@ RenderDeliver <----");
+			}
+			setBlock(false);
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 		
@@ -155,8 +168,6 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		}
 	}
 	pOutSample->Release();
-	setDirty(false);
-	setBlock(false);
 
 	return S_OK;
 }
@@ -165,7 +176,6 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 
 CMuxTransformOutputPin* SyncFilter::GetConnectedOutputPin(int i )
 {
-	
 	if (m_pOutputPins[i]->IsConnected())
 	{
 		return m_pOutputPins[i];
@@ -286,7 +296,7 @@ HRESULT SyncFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 
 	else if (m_pInputPins.size() >= 1 && m_pInputPins[1] == pPin)    // dirty Pin
 	{
-		if (IsEqualGUID(*pmt->Type(), GUID_MyMediaSample) && 
+		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			(IsEqualGUID(GUID_ARLayoutConfigData, *pmt->Subtype()) ))
 			return NOERROR;
 
@@ -496,25 +506,27 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 
 HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
-	if (iPosition < 0) {
-		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) { // WATCH OUT !!
-		return VFW_S_NO_MORE_ITEMS;
-	}
+
 	if (m_pInputPins.size() <= 0)
 	{
-		return VFW_S_NO_MORE_ITEMS;
+		return S_FALSE;
 	}
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
+
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)    // camera pin output camera Image
 	{
+		if (iPosition < 0) {
+			return E_INVALIDARG;
+		}
+		if (iPosition >= 1) { 
+			return VFW_S_NO_MORE_ITEMS;
+		}
 		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
-
 		*pMediaType = inputMT;
 		return S_OK;
 	}
-	else if (m_pOutputPins.size() > 1 && m_pOutputPins[2] != NULL && m_pOutputPins[1] == pOutPin)
+
+	else if (m_pOutputPins.size() > 1 && m_pInputPins[2] != NULL && m_pOutputPins[1] == pOutPin)
 	{
 		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
@@ -522,7 +534,7 @@ HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMe
 		*pMediaType = inputMT;
 		return S_OK;
 	}
-	else if (m_pOutputPins.size() > 2 && m_pOutputPins[2] != NULL && m_pOutputPins[2] == pOutPin)
+	else if (m_pOutputPins.size() > 2 && m_pInputPins[2] != NULL && m_pOutputPins[2] == pOutPin)
 	{
 		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
 		long size = inputMT.GetSampleSize();
@@ -553,4 +565,18 @@ HRESULT SyncFilter::setBlock(bool isBlock){
 	CAutoLock lck(&locBlock);
 	Block = isBlock;
 	return S_OK;
+}
+
+//for implement D3DTransformFilterBase Method
+
+MS3DDisplay* SyncFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
+{
+	MS3DDisplay* newMS3DDisplay ;
+	return newMS3DDisplay;
+}
+
+MS3DDisplay* SyncFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
+{
+	MS3DDisplay* newMS3DDisplay ;
+	return newMS3DDisplay;
 }

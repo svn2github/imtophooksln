@@ -115,6 +115,7 @@ HRESULT CHomoWarpMFCPropertyPage::OnDisconnect(void)
 		m_pFilter->Release();
 		m_pFilter = NULL;
 	}
+	cvDestroyWindow("HomoWarp Edit");
 	return S_OK;
 }
 
@@ -460,7 +461,7 @@ void CHomoWarpMFCPropertyPage::OnBnClickedbtneditwnd()
 	}
 	bool bFlipY = m_pFilter->GetIsFlipY();
 	
-	if (bFlipY)
+	if (!bFlipY)
 	{
 		cvFlip(cvInImg, m_pEditImage, 0 );
 	}

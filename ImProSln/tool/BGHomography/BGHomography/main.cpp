@@ -1,7 +1,7 @@
 #include "BackGroundHomo.h"
 #define CALIBRATION true
-#define CAMWIDTH 640
-#define CAMHEIGHT 480
+#define CAMWIDTH 320
+#define CAMHEIGHT 240
 
 void main(){
 	BackGroundHomo* bg = new BackGroundHomo() ;
@@ -12,12 +12,12 @@ void main(){
 	CvCapture *capture;	
 	IplImage *frame;
 	IplImage * whiteBG = cvLoadImage("white.bmp",0);
-	IplImage * blackBG = cvLoadImage("black.bmp",0);
-	IplImage * tagBG = cvLoadImage("bg.bmp",0);
+	IplImage * blackBG = cvLoadImage("gray.bmp",0);
+	IplImage * tagBG = cvLoadImage("BG.jpg",0);
 	IplImage *binary_img = cvCreateImage(cvSize(CAMWIDTH,CAMHEIGHT),8,1);
-	cvResize(tagBG,bg->backgroundImg );
+	cvResize(tagBG,bg->backgroundImg);
 
-	capture =cvCaptureFromCAM(0);
+	capture =cvCaptureFromCAM(1);
 	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, CAMWIDTH);
 	cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, CAMHEIGHT); 
 	cvNamedWindow("Webcam",0);
@@ -29,7 +29,7 @@ void main(){
 			cvCvtColor( frame, binary_img, CV_RGB2GRAY );
 			cvShowImage("Webcam",frame);
 			cvNamedWindow("bgCali");
-			cvMoveWindow("bgCali",1580,0);
+			cvMoveWindow("bgCali",1280,0);
 			if(whiteOK == false){
 				cvShowImage("bgCali",whiteBG);
 			}
@@ -69,6 +69,7 @@ void main(){
 	//cvSmooth(temp,bg->backgroundImg ,2,9);
 	cvNamedWindow("Background");
 	cvShowImage("Background",bg->backgroundImg);
+	cvWaitKey(1);
 
 
 	while(true)

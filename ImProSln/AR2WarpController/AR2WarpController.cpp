@@ -41,6 +41,8 @@ AR2WarpController::AR2WarpController(IUnknown * pOuter, HRESULT * phr, BOOL Modi
 	// tableW and tableH is the real size of the table in mm 720 * 540
 	tableWidth = 720;
 	tableHeight = 540;
+	W2CMat = cvCreateMat(4,4,CV_32F);
+
 	projCoord = NULL;
 	projCoord = new  ProjectorTrans2World(tableWidth,tableHeight,fileDir);
 	
@@ -328,9 +330,21 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 	CvMat cvPt;
 	CvMat dstPt;
 
+
 	cvPt = cvMat(nValidDetected*4, 2, CV_32F, d); //t: virtual space, d: camera space
 	dstPt = cvMat(nValidDetected*4, 2, CV_32F, t);
 	
+	for(int row = 0 ; row < 4 ; row ++){
+		for(int col = 0 ; col <4 ; col ++){
+			cvmSet(projCoord->world2CamExtrinsic,row,col,(float)pARResult->m_pMarkerConfig->cvTrans[row][col]);
+		}
+	}
+	for(int i = 0 ; i < 3 ; i ++){
+		cvmSet(projCoord->world2CamExtrinsic,i,3 , (float)(cvmGet(projCoord->world2CamExtrinsic,i,3)*tableHeight)) ; 
+		cvmSet(projCoord->world2CamExtrinsic,i,1 , (float)-cvmGet(projCoord->world2CamExtrinsic,i,1)) ; 
+		cvmSet(projCoord->world2CamExtrinsic,i,2 , (float)-cvmGet(projCoord->world2CamExtrinsic,i,2)) ; 
+	}	
+
 	GetProjCorner(&cvPt,&dstPt);
 	{
 		CAutoLock lck(&m_csMatPro2VW[idx]);
@@ -381,7 +395,7 @@ HRESULT AR2WarpController::ReceiveARResult(IMediaSample *pSample, const IPin* pR
 
 HRESULT AR2WarpController ::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
 	CAutoLock lck(&m_csProjCoord);
-	projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
+	//projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
 	projCoord->getProjHomo();	
 	return S_OK;
 }

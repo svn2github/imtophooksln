@@ -177,14 +177,20 @@ HookDrawingFilter::~HookDrawingFilter()
 	g_Instance = NULL;
 	for (int i =0; i< m_pAddOutTexture.size(); i++)
 	{
-		m_pAddOutTexture[i]->Release();
-		m_pAddOutTexture[i] = NULL;
+		if (m_pAddOutTexture[i] != NULL)
+		{
+			m_pAddOutTexture[i]->Release();
+			m_pAddOutTexture[i] = NULL;
+		}
 	}
 	m_pAddOutTexture.clear();
 	for (int i =0; i < m_pAddRenderTarget.size(); i++)
 	{
-		m_pAddRenderTarget[i]->Release();
-		m_pAddRenderTarget[i] = NULL;
+		if (m_pAddRenderTarget[i] != NULL)
+		{
+			m_pAddRenderTarget[i]->Release();
+			m_pAddRenderTarget[i] = NULL;
+		}
 	}
 	m_pAddRenderTarget.clear();
 	

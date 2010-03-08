@@ -352,6 +352,7 @@ HRESULT HomoWarpFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
+	
 	if (m_pD3DDisplay != NULL)
 	{
 		if (m_pInputPins.size() <= 0 || m_pOutputPins.size() <= 0)
@@ -377,7 +378,14 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		}
 		{
 			
-			((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = m_bFlipY;
+			if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE))
+			{
+				((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = m_bFlipY;
+			}
+			else
+			{
+				((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = !m_bFlipY;
+			}
 		}
 
 		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType());
@@ -747,6 +755,7 @@ IplImage* HomoWarpFilter::GetInIplmage()
 	if (m_pD3DDisplay == NULL)
 		return NULL;
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	
 	if (pDevice == NULL)
 		return NULL;
 	CCritSec* pD3DCS = NULL;
@@ -780,7 +789,25 @@ IplImage* HomoWarpFilter::GetInIplmage()
 	cvImg = cvCreateImage(cvSize(inDesc.Width, inDesc.Height), 8, 4);
 	d3dImg = cvCreateImageHeader(cvSize(inDesc.Width, inDesc.Height), 8, 4);
 	d3dImg->imageData = (char*)rect.pBits;
-	cvCopyImage(d3dImg, cvImg);
+	bool bFlipY = false;
+	CMediaType mt;
+	mt = m_pInputPins[0]->CurrentMediaType();
+	if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE))
+	{
+		bFlipY = !m_bFlipY;
+	}
+	else
+	{
+		bFlipY = m_bFlipY;
+	}
+	if (bFlipY)
+	{
+		cvFlip(d3dImg, cvImg, 0);
+	}
+	else
+	{
+		cvCopyImage(d3dImg, cvImg);
+	}
 	if (d3dImg != NULL)
 	{
 		cvReleaseImageHeader(&d3dImg);
@@ -793,6 +820,7 @@ IplImage* HomoWarpFilter::GetInIplmage()
 	}
 	if (pTmpSurface != NULL)
 	{
+		pTmpSurface->UnlockRect();
 		pTmpSurface->Release();
 		pTmpSurface = NULL;
 	}

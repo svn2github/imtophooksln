@@ -2,7 +2,7 @@
 #include "pointTrans.h"
 #include "common.h"
 
-#define BLENDVALUE 0.8
+#define BLENDVALUE 0.5
 
 // tableW and tableH is the real size of the table in mm 710 * 520
 ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
@@ -189,14 +189,13 @@ void ProjectorTrans2World::findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* obj
 	CvMat* camOriSizePoint = cvCreateMat(cvGetSize(cameraPoint).height,2,CV_32F);
 	for(int i = 0 ; i < cvGetSize(cameraPoint).height ; i++){
 		cvmSet(camOriSizePoint,i,0,cvmGet(cameraPoint,i,0)*640);
-		cvmSet(camOriSizePoint,i,1,(cvmGet(cameraPoint,i,1)*480)); 
+		cvmSet(camOriSizePoint,i,1,cvmGet(cameraPoint,i,1)*480); 
 	}
 	cvFindExtrinsicCameraParams2(object3D,camOriSizePoint,camIntrinsic,camDisto,rotateRodrigues,transW2C);
 	
 	cvRodrigues2(rotateRodrigues,rotateW2C);
 	buildExtrinsicMat(rotateW2C,transW2C,world2CamExtrinsic);
 
-	findPro2WorldExtrinsic();
 
 	cvReleaseMat(&object3D);
 	cvReleaseMat(&camOriSizePoint);
@@ -261,6 +260,9 @@ int* ProjectorTrans2World::getTableSize(){
 }
 
 void ProjectorTrans2World::getProjHomo(){
+
+	findPro2WorldExtrinsic();
+
 	CvMat* proj2DPoint  = cvCreateMat(3,1,CV_32F);
 	CvMat* projboundPoint  = cvCreateMat(4,2,CV_32F);
 	CvPoint3D32f projIn3D ;

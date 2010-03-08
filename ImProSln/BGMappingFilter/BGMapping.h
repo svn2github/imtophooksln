@@ -4,6 +4,8 @@
 #include "highgui.h"
 #include <cvaux.h>
 #include "stdafx.h"
+#include <vector>
+#define imgMAX 30
 
 
 using namespace std;
@@ -32,20 +34,25 @@ public:
 	CvMat* MatHomography;
 	CvMat* kerMat;
 
-
 	IplImage*mappingTable;
 	IplImage*backgroundImg;
 	IplImage*resultImg;
+	IplImage*tmpImg;
 	IplImage*result4CImg;
 	IplImage*foregroundImg;
 	IplImage*binarySrc;
 	IplImage*binaryResult;
+	IplImage*imgPool[imgMAX];
+	IplImage* bgMask ;
+
+	vector<IplImage*> historyBG ;
 
 	IplConvKernel* kernelElement;
 
 	int BGthreshold;
 	int BlackValue;
 	int WhiteValue;
+	int imgIndex ;
 
 	bool isDilate;
 	bool camFlip;

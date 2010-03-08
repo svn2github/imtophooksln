@@ -5,6 +5,8 @@
 #include <initguid.h>
 #include "combase.h"
 #include "CMuxTransformFilter.h"
+#include "D3DTransformFilterBase.h"
+#include "MyMediaSample.h"
 #include "cv.h"
 
 // {E1C813B2-CD41-43e1-985A-EF40CE6EC88D}
@@ -12,7 +14,7 @@ DEFINE_GUID(CLSID_SyncFilter,
 			0xe1c813b2, 0xcd41, 0x43e1, 0x98, 0x5a, 0xef, 0x40, 0xce, 0x6e, 0xc8, 0x8d);
 
 class SyncFilter :
-	public CMuxTransformFilter, public ISyncFilter
+	public CMuxTransformFilter, public ISyncFilter, public D3DTransformFilterBase
 {
 
 public:
@@ -35,6 +37,12 @@ public:
 
 	//implement DShow Property Page
 	//STDMETHODIMP     GetPages(CAUUID *pPages);
+
+protected:
+	//for implement D3DTransformFilterBase Method
+	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
+	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
+
 
 protected:
 	HRESULT CamTransform( IMediaSample *pIn, IMediaSample *pOut);

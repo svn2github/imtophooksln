@@ -28,7 +28,6 @@ BGMappingFilter::~BGMappingFilter()
 	cvReleaseImage(&foregroundIplImg);
 	if(cameraInputIplImg!= NULL)
 	cvReleaseImage(&cameraInputIplImg);
-
 }
 
 
@@ -71,10 +70,10 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		return S_FALSE;
 	}
 
-	//if(isReceiveBG == true){
-	//	BG->setBackground(backgroundIplImg);
-	//	isReceiveBG = false ;
-	//}
+	if(isReceiveBG == true){
+		BG->setBackground(backgroundIplImg);
+		isReceiveBG = false ;
+	}
 
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
 	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
@@ -157,8 +156,8 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	cvResize(backgroundtmp,backgroundIplImg);
 
 	CAutoLock cAutoLockShared(&m_cSharedState);
-	//isReceiveBG = true ;
-	BG->setBackground(backgroundIplImg);
+	isReceiveBG = true ;  // move the setBackground function to ReceiveCamImg 
+	//BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 
 	return S_OK;

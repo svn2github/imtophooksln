@@ -188,6 +188,7 @@ void BackGroundHomo::warpCaliImg(char* srcFileName,IplImage* dstImg){
 void BackGroundHomo::buildMappingTable(){
 	
 		CvScalar Scalar1;
+			cvShowImage("checkBG",backgroundImg);
 		int white ,black;
 		for(int i=0;i<mappingTable->height;i++)
 		{
@@ -199,17 +200,18 @@ void BackGroundHomo::buildMappingTable(){
 				black = Scalar1.val[0];
 				white = Scalar1.val[1];
 				cvSet2D(mappingTable,i,j,Scalar1);
-				if(cvGet2D(backgroundImg,i,j).val[0] == 0){
+				if(cvGet2D(backgroundImg,i,j).val[0] < 128){
 					cvSet2D(backgroundImg,i,j,cvScalar(black,black,black));
 				}
 				else 
 					cvSet2D(backgroundImg,i,j,cvScalar(white,white,white));
 			}
 		}
-		IplImage * newMappingTable = cvCreateImage(cvSize(640,480),8,3);
+	/*	IplImage * newMappingTable = cvCreateImage(cvSize(640,480),8,3);
 
-		cvResize(mappingTable,newMappingTable);
-		cvSave("mTable.txt",newMappingTable);
+		cvResize(mappingTable,newMappingTable);*/
+		cvSave("mTable.txt",mappingTable);
+	
 }
 
 int BackGroundHomo::getMappingValue(float x, float y , int oriIntensity){   // x and y are in 0~1 

@@ -87,6 +87,8 @@ protected:
 	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
 	int tableHeight;
 	int tableWidth;
+	CvMat* W2CMat ;
+
 
 	IPin* GetARResultPin(int idx);
 	IPin* GetWarpConfigPin(int idx);
