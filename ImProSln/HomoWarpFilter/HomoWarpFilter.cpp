@@ -444,9 +444,35 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
-		*pMediaType = inputMT;
-		return S_OK;
+		if (m_pOutTexture == NULL)
+			return S_FALSE;
+		if (iPosition == 0)
+		{
+			CMediaType mt;
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetType(&MEDIATYPE_Video);
+			mt.SetFormatType(&FORMAT_VideoInfo);
+			mt.SetTemporalCompression(FALSE);
+			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+			mt.SetSampleSize(desc.Width*desc.Height*4);
+
+			VIDEOINFOHEADER pvi;
+			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+			pvi.bmiHeader.biWidth = desc.Width;
+			pvi.bmiHeader.biHeight = desc.Height;
+			pvi.bmiHeader.biBitCount = 32;
+			SetRectEmpty(&(pvi.rcSource));
+			SetRectEmpty(&(pvi.rcTarget));
+			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else
+		{
+			return VFW_S_NO_MORE_ITEMS;
+		}
 	}
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
 	{
