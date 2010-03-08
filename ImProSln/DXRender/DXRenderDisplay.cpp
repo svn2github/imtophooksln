@@ -10,7 +10,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3D9* pD3D, UINT rtWidth, UINT rtHeight)
 	m_bFlipY = false;
 	m_sampleType = 0;
 	m_pD3DFont = NULL;
-	hr = D3DXCreateFont(m_pDevice, 20, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+	hr = D3DXCreateFont(m_pDevice, 35, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
 	
 	lasttime = timeGetTime();
@@ -29,7 +29,7 @@ DXRenderDisplay::DXRenderDisplay(IDirect3DDevice9* pDevice, UINT rtWidth, UINT r
 	m_bFlipY = false;
 	m_sampleType = 0;
 	m_pD3DFont = NULL;
-	hr = D3DXCreateFont(m_pDevice, 50, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+	hr = D3DXCreateFont(m_pDevice, 35, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, 
 		DEFAULT_PITCH | FF_DONTCARE, L"System", &m_pD3DFont  );
 	lasttime = timeGetTime();
 	currtime = timeGetTime();
