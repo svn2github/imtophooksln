@@ -2,7 +2,7 @@
 bool bFlipX = false;
 bool bFlipY = false;
 
-int g_sampleType = 1;
+int g_sampleType = 0;
 
 float4x4 g_matTexTransform   
 <
@@ -32,8 +32,8 @@ sampler2D g_LinearSampler = sampler_state {
 }; 
 
 sampler2D g_PointSampler = sampler_state {
-    MinFilter = Linear;
-    MagFilter = Linear;
+    MinFilter = Point;
+    MagFilter = Point;
     Texture = <g_Texture>;
 }; 
 
