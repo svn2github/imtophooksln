@@ -299,12 +299,17 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	HRESULT hr = S_OK;
 	
 	//CAutoLock lck(&m_csFillBuffer);
+	CMediaType mt;
+	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
 	
 	if (GetHookDirty(idx))
 	{
+		
 		{
 			CAutoLock lck0(&m_csD3DDisplay);
-			CAutoLock lck(&m_csInTexture);
+			CAutoLock lck1(&m_csInTexture);
+			CAutoLock lck2(&m_csAddRenderTarget[idx]);
+
 			SetRenderTarget(idx);
 			const D3DXMATRIX* matTTS = ((HookDrawingStream*)pPin)->GetWarpMatrix();
 			((HookDrawingDisplay*)m_pD3DDisplay)->SetMatTTS(matTTS);
@@ -313,13 +318,28 @@ HRESULT HookDrawingFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			m_pD3DDisplay->Render();
 			ResetRenderTarget();
 			SetHookDirty(idx, FALSE);
+
 		}
-		CopyRenderTarget2OutputTexture(idx);	
+		if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			// do nothing
+		}
+		else
+		{
+			CopyRenderTarget2OutputTexture(idx);
+		}
 		
 	}
-	CMediaType mt;
-	mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
-	CopyOutputTexture2OutputData(idx, pSamp, &mt, true);
+	if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE) &&
+		IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		CopyRenderTarget2OutputData(idx, pSamp, &mt);	
+	}
+	else
+	{
+		CopyOutputTexture2OutputData(idx, pSamp, &mt, true);
+	}
 	
 	return S_OK;
 }
@@ -375,54 +395,110 @@ HRESULT HookDrawingFilter::CopyRenderTarget2OutputTexture(int idx)
 }
 HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout CMediaType *pMediaType)
 {
-	bool isStreamPin = false;
-	for (int i =0; i <m_pStreamPins.size(); i++)
-	{
-		if (m_pStreamPins[i] == pPin)
+	if (m_pStreamPins.size() >= 0 && m_pStreamPins[0] == pPin)
+	{		
+		if (iPosition == 0)
 		{
-			if (iPosition == 1)
-			{
-				if (m_pOutTexture == NULL)
-					return S_FALSE;
-				CMediaType mt;
-				D3DSURFACE_DESC desc;
-				m_pOutTexture->GetLevelDesc(0, &desc);
-				mt.SetType(&MEDIATYPE_Video);
-				mt.SetFormatType(&FORMAT_VideoInfo);
-				mt.SetTemporalCompression(FALSE);
-				mt.SetSubtype(&MEDIASUBTYPE_RGB32);
-				mt.SetSampleSize(desc.Width*desc.Height*4);
+			CAutoLock lck(&m_csAddRenderTarget[0]);
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pAddRenderTarget[0]->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 1)
+		{
+			CAutoLock lck(&m_csAddTextures[0]);
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pAddOutTexture[0]->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 2)
+		{
+			if (m_pOutTexture == NULL)
+				return S_FALSE;
+			CMediaType mt;
+			D3DSURFACE_DESC desc;
+			m_pAddOutTexture[0]->GetLevelDesc(0, &desc);
+			mt.SetType(&MEDIATYPE_Video);
+			mt.SetFormatType(&FORMAT_VideoInfo);
+			mt.SetTemporalCompression(FALSE);
+			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+			mt.SetSampleSize(desc.Width*desc.Height*4);
 
-				VIDEOINFOHEADER pvi;
-				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
-				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
-				pvi.bmiHeader.biWidth = desc.Width;
-				pvi.bmiHeader.biHeight = desc.Height;
-				pvi.bmiHeader.biBitCount = 32;
-				SetRectEmpty(&(pvi.rcSource));
-				SetRectEmpty(&(pvi.rcTarget));
-				mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
-				*pMediaType = mt;
-				return S_OK;
-			}
-			else if (iPosition == 0)
+			VIDEOINFOHEADER pvi;
+			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+			pvi.bmiHeader.biWidth = desc.Width;
+			pvi.bmiHeader.biHeight = desc.Height;
+			pvi.bmiHeader.biBitCount = 32;
+			SetRectEmpty(&(pvi.rcSource));
+			SetRectEmpty(&(pvi.rcTarget));
+			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+			*pMediaType = mt;
+			return S_OK;
+		}
+	}
+	else
+	{
+		for (int i =1; i <m_pStreamPins.size(); i++)
+		{
+			if (m_pStreamPins[i] == pPin)
 			{
-				CAutoLock lck(&m_csAddTextures[i]);
-				CMediaType mt;
-				mt.SetType(&GUID_D3DMEDIATYPE);
-				mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
-				mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
-				D3DSURFACE_DESC desc;
-				m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
-				mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
-				mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
-				*pMediaType = mt;
-				return S_OK;
+				if (iPosition == 0)
+				{
+					CAutoLock lck(&m_csAddTextures[i]);
+					CMediaType mt;
+					mt.SetType(&GUID_D3DMEDIATYPE);
+					mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+					mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+					D3DSURFACE_DESC desc;
+					m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
+					mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+					mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+					*pMediaType = mt;
+					return S_OK;
+				}
+				else if (iPosition == 1)
+				{
+					if (m_pOutTexture == NULL)
+						return S_FALSE;
+					CMediaType mt;
+					D3DSURFACE_DESC desc;
+					m_pAddOutTexture[i]->GetLevelDesc(0, &desc);
+					mt.SetType(&MEDIATYPE_Video);
+					mt.SetFormatType(&FORMAT_VideoInfo);
+					mt.SetTemporalCompression(FALSE);
+					mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+					mt.SetSampleSize(desc.Width*desc.Height*4);
+
+					VIDEOINFOHEADER pvi;
+					memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+					pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+					pvi.bmiHeader.biWidth = desc.Width;
+					pvi.bmiHeader.biHeight = desc.Height;
+					pvi.bmiHeader.biBitCount = 32;
+					SetRectEmpty(&(pvi.rcSource));
+					SetRectEmpty(&(pvi.rcTarget));
+					mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+					*pMediaType = mt;
+					return S_OK;
+				}	
 			}
 		}
-		
 	}
-
 	return S_FALSE;
 }
 HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
@@ -439,7 +515,12 @@ HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* 
 	if (isStreamPin)
 	{
 		CheckPointer(mtOut, E_POINTER);
-		if (IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
+		if ((IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*mtOut->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER)))
+		{
+			return NOERROR;
+		}
+		else if (IsEqualGUID(*mtOut->Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*mtOut->Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			return NOERROR;
@@ -553,7 +634,7 @@ HRESULT HookDrawingFilter::SetRenderTarget(int idx)
 
 	hr = pDevice->GetRenderTarget(0, &m_pBackupRenderTarget);
 	hr = pDevice->SetRenderTarget(0, pRTSurface);
-
+	
 	if (pRTSurface != NULL)
 	{
 		pRTSurface->Release();
@@ -913,6 +994,7 @@ void HookDrawingFilter::onBitBltCalled()
 
 BOOL HookDrawingFilter::DrawBitBlt(HDC hdc, int x, int y, int width, int height, int dcW, int dcH, HDC hdcSrc, int x1, int y1, int srcW, int srcH, DWORD rop)
 {
+	CAutoLock lck0(&m_csD3DDisplay);
 	CAutoLock lck(&m_csInTexture);
 	if (m_pInTexture == NULL)
 		return FALSE;
@@ -987,6 +1069,36 @@ BOOL HookDrawingFilter::CaptureHookWnd()
 	pSurface->Release();
 	pSurface = NULL;
 	return TRUE;
+}
+HRESULT HookDrawingFilter::CopyRenderTarget2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType)
+{
+	if (pOut == NULL || m_pAddRenderTarget.size() <= idx || m_pAddRenderTarget[idx] == NULL)
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = S_OK;
+	if (FAILED(TestDisplayDeviceLost()))
+	{
+		return S_FALSE;
+	}
+	CAutoLock lck(&m_csAddRenderTarget[idx]);
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	GUID guidSubType = pOutMediaType->subtype;
+
+
+	D3DSURFACE_DESC surOutDesc;
+	hr = m_pAddRenderTarget[idx]->GetLevelDesc(0, &surOutDesc);
+	D3DLOCKED_RECT rect;
+
+	if (IsEqualGUID(*pOutMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*pOutMediaType->Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{	
+		((CMediaSample*)pOut)->SetPointer((BYTE*)m_pAddRenderTarget[idx], sizeof(LPDIRECT3DTEXTURE9));
+	}
+	else
+	{
+		return S_FALSE;
+	}
+	return S_OK;
 }
 BOOL HookDrawingFilter::CopyOutputTexture2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType, bool bFlipY)
 {
@@ -1286,3 +1398,24 @@ BOOL HookDrawingFilter::SetHookDirty(int idx, BOOL v)
 	return TRUE;
 }
 
+HRESULT HookDrawingFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice)
+{
+	if ( m_pStreamPins.size() <= 0 || pPin != m_pStreamPins[0])
+		return S_FALSE;
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	outDevice = m_pD3DDisplay->GetD3DDevice();
+	if (outDevice != NULL)
+	{
+		outDevice->AddRef();
+	}
+	return S_OK;
+}
+
+HRESULT HookDrawingFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	if ( m_pStreamPins.size() <= 0 || pPin != m_pStreamPins[0])
+		return S_FALSE;
+	cs = &m_csD3DDisplay;
+	return S_OK;
+}

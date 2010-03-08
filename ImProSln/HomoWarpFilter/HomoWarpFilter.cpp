@@ -358,7 +358,12 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			return S_FALSE;
 		}
-		
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return S_FALSE;
+		CAutoLock lck(pD3DCS);
+
 		{
 			CAutoLock lck(&m_accessWarpMatCS);
 			if (m_bInvTTS)
@@ -371,10 +376,12 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			}
 		}
 		{
-			CAutoLock lck(&m_csD3DDisplay);
+			
 			((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = m_bFlipY;
 		}
+
 		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType());
+
 	}
 	return S_OK;
 }

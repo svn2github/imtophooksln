@@ -77,6 +77,7 @@ public:
 	static LRESULT CALLBACK HookDrawingWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	HRESULT SetRenderTarget(int idx);
 	HRESULT ResetRenderTarget();
+	HRESULT CopyRenderTarget2OutputData(int idx, IMediaSample *pOut, const CMediaType* pOutMediaType);
 	HRESULT CopyRenderTarget2OutputTexture(int idx);
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
@@ -85,7 +86,9 @@ public:
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
 
-
+	//from D3DBaseFilter
+	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 
@@ -113,6 +116,7 @@ protected:
 	HWND m_hHookRecMsgWnd;
 	CCritSec m_csFillBuffer;
 	CCritSec m_csAddTextures[NUMHOOKPIN];
+	CCritSec m_csAddRenderTarget[NUMHOOKPIN];
 	CCritSec m_csHookDirty[NUMHOOKPIN];
 	CCritSec m_csHookRenderState;
 	BOOL m_bHookDirty[NUMHOOKPIN];
