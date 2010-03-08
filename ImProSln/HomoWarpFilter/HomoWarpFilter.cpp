@@ -303,7 +303,7 @@ HRESULT HomoWarpFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 			initD3D(desc->Width, desc->Height);
 			return S_OK;
 		}
-		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+		else if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
 		{
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
@@ -359,12 +359,18 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		{
 			return S_FALSE;
 		}
+		CMuxTransformOutputPin* pOutPin = NULL;
+		pOutPin = GetConnectedOutputPin();
+		if (pOutPin == NULL)
+		{
+			return S_FALSE;
+		}
 		CCritSec* pD3DCS = NULL;
 		QueryD3DDeviceCS(NULL, pD3DCS);
 		if (pD3DCS == NULL)
 			return S_FALSE;
 		CAutoLock lck(pD3DCS);
-
+		
 		{
 			CAutoLock lck(&m_accessWarpMatCS);
 			if (m_bInvTTS)
@@ -377,7 +383,7 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			}
 		}
 		{
-			
+			CMediaType mt = pOutPin->CurrentMediaType();
 			if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE))
 			{
 				((HomoD3DDisplay*)m_pD3DDisplay)->m_bFlipY = m_bFlipY;
@@ -388,7 +394,7 @@ HRESULT HomoWarpFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 			}
 		}
 
-		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &GetConnectedOutputPin()->CurrentMediaType());
+		DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &pOutPin->CurrentMediaType());
 
 	}
 	return S_OK;

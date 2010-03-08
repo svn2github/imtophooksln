@@ -331,6 +331,19 @@ HRESULT MaskFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin,
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
 			initD3D(desc->Width, desc->Height);
 		}
+		else if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			IDirect3DDevice9* pDevice = NULL;
+			m_pInputPins[0]->QueryD3DDevice(pDevice);
+			if (pDevice == NULL)
+				return S_FALSE;
+			initD3D(desc->Width, desc->Height, pDevice);
+			pDevice->Release();
+			pDevice = NULL;
+			return S_OK;
+		}
 		else
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
@@ -367,6 +380,13 @@ HRESULT MaskFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 		}
 		{
 			UpdateMask();
+
+			CCritSec* pD3DCS = NULL;
+			QueryD3DDeviceCS(NULL, pD3DCS);
+			if (pD3DCS == NULL)
+				return S_FALSE;
+
+			CAutoLock lck0(pD3DCS);
 			CAutoLock lck(&m_csDisplayState);
 			DoTransform(pIn, pOut, &m_pInputPins[0]->CurrentMediaType(), &m_pOutputPins[0]->CurrentMediaType(), false);
 		}
@@ -471,21 +491,58 @@ HRESULT MaskFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 
 HRESULT MaskFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
-	if (iPosition < 0) {
-		return E_INVALIDARG;
-	}
-	if (iPosition >= 1) { // WATCH OUT !!
-		return VFW_S_NO_MORE_ITEMS;
-	}
-	if (m_pInputPins.size() <= 0)
+
+	if (m_pOutputPins.size() >= 1 && m_pOutputPins[0] == pOutPin)
 	{
-		return VFW_S_NO_MORE_ITEMS;
-	}
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
-	{
-		CMediaType inputMT = m_pInputPins[0]->CurrentMediaType();
-		*pMediaType = inputMT;
-		return S_OK;
+		if (iPosition == 0)
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pRenderTarget->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 1)
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 2)
+		{
+			CMediaType mt;
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetType(&MEDIATYPE_Video);
+			mt.SetFormatType(&FORMAT_VideoInfo);
+			mt.SetTemporalCompression(FALSE);
+			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+			mt.SetSampleSize(desc.Width*desc.Height*4);
+
+			VIDEOINFOHEADER pvi;
+			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+			pvi.bmiHeader.biWidth = desc.Width;
+			pvi.bmiHeader.biHeight = desc.Height;
+			pvi.bmiHeader.biBitCount = 32;
+			SetRectEmpty(&(pvi.rcSource));
+			SetRectEmpty(&(pvi.rcTarget));
+			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+			*pMediaType = mt;
+			return S_OK;
+		}
 	}
 
 	return VFW_S_NO_MORE_ITEMS;
@@ -517,6 +574,11 @@ bool MaskFilter::IsAcceptedType(const CMediaType *pmt)
 	}
 	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
 		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		return true;
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
+		IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
 	{
 		return true;
 	}
@@ -730,6 +792,41 @@ HRESULT MaskFilter::GetName(WCHAR* name, UINT szName)
 	{
 		filterInfo.pGraph->Release();
 		filterInfo.pGraph = NULL;
+	}
+	return S_OK;
+}
+
+HRESULT MaskFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	outDevice = m_pD3DDisplay->GetD3DDevice();
+	if (outDevice != NULL)
+	{
+		outDevice->AddRef();
+	}
+	return S_OK;
+}
+
+HRESULT MaskFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	if (m_pD3DDisplay == NULL || m_pInputPins.size() <= 0 || m_pInputPins[0] == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay->IsDeviceFromOther())
+	{
+		IDXBasePin* pDXInPin = NULL;
+		m_pInputPins[0]->QueryInterface(IID_IDXBasePin, (void**)&pDXInPin);
+		if (pDXInPin == NULL)
+			return S_FALSE;
+		pDXInPin->QueryD3DDeviceCS(cs);
+		pDXInPin->Release();
+		pDXInPin = NULL;
+		return S_OK;
+	}
+	else
+	{
+		cs = &m_csD3DDisplay;
+		return S_OK;
 	}
 	return S_OK;
 }

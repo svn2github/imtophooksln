@@ -38,6 +38,9 @@ public:
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
+	//from D3DBaseFilter
+	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 	//implement IMaskFilterProperty
 	virtual BOOL SetMaskFlag(int flag);
 	virtual int GetMaskFlag();
