@@ -49,7 +49,7 @@ package {
 			//add stage listener 
 //			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
 //			stage.addEventListener(TouchEvent.CLICK, touchDown);
-			  
+			
 //			stage.addEventListener(KeyboardEvent.KEY_DOWN, function(e:KeyboardEvent):void{
 //				if(e.keyCode == Keyboard.LEFT)
 //					geControl.moveLeft();
@@ -93,8 +93,12 @@ package {
 		private function addGoogleEarthClient():void{
 			// add ge delegate control
 			setupSocket();
-			multiResMap.addGeControl(socket, "tabletGE_1", 150, 150);
-//			multiResMap.addGeControl(socket, "tabletGE_2", 250, 250);		
+			var ge1:GEControl = multiResMap.addGeControl(socket, 150, 150);
+//			var ge2:GEControl = multiResMap.addGeControl(socket, 250, 250);
+//			trace("ge1.id: " + ge1.id);		
+//			trace("ge2.id: " + ge2.id);
+			
+//			multiResMap.removeGeControl(ge1.id);
 		}
 
 		private function setupSocket():void{
@@ -119,14 +123,22 @@ package {
 			var from:String = data[2];
 			var cmd:String = data[3];
 			if(cmd=="geLogin"){
-				multiResMap.addGeControl(socket, from, 150, 150);
+				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
+				socket.send("15,tabletGE,flashGE," + "assignID," + geControl.id);
+				trace("assignID: " + geControl.id);
+				
+				
 			}else if(cmd=="geDebug"){
 				var vspaceX:Number = Number(data[4]);
 				var vspaceY:Number = Number(data[5]);
 				var lat:Number = Number(data[6]);
 				var lng:Number = Number(data[7]);
 				multiResMap.recvGeCenter(from, vspaceX, vspaceY, lat, lng);
-				trace("vspace: " + vspaceX + ", " + vspaceY);
+//				trace("vspace: " + vspaceX + ", " + vspaceY);
+			
+			}else if(cmd=="clientLogout"){
+				var who:String = data[4];
+				multiResMap.removeGeControl(who);
 			}
 		}
 		private function onConnect(e:Event):void{

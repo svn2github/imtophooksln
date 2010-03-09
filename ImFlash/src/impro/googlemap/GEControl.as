@@ -13,10 +13,12 @@ package impro.googlemap
 	
 	public class GEControl extends Sprite
 	{	
+		private static var index:Number = 0;
+		
 		private var socket:XMLSocket;
 		
 		private var parentMap:Map;
-		private var id:String;
+		private var _id:String;
 		
 		private var lat:Number = 23.69781;
 		private var lng:Number = 120.960515;
@@ -30,13 +32,13 @@ package impro.googlemap
 		private var DEBUG:Boolean = true;
 		private var DEBUG_TEXT:TextField;		
 		
-		public function GEControl(socket:XMLSocket, id:String, parentMap:Map,  $DEBUG:Boolean = true)
+		public function GEControl(socket:XMLSocket, parentMap:Map,  $DEBUG:Boolean = true)
 		{
 			super();
 			DEBUG = $DEBUG;
 			
 			this.socket = socket;
-			this.id = id;
+			this._id = "tabletGE_" + (index++);
 			this.parentMap = parentMap;
 			
 			setupDraw();			
@@ -68,6 +70,10 @@ package impro.googlemap
 				addChild(DEBUG_TEXT);
 			}
 		}
+		
+		public function get id():String{
+			return _id;
+		}		
 		
 		private function setupDraw():void{
 			
@@ -105,6 +111,7 @@ package impro.googlemap
 			event.target.stopDrag();			
 			update();
 		}
+		
 //		private function onWheel(event:MouseEvent):void{
 //			trace(event.delta);
 //			
@@ -183,17 +190,23 @@ package impro.googlemap
 		
 		private function updateSend():void{		
 			if(socket.connected)
-			{				
+			{
+				//  p1 -------- p4 
+				//  |			|
+				//  |			|
+				//  p2 -------- p3
 				// get target latlng
 				var p1ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, 0));
 				var p2ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, parentMap.height));
 				var p3ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, parentMap.height));
-//				var p4ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, parentMap.height));								
+				var p4ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, 0));								
 				
 				var s:String = "ll," + p1ToLatlng.lat() + "," + p1ToLatlng.lng() + ","
 									+ p2ToLatlng.lat() + "," + p2ToLatlng.lng() + ","
-									+ p3ToLatlng.lat() + "," + p3ToLatlng.lng(); 
-//									+ p4ToLatlng.lat() + "," + p4ToLatlng.lng();									
+									+ p3ToLatlng.lat() + "," + p3ToLatlng.lng() + "," 
+									+ p4ToLatlng.lat() + "," + p4ToLatlng.lng();
+									
+																		
 				socket.send("15,"+id+",flashGE," + s);
 			}
 //			else{

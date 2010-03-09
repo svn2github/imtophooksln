@@ -133,17 +133,35 @@ package impro.googlemap
 			return viewport;
 		}
 		
-		public function addGeControl(socket:XMLSocket, id:String, x:Number, y:Number):GEControl{
+		public function addGeControl(socket:XMLSocket, x:Number, y:Number):GEControl{
 			
-			var geControl:GEControl = new GEControl(socket, id, map);
+			var geControl:GEControl = new GEControl(socket, map);
 			geControl.x = x;
 			geControl.y = y;
-			geControlDict[id] = geControl;	
+			geControlDict[geControl.id] = geControl;	
 			if(DEBUG)
 				addChild(geControl);		
 
-
-			return geControlDict[id];
+			return geControl;
+		}
+		
+//		public function getGeControl(id:String):GEControl{
+//			return geControlDict[id];
+//		}
+		
+		public function removeGeControl(id:String):GEControl{
+			var geControl:GEControl = geControlDict[id];
+			if(geControl != null){
+				removeChild(geControl);
+				delete geControlDict[id];
+				trace("GEControl[" + id + "] deleted from dictionary");
+				
+				trace("geDictionary list:");
+				for each (var ge:GEControl in geControlDict) 
+	                trace(ge.id);
+						
+			}
+			return geControl;
 		}
 		
 		public function recvGeCenter(id:String, vspaceX:Number, vspaceY:Number, lat:Number, lng:Number):void{
@@ -192,9 +210,7 @@ package impro.googlemap
 	    
 	    private function onMapTypeChanged(event:MapEvent):void {
 	    	var stype:String = event.type;
-	    	
-//	    	trace(map.getCurrentMapType());
-	    	
+	    		    	
 	    	for each (var viewport:MapViewport in viewportDict) 
                 viewport.setMapType(map.getCurrentMapType());
 	    }
