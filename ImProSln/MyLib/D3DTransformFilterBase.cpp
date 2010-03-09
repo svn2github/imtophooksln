@@ -279,6 +279,7 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 	}
 	else
 	{
+		pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
 		BYTE* pOutData = NULL;
 		pOut->GetPointer(&pOutData);
 		int channel = 4;
@@ -291,46 +292,67 @@ HRESULT D3DTransformFilterBase::CopyOutputTexture2OutputData(IMediaSample *pOut,
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
 			channel = 3;
+			if (bFlipY)
+			{	
+				int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+				float tmpW = ((float)surWidth) / width;
+				float tmpH = ((float)surHeight) / height;
+				for( y = 0; y < height; y++ )
+				{
+					for ( x = 0; x< width; x++)
+					{
+						dstX = x * tmpW;  dstY = y * tmpH;
+						pOutData[(height - y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+						pOutData[(height - y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+						pOutData[(height - y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
+					}
+				}
+			}
+			else
+			{
+				int x = 0; int y = 0; int dstX = 0; int dstY = 0;
+				float tmpW = ((float)surWidth) / width;
+				float tmpH = ((float)surHeight) / height;
+				for( y = 0; y < height; y++ )
+				{
+					for ( x = 0; x< width; x++)
+					{
+						dstX = x * tmpW;  dstY = y * tmpH;
+						pOutData[y*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
+						pOutData[y*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
+						pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
+					}
+				}
+
+			}
+			pOutSurface->UnlockRect();
 		}
 		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
 			channel = 4;
-		}
-		pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
-		if (bFlipY)
-		{	
-			int x = 0; int y = 0; int dstX = 0; int dstY = 0;
-			float tmpW = ((float)surWidth) / width;
-			float tmpH = ((float)surHeight) / height;
-			for( y = 0; y < height; y++ )
-			{
-				for ( x = 0; x< width; x++)
-				{
-					dstX = x * tmpW;  dstY = y * tmpH;
-					pOutData[(height - y -1)*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
-					pOutData[(height - y -1)*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
-					pOutData[(height - y -1)*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
-				}
-			}
-		}
-		else
-		{
-			int x = 0; int y = 0; int dstX = 0; int dstY = 0;
-			float tmpW = ((float)surWidth) / width;
-			float tmpH = ((float)surHeight) / height;
-			for( y = 0; y < height; y++ )
-			{
-				for ( x = 0; x< width; x++)
-				{
-					dstX = x * tmpW;  dstY = y * tmpH;
-					pOutData[y*width*channel + x*channel] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4)];
-					pOutData[y*width*channel + x*channel + 1] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 1)];
-					pOutData[y*width*channel + x*channel + 2] = ((BYTE*)rect.pBits)[(int)(dstY*rect.Pitch + dstX*4 + 2)];
-				}
-			}
+			pOutSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+			IplImage* pCvOutImg = NULL, *pCvSampleImg = NULL;
+			pCvOutImg = cvCreateImageHeader(cvSize(surOutDesc.Width, surOutDesc.Height), 8, 4);
+			pCvSampleImg = cvCreateImageHeader(cvSize(surOutDesc.Width, surOutDesc.Height), 8, 4);
+			BYTE* pOutData = NULL;
+			pOut->GetPointer(&pOutData);
+			pCvOutImg->imageData = (char*)rect.pBits;
+			pCvSampleImg->imageData = (char*)pOutData;
 			
+			if (bFlipY)
+			{	
+				cvFlip(pCvOutImg, pCvSampleImg, 0);
+			}
+			else
+			{
+				cvCopyImage(pCvOutImg, pCvSampleImg);
+			}
+			cvReleaseImageHeader(&pCvOutImg);
+			cvReleaseImageHeader(&pCvSampleImg);
+			pOutSurface->UnlockRect();
 		}
-		pOutSurface->UnlockRect();
+	
+		
 	}
 	if (pOutSurface != NULL)
 	{
