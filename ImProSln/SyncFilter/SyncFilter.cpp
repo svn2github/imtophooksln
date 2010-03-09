@@ -134,7 +134,7 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	if (FAILED(hr)) {
 		return hr;
 	}
-	MSR_START(m_idTransform);
+//	MSR_START(m_idTransform);
 
 	hr = LayoutTransform(pSample, pOutSampleD3D);
 	if(hr == S_OK && pOutBGPin != NULL){
@@ -150,9 +150,7 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		/*hr = D3DXLoadSurfaceFromSurface(pOutSurface,NULL, NULL, pInSurface, NULL, NULL, 
 			D3DX_FILTER_POINT, 0);*/
 		IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
-		OutputDebugStringW(L"@@@@@pDevice->GetRenderTargetData(pInSurface, pOutSurface); --->\n");
 		pDevice->GetRenderTargetData(pInSurface, pOutSurface);
-		OutputDebugStringW(L"@@@@@pDevice->GetRenderTargetData(pInSurface, pOutSurface); <---\n");
 		if (pInSurface != NULL)
 		{
 			pInSurface->Release();
@@ -167,14 +165,14 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
 	}
 
-	MSR_STOP(m_idTransform);
+	//MSR_STOP(m_idTransform);
 
 	if (FAILED(hr)) {
 		DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
 	} else {
 		if (hr == NOERROR) {
 
-			if(true && GetConnectedOutputPin(1)!= NULL){
+			if(getDirty() == true && GetConnectedOutputPin(1)!= NULL){
 				OutputDebugStringW(L"@@@@ BGDeliver ---->");
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
 				OutputDebugStringW(L"@@@@ BGDeliver <----");

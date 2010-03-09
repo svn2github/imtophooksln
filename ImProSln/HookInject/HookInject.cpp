@@ -195,7 +195,7 @@ LRESULT CALLBACK HookWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,LPARAM lPara
 		}
 		else if (uMsg == WM_PAINT)
 		{
-			OutputDebugStringW(L"@@@@@ WM_PAINT!!!!\n");
+			//OutputDebugStringW(L"@@@@@ WM_PAINT!!!!\n");
 		}
 	}
 	LRESULT lr = 0;

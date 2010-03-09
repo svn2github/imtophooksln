@@ -362,7 +362,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 	{
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
-		{
+		{/*
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{
 				
@@ -398,7 +398,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 					delete pARTagResult;
 					pARTagResult = NULL;
 				}
-			}
+			}*/
 		}
 		else 
 		{

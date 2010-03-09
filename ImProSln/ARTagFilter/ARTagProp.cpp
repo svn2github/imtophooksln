@@ -265,8 +265,7 @@ BOOL ARTagCameraSettingPage::OnReceiveMessage(HWND hwnd,
 			DWORD cmd2 = HIWORD(wParam);
 			
 			bool dirty = false;
-			//swprintf_s(str, MAX_PATH, L"@@@@ cmd1 = %d, cmd2 = %d \n", cmd, cmd2);
-			//OutputDebugStringW(str);
+
 			if ((cmd2 == EN_CHANGE) && (cmd == IDC_DISTFACTOR1 || cmd == IDC_DISTFACTOR2 || cmd == IDC_DISTFACTOR3 || cmd == IDC_DISTFACTOR4 ||
 				cmd == IDC_XSIZE || cmd == IDC_YSIZE || 
 				cmd == IDC_Mat00 || cmd == IDC_Mat01 || cmd == IDC_Mat02 || cmd == IDC_Mat03 || 
@@ -603,8 +602,7 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 	WCHAR str[MAX_PATH] = {0};
 	DWORD cmd = 0;
 	DWORD cmd2 = 0;
-	//swprintf_s(str, MAX_PATH, L"@@@@@ uMsg = %d \n", uMsg);
-	//OutputDebugString(str);
+	
 	switch (uMsg) {
 	case WM_COMMAND:
 		cmd = LOWORD(wParam);

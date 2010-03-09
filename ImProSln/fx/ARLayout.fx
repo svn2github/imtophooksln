@@ -1,4 +1,4 @@
-float4 minColor = (0, 0, 0, 0);
+float4 minColor = (0.4, 0.4, 0.4, 0.4);
 	 
 struct VSOUT {
     float4 pos	: POSITION;
