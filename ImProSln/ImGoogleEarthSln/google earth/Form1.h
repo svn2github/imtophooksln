@@ -47,6 +47,8 @@ double LeftTopLong = 121.55607268966645;
 double LeftTopLat = 25.041212573911324;
 double LeftDownLong = 121.55607268966645;
 double LeftDownLat = 25.025659005961995;
+double RightTopLong = 121;
+double RightTopLat = 25;
 double RightDownLong = 121.57323882736176;
 double RightDownLat = 25.025659005961995;
 
@@ -185,6 +187,7 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: static String^ ipAddress = "192.168.101.154";
 		private: static Int32 port = 5000;
+	    private: static String^ tabletName = "tabletGE_0";
 	private: System::Windows::Forms::Timer^  animTimer;
 
 
@@ -263,7 +266,7 @@ namespace googleearth {
             Receive();
 			
 			// register to TcpServer.
-			sendData("11,tabletGE_1");		 
+			sendData("11," + tabletName);
 			 
 		}
 
@@ -311,7 +314,7 @@ namespace googleearth {
 			//array<String>^ data = strMessage->Split(',');
 			array<String^>^cmds = strMessage->Split(',');
 			
-			if(cmds!=nullptr && cmds->Length == 10){			
+			if(cmds!=nullptr && cmds->Length == 12){			
 
 				double leftTopLat = System::Double::Parse(cmds[4]);
 				double leftTopLong = System::Double::Parse(cmds[5]);
@@ -319,9 +322,13 @@ namespace googleearth {
 				double leftDownLong = System::Double::Parse(cmds[7]);
 				double rightDownLat = System::Double::Parse(cmds[8]);
 				double rightDownLong = System::Double::Parse(cmds[9]);
-				set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat, rightDownLong, rightDownLat);
+				double rightTopLat = System::Double::Parse(cmds[10]);
+				double rightTopLong = System::Double::Parse(cmds[11]);
+				set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat,rightTopLong,rightTopLat, rightDownLong, rightDownLat);
+				//webBrowser1->Document->InvokeScript("boundaryLine");
+				
 			}
-			
+
 		}
 
 		// Translate the passed message into ASCII and store it as a Byte array.
@@ -331,15 +338,36 @@ namespace googleearth {
 		}
 
 
-		//設定tag對應的四個點經緯度位置(左上、左下、右下)
-		static void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RDLong,double RDLat)
+		//設定tag對應的四個點經緯度位置
+		static void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat)
 		{
 			LeftTopLong = LTLong;
 			LeftTopLat = LTLat;
 			LeftDownLong = LDLong;
 			LeftDownLat = LDLat;
+			RightTopLong = RTLong;
+			RightTopLat = RTLat;
 			RightDownLong = RDLong;
 			RightDownLat = RDLat;
+			
+			/*
+			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			
+			parameterB[0] = LeftTopLong;
+			parameterB[1] = LeftTopLat;
+			parameterB[2] = LeftDownLong;
+			parameterB[3] = LeftDownLat;
+			parameterB[4] = RightTopLong;
+			parameterB[5] = RightTopLat;
+			parameterB[6] = RightDownLong;
+			parameterB[7] = RightDownLat;
+			
+			System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
+			browser->Document->InvokeScript("boundaryLine",parameterB);
+			
+			*/
+			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
+
 		}
 
 	protected:
@@ -477,7 +505,7 @@ namespace googleearth {
 				double lng = intersect_point.x;
 				
 				if(GetNetworkStream != nullptr)
-					sendData("15,flashGE,tabletGE_1,geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
+					sendData("15,flashGE,"+tabletName+",geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
@@ -516,7 +544,7 @@ namespace googleearth {
 				parameter[5] = croll;
 
 				double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
-				for (int i =0; i < 6; i++)
+				for (int i = 0; i < 6; i++)
 				{
 					if (Double::IsNaN(para[i]))
 					{
@@ -525,7 +553,23 @@ namespace googleearth {
 				}
 
 				webBrowser1->Document->InvokeScript("cameraView",parameter);
+			 
 			 }
+			 
+
+			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			
+			parameterB[0] = LeftTopLong;
+			parameterB[1] = LeftTopLat;
+			parameterB[2] = LeftDownLong;
+			parameterB[3] = LeftDownLat;
+			parameterB[4] = RightTopLong;
+			parameterB[5] = RightTopLat;
+			parameterB[6] = RightDownLong;
+			parameterB[7] = RightDownLat;
+
+			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
+		
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		
