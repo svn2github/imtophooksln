@@ -42,13 +42,17 @@ protected:
 	//for implement D3DTransformFilterBase Method
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
-
+	//from D3DBaseFilter
+	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
+	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
+	virtual bool  IsAcceptedType(const CMediaType *pMT);
+	virtual CMuxTransformOutputPin* GetConnectedOutputPin(int index);
 
 protected:
 	HRESULT CamTransform( IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT LayoutTransform( IMediaSample *pIn, IMediaSample *pOut);
+
 protected:
-	virtual bool  IsAcceptedType(const CMediaType *pMT);
 	BYTE* InData;
 	BYTE* LayoutData;
 	BYTE* CamData;
@@ -64,8 +68,6 @@ private:
 	bool getBlock();
 	HRESULT setBlock(bool isBlock);
 
-
-	virtual CMuxTransformOutputPin* GetConnectedOutputPin(int index);
 public:
 	SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~SyncFilter();

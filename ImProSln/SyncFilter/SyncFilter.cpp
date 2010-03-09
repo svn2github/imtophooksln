@@ -116,23 +116,56 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		return S_OK;
 	}
 	ASSERT(pSample);
-	IMediaSample * pOutSample;
+	IMediaSample * pOutSampleD3D;
+	IMediaSample * pOutSampleRGB;
+	CMuxTransformOutputPin* pOutBGPin = GetConnectedOutputPin(1);
+	CMuxTransformOutputPin* pOutRenderPin = GetConnectedOutputPin(2);
+
 	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr;
 	// Set up the output sample
-	if(GetConnectedOutputPin(1)!= NULL){
-		hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(1), &pOutSample);
+	if(pOutBGPin!= NULL){
+		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
 	}
-	else if(GetConnectedOutputPin(2) != NULL){
-		hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(2), &pOutSample);
+	if(pOutRenderPin != NULL){
+		hr = InitializeOutputSample(pSample, pReceivePin, pOutRenderPin, &pOutSampleD3D);
 	}
 	if (FAILED(hr)) {
 		return hr;
 	}
 	MSR_START(m_idTransform);
 
-	hr = LayoutTransform(pSample, pOutSample);
+	hr = LayoutTransform(pSample, pOutSampleD3D);
+	if(hr == S_OK && pOutBGPin != NULL){
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return S_FALSE;
+		CAutoLock lck(pD3DCS);
+
+	    IDirect3DSurface9* pInSurface = NULL, *pOutSurface = NULL;
+		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+		m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
+		/*hr = D3DXLoadSurfaceFromSurface(pOutSurface,NULL, NULL, pInSurface, NULL, NULL, 
+			D3DX_FILTER_POINT, 0);*/
+		IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+		OutputDebugStringW(L"@@@@@pDevice->GetRenderTargetData(pInSurface, pOutSurface); --->\n");
+		pDevice->GetRenderTargetData(pInSurface, pOutSurface);
+		OutputDebugStringW(L"@@@@@pDevice->GetRenderTargetData(pInSurface, pOutSurface); <---\n");
+		if (pInSurface != NULL)
+		{
+			pInSurface->Release();
+			pInSurface = NULL;
+		}
+		if (pOutSurface != NULL)
+		{
+			pOutSurface->Release();
+			pOutSurface = NULL;
+		}
+
+		CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
+	}
 
 	MSR_STOP(m_idTransform);
 
@@ -141,23 +174,24 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			if(getDirty() == true && GetConnectedOutputPin(1)!= NULL){
+			if(true && GetConnectedOutputPin(1)!= NULL){
 				OutputDebugStringW(L"@@@@ BGDeliver ---->");
-				hr = GetConnectedOutputPin(1)->Deliver(pOutSample);// Pin1 :: BG  only deliver in layout change
+				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
 				OutputDebugStringW(L"@@@@ BGDeliver <----");
 				setDirty(false);
 			}
 			if(GetConnectedOutputPin(2)!= NULL){
-				OutputDebugStringW(L"@@@@ RenderDeliver ---->");
-				hr = GetConnectedOutputPin(2)->Deliver(pOutSample);// Pin2 :: Render every frame deliver
-				OutputDebugStringW(L"@@@@ RenderDeliver <----");
+				//OutputDebugStringW(L"@@@@ RenderDeliver ---->");
+				hr = GetConnectedOutputPin(2)->Deliver(pOutSampleD3D);// Pin2 :: Render every frame deliver
+				//OutputDebugStringW(L"@@@@ RenderDeliver <----");
 			}
 			setBlock(false);
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 		
 			if (S_FALSE == hr) {
-				pOutSample->Release();
+				pOutSampleRGB->Release();
+				pOutSampleD3D->Release();
 				m_bSampleSkipped = TRUE;
 				if (!m_bQualityChanged) {
 					NotifyEvent(EC_QUALITY_CHANGE,0,0);
@@ -167,7 +201,10 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 			}
 		}
 	}
-	pOutSample->Release();
+	if(pOutBGPin != NULL)
+	pOutSampleRGB->Release();
+	if(pOutRenderPin != NULL)
+	pOutSampleD3D->Release();
 
 	return S_OK;
 }
@@ -209,9 +246,9 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 			setBlock(true);
 		}
 		pSample->GetPointer(&LayoutData);	
-		OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
+		//OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
 		hr = ReceiveLayoutImg(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@ ReceiveLayout <----");
+		//OutputDebugStringW(L"@@@@ ReceiveLayout <----");
 	}
 	return hr;
 }
@@ -302,14 +339,18 @@ HRESULT SyncFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 
 	}
 
-	if (m_pInputPins.size() >= 1 && m_pInputPins[2] == pPin)      // layout image
+	else if (m_pInputPins.size() >= 1 && m_pInputPins[2] == pPin)      // layout image
 	{
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		CheckPointer(pmt, E_POINTER);
+		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo) && 
+			!IsEqualGUID(*pmt->FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC)) 
+		{
 			return E_INVALIDARG;
 		}
-		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
-			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
+		// Can we transform this type
+		if(IsAcceptedType(pmt)){
 			return NOERROR;
+		}
 	}
 	return E_FAIL;
 }
@@ -328,11 +369,22 @@ bool SyncFilter::IsAcceptedType(const CMediaType *pmt){
 			return true;
 		}
 	}
+
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
+		IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		return true;
+	}
+	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
+		IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		return true;
+	}
 	return false;
 }
 HRESULT SyncFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
+	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin) // camera Image
 	{
 		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
@@ -344,7 +396,7 @@ HRESULT SyncFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 		}		
 	}
 
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[1] == pPin)
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)   
 	{		
 		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
@@ -356,16 +408,19 @@ HRESULT SyncFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 		}		
 	}
 
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[2] == pPin)
+	if (m_pOutputPins.size() > 2 && m_pOutputPins[2] == pPin)   // Render 
 	{
 		CheckPointer(pmt, E_POINTER);
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		if (*pmt->FormatType() != FORMAT_VideoInfo && 
+			*pmt->FormatType() != GUID_FORMATTYPE_D3DXTEXTURE9DESC) 
+		{
 			return E_INVALIDARG;
 		}
+
 		// Can we transform this type
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
-		}		
+		}
 	}
 
 	return E_FAIL;
@@ -384,12 +439,36 @@ HRESULT SyncFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin,
 
 	}
 
-	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[2] == pMyPin)
+	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[2] == pMyPin)  // Layout
 	{
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		return S_OK;
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			initD3D(desc->Width, desc->Height);
+			return S_OK;
+		}
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			IDirect3DDevice9* pDevice = NULL;
+			m_pInputPins[2]->QueryD3DDevice(pDevice);
+			if (pDevice == NULL)
+				return S_FALSE;
+			initD3D(desc->Width, desc->Height, pDevice);
+			pDevice->Release();
+			pDevice = NULL;
+			return S_OK;
+		}
+		else
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			initD3D(bitHeader.biWidth, bitHeader.biHeight);
+			return S_OK;
+		}
 	}
 	return S_OK;
 }
@@ -415,13 +494,31 @@ HRESULT SyncFilter::CamTransform( IMediaSample *pIn, IMediaSample *pOut)
 HRESULT SyncFilter::LayoutTransform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
-	long cbData;
-	BYTE* outByte;
-	// Access the sample's data buffer
-	pIn->GetPointer(&LayoutData);
-	pOut->GetPointer(&outByte);
-	cbData = pOut->GetSize();
-	memcpy (outByte,LayoutData,cbData);
+
+	if (m_pD3DDisplay != NULL)
+	{
+		if (m_pInputPins.size() <= 0 || m_pOutputPins.size() <= 0)
+		{
+			return S_FALSE;
+		}
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return S_FALSE;
+		CAutoLock lck(pD3DCS);
+		CMuxTransformOutputPin* pOutPin = GetConnectedOutputPin(2);
+		if (pOutPin == NULL)
+		{
+			return S_FALSE;
+		}
+		CMediaType mt;
+
+		mt = pOutPin->CurrentMediaType();
+
+		DoTransform(pIn, pOut, &m_pInputPins[2]->CurrentMediaType(), &pOutPin->CurrentMediaType());
+
+
+	}
 	return S_OK;
 }
 
@@ -433,20 +530,21 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 	{
 		return S_FALSE;
 	}
-	CMediaType inputPin1MT = m_pInputPins[0]->CurrentMediaType();
-	CMediaType inputPin2MT = m_pInputPins[2]->CurrentMediaType();
+	CMediaType outPin0MT = m_pOutputPins[0]->CurrentMediaType();
+	CMediaType outPin1MT = m_pOutputPins[1]->CurrentMediaType();
+	CMediaType outPin2MT = m_pOutputPins[2]->CurrentMediaType();
 
-	if (inputPin1MT.Type() == NULL || inputPin2MT.Type() == NULL)
+	if (outPin0MT.Type() == NULL || outPin1MT.Type() == NULL|| outPin2MT.Type() == NULL)
 	{
 		return S_FALSE;
 	}
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin1MT.pbFormat;
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) outPin0MT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputPin1MT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
+		pProp->cbBuffer = outPin0MT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -460,13 +558,13 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 		}
 	}
 
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[1] == pOutPin )
+	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin2MT.pbFormat;
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) outPin1MT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputPin2MT.GetSampleSize();
+		pProp->cbBuffer = outPin1MT.GetSampleSize();
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -482,11 +580,11 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 
 	if (m_pOutputPins.size() > 0 && m_pOutputPins[2] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputPin2MT.pbFormat;
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) outPin2MT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 
 		pProp->cBuffers = 1;
-		pProp->cbBuffer = inputPin2MT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
+		pProp->cbBuffer = outPin2MT.GetSampleSize();//bitHeader.biWidth*bitHeader.biHeight;
 
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
@@ -499,8 +597,6 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 				return E_FAIL;
 		}
 	}
-
-
 	return NOERROR;
 }
 
@@ -526,21 +622,69 @@ HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMe
 		return S_OK;
 	}
 
+	// BG pin
 	else if (m_pOutputPins.size() > 1 && m_pInputPins[2] != NULL && m_pOutputPins[1] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
-		long size = inputMT.GetSampleSize();
+		if (m_pOutTexture == NULL)
+			return S_FALSE;
+		if (iPosition == 0)
+		{
+			CMediaType mt;
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetType(&MEDIATYPE_Video);
+			mt.SetFormatType(&FORMAT_VideoInfo);
+			mt.SetTemporalCompression(FALSE);
+			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+			mt.SetSampleSize(desc.Width*desc.Height*4);
 
-		*pMediaType = inputMT;
-		return S_OK;
+			VIDEOINFOHEADER pvi;
+			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+			pvi.bmiHeader.biWidth = desc.Width;
+			pvi.bmiHeader.biHeight = desc.Height;
+			pvi.bmiHeader.biBitCount = 32;
+			SetRectEmpty(&(pvi.rcSource));
+			SetRectEmpty(&(pvi.rcTarget));
+			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else
+		{
+			return VFW_S_NO_MORE_ITEMS;
+		}
 	}
+
+	// Render Pin
 	else if (m_pOutputPins.size() > 2 && m_pInputPins[2] != NULL && m_pOutputPins[2] == pOutPin)
 	{
-		CMediaType inputMT = m_pInputPins[2]->CurrentMediaType(); 
-		long size = inputMT.GetSampleSize();
-
-		*pMediaType = inputMT;
-		return S_OK;
+		if (iPosition == 0)    // share Texture
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pRenderTarget->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 1)   //d3d texture
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_D3DMEDIATYPE);
+			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
+			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
+			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
+			*pMediaType = mt;
+			return S_OK;
+		}
 	}
 	return VFW_S_NO_MORE_ITEMS;
 }
@@ -571,12 +715,48 @@ HRESULT SyncFilter::setBlock(bool isBlock){
 
 MS3DDisplay* SyncFilter::Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight)
 {
-	MS3DDisplay* newMS3DDisplay ;
+	MS3DDisplay* newMS3DDisplay  = new MS3DDisplay(pD3D,rtWidth,rtHeight);
 	return newMS3DDisplay;
 }
 
 MS3DDisplay* SyncFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight)
 {
-	MS3DDisplay* newMS3DDisplay ;
+	MS3DDisplay* newMS3DDisplay  = new MS3DDisplay(pDevice,rtWidth,rtHeight);
 	return newMS3DDisplay;
+}
+
+
+HRESULT SyncFilter::QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	outDevice = m_pD3DDisplay->GetD3DDevice();
+	if (outDevice != NULL)
+	{
+		outDevice->AddRef();
+	}
+	return S_OK;
+}
+
+HRESULT SyncFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
+{
+	if (m_pD3DDisplay == NULL || m_pInputPins.size() <= 0 || m_pInputPins[0] == NULL)
+		return S_FALSE;
+	if (m_pD3DDisplay->IsDeviceFromOther())
+	{
+		IDXBasePin* pDXInPin = NULL;
+		m_pInputPins[2]->QueryInterface(IID_IDXBasePin, (void**)&pDXInPin);
+		if (pDXInPin == NULL)
+			return S_FALSE;
+		pDXInPin->QueryD3DDeviceCS(cs);
+		pDXInPin->Release();
+		pDXInPin = NULL;
+		return S_OK;
+	}
+	else
+	{
+		cs = &m_csD3DDisplay;
+		return S_OK;
+	}
+	return S_OK;
 }
