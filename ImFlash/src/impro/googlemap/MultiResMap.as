@@ -164,7 +164,7 @@ package impro.googlemap
 			return geControl;
 		}
 		
-		public function recvGeCenter(id:String, vspaceX:Number, vspaceY:Number, lat:Number, lng:Number):void{
+		public function recvGeCenter(id:String, vspaceX:Number, vspaceY:Number):void{
 			var geControl:GEControl = geControlDict[id] as GEControl;			
 			
 			var lresX:Number = vspaceX * Setting.LRes.stageWidth;
@@ -172,16 +172,8 @@ package impro.googlemap
 			geControl.x = lresX;
 			geControl.y = lresY;
 			
-			var latlng:LatLng = map.fromViewportToLatLng(new Point(geControl.x, geControl.y));
-			var latlng2:LatLng = new LatLng(lat, lng);
-			var debugPoint:Point = map.fromLatLngToViewport(latlng2);
-			trace(latlng + " == " + latlng2);
-			
-//			var debugPoint:Point = map.fromLatLngToPoint(new LatLng(lng, lat));
-			debugPoint.x -= geControl.x;
-			debugPoint.y -= geControl.y;
-			
-			geControl.debugPoint(debugPoint);
+//			var latlng:LatLng = map.fromViewportToLatLng(new Point(geControl.x, geControl.y));
+	
 		}
 		
 		public function getViewport (id:Number):MapViewport{

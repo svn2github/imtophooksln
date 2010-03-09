@@ -93,7 +93,7 @@ package {
 		private function addGoogleEarthClient():void{
 			// add ge delegate control
 			setupSocket();
-			var ge1:GEControl = multiResMap.addGeControl(socket, 150, 150);
+//			var ge1:GEControl = multiResMap.addGeControl(socket, 150, 150);
 //			var ge2:GEControl = multiResMap.addGeControl(socket, 250, 250);
 //			trace("ge1.id: " + ge1.id);		
 //			trace("ge2.id: " + ge2.id);
@@ -106,6 +106,7 @@ package {
 			socket = new XMLSocket();
 			socket.addEventListener(Event.CONNECT, function(event:Event):void{
 				socket.send("11,flashGE"); 
+				socket.send("14,flashGE_login"); // broadcast
 			});
 			
             socket.addEventListener(DataEvent.DATA, dataHandler);
@@ -125,15 +126,14 @@ package {
 			if(cmd=="geLogin"){
 				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
 				socket.send("15,tabletGE,flashGE," + "assignID," + geControl.id);
-				trace("assignID: " + geControl.id);
-				
+				trace("assignID: " + geControl.id);				
 				
 			}else if(cmd=="geDebug"){
 				var vspaceX:Number = Number(data[4]);
 				var vspaceY:Number = Number(data[5]);
-				var lat:Number = Number(data[6]);
-				var lng:Number = Number(data[7]);
-				multiResMap.recvGeCenter(from, vspaceX, vspaceY, lat, lng);
+//				var lat:Number = Number(data[6]);
+//				var lng:Number = Number(data[7]);
+				multiResMap.recvGeCenter(from, vspaceX, vspaceY);
 //				trace("vspace: " + vspaceX + ", " + vspaceY);
 			
 			}else if(cmd=="clientLogout"){

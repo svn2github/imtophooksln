@@ -26,7 +26,7 @@ package impro.googlemap
 //		private var yaw:Number = 0;
 //		private var roll:Number = 0;
 
-		private var debugGUI:Sprite;		
+//		private var debugGUI:Sprite;		
 
 		//-------------------------------------- DEBUG VARS
 		private var DEBUG:Boolean = true;
@@ -41,19 +41,18 @@ package impro.googlemap
 			this._id = "tabletGE_" + (index++);
 			this.parentMap = parentMap;
 			
-			setupDraw();			
-			updateControl();
-			
 			this.addEventListener(MouseEvent.MOUSE_DOWN, pickUp);
 			this.addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
 			this.addEventListener(MouseEvent.MOUSE_UP, dropIt);
 			
-//			this.addEventListener(MouseEvent.MOUSE_WHEEL, onWheel);
-			
-			//this.addEventListener(KeyboardEvent.KEY_DOWN, onKeyUp);
-			//stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyUp);
-			
 			if(DEBUG){
+
+//				debugGUI = new Sprite();
+//				debugGUI.graphics.beginFill(0xff0000, 0.6);
+//				debugGUI.graphics.drawCircle(0, 0, 10);
+//				debugGUI.graphics.endFill();
+//				addChild(debugGUI);
+
 				var format:TextFormat = new TextFormat("Verdana", 10, 0xFFFFFF);
 				DEBUG_TEXT = new TextField();
 				DEBUG_TEXT.defaultTextFormat = format;
@@ -69,37 +68,14 @@ package impro.googlemap
 				DEBUG_TEXT.text = "-";
 				addChild(DEBUG_TEXT);
 			}
+			
+			update();						
 		}
 		
 		public function get id():String{
 			return _id;
 		}		
 		
-		private function setupDraw():void{
-			
-//			this.graphics.beginFill(0x0000ff, 0.4);
-//			this.graphics.drawRect(-w/2, -h/2, w, h);
-//			this.graphics.endFill();
-//			
-//			// draw cross line
-//			this.graphics.beginFill(0x0000ff, 1);
-//			this.graphics.drawRect(0, -h/2, 1, h);
-//			this.graphics.drawRect(-w/2, 0, w, 1);			
-//			this.graphics.endFill();
-//			
-//			this.graphics.lineStyle(1, 0x0000ff);
-//			this.graphics.moveTo(-w/2, -h/2);
-//			this.graphics.lineTo(w/2, -h/2);
-//			this.graphics.lineTo(w/2, h/2);			
-//			this.graphics.lineTo(-w/2, h/2);
-//			this.graphics.lineTo(-w/2, -h/2);			
-			
-			debugGUI = new Sprite();
-			debugGUI.graphics.beginFill(0xff0000, 0.6);
-			debugGUI.graphics.drawCircle(0, 0, 10);
-			debugGUI.graphics.endFill();
-			addChild(debugGUI);
-		}
 
 		private function pickUp(event:MouseEvent):void {
 		    event.target.startDrag(false);
@@ -122,11 +98,6 @@ package impro.googlemap
 //			update();
 //		}
 		
-		public function debugPoint(point:Point):void{
-			debugGUI.x = point.x;
-			debugGUI.y = point.y;
-			update();
-		}
 		
 		public function update():void{
 //			updateMap();
@@ -160,9 +131,9 @@ package impro.googlemap
 			this.graphics.lineTo(-w/2, -h/2);		
 			
 			// connecting line
-			this.graphics.lineStyle(2, 0x00ff00, 0.6);
-			this.graphics.moveTo(0, 0);
-			this.graphics.lineTo(debugGUI.x, debugGUI.y);			
+//			this.graphics.lineStyle(2, 0x00ff00, 0.6);
+//			this.graphics.moveTo(0, 0);
+//			this.graphics.lineTo(debugGUI.x, debugGUI.y);			
 		}
 		
 		public function moveLeft(value:Number=1):void{
@@ -201,13 +172,14 @@ package impro.googlemap
 				var p3ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, parentMap.height));
 				var p4ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, 0));								
 				
-				var s:String = "ll," + p1ToLatlng.lat() + "," + p1ToLatlng.lng() + ","
+				var s:String = "setBoundary," + p1ToLatlng.lat() + "," + p1ToLatlng.lng() + ","
 									+ p2ToLatlng.lat() + "," + p2ToLatlng.lng() + ","
 									+ p3ToLatlng.lat() + "," + p3ToLatlng.lng() + "," 
 									+ p4ToLatlng.lat() + "," + p4ToLatlng.lng();
 									
 																		
 				socket.send("15,"+id+",flashGE," + s);
+				trace("socket.send");
 			}
 //			else{
 //				var p1ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, 0));
