@@ -798,14 +798,9 @@ IplImage* HomoWarpFilter::GetInIplmage()
 	bool bFlipY = false;
 	CMediaType mt;
 	mt = m_pInputPins[0]->CurrentMediaType();
-	if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE))
-	{
-		bFlipY = !m_bFlipY;
-	}
-	else
-	{
-		bFlipY = m_bFlipY;
-	}
+	
+	bFlipY = !m_bFlipY;
+
 	if (bFlipY)
 	{
 		cvFlip(d3dImg, cvImg, 0);
