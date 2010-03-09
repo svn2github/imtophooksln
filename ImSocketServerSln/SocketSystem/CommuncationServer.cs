@@ -127,17 +127,20 @@ namespace SocketSystem
         /// <param name="pSocket"> The SocketClient object the message came from </param>
         public void CloseHandler(CSocketClient pSocket)
         {
-            Console.WriteLine("Close Handler");
-            Console.WriteLine("IpAddress: " + pSocket.GetIpAddress);
-
-
+//            Console.WriteLine("Close Handler");
+//            Console.WriteLine("IpAddress: " + pSocket.GetIpAddress);
+            
+            String logoutClient = pSocket.GetClientName;
             pSocketServer.RemoveSocket(pSocket);
-
+            Console.WriteLine("Client [" + logoutClient + "] logout.");
+            
             ArrayList clients = pSocketServer.GetSockets();
 
+            // list and boradcast to all live clients
             Console.WriteLine("\n=== Client List ===");
             foreach (CSocketClient client in clients)
             {
+                client.Send("15," + client.GetClientName + ",Server,clientLogout," + logoutClient);
                 Console.WriteLine("Client: " + client.GetClientName);
             }
         }
