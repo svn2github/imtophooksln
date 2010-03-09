@@ -399,6 +399,7 @@ bool TouchLibFilter::SetBGThreshold(int threshold)
 	}
 	char para[MAX_PATH];
 	sprintf(para, "%d", threshold);
+	CAutoLock lck(&m_csTouchScreen);
 	m_pTouchScreen->setParameter(m_bgLabel, "threshold", para);
 	return true;
 }
@@ -413,6 +414,7 @@ bool TouchLibFilter::GetBGThreshold(int& threshold)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_bgLabel);
 	if (pFilterList.size() <= 0)
 		return false;
@@ -438,6 +440,7 @@ bool TouchLibFilter::SetSimpleHighPassBlur(int blur)
 	}
 	char para[MAX_PATH];
 	sprintf(para, "%d", blur);
+	CAutoLock lck(&m_csTouchScreen);
 	m_pTouchScreen->setParameter(m_shpLabel, "blur", para);
 
 	return true;
@@ -453,6 +456,7 @@ bool TouchLibFilter::GetSimpleHighPassBlur(int& blur)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_shpLabel);
 	if (pFilterList.size() <= 0)
 		return false;
@@ -480,6 +484,7 @@ bool TouchLibFilter::SetSimpleHighPassDeNoise(int deNoise)
 	}
 	char para[MAX_PATH];
 	sprintf(para, "%d", deNoise);
+	CAutoLock lck(&m_csTouchScreen);
 	m_pTouchScreen->setParameter(m_shpLabel, "noise", para);
 	return true;
 }
@@ -493,6 +498,7 @@ bool TouchLibFilter::GetSimpleHighPassDeNoise(int& deNoise)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_shpLabel);
 	if (pFilterList.size() <= 0)
 		return false;
@@ -518,6 +524,7 @@ bool TouchLibFilter::SetScaleLevel(int level)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	char para[MAX_PATH];
 	sprintf(para, "%d", level);
 	m_pTouchScreen->setParameter(m_scalerLabel, "level", para);
@@ -533,6 +540,7 @@ bool TouchLibFilter::GetScaleLevel(int& level)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_scalerLabel);
 	if (pFilterList.size() <= 0)
 		return false;
@@ -558,6 +566,7 @@ bool TouchLibFilter::SetRectifyLevel(int level)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	char para[MAX_PATH];
 	sprintf(para, "%d", level);
 	m_pTouchScreen->setParameter(m_rectifyLabel, "level", para);
@@ -574,6 +583,7 @@ bool TouchLibFilter::GetRectifyLevel(int& level)
 	{
 		return false;
 	}
+	CAutoLock lck(&m_csTouchScreen);
 	list<Filter*> pFilterList = m_pTouchScreen->findFiltersPtr(m_rectifyLabel);
 	if (pFilterList.size() <= 0)
 		return false;

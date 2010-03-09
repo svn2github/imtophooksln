@@ -429,8 +429,8 @@ bool CTouchScreen::processOnce(IplImage* pSrc, ROIData* roi)
 			CvRect roiRect;
 			roiRect.x = roi->m_pRECTs[i].left * pSrc->width;
 			roiRect.y = roi->m_pRECTs[i].top * pSrc->height;
-			roiRect.width = (roi->m_pRECTs[i].right - roi->m_pRECTs[i].left)*pSrc->width;
-			roiRect.height = (roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height;		
+			roiRect.width = min((int)pSrc->width -1, (int)((roi->m_pRECTs[i].right - roi->m_pRECTs[i].left)*pSrc->width));
+			roiRect.height = min((int)pSrc->height -1, (int)((roi->m_pRECTs[i].bottom - roi->m_pRECTs[i].top) * pSrc->height));		
 			if (i >= 1)
 			{
 				//since mono filter we don't use ROI

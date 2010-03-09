@@ -150,6 +150,8 @@ void SimpleHighpassFilter::kernelWithROI()
 
 	// filter out the noise using a median filter
 	int noiseParameter = noiseLevel*2+1;
+	//because OpenCV2.0a have bugs, if the noiseParameter bigger than 21, it will crash
+	noiseParameter = min(21, noiseParameter);
 	cvSmooth(buffer, destination, noiseSmoothType, noiseParameter, noiseParameter);
 
 	cvResetImageROI(buffer);
