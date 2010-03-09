@@ -27,13 +27,14 @@ namespace SocketSystem
         //     This command will send to the new connected client with MetaData of 'True'
         //     or 'False' in replay to the same command that client did sent to the server
         //     as a question.
-        IsNameExists = 13,
+        ClientRename = 13,
         //
         // ºK­n:
         //     This command will send to the new connected client with MetaData in "RemoteClientIP:RemoteClientName"
         //     format in replay to the same command that client did sent to the server as
         //     a request.
-        SendClientList = 14,
+        Broadcast = 14,
+        //SendClientList = 14,
         //
         // ºK­n:
         //     Send a text message to the server.Pass the body of text message as command's
