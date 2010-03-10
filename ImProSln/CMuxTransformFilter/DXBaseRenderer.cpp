@@ -158,46 +158,61 @@ HRESULT DXBaseRenderer::SourceThreadCanWait(BOOL bCanWait)
 
 void DXBaseRenderer::DisplayRendererState()
 {
-	DbgLog((LOG_TIMING, 1, TEXT("\nTimed out in WaitForRenderTime")));
+	WCHAR str[MAX_PATH] = {0};
+	OutputDebugStringW(L"@@@@@@@@@DisplayRendererState@@@@@@@@@\n");
+	OutputDebugStringW(L"\n@@@@ Timed out in WaitForRenderTime");
 
 	// No way should this be signalled at this point
 
 	BOOL bSignalled = m_ThreadSignal.Check();
-	DbgLog((LOG_TIMING, 1, TEXT("Signal sanity check %d"),bSignalled));
+	swprintf_s(str, MAX_PATH, L"@@@@ Signal sanity check %d", bSignalled);
+	OutputDebugStringW(str);
+	
 
 	// Now output the current renderer state variables
+	swprintf_s(str, MAX_PATH, L"@@@@ Filter state %d",m_State);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Filter state %d"),m_State));
+	swprintf_s(str, MAX_PATH, L"@@@@ Abort flag %d", m_bAbort);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Abort flag %d"),m_bAbort));
+	swprintf_s(str, MAX_PATH, L"@@@@ Streaming flag %d", m_bStreaming);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Streaming flag %d"),m_bStreaming));
+	swprintf_s(str, MAX_PATH, L"@@@@ Clock advise link %d",m_dwAdvise);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Clock advise link %d"),m_dwAdvise));
+	swprintf_s(str, MAX_PATH, L"@@@@ Current media sample %x", m_pMediaSample);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Current media sample %x"),m_pMediaSample));
+	swprintf_s(str, MAX_PATH, L"@@@@ EOS signalled %d", m_bEOS);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("EOS signalled %d"),m_bEOS));
+	swprintf_s(str, MAX_PATH, L"@@@@ EOS delivered %d", m_bEOSDelivered);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("EOS delivered %d"),m_bEOSDelivered));
-
-	DbgLog((LOG_TIMING, 1, TEXT("Repaint status %d"),m_bRepaintStatus));
+	swprintf_s(str, MAX_PATH, L"@@@@ Repaint status %d", m_bRepaintStatus);
+	OutputDebugStringW(str);
 
 
 	// Output the delayed end of stream timer information
+	swprintf_s(str, MAX_PATH, L"@@@@ End of stream timer %x", m_EndOfStreamTimer);
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("End of stream timer %x"),m_EndOfStreamTimer));
-
-	DbgLog((LOG_TIMING, 1, TEXT("Deliver time %s"),CDisp((LONGLONG)m_SignalTime)));
+	swprintf_s(str, MAX_PATH, L"@@@@ Deliver time %s",CDisp((LONGLONG)m_SignalTime));
+	OutputDebugStringW(str);
 
 
 	// Should never timeout during a flushing state
 
 	BOOL bFlushing = m_pInputPin->IsFlushing();
-	DbgLog((LOG_TIMING, 1, TEXT("Flushing sanity check %d"),bFlushing));
+
+	swprintf_s(str, MAX_PATH, L"@@@@ Flushing sanity check %d", bFlushing);
+	OutputDebugStringW(str);
 
 	// Display the time we were told to start at
-	DbgLog((LOG_TIMING, 1, TEXT("Last run time %s"),CDisp((LONGLONG)m_tStart.m_time)));
+	swprintf_s(str, MAX_PATH, L"@@@@ Last run time %s", CDisp((LONGLONG)m_tStart.m_time));
+	OutputDebugStringW(str);
 
 	// Have we got a reference clock
 	if (m_pClock == NULL) return;
@@ -209,22 +224,28 @@ void DXBaseRenderer::DisplayRendererState()
 	CRefTime Offset = CurrentTime - m_tStart;
 
 	// Display the current time from the clock
+	swprintf_s(str, MAX_PATH, L"@@@@ Clock time %s",CDisp((LONGLONG)CurrentTime.m_time));
+	OutputDebugStringW(str);
 
-	DbgLog((LOG_TIMING, 1, TEXT("Clock time %s"),CDisp((LONGLONG)CurrentTime.m_time)));
 
-	DbgLog((LOG_TIMING, 1, TEXT("Time difference %dms"),Offset.Millisecs()));
+	swprintf_s(str, MAX_PATH, L"@@@@ Time difference %dms",Offset.Millisecs());
+	OutputDebugStringW(str);
 
 
 	// Do we have a sample ready to render
 	if (m_pMediaSample == NULL) return;
 
 	m_pMediaSample->GetTime((REFERENCE_TIME*)&StartTime, (REFERENCE_TIME*)&EndTime);
-	DbgLog((LOG_TIMING, 1, TEXT("Next sample stream times (Start %d End %d ms)"),
-		StartTime.Millisecs(),EndTime.Millisecs()));
+
+	swprintf_s(str, MAX_PATH, L"@@@@ Next sample stream times (Start %d End %d ms)",
+		StartTime.Millisecs(), EndTime.Millisecs());
+	OutputDebugStringW(str);
 
 	// Calculate how long it is until it is due for rendering
 	CRefTime Wait = (m_tStart + StartTime) - CurrentTime;
-	DbgLog((LOG_TIMING, 1, TEXT("Wait required %d ms"),Wait.Millisecs()));
+	swprintf_s(str, MAX_PATH, L"@@@@ Wait required %d ms", Wait.Millisecs());
+	OutputDebugStringW(str);
+	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
 }
 #endif
 
@@ -247,7 +268,6 @@ HRESULT DXBaseRenderer::WaitForRenderTime()
 	OnWaitStart();
 	while (Result == WAIT_TIMEOUT) {
 		Result = WaitForMultipleObjects(2,WaitObjects,FALSE,RENDER_TIMEOUT);
-
 #ifdef DEBUG
 		if (Result == WAIT_TIMEOUT) DisplayRendererState();
 #endif

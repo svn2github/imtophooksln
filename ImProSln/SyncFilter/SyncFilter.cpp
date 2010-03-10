@@ -103,7 +103,35 @@ HRESULT SyncFilter::ReceiveDirty(){
 	setDirty(true);
     return S_OK;
 }
+HRESULT SyncFilter::CopyInRT2OutTexture()
+{
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+		return S_FALSE;
+	CAutoLock lck(pD3DCS);
 
+    IDirect3DSurface9* pInSurface = NULL, *pOutSurface = NULL;
+	m_pInTexture->GetSurfaceLevel(0, &pInSurface);
+	m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
+
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	
+	pDevice->GetRenderTargetData(pInSurface, pOutSurface);
+
+	if (pInSurface != NULL)
+	{
+		pInSurface->Release();
+		pInSurface = NULL;
+	}
+	if (pOutSurface != NULL)
+	{
+		pOutSurface->Release();
+		pOutSurface = NULL;
+	}
+	return S_OK;
+
+}
 HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceivePin)
 {
 	if (m_pOutputPins.size() < 2)
@@ -116,8 +144,8 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		return S_OK;
 	}
 	ASSERT(pSample);
-	IMediaSample * pOutSampleD3D;
-	IMediaSample * pOutSampleRGB;
+	IMediaSample * pOutSampleD3D = NULL;
+	IMediaSample * pOutSampleRGB = NULL;
 	CMuxTransformOutputPin* pOutBGPin = GetConnectedOutputPin(1);
 	CMuxTransformOutputPin* pOutRenderPin = GetConnectedOutputPin(2);
 
@@ -125,46 +153,25 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr;
 	// Set up the output sample
-	if(pOutBGPin!= NULL){
-		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
-	}
-	if(pOutRenderPin != NULL){
+	MSR_START(m_idTransform);
+
+	if(pOutRenderPin != NULL && pOutRenderPin->IsConnected()){
 		hr = InitializeOutputSample(pSample, pReceivePin, pOutRenderPin, &pOutSampleD3D);
+		hr = LayoutTransform(pSample, pOutSampleD3D);
 	}
+	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty()){
+		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
+		hr = CopyInRT2OutTexture();
+		hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
+	}
+
 	if (FAILED(hr)) {
 		return hr;
 	}
-//	MSR_START(m_idTransform);
-
-	hr = LayoutTransform(pSample, pOutSampleD3D);
-	if(hr == S_OK && pOutBGPin != NULL){
-		CCritSec* pD3DCS = NULL;
-		QueryD3DDeviceCS(NULL, pD3DCS);
-		if (pD3DCS == NULL)
-			return S_FALSE;
-		CAutoLock lck(pD3DCS);
-
-	    IDirect3DSurface9* pInSurface = NULL, *pOutSurface = NULL;
-		m_pInTexture->GetSurfaceLevel(0, &pInSurface);
-		m_pOutTexture->GetSurfaceLevel(0, &pOutSurface);
-		/*hr = D3DXLoadSurfaceFromSurface(pOutSurface,NULL, NULL, pInSurface, NULL, NULL, 
-			D3DX_FILTER_POINT, 0);*/
-		IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
-		pDevice->GetRenderTargetData(pInSurface, pOutSurface);
-		if (pInSurface != NULL)
-		{
-			pInSurface->Release();
-			pInSurface = NULL;
-		}
-		if (pOutSurface != NULL)
-		{
-			pOutSurface->Release();
-			pOutSurface = NULL;
-		}
-
-		CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
+	
+	if(getDirty() == true){
+		setBlock(true);
 	}
-
 	//MSR_STOP(m_idTransform);
 
 	if (FAILED(hr)) {
@@ -172,13 +179,13 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			if(getDirty() == true && GetConnectedOutputPin(1)!= NULL){
-				OutputDebugStringW(L"@@@@ BGDeliver ---->");
+			if(pOutSampleRGB != NULL){
+				/*OutputDebugStringW(L"@@@@ BGDeliver ---->");*/
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
-				OutputDebugStringW(L"@@@@ BGDeliver <----");
+				/*OutputDebugStringW(L"@@@@ BGDeliver <----");*/
 				setDirty(false);
 			}
-			if(GetConnectedOutputPin(2)!= NULL){
+			if( pOutSampleD3D != NULL){
 				//OutputDebugStringW(L"@@@@ RenderDeliver ---->");
 				hr = GetConnectedOutputPin(2)->Deliver(pOutSampleD3D);// Pin2 :: Render every frame deliver
 				//OutputDebugStringW(L"@@@@ RenderDeliver <----");
@@ -188,8 +195,16 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		} else {
 		
 			if (S_FALSE == hr) {
-				pOutSampleRGB->Release();
-				pOutSampleD3D->Release();
+				if (pOutSampleRGB != NULL)
+				{
+					pOutSampleRGB->Release();
+					pOutSampleRGB = NULL;
+				}
+				if (pOutSampleD3D != NULL)
+				{
+					pOutSampleD3D->Release();
+					pOutSampleD3D = NULL;
+				}
 				m_bSampleSkipped = TRUE;
 				if (!m_bQualityChanged) {
 					NotifyEvent(EC_QUALITY_CHANGE,0,0);
@@ -199,10 +214,16 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 			}
 		}
 	}
-	if(pOutBGPin != NULL)
-	pOutSampleRGB->Release();
-	if(pOutRenderPin != NULL)
-	pOutSampleD3D->Release();
+	if(pOutSampleRGB != NULL)
+	{
+		pOutSampleRGB->Release();
+		pOutSampleRGB = NULL;
+	}
+	if(pOutSampleD3D != NULL)
+	{
+		pOutSampleD3D->Release();
+		pOutSampleD3D = NULL;
+	}
 
 	return S_OK;
 }
@@ -227,22 +248,20 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0] && !getBlock())
 	{
 		pSample->GetPointer(&CamData);
-		OutputDebugStringW(L"@@@@ ReceiveCam ---->");
+		/*OutputDebugStringW(L"@@@@ ReceiveCam ---->");*/
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@ ReceiveCam <----");
+		/*OutputDebugStringW(L"@@@@ ReceiveCam <----");*/
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
-		OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
+		/*OutputDebugStringW(L"@@@@ ReceiveDirty ---->");*/
 		hr = ReceiveDirty();
-		OutputDebugStringW(L"@@@@ ReceiveDirty <----");
+		/*OutputDebugStringW(L"@@@@ ReceiveDirty <----");*/
 
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
 	{
-		if(getDirty() == true){
-			setBlock(true);
-		}
+
 		pSample->GetPointer(&LayoutData);	
 		//OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
 		hr = ReceiveLayoutImg(pSample, pReceivePin);

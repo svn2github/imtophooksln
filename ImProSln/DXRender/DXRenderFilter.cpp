@@ -173,12 +173,6 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 		m_pD3DDisplay->Render();
 		m_pD3DDisplay->SetTexture(NULL);
 	}
-	/*HRESULT hr = S_OK;
-	int tid = GetCurrentThreadId();
-	WCHAR str[MAX_PATH] = {0};
-	swprintf_s(str, MAX_PATH, L"d:\testRenderIn%d.jpg", tid);
-	hr = D3DXSaveTextureToFile(str, D3DXIFF_JPG, m_pInTexture, NULL);
-	*/
 	return S_OK;
 }
 

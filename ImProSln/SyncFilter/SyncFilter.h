@@ -60,6 +60,7 @@ protected:
 	bool Block;
 
 private:
+	virtual HRESULT CopyInRT2OutTexture();
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveDirty();
 	virtual HRESULT ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceivePin);
