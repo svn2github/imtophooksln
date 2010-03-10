@@ -157,7 +157,7 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	}
 	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty()){
 		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
-		hr = CopyInRT2OutTexture();
+		hr = CopyRenderTarget2OutputTexture();
 		hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
 	}
 
