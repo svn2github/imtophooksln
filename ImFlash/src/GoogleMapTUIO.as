@@ -64,7 +64,7 @@ package {
 			
 //			var iview:IMView = multiResMap.getMapStage();
 			
-			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
+//			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
 			  
 		}  
 

@@ -48,8 +48,8 @@ package impro.googlemap
 		{
 			DEBUG = $DEBUG;
 			
-//			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExRcR7IumtuiL9gAiOhCPfe14dC1HBSpTjOFiyNExylutyalkkjAIFFIZw";
-			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExR_j1b9FZtV9XbZimSIA_BIot63gxRd534MBVvU4xP-2j78Ek8TfdeHFg";
+			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExRcR7IumtuiL9gAiOhCPfe14dC1HBSpTjOFiyNExylutyalkkjAIFFIZw";
+//			map.key = "ABQIAAAA1Xc_0qFDwhVg0qsY959yExR_j1b9FZtV9XbZimSIA_BIot63gxRd534MBVvU4xP-2j78Ek8TfdeHFg";
 			map.setSize(new Point(width, height));			
 			map.addEventListener(MapEvent.MAP_READY, onMapReady);
 			map.addEventListener(MapZoomEvent.ZOOM_CHANGED, onMapZoom);

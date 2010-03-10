@@ -7,7 +7,7 @@ package impro
 		public static const DEBUG:Boolean = true;
 		
 		// this is for GEControl to communicate with googleEarth via a socket server
-		public static var ServerIP:String = "192.168.101.154";
+		public static var ServerIP:String = "192.168.1.21";
 		public static var ServerPort:Number = 5000;
 		
 //		public static var LRes:IMView = new IMView(-1, 0, 0, 1024, 768);		
