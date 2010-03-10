@@ -56,22 +56,18 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 		return S_OK;
 	}
 	ASSERT(pSample);
-	IMediaSample * pOutSample;
+	IMediaSample * pOutSample = NULL;
 	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
-	HRESULT hr;
+	HRESULT hr = S_OK;
 	// Set up the output sample
-
-	hr = InitializeOutputSample(pSample, pReceivePin, GetConnectedOutputPin(0), &pOutSample);
-
-	if (FAILED(hr)) {
-		return hr;
-	}
-
+	
 	// Start timing the transform (if PERF is defined)
 	MSR_START(m_idTransform);
+	//since we just try to sync them, we don't need copy it, we just pass it.
 
-	hr = CamTransform(pSample, pOutSample);
+	pOutSample = pSample;
+	pOutSample->AddRef();
 
 	// Stop the clock and log it (if PERF is defined)
 	MSR_STOP(m_idTransform);
