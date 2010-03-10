@@ -19,6 +19,7 @@ TouchLibFilter::TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 	m_pTouchScreen = NULL;
 	m_oscSender = OSCSender::GetOSCSender();
 	m_bFingerFlipY = false;
+	m_bSkipBGRemove = false;
 
 	m_ROIData.m_nRECTs = 1;
 	m_ROIData.m_pRECTs = new fRECT[1];
@@ -195,13 +196,13 @@ HRESULT TouchLibFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 		if (IsEqualGUID(*mt.Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(*mt.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = ((D3DSURFACE_DESC* ) (mt.pbFormat));
-			CreateTouchScreen(desc->Width, desc->Height, false);
+			CreateTouchScreen(desc->Width, desc->Height, m_bSkipBGRemove);
 		}
 		else
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, false);
+			CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, m_bSkipBGRemove);
 		}
 	}
 
@@ -355,6 +356,7 @@ HRESULT TouchLibFilter::GetPages(CAUUID *pPages)
 
 bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove)
 {
+	CAutoLock lck(&m_csTouchScreen);
 	if (m_pTouchScreen != NULL)
 	{
 		delete m_pTouchScreen;
@@ -386,6 +388,67 @@ bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundR
 	registerListener(m_oscSender);
 	
 	return true;
+}
+
+bool TouchLibFilter::GetIsSkipBGRemove()
+{
+	CAutoLock lck(&m_csTouchScreen);
+	return m_bSkipBGRemove;
+}
+bool TouchLibFilter::SetIsSKipBGRemove(bool isSkipBG)
+{
+	if (m_pInputPins.size() <= 0 || !m_pInputPins[0]->IsConnected())
+		return false;
+	CAutoLock lck(&m_csTouchScreen);
+	if (m_bSkipBGRemove == isSkipBG)
+		return true;
+
+	CMediaType mt = m_pInputPins[0]->CurrentMediaType();
+	if (IsEqualGUID(*mt.FormatType(), FORMAT_VideoInfo) )
+	{
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+
+		bool bStartTracking = false;
+		bool bDrawFinger = false;
+		bool bDrawROI = false;
+		int BGThreshold = 0;
+		int shpBlur = 13;
+		int shpDN = 3;
+		int scaleLevel = 70;
+		int rectifyLevel = 70;
+		bool bFlipY = false;
+
+
+		getStartTracking(bStartTracking);
+		bDrawFinger = getDrawFingers();
+		bDrawROI = getDrawROI();
+		
+		GetSimpleHighPassBlur(shpBlur);
+		GetSimpleHighPassDeNoise(shpDN);
+		GetScaleLevel(scaleLevel);
+		GetRectifyLevel(rectifyLevel);
+		bFlipY = GetbFlipY();
+		
+		if (CreateTouchScreen(bitHeader.biWidth, bitHeader.biHeight, isSkipBG))
+		{
+			m_bSkipBGRemove = isSkipBG;
+			
+
+			setStartTracking(bStartTracking);
+			setDrawFingers(bDrawFinger);
+			setDrawROI(bDrawROI);
+
+			SetSimpleHighPassBlur(shpBlur);
+
+			SetSimpleHighPassDeNoise(shpDN);
+			SetScaleLevel(scaleLevel);
+			SetRectifyLevel(rectifyLevel);
+			SetbFlipY(bFlipY);
+			return true;
+		}
+	}
+	return false;
 }
 bool TouchLibFilter::SetBGThreshold(int threshold)
 {

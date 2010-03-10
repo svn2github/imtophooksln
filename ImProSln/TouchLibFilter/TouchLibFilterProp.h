@@ -70,4 +70,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedCkfingerflipy();
 	CButton m_ckDrawROI;
 	afx_msg void OnBnClickedCkdrawroi();
+	CButton m_ckSkipBGRemove;
+	afx_msg void OnBnClickedCkskipbg();
 };

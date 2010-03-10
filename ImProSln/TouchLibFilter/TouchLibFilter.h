@@ -56,8 +56,8 @@ protected:
 	CCritSec m_csROIData;
 	ROIData m_ROIData;
 	bool m_bFingerFlipY;
-
-	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
+	bool m_bSkipBGRemove;
+	
 	bool DestoryTouchScreen();
 	virtual bool ShowConfigWindow(bool bShow);
 	HRESULT ReceiveInput0(IMediaSample *pSample, const IPin* pReceivePin);
@@ -73,6 +73,7 @@ protected:
 	OSCSender* m_oscSender;
 	CCritSec m_csFilterState;
 protected:
+	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
 	bool IsAcceptedType(const CMediaType *pmt);
 public:
 	TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
@@ -109,4 +110,7 @@ public:
 
 	virtual bool GetbFlipY();
 	virtual bool SetbFlipY(bool v);
+
+	virtual bool GetIsSkipBGRemove();
+	virtual bool SetIsSKipBGRemove(bool isSkipBG);
 };

@@ -53,4 +53,7 @@ public:
 	virtual HRESULT SaveToFile(WCHAR* filename);
 	virtual HRESULT LoadFromFile(WCHAR* filename);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
+
+	virtual bool GetIsSkipBGRemove();
+	virtual bool SetIsSKipBGRemove(bool isSkipBG);
 };
