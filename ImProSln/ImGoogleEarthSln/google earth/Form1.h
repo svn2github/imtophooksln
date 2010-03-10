@@ -185,8 +185,8 @@ namespace googleearth {
 		private: static System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress = "192.168.101.154";
-		private: static Int32 port = 5000;
+		private: static String^ ipAddress;
+		private: static Int32 port;
 	    private: static String^ tabletName = "tabletGE";
 		private: System::Windows::Forms::Timer^  animTimer;
 
@@ -208,6 +208,8 @@ namespace googleearth {
 
 			g_formPtr = this;
 
+			loadParamsFromFile();
+
 			setupBrowser();
 			
 			setupArtoolkit();
@@ -223,6 +225,20 @@ namespace googleearth {
 				this->TopMost = true;
 			}				 
 		}
+
+		private: System::Void loadParamsFromFile(){
+			String^ line;
+			System::IO::StreamReader^ file = gcnew System::IO::StreamReader(".\\setting.txt");
+			
+			line = file->ReadLine();
+			String^ _ip = line->Split(' ')[1];
+			line = file->ReadLine();
+			String^ _port = line->Split(' ')[1];
+
+			ipAddress = _ip;
+			port = Int32::Parse(_port);
+		}
+		
 
 		private: System::Void setupBrowser(){
 			String^ URL = "file:///C:/googleEarth.html";
@@ -311,17 +327,20 @@ namespace googleearth {
 		private: static System::Void MessageHandler(Int32 iNumberOfBytes){
 
 			// Find a complete message
-			String^ strMessage = System::Text::ASCIIEncoding::ASCII->GetString(GetRawBuffer, 0, iNumberOfBytes);			
+			String^ strMessage = System::Text::ASCIIEncoding::ASCII->GetString(GetRawBuffer, 0, iNumberOfBytes);
+			
 
 			// 15,csGE,flashGE,11,p1x,p1y,..
 			//array<String>^ data = strMessage->Split(',');
+			strMessage = strMessage->Trim('\0');
 			array<String^>^data = strMessage->Split(',');
+
 			
 			if(data!=nullptr){			
 				
 				// && cmds->Length == 12
 				
-				String^ cmd = data[3]->Trim('\0');
+				String^ cmd = data[3];
 
 				if(cmd == "assignID"){
 					tabletName = data[4];
@@ -331,15 +350,22 @@ namespace googleearth {
 					sendData("15,flashGE,"+tabletName+",geLogin");				
 				}
 				else if(cmd == "setBoundary"){
-					double leftTopLat = System::Double::Parse(data[4]);
-					double leftTopLong = System::Double::Parse(data[5]);
-					double leftDownLat = System::Double::Parse(data[6]);
-					double leftDownLong = System::Double::Parse(data[7]);
-					double rightDownLat = System::Double::Parse(data[8]);
-					double rightDownLong = System::Double::Parse(data[9]);
-					double rightTopLat = System::Double::Parse(data[10]);
-					double rightTopLong = System::Double::Parse(data[11]);
-					set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat,rightTopLong,rightTopLat, rightDownLong, rightDownLat);
+
+					try{
+						double leftTopLat = System::Double::Parse(data[4]);
+						double leftTopLong = System::Double::Parse(data[5]);
+						double leftDownLat = System::Double::Parse(data[6]);
+						double leftDownLong = System::Double::Parse(data[7]);
+						double rightDownLat = System::Double::Parse(data[8]);
+						double rightDownLong = System::Double::Parse(data[9]);
+						double rightTopLat = System::Double::Parse(data[10]);
+						double rightTopLong = System::Double::Parse(data[11]);
+						set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat,rightTopLong,rightTopLat, rightDownLong, rightDownLat);
+
+					}catch(System::Exception^ e){
+
+					}
+
 					//webBrowser1->Document->InvokeScript("boundaryLine");
 				}
 			}
@@ -347,6 +373,7 @@ namespace googleearth {
 
 		// Translate the passed message into ASCII and store it as a Byte array.
 		private: static System::Void sendData (String^ message) {
+		    message += "\0";
 			array<Byte>^data = System::Text::Encoding::ASCII->GetBytes( message );
 			GetNetworkStream->Write( data, 0, data->Length );
 			GetNetworkStream->Flush();
