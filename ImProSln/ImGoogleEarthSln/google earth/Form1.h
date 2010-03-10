@@ -187,8 +187,8 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: static String^ ipAddress = "192.168.101.154";
 		private: static Int32 port = 5000;
-	    private: static String^ tabletName = "tabletGE_0";
-	private: System::Windows::Forms::Timer^  animTimer;
+	    private: static String^ tabletName = "tabletGE";
+		private: System::Windows::Forms::Timer^  animTimer;
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -205,11 +205,13 @@ namespace googleearth {
 			
 			//full screen mode
 			//setFullScreen();			
+
 			g_formPtr = this;
+
 			setupBrowser();
 			
 			setupArtoolkit();
-
+			
 			setupSocket();
 						
 		}
@@ -266,7 +268,8 @@ namespace googleearth {
             Receive();
 			
 			// register to TcpServer.
-			sendData("11," + tabletName);
+			sendData("11," + tabletName + "\0");
+			sendData("15,flashGE,tabletGE,geLogin" + "\0");
 			 
 		}
 
@@ -312,29 +315,41 @@ namespace googleearth {
 
 			// 15,csGE,flashGE,11,p1x,p1y,..
 			//array<String>^ data = strMessage->Split(',');
-			array<String^>^cmds = strMessage->Split(',');
+			array<String^>^data = strMessage->Split(',');
 			
-			if(cmds!=nullptr && cmds->Length == 12){			
-
-				double leftTopLat = System::Double::Parse(cmds[4]);
-				double leftTopLong = System::Double::Parse(cmds[5]);
-				double leftDownLat = System::Double::Parse(cmds[6]);
-				double leftDownLong = System::Double::Parse(cmds[7]);
-				double rightDownLat = System::Double::Parse(cmds[8]);
-				double rightDownLong = System::Double::Parse(cmds[9]);
-				double rightTopLat = System::Double::Parse(cmds[10]);
-				double rightTopLong = System::Double::Parse(cmds[11]);
-				set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat,rightTopLong,rightTopLat, rightDownLong, rightDownLat);
-				//webBrowser1->Document->InvokeScript("boundaryLine");
+			if(data!=nullptr){			
 				
-			}
+				// && cmds->Length == 12
+				
+				String^ cmd = data[3]->Trim('\0');
 
+				if(cmd == "assignID"){
+					tabletName = data[4];
+					sendData("13," + tabletName); // rename
+				}
+				else if(cmd == "flashGE-login"){
+					sendData("15,flashGE,"+tabletName+",geLogin");				
+				}
+				else if(cmd == "setBoundary"){
+					double leftTopLat = System::Double::Parse(data[4]);
+					double leftTopLong = System::Double::Parse(data[5]);
+					double leftDownLat = System::Double::Parse(data[6]);
+					double leftDownLong = System::Double::Parse(data[7]);
+					double rightDownLat = System::Double::Parse(data[8]);
+					double rightDownLong = System::Double::Parse(data[9]);
+					double rightTopLat = System::Double::Parse(data[10]);
+					double rightTopLong = System::Double::Parse(data[11]);
+					set_4_point(leftTopLong, leftTopLat, leftDownLong, leftDownLat,rightTopLong,rightTopLat, rightDownLong, rightDownLat);
+					//webBrowser1->Document->InvokeScript("boundaryLine");
+				}
+			}
 		}
 
 		// Translate the passed message into ASCII and store it as a Byte array.
-		private: System::Void sendData (String^ message) {
+		private: static System::Void sendData (String^ message) {
 			array<Byte>^data = System::Text::Encoding::ASCII->GetBytes( message );
 			GetNetworkStream->Write( data, 0, data->Length );
+			GetNetworkStream->Flush();
 		}
 
 
@@ -501,11 +516,14 @@ namespace googleearth {
 
 				double vspaceX = (double)intersect_origin_point.x / (double)1.33;
 				double vspaceY = -intersect_origin_point.y;
-				double lat = intersect_point.y;
-				double lng = intersect_point.x;
+				//double lat = intersect_point.y;
+				//double lng = intersect_point.x;
+
+				String^ _vspaceX = vspaceX.ToString("0.0000");
+				String^ _vspaceY = vspaceY.ToString("0.0000");
 				
 				if(GetNetworkStream != nullptr)
-					sendData("15,flashGE,"+tabletName+",geDebug," + vspaceX + "," + vspaceY + "," + lat + "," + lng);
+					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
@@ -568,7 +586,7 @@ namespace googleearth {
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
+			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
 		
 		}
 
