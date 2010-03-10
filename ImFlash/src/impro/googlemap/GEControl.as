@@ -160,26 +160,40 @@ package impro.googlemap
 //		}
 		
 		private function updateSend():void{		
+
 			if(socket.connected)
 			{
+
 				//  p1 -------- p4 
 				//  |			|
 				//  |			|
 				//  p2 -------- p3
 				// get target latlng
-				var p1ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, 0));
-				var p2ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, parentMap.height));
-				var p3ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, parentMap.height));
-				var p4ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, 0));								
-				
-				var s:String = "setBoundary," + p1ToLatlng.lat() + "," + p1ToLatlng.lng() + ","
-									+ p2ToLatlng.lat() + "," + p2ToLatlng.lng() + ","
-									+ p3ToLatlng.lat() + "," + p3ToLatlng.lng() + "," 
-									+ p4ToLatlng.lat() + "," + p4ToLatlng.lng();
-									
-																		
-				socket.send("15,"+id+",flashGE," + s);
-				trace("socket.send");
+				if(parentMap.isLoaded()){
+					var p1ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, 0));
+					var p2ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, parentMap.height));
+					var p3ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, parentMap.height));
+					var p4ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(parentMap.width, 0));								
+					
+					var precision:Number = 4;
+					
+//					var s:String = "setBoundary," 
+//										+ p1ToLatlng.lat().toFixed(precision) + "," + p1ToLatlng.lng().toFixed(precision) + ","
+//										+ p2ToLatlng.lat().toFixed(precision) + "," + p2ToLatlng.lng().toFixed(precision) + ","
+//										+ p3ToLatlng.lat().toFixed(precision) + "," + p3ToLatlng.lng().toFixed(precision) + "," 
+//										+ p4ToLatlng.lat().toFixed(precision) + "," + p4ToLatlng.lng().toFixed(precision);
+					var s:String = "setBoundary," 
+										+ p1ToLatlng.lat() + "," + p1ToLatlng.lng() + ","
+										+ p2ToLatlng.lat() + "," + p2ToLatlng.lng() + ","
+										+ p3ToLatlng.lat() + "," + p3ToLatlng.lng() + "," 
+										+ p4ToLatlng.lat() + "," + p4ToLatlng.lng();
+										
+																			
+					socket.send("15,"+id+",flashGE," + s);
+					
+					trace("socket.send");					
+				}
+
 			}
 //			else{
 //				var p1ToLatlng:LatLng = parentMap.fromViewportToLatLng(new Point(0, 0));

@@ -106,7 +106,7 @@ package {
 			socket = new XMLSocket();
 			socket.addEventListener(Event.CONNECT, function(event:Event):void{
 				socket.send("11,flashGE"); 
-				socket.send("14,flashGE_login"); // broadcast
+				socket.send("14,flashGE-login"); // broadcast
 			});
 			
             socket.addEventListener(DataEvent.DATA, dataHandler);
@@ -125,7 +125,7 @@ package {
 			var cmd:String = data[3];
 			if(cmd=="geLogin"){
 				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
-				socket.send("15,tabletGE,flashGE," + "assignID," + geControl.id);
+				socket.send("15," + from + ",flashGE," + "assignID," + geControl.id);
 				trace("assignID: " + geControl.id);				
 				
 			}else if(cmd=="geDebug"){
