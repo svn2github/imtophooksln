@@ -296,6 +296,7 @@ namespace SocketSystem
         {
             if ((GetNetworkStream != null) && (GetNetworkStream.CanWrite))
             {
+                
                 strMessage += "\0"; // for flash
 
                 // Convert the string into a Raw Buffer

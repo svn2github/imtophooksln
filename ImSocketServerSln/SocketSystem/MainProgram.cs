@@ -18,6 +18,7 @@ namespace SocketSystem
 
         public MainProgram()
         {
+
             loadParamsFromFile();
 
             setupCommunicationServer();
