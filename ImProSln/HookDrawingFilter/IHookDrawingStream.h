@@ -18,5 +18,6 @@ public:
 
 	virtual BOOL GetResolution(UINT& resW, UINT& resH);
 	virtual BOOL SetResolution(UINT resW, UINT resH);
-	
+	virtual float GetFrameRate();
+	virtual BOOL SetFrameRate(float fps);
 };

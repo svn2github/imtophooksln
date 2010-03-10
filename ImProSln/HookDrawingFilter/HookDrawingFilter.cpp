@@ -17,6 +17,7 @@ HookDrawingStream::HookDrawingStream(LPCTSTR pObjectName, HRESULT *phr,
 									 CMuxTransformFilter *pms, LPCWSTR pName) :
 CMuxTransformStream(pObjectName, phr, pms, pName)
 {
+	m_fps = 120;
 	D3DXMatrixIdentity(&m_matTTS);
 }
 #ifdef UNICODE
@@ -24,14 +25,28 @@ HookDrawingStream::HookDrawingStream( LPCSTR pObjectName, HRESULT *phr,
 									 CMuxTransformFilter *pms, LPCWSTR pName) :
 				  CMuxTransformStream(pObjectName, phr, pms, pName)
 {
+	m_fps = 120;
 	D3DXMatrixIdentity(&m_matTTS);
 }
 #endif
 HookDrawingStream::~HookDrawingStream(void)
 {
-
+	
+}
+float HookDrawingStream::GetFrameRate()
+{
+	return m_fps;
+}
+BOOL HookDrawingStream::SetFrameRate(float fps)
+{
+	m_fps = fps;
+	return TRUE;
 }
 
+float HookDrawingStream::GetFrameRateLimit()
+{
+	return m_fps;
+}
 const D3DXMATRIX* HookDrawingStream::GetWarpMatrix()
 {
 	CAutoLock lck(&m_csMatTTS);
@@ -1272,7 +1287,7 @@ HRESULT HookDrawingFilter::SaveToFile(WCHAR* path)
 	{
 		return false;
 	}
-
+	float fps[NUMHOOKPIN] = {120};
 	UINT srcResW = 0, srcResH = 0;
 	GetSourceResolution(srcResW, srcResH);
 	UINT* pinResW = new UINT[NUMHOOKPIN];
@@ -1286,12 +1301,15 @@ HRESULT HookDrawingFilter::SaveToFile(WCHAR* path)
 	{
 		GetResolution(m_pStreamPins[i], pinResW[i], pinResH[i]);
 		GetWarpMatrix(i, matWarp[i]);
+		fps[i] = ((IHookDrawingStream*)m_pStreamPins[i])->GetFrameRate();	
+		
 	}
+
 	fwprintf_s(filestream, L"%d\n", NUMHOOKPIN);
 	fwprintf_s(filestream, L"%d %d \n", srcResW, srcResH);
 	for (int i = 0; i < NUMHOOKPIN; i++)
 	{
-		fwprintf_s(filestream, L"%d %d \n", pinResW[i], pinResH[i]);
+		fwprintf_s(filestream, L"%d %d %.1f \n", pinResW[i], pinResH[i], fps[i]);
 		fwprintf_s(filestream, L"%f %f %f %f\n", 
 			matWarp[i].m[0][0], matWarp[i].m[0][1], matWarp[i].m[0][2], matWarp[i].m[0][3]);
 		fwprintf_s(filestream, L"%f %f %f %f\n", 
@@ -1320,6 +1338,7 @@ HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
 	int numPins = 0; 
 	int srcResW=0, srcResH = 0;
 	int* pinResW = NULL, *pinResH = NULL;
+	double* pinFPS = NULL;
 	D3DXMATRIX* matWarp = NULL;
 
 	fwscanf_s(filestream, L"%d\n", &numPins);
@@ -1328,6 +1347,7 @@ HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
 		fclose(filestream);
 		return S_FALSE;
 	}
+	pinFPS = new double[numPins];
 	pinResW = new int[numPins];
 	pinResH = new int[numPins];
 	matWarp = new D3DXMATRIX[numPins];
@@ -1335,7 +1355,7 @@ HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
 	fwscanf_s(filestream, L"%d %d \n", &srcResW, &srcResH);
 	for (int i = 0; i < numPins; i++)
 	{
-		fwscanf_s(filestream, L"%d %d \n", &(pinResW[i]), &(pinResH[i]));
+		fwscanf_s(filestream, L"%d %d %lf\n", &(pinResW[i]), &(pinResH[i]), &(pinFPS[i]));
 		fwscanf_s(filestream, L"%f %f %f %f\n", 
 			&(matWarp[i].m[0][0]), &(matWarp[i].m[0][1]), &(matWarp[i].m[0][2]), &(matWarp[i].m[0][3]));
 		fwscanf_s(filestream, L"%f %f %f %f\n", 
@@ -1352,6 +1372,7 @@ HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
 	{
 		this->SetResolution(m_pStreamPins[i], pinResW[i], pinResH[i] );
 		this->SetWarpMatrix(i, matWarp[i]);
+		((HookDrawingStream*)m_pStreamPins[i])->SetFrameRate(pinFPS[i]);
 	}
 
 	if (pinResW != NULL)
@@ -1363,6 +1384,11 @@ HRESULT HookDrawingFilter::LoadFromFile(WCHAR* path)
 	{
 		delete [] pinResH;
 		pinResH = NULL;
+	}
+	if (pinFPS != NULL)
+	{
+		delete [] pinFPS;
+		pinFPS = NULL;
 	}
 	if (matWarp != NULL)
 	{

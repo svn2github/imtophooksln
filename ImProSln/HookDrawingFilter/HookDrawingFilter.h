@@ -18,6 +18,10 @@ class HookDrawingStream : public CMuxTransformStream, public IHookDrawingStream,
 	public ISpecifyPropertyPages
 	
 {
+protected:
+	float m_fps;
+	virtual float GetFrameRateLimit();
+
 public:
 	D3DXMATRIX m_matTTS;
 	CCritSec m_csMatTTS;
@@ -29,6 +33,8 @@ public:
 				D3DXVECTOR2& rt);
 	virtual BOOL GetResolution(UINT& resW, UINT& resH);
 	virtual BOOL SetResolution(UINT resW, UINT resH);
+	virtual float GetFrameRate();
+	virtual BOOL SetFrameRate(float fps);
 	//ISpecifyPropertyPages
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//for COM interface 

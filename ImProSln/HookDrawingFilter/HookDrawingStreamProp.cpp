@@ -14,6 +14,7 @@ void HookDrawingStreamPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edTop, m_edTop);
 	DDX_Control(pDX, IDC_edBottom, m_edBottom);
 	DDX_Control(pDX, IDC_COMBO1, m_cbResolution);
+	DDX_Control(pDX, IDC_cbFPS, m_cbFPS);
 }
 BOOL HookDrawingStreamPropPage::OnInitDialog()
 {
@@ -32,6 +33,7 @@ BEGIN_MESSAGE_MAP(HookDrawingStreamPropPage, CMFCBasePropertyPage)
 	ON_EN_CHANGE(IDC_edRight, &HookDrawingStreamPropPage::OnEnChangeedright)
 	ON_EN_CHANGE(IDC_edBottom, &HookDrawingStreamPropPage::OnEnChangeedbottom)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &HookDrawingStreamPropPage::OnCbnSelchangeCombo1)
+	ON_CBN_SELCHANGE(IDC_cbFPS, &HookDrawingStreamPropPage::OnCbnSelchangecbfps)
 END_MESSAGE_MAP()
 
 
@@ -92,6 +94,13 @@ HRESULT HookDrawingStreamPropPage::OnActivate(void)
 	m_cbResolution.AddString(L"1024 x 768");
 	m_cbResolution.AddString(L"1280 x 1024");
 	
+	m_cbFPS.AddString(L"500");
+	m_cbFPS.AddString(L"120");
+	m_cbFPS.AddString(L"60");
+	m_cbFPS.AddString(L"30");
+	m_cbFPS.AddString(L"15");
+	m_cbFPS.AddString(L"10");
+	m_cbFPS.AddString(L"5");
 	GetSetting();
 	return S_OK;
 }
@@ -149,7 +158,24 @@ bool HookDrawingStreamPropPage::GetSetting()
 		}
 	}
 	
+	float fps = m_pPin->GetFrameRate();
+	int cbCount = m_cbFPS.GetCount();
+	double cbFPS;
+	int chooseIdx = -1;
+	float minError = 1000;
 
+	for (int i =0 ; i< cbCount; i++)
+	{
+		m_cbFPS.GetLBText(i, str);
+		swscanf_s(str, L"%lf", &cbFPS);
+		if (abs(fps - cbFPS) < minError)
+		{
+			chooseIdx = i;
+			minError = abs(fps - cbFPS);
+		}
+	}
+	if (chooseIdx != -1)
+		m_cbFPS.SetCurSel(chooseIdx);
 	return true;
 }
 bool HookDrawingStreamPropPage::ApplySetting()
@@ -230,4 +256,16 @@ void HookDrawingStreamPropPage::OnCbnSelchangeCombo1()
 	int w =0, h = 0; 
 	swscanf_s(str, L"%d x %d", &w, &h);
 	m_pPin->SetResolution(w, h);
+}
+
+void HookDrawingStreamPropPage::OnCbnSelchangecbfps()
+{
+	if (m_pPin == NULL)
+		return;
+	int idx = m_cbFPS.GetCurSel();
+	WCHAR str[MAX_PATH] = {0};
+	m_cbFPS.GetLBText(idx, str);
+	double cbFps = 0;
+	swscanf_s(str, L"%lf", &cbFps);
+	m_pPin->SetFrameRate(cbFps);
 }

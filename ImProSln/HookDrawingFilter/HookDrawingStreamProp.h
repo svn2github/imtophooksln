@@ -61,4 +61,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnEnChangeedbottom();
 	afx_msg void OnCbnSelchangeCombo1();
 	CComboBox m_cbResolution;
+	CComboBox m_cbFPS;
+	afx_msg void OnCbnSelchangecbfps();
 };

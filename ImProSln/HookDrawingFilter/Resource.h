@@ -16,6 +16,8 @@
 #define IDC_edBottom                    13004
 #define IDC_COMBO1                      13005
 #define IDC_CBRES                       13006
+#define IDC_COMBO2                      13006
+#define IDC_cbFPS                       13006
 
 // Next default values for new objects
 // 
