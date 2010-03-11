@@ -1075,6 +1075,8 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bool bDrawFinger = false;
 	bool bDrawROI = false;
 	bool bFlipY = false;
+	bool bSkipBG = false;
+	bSkipBG = GetIsSkipBGRemove();
 	GetBGThreshold(bgThreshold);
 	GetSimpleHighPassDeNoise(deNoise);
 	GetSimpleHighPassBlur(blur);
@@ -1085,8 +1087,8 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bDrawFinger = getDrawFingers();
 	bDrawROI = getDrawROI();
 	bFlipY = GetbFlipY();
-	fwprintf_s(filestream, L"%d %d %d %d %d\n %d %d %d %d\n",
-		bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
+	fwprintf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n",
+		bSkipBG, bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
 		bStartTracking, bDrawFinger, bDrawROI, bFlipY);
 	fclose(filestream);
 	return S_OK;
@@ -1109,11 +1111,12 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 	int bDrawFinger = false;
 	int bDrawROI = false;
 	int bFlipY = false;
-	fwscanf_s(filestream, L"%d %d %d %d %d\n %d %d %d %d\n",
-		&bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
+	int bSkipBG = false;
+	fwscanf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n",
+		&bSkipBG, &bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
 		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY);
 	fclose(filestream);
-
+	SetIsSKipBGRemove(bSkipBG);
 	SetBGThreshold(bgThreshold);
 	SetSimpleHighPassDeNoise(deNoise);
 	SetSimpleHighPassBlur(blur);
