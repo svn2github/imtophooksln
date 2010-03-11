@@ -638,6 +638,11 @@ BOOL MaskFilter::GenerateMaskFromARLayout(const ARMultiMarkerInfoT* pMarkerConfi
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+		return S_FALSE;
+	CAutoLock lck0(pD3DCS);
 	CAutoLock lck(&m_csDisplayState);
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromARLauout(pMarkerConfig, fMaskScale);
 }
@@ -652,6 +657,11 @@ BOOL MaskFilter::GenerateMaskFromWarpMatrix(D3DXMATRIX warpMat[], int numMatrix)
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+		return S_FALSE;
+	CAutoLock lck0(pD3DCS);
 	CAutoLock lck(&m_csDisplayState);
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromWarpMatrix(warpMat, numMatrix);
 }
@@ -702,6 +712,11 @@ BOOL MaskFilter::GenerateMaskFromVertices(D3DXVECTOR2* pts[], int numRects, floa
 {
 	if (m_pD3DDisplay == NULL)
 		return FALSE;
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+		return S_FALSE;
+	CAutoLock lck0(pD3DCS);
 	CAutoLock lck(&m_csDisplayState);
 	return ((MaskFilterDisplay*)m_pD3DDisplay)->GenerateMaskFromVertices(pts, numRects, fMaskScale);
 }

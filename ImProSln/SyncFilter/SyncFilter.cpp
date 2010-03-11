@@ -244,24 +244,24 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0] && !getBlock())
 	{
 		pSample->GetPointer(&CamData);
-		/*OutputDebugStringW(L"@@@@ ReceiveCam ---->");*/
+		OutputDebugStringW(L"@@@@ ReceiveCam ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		/*OutputDebugStringW(L"@@@@ ReceiveCam <----");*/
+		OutputDebugStringW(L"@@@@ ReceiveCam <----");
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
-		/*OutputDebugStringW(L"@@@@ ReceiveDirty ---->");*/
+		OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
 		hr = ReceiveDirty();
-		/*OutputDebugStringW(L"@@@@ ReceiveDirty <----");*/
+		OutputDebugStringW(L"@@@@ ReceiveDirty <----");
 
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
 	{
 
 		pSample->GetPointer(&LayoutData);	
-		//OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
+		OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
 		hr = ReceiveLayoutImg(pSample, pReceivePin);
-		//OutputDebugStringW(L"@@@@ ReceiveLayout <----");
+		OutputDebugStringW(L"@@@@ ReceiveLayout <----");
 	}
 	return hr;
 }
