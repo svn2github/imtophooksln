@@ -14,19 +14,6 @@ DEFINE_GUID(CLSID_ARLayoutPropPage,
 			0x5cdca877, 0xd333, 0x43f4, 0x83, 0x9f, 0xc7, 0x4a, 0xdd, 0xf9, 0xe1, 0x88);
 
 
-MIDL_INTERFACE("60428265-23E1-4551-B13A-6F6029B89D0B")
-
-
-IARLayoutFilter: public IUnknown
-{
-public:
-	virtual int getNumOfX() ;
-	virtual int getNumOfY() ;
-	//virtual void setTagProp(int tagID,int posX, int posY, int width,bool isVisible);
-	virtual HRESULT setNumOfX(int numX) ;
-	virtual HRESULT setNumOfY(int numY) ;
-
-};
 #ifndef _fRECT_
 #define _fRECT_
 class fRECT
@@ -74,6 +61,9 @@ public:
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
 		fRECT* fingerRects, UINT numFingerRects, bool& bLayoutChanged, float fingerExtend = 0.07);
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
+	virtual int GetNumMarker();
+	virtual bool SetMarkerVisible(int idx, bool bVisible);
+
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();
 };

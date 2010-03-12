@@ -4,10 +4,8 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
-#include "ARTagLayout.h"
 #include "IARLayoutFilter.h"
 #include "CMuxTransformFilter.h"
-#include "ARLayoutFilter.h"
 #include "MSSD3DClass.h"
 #include "D3DTransformFilterBase.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
@@ -81,6 +79,9 @@ public:
 		fRECT* fingerRects, UINT numFingerRects, bool& bLayoutChanged, float fingerExtend = 0.07);
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
 
+	virtual int GetNumMarker();
+	virtual bool SetMarkerVisible(int idx, bool bVisible);
+	virtual bool SetMarkerVisibleByID(int id, bool bVisible);
 private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker, float fScale = 1.0);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);

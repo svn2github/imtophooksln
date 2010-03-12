@@ -4,8 +4,7 @@
 CCameraDS::CCameraDS()
 {
 	m_bConnected = false;
-	m_nWidth = 0;
-	m_nHeight = 0;
+
 	m_bLock = false;
 	m_bChanged = false;
 	m_pFrame = NULL;
@@ -18,9 +17,7 @@ CCameraDS::CCameraDS()
 
 	m_pDeviceFilter = NULL;
 	m_pMediaControl = NULL;
-	m_pSampleGrabber = NULL;
-	m_pGrabberInput = NULL;
-	m_pGrabberOutput = NULL;
+
 	m_pCameraOutput = NULL;
 	m_pRenderInputPin = NULL;
 
@@ -42,9 +39,7 @@ void CCameraDS::CloseCamera()
 	m_pDeviceFilter = NULL;
 	m_pMediaControl = NULL;
 	m_pSampleGrabberFilter = NULL;
-	m_pSampleGrabber = NULL;
-	m_pGrabberInput = NULL;
-	m_pGrabberOutput = NULL;
+
 	m_pCameraOutput = NULL;
 	m_pMediaEvent = NULL;
 	m_pRenderFilter = NULL;
@@ -55,8 +50,7 @@ void CCameraDS::CloseCamera()
 		cvReleaseImage(&m_pFrame);
 
 	m_bConnected = false;
-	m_nWidth = 0;
-	m_nHeight = 0;
+
 	m_bLock = false;
 	m_bChanged = false;
 	m_nBufferSize = 0;
@@ -72,33 +66,13 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 	hr = CreateGraph((IGraphBuilder**)&m_pGraph);
 	hr = CreateFilters(nCamID, bDisplayProperties, nWidth, nHeight);
 	hr = ConnectGraph();
-
-	//m_pSampleGrabber->SetBufferSamples(TRUE);
-	//m_pSampleGrabber->SetOneShot(TRUE);
    
-
-	AM_MEDIA_TYPE   mt;
-	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
-
-	hr = m_pSampleGrabber->GetConnectedMediaType(&mt);
-	if(FAILED(hr))
-		return false;
-
-	VIDEOINFOHEADER *videoHeader;
-	videoHeader = reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat);
-	m_nWidth = videoHeader->bmiHeader.biWidth;
-	m_nHeight = videoHeader->bmiHeader.biHeight;
-	m_bConnected = true;
-	MYFREEMEDIATYPE(mt);
 	return true;
 }
 HRESULT CCameraDS::ConnectGraph()
 {
 	HRESULT hr;
-	hr = m_pGraph->Connect(m_pCameraOutput, m_pGrabberInput);
-	if (FAILED(hr))
-		return hr;
-	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
+	hr = m_pGraph->Connect(m_pCameraOutput, m_pRenderInputPin);
 	return hr;
 }
 HRESULT CCameraDS::CreateGraph(IGraphBuilder** ppGraph)
@@ -115,8 +89,6 @@ HRESULT CCameraDS::CreateGraph(IGraphBuilder** ppGraph)
 HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
 {
 	HRESULT hr;
-	hr = CoCreateInstance(CLSID_SampleGrabber, NULL, CLSCTX_INPROC_SERVER, 
-		IID_IBaseFilter, (LPVOID *)&m_pSampleGrabberFilter);
 
 	hr = CoCreateInstance(CLSID_VideoRenderer, NULL, CLSCTX_INPROC_SERVER,
 		IID_IBaseFilter, (LPVOID*) &m_pRenderFilter);
@@ -124,17 +96,11 @@ HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 
 	hr = m_pGraph->AddFilter(m_pRenderFilter, L"Video Renderer");
 
-	hr = m_pSampleGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&m_pSampleGrabber);
-
 	AM_MEDIA_TYPE   mt;
 	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
 	mt.majortype = MEDIATYPE_Video;
 	mt.subtype = MEDIASUBTYPE_RGB24;
 	mt.formattype = FORMAT_VideoInfo; 
-	hr = m_pSampleGrabber->SetMediaType(&mt);
-	MYFREEMEDIATYPE(mt);
-
-	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Sample Grabber");
 
 	// Bind Device Filter.  We know the device because the id was passed in
 	BindFilter(nCamID, &m_pDeviceFilter);
@@ -145,17 +111,6 @@ HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 
 	hr = pEnum->Reset();
 	hr = pEnum->Next(1, &m_pCameraOutput, NULL); 
-
-	pEnum = NULL; 
-	m_pSampleGrabberFilter->EnumPins(&pEnum);
-	pEnum->Reset();
-	hr = pEnum->Next(1, &m_pGrabberInput, NULL); 
-
-	pEnum = NULL;
-	m_pSampleGrabberFilter->EnumPins(&pEnum);
-	pEnum->Reset();
-	pEnum->Skip(1);
-	hr = pEnum->Next(1, &m_pGrabberOutput, NULL); 
 
 	pEnum = NULL;
 	m_pRenderFilter->EnumPins(&pEnum);
@@ -395,35 +350,6 @@ void CCameraDS::SetCrossBar()
 	pBuilder->Release();
 }
 
-/*
-The returned image can not be released.
-*/
-IplImage* CCameraDS::QueryFrame()
-{
-
-	long evCode;
-	long size = 0;
-
-	m_pMediaControl->Run();
-	m_pMediaEvent->WaitForCompletion(INFINITE, &evCode);
- 
-	m_pSampleGrabber->GetCurrentBuffer(&size, NULL);
-
-	//if the buffer size changed
-	if (size != m_nBufferSize)
-	{
-		if (m_pFrame)
-			cvReleaseImage(&m_pFrame);
-
-		m_nBufferSize = size;
-		m_pFrame = cvCreateImage(cvSize(m_nWidth, m_nHeight), IPL_DEPTH_8U, 3);
-	}
-
-	m_pSampleGrabber->GetCurrentBuffer(&m_nBufferSize, (long*)m_pFrame->imageData);
-	cvFlip(m_pFrame);
-
-	return m_pFrame;
-}
 
 int CCameraDS::CameraCount()
 {

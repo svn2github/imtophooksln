@@ -1070,3 +1070,34 @@ float ARLayoutDXFilter::GetFrameRate()
 	CAutoLock lck(&m_csFrameRate);
 	return m_FrameRate;
 }
+
+int ARLayoutDXFilter::GetNumMarker()
+{	
+	CAutoLock lck(&m_csARMarker);	
+	return m_numMarker;
+}
+
+bool ARLayoutDXFilter::SetMarkerVisible(int idx, bool bVisible)
+{	
+	CAutoLock lck(&m_csARMarker);
+	if (idx < 0 || idx >= m_numMarker)	
+	{		
+		return false;
+	}	
+	m_ARMarkers[idx].visible = bVisible;	
+	return true;
+}
+
+bool ARLayoutDXFilter::SetMarkerVisibleByID(int id, bool bVisible)
+{	
+	CAutoLock lck(&m_csARMarker);
+	for (int i =0 ; i < m_numMarker; i++)
+	{
+		if (m_ARMarkers[i].patt_id == id)
+		{
+			m_ARMarkers[i].visible = bVisible;
+			return true;
+		}
+	}
+	return false;
+}

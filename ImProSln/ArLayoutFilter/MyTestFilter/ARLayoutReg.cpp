@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "ARLayoutReg.h"
-#include "ARLayoutFilter.h"
 #include "ARLayoutDXFilter.h"
 #include "ARLayoutDXProp.h"
 // {9D6C4A7B-57BA-4482-A034-653BF55633F5}

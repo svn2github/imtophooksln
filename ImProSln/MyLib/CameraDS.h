@@ -40,8 +40,7 @@ class CCameraDS
 protected:
 	IplImage * m_pFrame;
 	bool m_bConnected;
-	int m_nWidth;
-	int m_nHeight;
+
 	bool m_bLock;
 	bool m_bChanged;
 	long m_nBufferSize;
@@ -50,9 +49,7 @@ protected:
 	CComPtr<IBaseFilter> m_pDeviceFilter;
 	CComPtr<IMediaControl> m_pMediaControl;
 	CComPtr<IBaseFilter> m_pSampleGrabberFilter;
-	CComPtr<ISampleGrabber> m_pSampleGrabber;
-	CComPtr<IPin> m_pGrabberInput;
-	CComPtr<IPin> m_pGrabberOutput;
+
 	CComPtr<IPin> m_pCameraOutput;
 	CComPtr<IMediaEvent> m_pMediaEvent;
 	CComPtr<IBaseFilter> m_pRenderFilter;
@@ -79,14 +76,11 @@ public:
 	virtual HRESULT ShowCamProp();
 	virtual HRESULT ShowCamPinProp();
 
-
 	virtual bool SetVideoWindow(HWND hwnd);
 	virtual HRESULT SaveGraphFile(WCHAR *wszPath);
 	static int CameraCount(); 
 	static int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize);
-	int GetWidth(){return m_nWidth;} 
-	int GetHeight(){return m_nHeight;}
-	IplImage * QueryFrame();
+
 };
 
 #endif 

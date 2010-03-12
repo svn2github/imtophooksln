@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib CMFCBasePropertyPage.lib  CMuxTransformFilter.lib  d3dx9.lib d3d9.lib MSD3DLib.lib highgui200.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="strmbase.lib  winmm.lib CMFCBasePropertyPage.lib  CMuxTransformFilter.lib  d3dx9.lib d3d9.lib MSD3DLib.lib highgui200.lib cv200.lib cxcore200.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;..\..\DSLib/lib;..\..\MyLib\bin;..\..\OpenCV2.0\lib;..\..\OpenCV2.0\bin"
 				IgnoreDefaultLibraryNames=""
@@ -194,15 +194,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\ARLayoutFilter.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\ARLayoutReg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ARTagLayout.cpp"
 				>
 			</File>
 			<File
@@ -240,15 +232,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\ARLayoutFilter.h"
-				>
-			</File>
-			<File
 				RelativePath=".\ARLayoutReg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ARTagLayout.h"
 				>
 			</File>
 			<File
