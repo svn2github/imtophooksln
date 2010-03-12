@@ -130,7 +130,7 @@ END
 // Dialog
 //
 
-IDD_HomoWarpPropertyPage DIALOGEX 0, 0, 235, 192
+IDD_HomoWarpPropertyPage DIALOGEX 0, 0, 242, 219
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
@@ -171,7 +171,7 @@ BEGIN
     IDD_HomoWarpPropertyPage, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 228
+        RIGHTMARGIN, 235
         VERTGUIDE, 19
         VERTGUIDE, 29
         VERTGUIDE, 104
@@ -179,7 +179,7 @@ BEGIN
         VERTGUIDE, 142
         VERTGUIDE, 184
         TOPMARGIN, 7
-        BOTTOMMARGIN, 186
+        BOTTOMMARGIN, 213
     END
 END
 #endif    // APSTUDIO_INVOKED

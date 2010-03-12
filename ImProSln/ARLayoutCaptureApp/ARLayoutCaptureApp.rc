@@ -15,27 +15,36 @@
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(950)
+#endif //_WIN32
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
-	"#ifndef APSTUDIO_INVOKED\r\n"
+    "#ifndef APSTUDIO_INVOKED\r\n"
     "#include ""targetver.h""\r\n"
     "#endif\r\n"
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
     "#define _AFX_NO_OLE_RESOURCES\r\n"
@@ -46,12 +55,11 @@ BEGIN
     "LANGUAGE 9, 1\r\n"
     "#pragma code_page(1252)\r\n"
     "#include ""res\\ARLayoutCaptureApp.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
-    "#include ""afxres.rc""  	// Standard components\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
     "#endif\r\n"
     "\0"
 END
 
-/////////////////////////////////////////////////////////////////////////////
 #endif    // APSTUDIO_INVOKED
 
 
@@ -62,38 +70,55 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON         "res\\ARLayoutCaptureApp.ico"
+IDR_MAINFRAME           ICON                    "res\\ARLayoutCaptureApp.ico"
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
 
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-LANGUAGE 9, 1
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
+#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_ARLAYOUTCAPTUREAPP_DIALOG DIALOGEX  0, 0, 320, 200
-STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION
- | DS_MODALFRAME
+IDD_ARLAYOUTCAPTUREAPP_DIALOG DIALOGEX 0, 0, 340, 260
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "ARLayoutCaptureApp"
-FONT 8, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,209,179,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,263,179,50,14
-	CTEXT           "TODO: Place dialog controls here.",IDC_STATIC,10,96,300,8
+    CONTROL         "",IDC_CamView,"Static",SS_BLACKFRAME,7,7,207,157
+    PUSHBUTTON      "Open Cam",IDC_btnOpenCamera,246,7,87,14
+    PUSHBUTTON      "Destory Cam",IDC_btnDestoryCamera,246,24,87,14,WS_DISABLED
+    PUSHBUTTON      "Play",IDC_btnPlay,246,51,87,14,WS_DISABLED
+    PUSHBUTTON      "Pause",IDC_btnPasue,246,67,87,14,WS_DISABLED
+    PUSHBUTTON      "Stop",IDC_btnStop,246,83,87,14,WS_DISABLED
+    PUSHBUTTON      "Save Graph",IDC_btnSaveGraph,246,111,87,14,WS_DISABLED
+    PUSHBUTTON      "AR Prop",IDC_btnARProp,246,137,87,14,WS_DISABLED
+    PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,246,154,87,14,WS_DISABLED
+    PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,246,172,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Prop",IDC_btnCamProp,246,201,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp",IDC_btnCamWarp,246,239,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop",IDC_btnCamPinProp,246,220,87,14,WS_DISABLED
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
-VS_VERSION_INFO     VERSIONINFO
-  FILEVERSION       1,0,0,1
-  PRODUCTVERSION    1,0,0,1
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -104,25 +129,26 @@ VS_VERSION_INFO     VERSIONINFO
  FILETYPE 0x1L
  FILESUBTYPE 0x0L
 BEGIN
-	BLOCK "StringFileInfo"
-	BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
         BLOCK "040904e4"
-		BEGIN
+        BEGIN
             VALUE "CompanyName", "TODO: <Company name>"
             VALUE "FileDescription", "TODO: <File description>"
-			VALUE "FileVersion",     "1.0.0.1"
-			VALUE "InternalName",    "ARLayoutCaptureApp.exe"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "ARLayoutCaptureApp.exe"
             VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
-			VALUE "OriginalFilename","ARLayoutCaptureApp.exe"
+            VALUE "OriginalFilename", "ARLayoutCaptureApp.exe"
             VALUE "ProductName", "TODO: <Product name>"
-			VALUE "ProductVersion",  "1.0.0.1"
-		END
-	END
-	BLOCK "VarFileInfo"
-	BEGIN
-		VALUE "Translation", 0x0409, 1252
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
     END
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -130,28 +156,24 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_ARLAYOUTCAPTUREAPP_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 313
+        RIGHTMARGIN, 333
+        VERTGUIDE, 141
+        VERTGUIDE, 246
         TOPMARGIN, 7
-        BOTTOMMARGIN, 193
+        BOTTOMMARGIN, 253
     END
 END
 #endif    // APSTUDIO_INVOKED
 
-
-
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
 
 
-
-#endif
 
 #ifndef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -166,9 +188,10 @@ END
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 LANGUAGE 9, 1
 #pragma code_page(1252)
-#include "res\\ARLayoutCaptureApp.rc2"  // non-Microsoft Visual C++ edited resources
-#include "afxres.rc"  	// Standard components
+#include "res\ARLayoutCaptureApp.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
 #endif
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

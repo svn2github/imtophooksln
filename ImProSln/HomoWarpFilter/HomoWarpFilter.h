@@ -50,7 +50,9 @@ public:
 	virtual HRESULT GetWarpMatrix(D3DXMATRIX& mat);
 
 	virtual bool GetIsFlipY() { return m_bFlipY;};
-	virtual bool SetIsFlipY(bool bFlipY) { m_bFlipY = bFlipY; return true;};
+	virtual bool SetIsFlipY(bool bFlipY) { 
+		m_bFlipY = bFlipY; 
+		return true;};
 
 	virtual bool GetIsInvWarp();
 	virtual bool SetIsInvWarp(bool bInv);

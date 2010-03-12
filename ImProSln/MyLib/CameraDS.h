@@ -38,17 +38,15 @@
 class CCameraDS  
 {
 protected:
-	IplImage * m_pFrame;
-	bool m_bConnected;
-
-	bool m_bLock;
-	bool m_bChanged;
-	long m_nBufferSize;
 	
 	CComPtr<IGraphBuilder> m_pGraph;
 	CComPtr<IBaseFilter> m_pDeviceFilter;
 	CComPtr<IMediaControl> m_pMediaControl;
 	CComPtr<IBaseFilter> m_pSampleGrabberFilter;
+
+	CComPtr<ISampleGrabber> m_pSampleGrabber;
+	CComPtr<IPin> m_pGrabberInput;
+	CComPtr<IPin> m_pGrabberOutput;
 
 	CComPtr<IPin> m_pCameraOutput;
 	CComPtr<IMediaEvent> m_pMediaEvent;
@@ -60,10 +58,11 @@ private:
 	bool BindFilter(int nCamIDX, IBaseFilter **pFilter);
 	void SetCrossBar();
 protected:
-	
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateGraph(IGraphBuilder** ppGraph);
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
+	virtual HRESULT ShowFilterProp(IUnknown* pFilter);
+
 public:
 	CCameraDS();
 	virtual ~CCameraDS();
@@ -78,6 +77,8 @@ public:
 
 	virtual bool SetVideoWindow(HWND hwnd);
 	virtual HRESULT SaveGraphFile(WCHAR *wszPath);
+
+	IplImage* CCameraDS::QueryFrame();
 	static int CameraCount(); 
 	static int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize);
 

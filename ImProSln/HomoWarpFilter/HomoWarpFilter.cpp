@@ -504,6 +504,8 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 			mt.SetSubtype(&GUID_D3DSHARE_RTTEXTURE_POINTER);
 			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
 			D3DSURFACE_DESC desc;
+			if (m_pRenderTarget == NULL)
+				return S_FALSE;
 			m_pRenderTarget->GetLevelDesc(0, &desc);
 			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
 			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
@@ -517,6 +519,8 @@ HRESULT HomoWarpFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout
 			mt.SetSubtype(&GUID_D3DXTEXTURE9_POINTER);
 			mt.SetSampleSize(sizeof(LPDIRECT3DTEXTURE9));
 			D3DSURFACE_DESC desc;
+			if (m_pOutTexture == NULL)
+				return S_FALSE;
 			m_pOutTexture->GetLevelDesc(0, &desc);
 			mt.SetFormat((BYTE*)&desc, sizeof(D3DSURFACE_DESC));
 			mt.SetFormatType(&GUID_FORMATTYPE_D3DXTEXTURE9DESC);
