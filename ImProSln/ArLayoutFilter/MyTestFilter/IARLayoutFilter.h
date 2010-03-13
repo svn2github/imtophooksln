@@ -63,7 +63,7 @@ public:
 	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
 	virtual int GetNumMarker();
 	virtual bool SetMarkerVisible(int idx, bool bVisible);
-
+	virtual bool SetMarkerVisibleByID(int id, bool bVisible);
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();
 };

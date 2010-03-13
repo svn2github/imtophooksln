@@ -55,8 +55,14 @@ bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int 
 	hr = CreateGraph((IGraphBuilder**)&m_pGraph);
 	hr = CreateFilters(nCamID, bDisplayProperties, nWidth, nHeight);
 	hr = ConnectGraph();
+	hr = ConfigFilters();
    
 	return true;
+}
+HRESULT CCameraDS::ConfigFilters()
+{
+	m_pSampleGrabber->SetBufferSamples(TRUE);
+	return S_OK;
 }
 HRESULT CCameraDS::ConnectGraph()
 {
@@ -64,6 +70,7 @@ HRESULT CCameraDS::ConnectGraph()
 	hr = m_pGraph->Connect(m_pCameraOutput, m_pGrabberInput);
 	if (FAILED(hr))
 		return hr;
+
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 	return hr;
 }
@@ -487,49 +494,55 @@ HRESULT CCameraDS::ShowCamPinProp()
 	return ShowFilterProp(m_pCameraOutput);
 }
 
-IplImage* CCameraDS::QueryFrame()
+HRESULT CCameraDS::QueryFrame(IplImage*& pFrame)
 {
 	HRESULT hr = S_OK;
 	long evCode;
 	long size = 0;
-
-	m_pMediaControl->Run();
-	m_pMediaEvent->WaitForCompletion(INFINITE, &evCode);
-
-	m_pSampleGrabber->GetCurrentBuffer(&size, NULL);
+	OAFilterState state;
+	m_pMediaControl->GetState(INFINITE, &state);
+	if (state != State_Running && state != State_Paused)
+		return E_FAIL;
 	
 	AM_MEDIA_TYPE   mt;
 	ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
 	hr = m_pSampleGrabber->GetConnectedMediaType(&mt);
 	if(FAILED(hr))
-		return false;
+		return E_FAIL;
 
 	VIDEOINFOHEADER *videoHeader;
 	videoHeader = reinterpret_cast<VIDEOINFOHEADER*>(mt.pbFormat);
 	int nWidth = videoHeader->bmiHeader.biWidth;
 	int nHeight = videoHeader->bmiHeader.biHeight;
 	long bufferSize = mt.lSampleSize;
-
-	IplImage* pFrame = NULL;
+	int nChannel = videoHeader->bmiHeader.biBitCount / 8;
 	//if the buffer size changed
-	if (IsEqualGUID(mt.majortype, MEDIASUBTYPE_RGB32))
+	if (pFrame == NULL)
 	{
-		pFrame = cvCreateImage(cvSize(nWidth, nHeight), IPL_DEPTH_8U, 4);
+		if (IsEqualGUID(mt.subtype, MEDIASUBTYPE_RGB32))
+		{
+			pFrame = cvCreateImage(cvSize(nWidth, nHeight), IPL_DEPTH_8U, 4);
+		}
+		else if(IsEqualGUID(mt.subtype, MEDIASUBTYPE_RGB24))
+		{
+			
+			pFrame = cvCreateImage(cvSize(nWidth, nHeight), IPL_DEPTH_8U, 3);
+		}
+		else
+		{
+			MYFREEMEDIATYPE(mt);
+			return E_FAIL;
+		}
 	}
-	else if(IsEqualGUID(mt.majortype, MEDIASUBTYPE_RGB24))
-	{
-		
-		pFrame = cvCreateImage(cvSize(nWidth, nHeight), IPL_DEPTH_8U, 3);
-	}
-	else
+	if (pFrame->width != nWidth || pFrame->height != nHeight || 
+		pFrame->nChannels != nChannel)
 	{
 		MYFREEMEDIATYPE(mt);
-		return false;
+		return S_FALSE;
 	}
-
-	m_pSampleGrabber->GetCurrentBuffer(&bufferSize, (long*)pFrame->imageData);
+	hr = m_pSampleGrabber->GetCurrentBuffer(&bufferSize, (long*)pFrame->imageData);
 	cvFlip(pFrame);
 	
 	MYFREEMEDIATYPE(mt);
-	return pFrame;
+	return S_OK;
 }

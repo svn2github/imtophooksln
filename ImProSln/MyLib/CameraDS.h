@@ -58,6 +58,7 @@ private:
 	bool BindFilter(int nCamIDX, IBaseFilter **pFilter);
 	void SetCrossBar();
 protected:
+	virtual HRESULT ConfigFilters();
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateGraph(IGraphBuilder** ppGraph);
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
@@ -78,7 +79,7 @@ public:
 	virtual bool SetVideoWindow(HWND hwnd);
 	virtual HRESULT SaveGraphFile(WCHAR *wszPath);
 
-	IplImage* CCameraDS::QueryFrame();
+	HRESULT QueryFrame(IplImage*& pFrame);
 	static int CameraCount(); 
 	static int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize);
 

@@ -4,7 +4,8 @@
 #include "stdafx.h"
 #include "ARLayoutCaptureApp.h"
 #include "ARLayoutCaptureAppDlg.h"
-
+#include "cv.h"
+#include "highgui.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -38,6 +39,13 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnCamWarp, m_btnCamWarpProp);
 	DDX_Control(pDX, IDC_CamView, m_camView);
 	DDX_Control(pDX, IDC_btnCamPinProp, m_btnCamPinProp);
+	DDX_Control(pDX, IDC_btnLastTag, m_btnLastTag);
+	DDX_Control(pDX, IDC_btnNextTag, m_btnNextTag);
+	DDX_Control(pDX, IDC_txtCurTag, m_txtCurTag);
+	DDX_Control(pDX, IDC_btnClear, m_btnClear);
+	DDX_Control(pDX, IDC_btnCaptureBG, m_btnCaptureBG);
+	DDX_Control(pDX, IDC_btnCaptureTag, m_btnCaptureTag);
+	DDX_Control(pDX, IDC_cbAvgFrame, m_cbAvgFrame);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -57,6 +65,11 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnCamProp, &CARLayoutCaptureAppDlg::OnBnClickedbtncamprop)
 	ON_BN_CLICKED(IDC_btnCamPinProp, &CARLayoutCaptureAppDlg::OnBnClickedbtncampinprop)
 	ON_BN_CLICKED(IDC_btnCamWarp, &CARLayoutCaptureAppDlg::OnBnClickedbtncamwarp)
+	ON_BN_CLICKED(IDC_btnLastTag, &CARLayoutCaptureAppDlg::OnBnClickedbtnlasttag)
+	ON_BN_CLICKED(IDC_btnNextTag, &CARLayoutCaptureAppDlg::OnBnClickedbtnnexttag)
+	ON_BN_CLICKED(IDC_btnClear, &CARLayoutCaptureAppDlg::OnBnClickedbtnclear)
+	ON_BN_CLICKED(IDC_btnCaptureBG, &CARLayoutCaptureAppDlg::OnBnClickedbtncapturebg)
+	ON_CBN_SELCHANGE(IDC_cbAvgFrame, &CARLayoutCaptureAppDlg::OnCbnSelchangecbavgframe)
 END_MESSAGE_MAP()
 
 
@@ -75,7 +88,18 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_btnOpenCam.EnableWindow(TRUE);
 	m_btnCloseCam.EnableWindow(FALSE);
 	m_hWndCaptureWnd = 0;
+	m_curTag = -1;
+	m_pBG = NULL;
+	m_pCaptureFrame = NULL;
+	m_pDiff = NULL;
+	m_pTmpImage = NULL;
 
+	m_cbAvgFrame.AddString(L"1");
+	m_cbAvgFrame.AddString(L"3");
+	m_cbAvgFrame.AddString(L"5");
+	m_cbAvgFrame.AddString(L"10");
+	m_cbAvgFrame.SetCurSel(0);
+	m_nAvgFrame = 1;
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -145,6 +169,13 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 	m_btnCamProp.EnableWindow(TRUE);
 	m_btnCamWarpProp.EnableWindow(TRUE);
 	m_btnCamPinProp.EnableWindow(TRUE);
+
+	m_btnLastTag.EnableWindow(TRUE);
+	m_btnNextTag.EnableWindow(TRUE);
+	m_btnClear.EnableWindow(TRUE);
+
+	m_btnCaptureBG.EnableWindow(TRUE);
+	m_btnCaptureTag.EnableWindow(TRUE);
 }
 
 void CARLayoutCaptureAppDlg::OnDestroy()
@@ -156,6 +187,27 @@ void CARLayoutCaptureAppDlg::OnDestroy()
 		delete m_pDSCam;
 		m_pDSCam = NULL;
 	}
+	if (m_pBG != NULL)
+	{
+		cvReleaseImage(&m_pBG);
+		m_pBG = NULL;
+	}
+	if (m_pCaptureFrame != NULL)
+	{
+		cvReleaseImage(&m_pCaptureFrame);
+		m_pCaptureFrame = NULL;
+	}
+	if (m_pDiff != NULL)
+	{
+		cvReleaseImage(&m_pDiff);
+		m_pDiff = NULL;
+	}
+	if (m_pTmpImage != NULL)
+	{
+		cvReleaseImage(&m_pTmpImage);
+		m_pTmpImage = NULL;
+	}
+	cvDestroyAllWindows();
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
@@ -181,6 +233,13 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 	m_btnCamProp.EnableWindow(FALSE);
 	m_btnCamWarpProp.EnableWindow(FALSE);
 	m_btnCamPinProp.EnableWindow(FALSE);
+
+	m_btnLastTag.EnableWindow(FALSE);
+	m_btnNextTag.EnableWindow(FALSE);
+	m_btnClear.EnableWindow(FALSE);
+
+	m_btnCaptureBG.EnableWindow(FALSE);
+	m_btnCaptureTag.EnableWindow(FALSE);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnplay()
@@ -271,4 +330,116 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtncamwarp()
 	if (m_pDSCam == NULL)
 		return;
 	m_pDSCam->ShowCamWarpProp();
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnlasttag()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	int numMarker = m_pDSCam->GetNumMarker();
+	m_curTag = (m_curTag - 1) % numMarker;
+	while (m_curTag < 0)
+	{
+		m_curTag += numMarker;
+	}
+	ShowCurTag();
+}
+
+BOOL CARLayoutCaptureAppDlg::ShowCurTag()
+{
+	if (m_pDSCam == NULL)
+		return FALSE;
+	int numMarker = m_pDSCam->GetNumMarker();
+	for (int i = 0; i < numMarker; i++)
+	{
+		if ( i != m_curTag)
+		{
+			m_pDSCam->SetMarkerVisible(i, FALSE);
+		}
+		else
+		{
+			m_pDSCam->SetMarkerVisible(i, TRUE);
+		}
+	}
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"%d", m_curTag);
+	m_txtCurTag.SetWindowText(str);
+	return TRUE;
+}
+BOOL CARLayoutCaptureAppDlg::ClearTag()
+{
+	if (m_pDSCam == NULL)
+		return FALSE;
+	int numMarker = m_pDSCam->GetNumMarker();
+	for (int i = 0; i < numMarker; i++)
+	{
+		m_pDSCam->SetMarkerVisible(i, FALSE);
+	}
+	return TRUE;
+}
+
+BOOL CARLayoutCaptureAppDlg::CaptureBG()
+{
+	int avgNum = m_nAvgFrame;
+	HRESULT hr = S_OK;
+	for (int i =0 ; i<avgNum; i++)
+	{
+		Sleep(50);
+		hr = m_pDSCam->QueryFrame(m_pTmpImage);
+		if (FAILED(hr))
+		{
+			return FALSE;
+		}
+		if (m_pBG == NULL)
+		{
+			m_pBG = cvCloneImage(m_pTmpImage);
+		}
+		if (i == 0)
+		{
+			cvZero(m_pBG);
+		}
+		cvAddWeighted(m_pBG, 1.0, m_pTmpImage, 1.0/avgNum, 0, m_pBG);
+	}
+	return TRUE;
+}
+
+
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnnexttag()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	int numMarker = m_pDSCam->GetNumMarker();
+	m_curTag = (m_curTag + 1) % numMarker;
+	while (m_curTag < 0)
+	{
+		m_curTag += numMarker;
+	}
+	ShowCurTag();
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnclear()
+{	
+	if (m_pDSCam == NULL)
+		return ;
+	ClearTag();
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncapturebg()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	CaptureBG();
+	cvShowImage("BG", m_pBG);
+	return;
+}
+
+void CARLayoutCaptureAppDlg::OnCbnSelchangecbavgframe()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	int curIdx = m_cbAvgFrame.GetCurSel();
+	CString strAvgFrame;
+	m_cbAvgFrame.GetLBText(curIdx, strAvgFrame);
+	swscanf_s(strAvgFrame, L"%d", &m_nAvgFrame);
 }

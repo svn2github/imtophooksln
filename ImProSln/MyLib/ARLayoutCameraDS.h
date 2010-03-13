@@ -38,6 +38,11 @@ public:
 	virtual HRESULT ShowARLayoutProp();
 	virtual HRESULT ShowARWarpProp();
 	virtual HRESULT ShowCamWarpProp();
+
+	virtual int GetNumMarker();
+	virtual HRESULT SetMarkerVisible(int idx, BOOL bVisible);
+	virtual HRESULT SetMarkerVisibleByID(int id, BOOL bVisible);
+
 public:
 	ARLayoutCameraDS(void);
 	~ARLayoutCameraDS(void);

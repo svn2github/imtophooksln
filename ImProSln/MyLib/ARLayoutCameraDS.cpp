@@ -122,5 +122,22 @@ HRESULT ARLayoutCameraDS::ShowCamWarpProp()
 {
 	return ShowFilterProp(m_pCamWarpFilter);
 }
-
-
+int ARLayoutCameraDS::GetNumMarker()
+{
+	if (m_pIARLayoutFilter == NULL)
+		return 0;
+	return m_pIARLayoutFilter->GetNumMarker();
+}
+HRESULT ARLayoutCameraDS::SetMarkerVisible(int idx, BOOL bVisible)
+{
+	if (m_pIARLayoutFilter == NULL)
+		return 0;
+	return m_pIARLayoutFilter->SetMarkerVisible(idx, bVisible);
+}
+HRESULT ARLayoutCameraDS::SetMarkerVisibleByID(int id, BOOL bVisible)
+{
+	if (m_pIARLayoutFilter == NULL)
+		return 0;
+	return m_pIARLayoutFilter->SetMarkerVisibleByID(id, bVisible);
+	
+}

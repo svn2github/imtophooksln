@@ -22,7 +22,11 @@ public:
 // Implementation
 protected:
 	ARLayoutCameraDS* m_pDSCam;
-
+	IplImage* m_pBG;
+	IplImage* m_pCaptureFrame;
+	IplImage* m_pDiff; 
+	IplImage* m_pTmpImage;
+	int m_nAvgFrame;
 	HICON m_hIcon;
 	HWND m_hWndCaptureWnd;
 	// Generated message map functions
@@ -30,6 +34,14 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+private:
+	int m_curTag;
+	BOOL NextTag();
+	BOOL LastTag();
+	BOOL ShowCurTag();
+	BOOL ClearTag();
+	BOOL CaptureBG();
+
 public:
 	CButton m_btnOpenCam;
 	CButton m_btnCloseCam;
@@ -58,4 +70,16 @@ public:
 	afx_msg void OnBnClickedbtncamprop();
 	afx_msg void OnBnClickedbtncampinprop();
 	afx_msg void OnBnClickedbtncamwarp();
+	CButton m_btnLastTag;
+	CButton m_btnNextTag;
+	CStatic m_txtCurTag;
+	afx_msg void OnBnClickedbtnlasttag();
+	afx_msg void OnBnClickedbtnnexttag();
+	CButton m_btnClear;
+	afx_msg void OnBnClickedbtnclear();
+	CButton m_btnCaptureBG;
+	CButton m_btnCaptureTag;
+	afx_msg void OnBnClickedbtncapturebg();
+	CComboBox m_cbAvgFrame;
+	afx_msg void OnCbnSelchangecbavgframe();
 };
