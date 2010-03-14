@@ -5,7 +5,8 @@
 #include "afxwin.h"
 #include "ARLayoutCameraDS.h"
 #include "afxcmn.h"
-
+#include <map>
+using namespace std;
 // CARLayoutCaptureAppDlg dialog
 class CARLayoutCaptureAppDlg : public CDialog
 {
@@ -33,6 +34,8 @@ protected:
 	int m_nAvgFrame;
 	HICON m_hIcon;
 	HWND m_hWndCaptureWnd;
+	map<CString, int> m_CamDevice;
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();

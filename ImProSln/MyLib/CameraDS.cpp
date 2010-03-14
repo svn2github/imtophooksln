@@ -268,6 +268,7 @@ HRESULT CCameraDS::SaveGraphFile(WCHAR *wszPath)
 	return hr;
 }
 
+
 bool CCameraDS::BindFilter(int nCamID, IBaseFilter **pFilter)
 {
 	if (nCamID < 0)
@@ -435,28 +436,28 @@ int CCameraDS::CameraName(int nCamID, WCHAR* sName, int nBufferSize)
     IMoniker *pM;
     while(hr = pEm->Next(1, &pM, &cFetched), hr==S_OK)
     {
-		if (count == nCamID)
+		if (count != nCamID)
 		{
-			IPropertyBag *pBag=0;
-			hr = pM->BindToStorage(0, 0, IID_IPropertyBag, (void **)&pBag);
-			if(SUCCEEDED(hr))
-			{
-				VARIANT var;
-				var.vt = VT_BSTR;
-				hr = pBag->Read(L"FriendlyName", &var, NULL); //还有其他属性,像描述信息等等...
-	            if(hr == NOERROR)
-		        {
-			        //获取设备名称			
-					wcscpy_s(sName, nBufferSize, (WCHAR*)var.bstrVal);
-	                SysFreeString(var.bstrVal);				
-		        }
-			    pBag->Release();
-			}
 			pM->Release();
-
-			break;
+			count++;
+			continue;
 		}
-		count++;
+		IPropertyBag *pBag=0;
+		hr = pM->BindToStorage(0, 0, IID_IPropertyBag, (void **)&pBag);
+		if(SUCCEEDED(hr))
+		{
+			VARIANT var;
+			var.vt = VT_BSTR;
+			hr = pBag->Read(L"FriendlyName", &var, NULL); //还有其他属性,像描述信息等等...
+            if(hr == NOERROR)
+	        {
+				wcscpy_s(sName, nBufferSize, (WCHAR*)var.bstrVal);
+                SysFreeString(var.bstrVal);				
+	        }
+		    pBag->Release();
+		}
+		pM->Release();
+		break;
     }
 
 	pCreateDevEnum = NULL;

@@ -120,12 +120,15 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_nAvgFrame = 1;
 
 	int camCount = CCameraDS::CameraCount();
+	m_CamDevice.clear();
 	for (int i =0; i< camCount; i++)
 	{
 		WCHAR sName[MAX_PATH] = {0};
 		CCameraDS::CameraName(i, sName, MAX_PATH);
 		m_cbCam.AddString(sName);
-		
+		CString camName = sName;
+		m_CamDevice[camName] = i;
+
 	}
 	if (camCount > 0)
 	{
@@ -187,8 +190,12 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 		m_pDSCam = NULL;
 	}
 	bool ret;
-	int nCamID = m_cbCam.GetCurSel();
+	CString cbStr;
+	int nCamID = -1;
 	
+	m_cbCam.GetLBText(m_cbCam.GetCurSel(), cbStr);
+	nCamID = m_CamDevice[cbStr];
+
 	m_hWndCaptureWnd = m_camView.GetSafeHwnd();
 	m_pDSCam = new ARLayoutCameraDS();
 	ret = m_pDSCam->OpenCamera(nCamID, true);
@@ -799,7 +806,7 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 	if (nIDEvent == m_CaptureTimer)
 	{
 		int numMarker = m_pDSCam->GetNumMarker();
-		if (m_curTag == numMarker)
+		if (m_curTag == numMarker -1)
 		{
 			KillTimer(m_CaptureTimer);
 			m_btnOpenCam.EnableWindow(FALSE);
@@ -830,6 +837,7 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 			m_btnStartAutoCapture.EnableWindow(TRUE);
 			m_edSavePath.EnableWindow(TRUE);
 			cvDestroyAllWindows();
+			return;
 		}
 		m_curTag++;
 		fRECT roiRECT;
