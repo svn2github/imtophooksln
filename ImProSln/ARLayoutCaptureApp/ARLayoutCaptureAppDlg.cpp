@@ -52,6 +52,7 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_txtROIThreshold, m_txtROIThreshold);
 	DDX_Control(pDX, IDC_EDPath, m_edSavePath);
 	DDX_Control(pDX, IDC_btnStartAutoCapture, m_btnStartAutoCapture);
+	DDX_Control(pDX, IDC_cbCam, m_cbCam);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -78,13 +79,13 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_cbAvgFrame, &CARLayoutCaptureAppDlg::OnCbnSelchangecbavgframe)
 	ON_BN_CLICKED(IDC_btnCaptureTag, &CARLayoutCaptureAppDlg::OnBnClickedbtncapturetag)
 	ON_BN_CLICKED(IDC_btnShowDiff, &CARLayoutCaptureAppDlg::OnBnClickedbtnshowdiff)
-//	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnTRBNThumbPosChangingslrroithreshold)
-//	ON_NOTIFY(NM_THEMECHANGED, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnNMThemeChangedslrroithreshold)
+
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnNMCustomdrawslrroithreshold)
 	ON_BN_CLICKED(IDC_btnCropDiff, &CARLayoutCaptureAppDlg::OnBnClickedbtncropdiff)
 	ON_BN_CLICKED(IDC_btnBrowse, &CARLayoutCaptureAppDlg::OnBnClickedbtnbrowse)
 	ON_BN_CLICKED(IDC_btnStartAutoCapture, &CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture)
 	ON_WM_TIMER()
+
 END_MESSAGE_MAP()
 
 
@@ -118,6 +119,18 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_cbAvgFrame.SetCurSel(0);
 	m_nAvgFrame = 1;
 
+	int camCount = CCameraDS::CameraCount();
+	for (int i =0; i< camCount; i++)
+	{
+		WCHAR sName[MAX_PATH] = {0};
+		CCameraDS::CameraName(i, sName, MAX_PATH);
+		m_cbCam.AddString(sName);
+		
+	}
+	if (camCount > 0)
+	{
+		m_cbCam.SetCurSel(0);
+	}
 	m_slrROIThreshold.SetRangeMax(30, TRUE);
 	m_slrROIThreshold.SetRangeMin(0, TRUE);
 	m_slrROIThreshold.SetPos(5);
@@ -174,11 +187,14 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 		m_pDSCam = NULL;
 	}
 	bool ret;
+	int nCamID = m_cbCam.GetCurSel();
+	
 	m_hWndCaptureWnd = m_camView.GetSafeHwnd();
 	m_pDSCam = new ARLayoutCameraDS();
-	ret = m_pDSCam->OpenCamera(0, true);
+	ret = m_pDSCam->OpenCamera(nCamID, true);
 	ret = m_pDSCam->SetVideoWindow(m_hWndCaptureWnd);
 
+	m_cbCam.EnableWindow(FALSE);
 	m_btnOpenCam.EnableWindow(FALSE);
 	m_btnCloseCam.EnableWindow(TRUE);
 
@@ -258,6 +274,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 		delete m_pDSCam;
 		m_pDSCam = NULL;
 	}
+	m_cbCam.EnableWindow(TRUE);
 	m_btnOpenCam.EnableWindow(TRUE);
 	m_btnCloseCam.EnableWindow(FALSE);
 
@@ -857,3 +874,4 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 
 	CDialog::OnTimer(nIDEvent);
 }
+

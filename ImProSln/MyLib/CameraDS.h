@@ -81,7 +81,7 @@ public:
 
 	HRESULT QueryFrame(IplImage*& pFrame);
 	static int CameraCount(); 
-	static int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize);
+	static int CCameraDS::CameraName(int nCamID, WCHAR* sName, int nBufferSize);
 
 };
 

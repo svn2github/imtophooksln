@@ -414,7 +414,7 @@ int CCameraDS::CameraCount()
 	return count;
 }
 
-int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize)
+int CCameraDS::CameraName(int nCamID, WCHAR* sName, int nBufferSize)
 {
 	int count = 0;
  	CoInitialize(NULL);
@@ -447,8 +447,7 @@ int CCameraDS::CameraName(int nCamID, char* sName, int nBufferSize)
 	            if(hr == NOERROR)
 		        {
 			        //获取设备名称			
-					WideCharToMultiByte(CP_ACP,0,var.bstrVal,-1,sName, nBufferSize ,"",NULL);
-
+					wcscpy_s(sName, nBufferSize, (WCHAR*)var.bstrVal);
 	                SysFreeString(var.bstrVal);				
 		        }
 			    pBag->Release();

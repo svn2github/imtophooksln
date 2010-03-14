@@ -96,18 +96,18 @@ CAPTION "ARLayoutCaptureApp"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_CamView,"Static",SS_BLACKFRAME,7,7,207,157
-    PUSHBUTTON      "Open Cam",IDC_btnOpenCamera,246,7,87,14
-    PUSHBUTTON      "Destory Cam",IDC_btnDestoryCamera,246,24,87,14,WS_DISABLED
-    PUSHBUTTON      "Play",IDC_btnPlay,246,51,87,14,WS_DISABLED
-    PUSHBUTTON      "Pause",IDC_btnPasue,246,67,87,14,WS_DISABLED
-    PUSHBUTTON      "Stop",IDC_btnStop,246,83,87,14,WS_DISABLED
-    PUSHBUTTON      "Save Graph",IDC_btnSaveGraph,246,111,87,14,WS_DISABLED
-    PUSHBUTTON      "AR Prop",IDC_btnARProp,246,137,87,14,WS_DISABLED
-    PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,246,154,87,14,WS_DISABLED
-    PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,246,172,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Prop",IDC_btnCamProp,246,201,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp",IDC_btnCamWarp,246,239,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Pin Prop",IDC_btnCamPinProp,246,220,87,14,WS_DISABLED
+    PUSHBUTTON      "Open Cam",IDC_btnOpenCamera,246,30,87,14
+    PUSHBUTTON      "Destory Cam",IDC_btnDestoryCamera,246,47,87,14,WS_DISABLED
+    PUSHBUTTON      "Play",IDC_btnPlay,246,70,87,14,WS_DISABLED
+    PUSHBUTTON      "Pause",IDC_btnPasue,246,86,87,14,WS_DISABLED
+    PUSHBUTTON      "Stop",IDC_btnStop,246,102,87,14,WS_DISABLED
+    PUSHBUTTON      "Save Graph",IDC_btnSaveGraph,246,127,87,14,WS_DISABLED
+    PUSHBUTTON      "AR Prop",IDC_btnARProp,246,150,87,14,WS_DISABLED
+    PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,246,167,87,14,WS_DISABLED
+    PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,246,185,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Prop",IDC_btnCamProp,246,207,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp",IDC_btnCamWarp,246,245,87,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop",IDC_btnCamPinProp,246,226,87,14,WS_DISABLED
     PUSHBUTTON      "<",IDC_btnLastTag,72,166,25,14,WS_DISABLED
     PUSHBUTTON      ">",IDC_btnNextTag,129,166,25,14,WS_DISABLED
     CTEXT           "______",IDC_txtCurTag,100,168,25,10
@@ -125,6 +125,7 @@ BEGIN
     PUSHBUTTON      "...",IDC_btnBrowse,213,226,17,12
     LTEXT           "Save Path:",IDC_STATIC,7,227,35,10
     PUSHBUTTON      "Start Auto Capture",IDC_btnStartAutoCapture,151,244,78,14,WS_DISABLED
+    COMBOBOX        IDC_cbCam,246,7,87,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 

@@ -107,7 +107,6 @@ public:
 	CEdit m_edSavePath;
 	CButton m_btnStartAutoCapture;
 	afx_msg void OnBnClickedbtnstartautocapture();
-	
-
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	CComboBox m_cbCam;
 };
