@@ -4,6 +4,7 @@
 #pragma once
 #include "afxwin.h"
 #include "ARLayoutCameraDS.h"
+#include "afxcmn.h"
 
 // CARLayoutCaptureAppDlg dialog
 class CARLayoutCaptureAppDlg : public CDialog
@@ -24,8 +25,11 @@ protected:
 	ARLayoutCameraDS* m_pDSCam;
 	IplImage* m_pBG;
 	IplImage* m_pCaptureFrame;
-	IplImage* m_pDiff; 
+	IplImage* m_pDiff;
+	IplImage* m_pCroppedDiff;
 	IplImage* m_pTmpImage;
+	IplImage* m_pROITmpImage;
+	UINT m_CaptureTimer;
 	int m_nAvgFrame;
 	HICON m_hIcon;
 	HWND m_hWndCaptureWnd;
@@ -41,7 +45,14 @@ private:
 	BOOL ShowCurTag();
 	BOOL ClearTag();
 	BOOL CaptureBG();
-
+	BOOL CaptureTag();
+	BOOL CaptureCamFrame(IplImage*& pFrame);
+	BOOL GenerateDiff();
+	BOOL ComputeDiffROI(int threshold, fRECT& roiRECT,BOOL bDrawOnDiff = false);
+	BOOL GenerateCroppedDiff(fRECT* roi = NULL);
+	BOOL GenerateCropDiff();
+	BOOL GetSavePath(WCHAR* path, WCHAR* imageFolder, WCHAR* confName);
+	BOOL SaveCroppedDiff(WCHAR* path);
 public:
 	CButton m_btnOpenCam;
 	CButton m_btnCloseCam;
@@ -82,4 +93,21 @@ public:
 	afx_msg void OnBnClickedbtncapturebg();
 	CComboBox m_cbAvgFrame;
 	afx_msg void OnCbnSelchangecbavgframe();
+	afx_msg void OnBnClickedbtncapturetag();
+	CButton m_btnShowDiff;
+	CButton m_btnCropDiff;
+	afx_msg void OnBnClickedbtnshowdiff();
+	CSliderCtrl m_slrROIThreshold;
+	CStatic m_txtROIThreshold;
+//	afx_msg void OnTRBNThumbPosChangingslrroithreshold(NMHDR *pNMHDR, LRESULT *pResult);
+//	afx_msg void OnNMThemeChangedslrroithreshold(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMCustomdrawslrroithreshold(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnBnClickedbtncropdiff();
+	afx_msg void OnBnClickedbtnbrowse();
+	CEdit m_edSavePath;
+	CButton m_btnStartAutoCapture;
+	afx_msg void OnBnClickedbtnstartautocapture();
+	
+
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

@@ -48,7 +48,19 @@ void ARLayoutCameraDS::CloseCamera()
 	__super::CloseCamera();
 
 }
+HRESULT ARLayoutCameraDS::ConfigFilters()
+{
+	HRESULT hr = __super::ConfigFilters();
+	if (m_pIARWarpFilter == NULL || m_pICamWarpFilter == NULL || FAILED(hr))
+	{
+		return E_FAIL;
+	}
+		
+	m_pIARWarpFilter->SetIsFlipY(false);
+	m_pICamWarpFilter->SetIsFlipY(false);
 
+	return S_OK;
+}
 
 HRESULT ARLayoutCameraDS::ConnectGraph()
 {
@@ -61,9 +73,7 @@ HRESULT ARLayoutCameraDS::ConnectGraph()
 	hr = m_pGraph->Connect(m_pCamWarpOutputPin, m_pGrabberInput);
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 
-	m_pIARWarpFilter->SetIsFlipY(false);
-	m_pICamWarpFilter->SetIsFlipY(false);
-	bool isFlipY = m_pICamWarpFilter->GetIsFlipY();
+
 	return S_OK;
 }
 HRESULT ARLayoutCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
@@ -140,4 +150,10 @@ HRESULT ARLayoutCameraDS::SetMarkerVisibleByID(int id, BOOL bVisible)
 		return 0;
 	return m_pIARLayoutFilter->SetMarkerVisibleByID(id, bVisible);
 	
+}
+int ARLayoutCameraDS::GetMarkerID(int idx)
+{
+	if (m_pIARLayoutFilter == NULL)
+		return -1;
+	return m_pIARLayoutFilter->GetMarkerID(idx);
 }

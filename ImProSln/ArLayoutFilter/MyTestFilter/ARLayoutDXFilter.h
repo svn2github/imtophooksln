@@ -82,6 +82,7 @@ public:
 	virtual int GetNumMarker();
 	virtual bool SetMarkerVisible(int idx, bool bVisible);
 	virtual bool SetMarkerVisibleByID(int id, bool bVisible);
+	virtual int GetMarkerID(int idx);
 private:
 	bool GetARTag2DRect(fRECT* retRect, const ARMultiEachMarkerInfoT* pMarker, float fScale = 1.0);
 	ARMultiEachMarkerInfoT* GetARMarker(int id);

@@ -23,8 +23,15 @@
 #define IDC_btnClear                    1016
 #define IDC_btnCaptureBG                1017
 #define IDC_btnCaptureTag               1018
-#define IDC_COMBO1                      1019
 #define IDC_cbAvgFrame                  1019
+#define IDC_btnShowDiff                 1020
+#define IDC_btnCropDiff                 1021
+#define IDC_slrROIThreshold             1022
+#define IDC_txtROIThreshold             1023
+#define IDC_BUTTON2                     1026
+#define IDC_btnStartAutoCapture         1026
+#define IDC_EDPath                      7020
+#define IDC_btnBrowse                   7021
 
 // Next default values for new objects
 // 
@@ -32,7 +39,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1020
+#define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

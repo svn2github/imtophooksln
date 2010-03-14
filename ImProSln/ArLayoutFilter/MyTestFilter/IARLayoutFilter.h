@@ -64,6 +64,9 @@ public:
 	virtual int GetNumMarker();
 	virtual bool SetMarkerVisible(int idx, bool bVisible);
 	virtual bool SetMarkerVisibleByID(int id, bool bVisible);
+	virtual int GetMarkerID(int idx);
+
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();
+	
 };

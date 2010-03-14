@@ -184,14 +184,17 @@ HRESULT ARLayoutDXFilter::ComputeROIs(const ARMultiMarkerInfoT* pMarkerConfig)
 	CvRect cvROIRect;
 	fRECT fROIRect;
 	int imgW = m_pROIImage->width; int imgH = m_pROIImage->height;
-
+	if (imgW -1 <= 0 || imgH -1 <= 0 )
+	{
+		return E_FAIL;
+	}
 	for( ; cont != 0; cont = cont->h_next )	{
 		int count = cont->total; // This is number point in contour
 		cvROIRect = cvContourBoundingRect(cont);
-		fROIRect.left = cvROIRect.x /(float) imgW;
-		fROIRect.top = cvROIRect.y /(float) imgH;
-		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)imgW;
-		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)imgH;
+		fROIRect.left = cvROIRect.x /(float)(imgW-1) ;
+		fROIRect.top = cvROIRect.y /(float)(imgH -1);
+		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)(imgW-1);
+		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)(imgH-1);
 		m_ROIRects.push_back(fROIRect);
 	}
 
@@ -1100,4 +1103,13 @@ bool ARLayoutDXFilter::SetMarkerVisibleByID(int id, bool bVisible)
 		}
 	}
 	return false;
+}
+int ARLayoutDXFilter::GetMarkerID(int idx)
+{
+	CAutoLock lck(&m_csARMarker);
+	if (idx < 0 || idx >= m_numMarker)	
+	{		
+		return -1;
+	}	
+	return m_ARMarkers[idx].patt_id;
 }

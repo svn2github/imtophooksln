@@ -46,6 +46,12 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnCaptureBG, m_btnCaptureBG);
 	DDX_Control(pDX, IDC_btnCaptureTag, m_btnCaptureTag);
 	DDX_Control(pDX, IDC_cbAvgFrame, m_cbAvgFrame);
+	DDX_Control(pDX, IDC_btnShowDiff, m_btnShowDiff);
+	DDX_Control(pDX, IDC_btnCropDiff, m_btnCropDiff);
+	DDX_Control(pDX, IDC_slrROIThreshold, m_slrROIThreshold);
+	DDX_Control(pDX, IDC_txtROIThreshold, m_txtROIThreshold);
+	DDX_Control(pDX, IDC_EDPath, m_edSavePath);
+	DDX_Control(pDX, IDC_btnStartAutoCapture, m_btnStartAutoCapture);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -70,6 +76,15 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnClear, &CARLayoutCaptureAppDlg::OnBnClickedbtnclear)
 	ON_BN_CLICKED(IDC_btnCaptureBG, &CARLayoutCaptureAppDlg::OnBnClickedbtncapturebg)
 	ON_CBN_SELCHANGE(IDC_cbAvgFrame, &CARLayoutCaptureAppDlg::OnCbnSelchangecbavgframe)
+	ON_BN_CLICKED(IDC_btnCaptureTag, &CARLayoutCaptureAppDlg::OnBnClickedbtncapturetag)
+	ON_BN_CLICKED(IDC_btnShowDiff, &CARLayoutCaptureAppDlg::OnBnClickedbtnshowdiff)
+//	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnTRBNThumbPosChangingslrroithreshold)
+//	ON_NOTIFY(NM_THEMECHANGED, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnNMThemeChangedslrroithreshold)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_slrROIThreshold, &CARLayoutCaptureAppDlg::OnNMCustomdrawslrroithreshold)
+	ON_BN_CLICKED(IDC_btnCropDiff, &CARLayoutCaptureAppDlg::OnBnClickedbtncropdiff)
+	ON_BN_CLICKED(IDC_btnBrowse, &CARLayoutCaptureAppDlg::OnBnClickedbtnbrowse)
+	ON_BN_CLICKED(IDC_btnStartAutoCapture, &CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -93,6 +108,8 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_pCaptureFrame = NULL;
 	m_pDiff = NULL;
 	m_pTmpImage = NULL;
+    m_pCroppedDiff = NULL;
+	m_pROITmpImage = NULL;
 
 	m_cbAvgFrame.AddString(L"1");
 	m_cbAvgFrame.AddString(L"3");
@@ -100,6 +117,14 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_cbAvgFrame.AddString(L"10");
 	m_cbAvgFrame.SetCurSel(0);
 	m_nAvgFrame = 1;
+
+	m_slrROIThreshold.SetRangeMax(30, TRUE);
+	m_slrROIThreshold.SetRangeMin(0, TRUE);
+	m_slrROIThreshold.SetPos(5);
+	m_CaptureTimer = 1;
+	CString path;
+	path = theApp.GetProfileString(L"MySetting",L"ARLayoutCaptureSavePath", L"");
+	m_edSavePath.SetWindowText(path);
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -176,6 +201,10 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 
 	m_btnCaptureBG.EnableWindow(TRUE);
 	m_btnCaptureTag.EnableWindow(TRUE);
+	m_btnShowDiff.EnableWindow(TRUE);
+	m_btnCropDiff.EnableWindow(TRUE);
+
+	m_btnStartAutoCapture.EnableWindow(TRUE);
 }
 
 void CARLayoutCaptureAppDlg::OnDestroy()
@@ -202,12 +231,23 @@ void CARLayoutCaptureAppDlg::OnDestroy()
 		cvReleaseImage(&m_pDiff);
 		m_pDiff = NULL;
 	}
+	if (m_pCroppedDiff != NULL)
+	{
+		cvReleaseImage(&m_pCroppedDiff);
+		m_pCroppedDiff = NULL;
+	}
 	if (m_pTmpImage != NULL)
 	{
 		cvReleaseImage(&m_pTmpImage);
 		m_pTmpImage = NULL;
 	}
+	if (m_pROITmpImage != NULL)
+	{
+		cvReleaseImage(&m_pROITmpImage);
+		m_pROITmpImage = NULL;
+	}
 	cvDestroyAllWindows();
+	KillTimer(m_CaptureTimer);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
@@ -240,6 +280,10 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 
 	m_btnCaptureBG.EnableWindow(FALSE);
 	m_btnCaptureTag.EnableWindow(FALSE);
+	m_btnShowDiff.EnableWindow(FALSE);
+	m_btnCropDiff.EnableWindow(FALSE);
+
+	m_btnStartAutoCapture.EnableWindow(FALSE);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnplay()
@@ -377,8 +421,133 @@ BOOL CARLayoutCaptureAppDlg::ClearTag()
 	}
 	return TRUE;
 }
+BOOL CARLayoutCaptureAppDlg::GenerateDiff()
+{
+	if (m_pBG == NULL || m_pCaptureFrame == NULL ||
+		m_pBG->imageSize != m_pCaptureFrame->imageSize)
+	{
+		return FALSE;
+	}
+	if (m_pDiff == NULL)
+	{
+		m_pDiff = cvCloneImage(m_pBG);
+	}
+	if (m_pDiff->imageSize != m_pBG->imageSize)
+	{
+		return FALSE;
+	}
+	cvSub(m_pBG, m_pCaptureFrame, m_pDiff);
 
-BOOL CARLayoutCaptureAppDlg::CaptureBG()
+	return TRUE;
+}
+BOOL CARLayoutCaptureAppDlg::ComputeDiffROI(int threshold, fRECT& roiRECT, BOOL bDrawOnDiff)
+{
+	if (m_pDiff == NULL)
+	{
+		return S_FALSE;
+	}
+	if (m_pROITmpImage == NULL)
+	{
+		m_pROITmpImage = cvCreateImage(cvSize(m_pDiff->width, m_pDiff->height), 
+			IPL_DEPTH_8U, 1);
+	}
+	if (m_pROITmpImage->width != m_pDiff->width || 
+		m_pROITmpImage->height != m_pDiff->height)
+	{
+		return FALSE;
+	}
+	if(strcmpi(m_pDiff->colorModel, "BGRA") == 0)
+		cvCvtColor(m_pDiff, m_pROITmpImage, CV_BGRA2GRAY);
+	else if(strcmpi(m_pDiff->colorModel, "BGR") == 0)
+		cvCvtColor(m_pDiff, m_pROITmpImage, CV_BGR2GRAY);
+	else if(strcmpi(m_pDiff->colorModel, "RGB") == 0) 
+		cvCvtColor(m_pDiff, m_pROITmpImage, CV_RGB2GRAY);
+	
+	cvThreshold(m_pROITmpImage, m_pROITmpImage, threshold, 255,  CV_THRESH_BINARY);	
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	CvSeq* cont = 0; 
+	CvRect cvROIRect;
+	fRECT fROIRect;
+	fRECT maxROIRect;
+
+	float maxArea = (maxROIRect.right - maxROIRect.left) * 
+		(maxROIRect.bottom - maxROIRect.top);
+
+	int imgW = m_pROITmpImage->width; 
+	int imgH = m_pROITmpImage->height;
+	if (imgW -1 <= 0 || imgH -1 <= 0 )
+	{
+		cvReleaseMemStorage(&storage);
+		return E_FAIL;
+	}
+	bool bFindContour = false;
+	cvFindContours(m_pROITmpImage, storage, &cont, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+	for( ; cont != 0; cont = cont->h_next )	{
+		int count = cont->total; // This is number point in contour
+		
+		cvROIRect = cvContourBoundingRect(cont);
+		fROIRect.left = cvROIRect.x /(float) (imgW - 1);
+		fROIRect.top = cvROIRect.y /(float) (imgH - 1);
+		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)(imgW -1);
+		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)(imgH -1);
+		float roiArea = (fROIRect.right - fROIRect.left) * 
+			(fROIRect.bottom - fROIRect.top);
+		if (roiArea > maxArea)
+		{
+			maxArea = roiArea;
+			maxROIRect = fROIRect;
+			bFindContour = true;
+		}
+	}
+	cvReleaseMemStorage(&storage);
+	if (!bFindContour )
+		return FALSE;
+
+	roiRECT = maxROIRect;
+	if (bDrawOnDiff)
+	{
+		CvPoint p0, p1;
+		p0.x = roiRECT.left * (imgW -1); p0.y = roiRECT.top * (imgH - 1);
+		p1.x = roiRECT.right * (imgW -1); p1.y = roiRECT.bottom * (imgH - 1);
+		cvDrawRect(m_pDiff, p0, p1, cvScalar(0, 0, 255, 255), 3);
+		
+	}
+	return TRUE;
+}
+BOOL CARLayoutCaptureAppDlg::GenerateCroppedDiff(fRECT* roi)
+{
+	if (m_pDiff == NULL)
+	{
+		return S_FALSE;
+	}
+	if (m_pCroppedDiff == NULL)
+	{
+		m_pCroppedDiff = cvCloneImage(m_pDiff);
+	}
+	cvResetImageROI(m_pCroppedDiff);
+	if (m_pDiff->imageSize != m_pCroppedDiff->imageSize)
+	{
+		return FALSE;
+	}
+	cvCopyImage(m_pDiff, m_pCroppedDiff);
+	fRECT roiRECT;
+	CvRect cvROIRect;
+	int threshold = m_slrROIThreshold.GetPos(); 
+	if(!ComputeDiffROI(threshold, roiRECT, true))
+		return FALSE;
+	int imgW = m_pDiff->width;
+	int imgH = m_pDiff->height;
+	cvROIRect.x = roiRECT.left * (imgW -1); 
+	cvROIRect.y = roiRECT.top * (imgH -1); 
+	cvROIRect.width = (roiRECT.right - roiRECT.left)*imgW;
+	cvROIRect.height = (roiRECT.bottom - roiRECT.top)*imgH;
+	cvSetImageROI(m_pCroppedDiff, cvROIRect);
+	if (roi != NULL)
+		*roi = roiRECT;
+	return TRUE;
+}
+
+BOOL CARLayoutCaptureAppDlg::CaptureCamFrame(IplImage*& pFrame)
 {
 	int avgNum = m_nAvgFrame;
 	HRESULT hr = S_OK;
@@ -390,19 +559,27 @@ BOOL CARLayoutCaptureAppDlg::CaptureBG()
 		{
 			return FALSE;
 		}
-		if (m_pBG == NULL)
+		if (pFrame == NULL)
 		{
-			m_pBG = cvCloneImage(m_pTmpImage);
+			pFrame = cvCloneImage(m_pTmpImage);
 		}
 		if (i == 0)
 		{
-			cvZero(m_pBG);
+			cvZero(pFrame);
 		}
-		cvAddWeighted(m_pBG, 1.0, m_pTmpImage, 1.0/avgNum, 0, m_pBG);
+		cvAddWeighted(pFrame, 1.0, m_pTmpImage, 1.0/avgNum, 0, pFrame);
 	}
+
 	return TRUE;
 }
-
+BOOL CARLayoutCaptureAppDlg::CaptureBG()
+{
+	return CaptureCamFrame(m_pBG);
+}
+BOOL CARLayoutCaptureAppDlg::CaptureTag()
+{
+	return CaptureCamFrame(m_pCaptureFrame);
+}
 
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnnexttag()
@@ -442,4 +619,241 @@ void CARLayoutCaptureAppDlg::OnCbnSelchangecbavgframe()
 	CString strAvgFrame;
 	m_cbAvgFrame.GetLBText(curIdx, strAvgFrame);
 	swscanf_s(strAvgFrame, L"%d", &m_nAvgFrame);
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncapturetag()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	CaptureTag();
+	cvShowImage("Tag", m_pCaptureFrame);
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnshowdiff()
+{
+	if (m_pDSCam == NULL)
+		return ;
+	GenerateDiff();
+	cvShowImage("Diff", m_pDiff);
+}
+
+
+void CARLayoutCaptureAppDlg::OnNMCustomdrawslrroithreshold(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	int slrPos = m_slrROIThreshold.GetPos();
+	WCHAR str[MAX_PATH] = {0};
+	swprintf_s(str, MAX_PATH, L"%d", slrPos);
+	m_txtROIThreshold.SetWindowText(str);
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncropdiff()
+{
+	if (m_pDSCam == NULL)
+		return ;
+
+	GenerateCroppedDiff();
+	cvShowImage("Cropped Diff", m_pCroppedDiff);
+}
+
+BOOL CARLayoutCaptureAppDlg::SaveCroppedDiff(WCHAR* path)
+{
+	if (m_pCroppedDiff == NULL)
+	{
+		return FALSE;
+	}
+	char filename[MAX_PATH];
+	wcstombs(filename, path, MAX_PATH);
+	cvSaveImage(filename, m_pCroppedDiff);
+	return TRUE;
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnbrowse()
+{
+	WCHAR curDic[MAX_PATH] = {0};
+	GetCurrentDirectoryW(MAX_PATH, curDic);
+	OPENFILENAME openfn;
+	WCHAR cFname[256];
+	WCHAR szFilterOpn[]=TEXT("Config files (*.txt)\0*.txt\0All files (*.*)\0*.*\0\0");
+	DWORD nFilterIndex=1;
+	cFname[0]=0x00;
+	ZeroMemory(&openfn, sizeof(openfn));
+	openfn.hwndOwner=GetActiveWindow()->GetSafeHwnd();
+	openfn.lpstrFile=cFname;
+	openfn.nMaxFile=sizeof(cFname);
+	openfn.lStructSize=sizeof(openfn);
+	openfn.lpstrFilter=szFilterOpn; 
+	openfn.nFilterIndex=nFilterIndex;
+	//openfn.lpstrInitialDir=szCurDir;
+	openfn.Flags= OFN_PATHMUSTEXIST | OFN_LONGNAMES | OFN_HIDEREADONLY;
+	BOOL hr = GetOpenFileName(&openfn );
+	SetCurrentDirectoryW(curDic);
+	if (!hr)
+	{
+		return ;
+	}
+	m_edSavePath.SetWindowText(openfn.lpstrFile);
+}
+BOOL CARLayoutCaptureAppDlg::GetSavePath(WCHAR* path, WCHAR* imageFolder, WCHAR* confName)
+{
+	if (path == NULL || imageFolder == NULL || confName == NULL)
+		return FALSE;
+	CString cstrPath;
+	m_edSavePath.GetWindowText(cstrPath);
+	WCHAR* pszFile = wcsrchr((WCHAR*)(LPCWSTR)cstrPath, '\\');
+	pszFile++;    // Moves on from \
+	// Get path
+	WCHAR szPath[MAX_PATH] = L"";
+	_tcsncat(szPath, cstrPath, pszFile - cstrPath);
+
+	WCHAR* tmp = wcsrchr(pszFile, '.');
+	int res = (int)(tmp - pszFile);
+	WCHAR tmpConfName[MAX_PATH] = {0};
+	memcpy(tmpConfName, pszFile, sizeof(WCHAR)*res);
+	tmpConfName[res] = '\0';
+	WCHAR dirName[MAX_PATH] = {0};
+	swprintf_s(dirName, MAX_PATH, L"%s%s", szPath, tmpConfName);
+
+	wcscpy_s(path, MAX_PATH,(WCHAR*)(LPCWSTR)cstrPath);
+	wcscpy_s(imageFolder,MAX_PATH, dirName);
+	wcscpy_s(confName, MAX_PATH, tmpConfName);
+	return TRUE;
+}
+void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
+{
+	if (m_pDSCam == NULL)
+	{
+		return;
+	}
+	WCHAR path[MAX_PATH] = {0};
+	WCHAR dirName[MAX_PATH] = {0};
+	WCHAR confName[MAX_PATH] = {0};
+	GetSavePath(path, dirName, confName);
+	int mkdirRet = _wmkdir(dirName);
+	if (mkdirRet < 0)
+		return;
+	int numMarker = m_pDSCam->GetNumMarker();
+	FILE* openfile = NULL;
+	_wfopen_s(&openfile, path, L"w");
+	fwprintf_s(openfile, L"%d \n", numMarker);
+	fclose(openfile);
+
+	m_btnOpenCam.EnableWindow(FALSE);
+	m_btnCloseCam.EnableWindow(FALSE);
+
+	m_btnPlay.EnableWindow(FALSE);
+	m_btnPause.EnableWindow(FALSE);
+	m_btnStop.EnableWindow(FALSE);
+
+	m_btnSaveGraph.EnableWindow(FALSE);
+
+	m_btnARProp.EnableWindow(FALSE);
+	m_btnARWarpProp.EnableWindow(FALSE);
+	m_btnDXRenderProp.EnableWindow(FALSE);
+	m_btnCamProp.EnableWindow(FALSE);
+	m_btnCamWarpProp.EnableWindow(FALSE);
+	m_btnCamPinProp.EnableWindow(FALSE);
+
+	m_btnLastTag.EnableWindow(FALSE);
+	m_btnNextTag.EnableWindow(FALSE);
+	m_btnClear.EnableWindow(FALSE);
+
+	m_btnCaptureBG.EnableWindow(FALSE);
+	m_btnCaptureTag.EnableWindow(FALSE);
+	m_btnShowDiff.EnableWindow(FALSE);
+	m_btnCropDiff.EnableWindow(FALSE);
+
+	m_btnStartAutoCapture.EnableWindow(FALSE);
+	m_edSavePath.EnableWindow(FALSE);
+	ClearTag();
+	Sleep(500);
+	CaptureBG();
+	m_curTag = -1;
+	
+	SetTimer(m_CaptureTimer, 2000, 0);
+
+	theApp.WriteProfileString(L"MySetting",L"ARLayoutCaptureSavePath", path);
+}
+
+void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == m_CaptureTimer)
+	{
+		int numMarker = m_pDSCam->GetNumMarker();
+		if (m_curTag == numMarker)
+		{
+			KillTimer(m_CaptureTimer);
+			m_btnOpenCam.EnableWindow(FALSE);
+			m_btnCloseCam.EnableWindow(TRUE);
+
+			m_btnPlay.EnableWindow(TRUE);
+			m_btnPause.EnableWindow(FALSE);
+			m_btnStop.EnableWindow(FALSE);
+
+			m_btnSaveGraph.EnableWindow(TRUE);
+
+			m_btnARProp.EnableWindow(TRUE);
+			m_btnARWarpProp.EnableWindow(TRUE);
+			m_btnDXRenderProp.EnableWindow(TRUE);
+			m_btnCamProp.EnableWindow(TRUE);
+			m_btnCamWarpProp.EnableWindow(TRUE);
+			m_btnCamPinProp.EnableWindow(TRUE);
+
+			m_btnLastTag.EnableWindow(TRUE);
+			m_btnNextTag.EnableWindow(TRUE);
+			m_btnClear.EnableWindow(TRUE);
+
+			m_btnCaptureBG.EnableWindow(TRUE);
+			m_btnCaptureTag.EnableWindow(TRUE);
+			m_btnShowDiff.EnableWindow(TRUE);
+			m_btnCropDiff.EnableWindow(TRUE);
+
+			m_btnStartAutoCapture.EnableWindow(TRUE);
+			m_edSavePath.EnableWindow(TRUE);
+			cvDestroyAllWindows();
+		}
+		m_curTag++;
+		fRECT roiRECT;
+
+		ShowCurTag();
+		Sleep(300);
+		CaptureTag();
+		cvShowImage("Tag", m_pCaptureFrame);
+		GenerateDiff();
+		cvShowImage("Diff", m_pDiff);
+		GenerateCroppedDiff(&roiRECT);
+		cvShowImage("Diff", m_pDiff);
+		cvShowImage("Cropped Diff", m_pCroppedDiff);
+
+		WCHAR path[MAX_PATH] = {0};
+		WCHAR dirName[MAX_PATH] = {0};
+		WCHAR confName[MAX_PATH] = {0};
+		WCHAR imgPath[MAX_PATH] = {0};
+		GetSavePath(path, dirName, confName);
+		FILE* file = NULL;
+		_wfopen_s(&file, path, L"r+");
+		if (file == NULL)
+		{
+			return ;
+		}
+		fseek(file, 0, SEEK_END);
+		
+		int patt_id = m_pDSCam->GetMarkerID(m_curTag);
+
+		swprintf_s(imgPath, MAX_PATH, L"%s\\%03d.png", dirName, m_curTag);
+		fwprintf_s(file, L"\n%d %d\n%f %f %f %f \n%s \n", m_curTag, patt_id, 
+			roiRECT.left, roiRECT.top, roiRECT.right, roiRECT.bottom,
+			imgPath);
+		if (file != NULL)
+		{
+			fclose(file);
+			file = NULL;
+		}
+		SaveCroppedDiff(imgPath);
+	}
+	// TODO: Add your message handler code here and/or call default
+
+	CDialog::OnTimer(nIDEvent);
 }

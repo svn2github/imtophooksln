@@ -31,6 +31,7 @@ protected:
 	//overwrite CCameraDS function
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
+	virtual HRESULT ConfigFilters();
 public:
 	
 	virtual void CloseCamera();
@@ -42,7 +43,7 @@ public:
 	virtual int GetNumMarker();
 	virtual HRESULT SetMarkerVisible(int idx, BOOL bVisible);
 	virtual HRESULT SetMarkerVisibleByID(int id, BOOL bVisible);
-
+	virtual int GetMarkerID(int idx);
 public:
 	ARLayoutCameraDS(void);
 	~ARLayoutCameraDS(void);
