@@ -153,6 +153,7 @@
 			OutputDirectory="$(SolutionDir)\DSLib\lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
