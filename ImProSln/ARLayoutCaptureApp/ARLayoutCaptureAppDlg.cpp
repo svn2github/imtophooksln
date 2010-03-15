@@ -494,8 +494,7 @@ BOOL CARLayoutCaptureAppDlg::ComputeDiffROI(int threshold, fRECT& roiRECT, BOOL 
 	fRECT fROIRect;
 	fRECT maxROIRect;
 
-	float maxArea = (maxROIRect.right - maxROIRect.left) * 
-		(maxROIRect.bottom - maxROIRect.top);
+	double maxSum = 0;
 
 	int imgW = m_pROITmpImage->width; 
 	int imgH = m_pROITmpImage->height;
@@ -510,15 +509,18 @@ BOOL CARLayoutCaptureAppDlg::ComputeDiffROI(int threshold, fRECT& roiRECT, BOOL 
 		int count = cont->total; // This is number point in contour
 		
 		cvROIRect = cvContourBoundingRect(cont);
-		fROIRect.left = cvROIRect.x /(float) (imgW - 1);
-		fROIRect.top = cvROIRect.y /(float) (imgH - 1);
-		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)(imgW -1);
-		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)(imgH -1);
-		float roiArea = (fROIRect.right - fROIRect.left) * 
-			(fROIRect.bottom - fROIRect.top);
-		if (roiArea > maxArea)
+
+		cvSetImageROI(m_pDiff, cvROIRect);
+		double roiSum = cvSumPixels(m_pDiff);
+		cvResetImageROI(m_pDiff);
+		if (roiSum > maxSum)
 		{
-			maxArea = roiArea;
+			fROIRect.left = cvROIRect.x /(float) (imgW - 1);
+			fROIRect.top = cvROIRect.y /(float) (imgH - 1);
+			fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)(imgW -1);
+			fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)(imgH -1);
+
+			maxSum = roiSum;
 			maxROIRect = fROIRect;
 			bFindContour = true;
 		}
@@ -791,12 +793,16 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
 
 	m_btnStartAutoCapture.EnableWindow(FALSE);
 	m_edSavePath.EnableWindow(FALSE);
+
+	m_cbAvgFrame.EnableWindow(FALSE);
+	m_slrROIThreshold.EnableWindow(FALSE);
+
 	ClearTag();
 	Sleep(500);
 	CaptureBG();
 	m_curTag = -1;
 	
-	SetTimer(m_CaptureTimer, 2000, 0);
+	SetTimer(m_CaptureTimer, 500, 0);
 
 	theApp.WriteProfileString(L"MySetting",L"ARLayoutCaptureSavePath", path);
 }
@@ -836,6 +842,10 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 
 			m_btnStartAutoCapture.EnableWindow(TRUE);
 			m_edSavePath.EnableWindow(TRUE);
+
+			m_cbAvgFrame.EnableWindow(TRUE);
+			m_slrROIThreshold.EnableWindow(TRUE);
+
 			cvDestroyAllWindows();
 			return;
 		}
@@ -843,7 +853,7 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 		fRECT roiRECT;
 
 		ShowCurTag();
-		Sleep(300);
+		Sleep(200);
 		CaptureTag();
 		cvShowImage("Tag", m_pCaptureFrame);
 		GenerateDiff();
