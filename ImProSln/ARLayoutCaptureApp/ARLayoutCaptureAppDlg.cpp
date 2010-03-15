@@ -710,11 +710,12 @@ BOOL CARLayoutCaptureAppDlg::CaptureCurrentShot()
 	WCHAR confName[MAX_PATH] = {0};
 	WCHAR imgPath[MAX_PATH] = {0};
 	WCHAR shotConfPath[MAX_PATH] = {0};
+	
 	GetSavePath(path, dirName, confName);
 	int mkdirRet = _wmkdir(dirName);
 	swprintf_s(imgPath, MAX_PATH, L"%s\\%03d.png", dirName, m_curTag);
 
-
+	
 	fRECT roiRECT;
 	ClearTag();
 	Sleep(200);
@@ -814,7 +815,13 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
 	WCHAR path[MAX_PATH] = {0};
 	WCHAR dirName[MAX_PATH] = {0};
 	WCHAR confName[MAX_PATH] = {0};
+	WCHAR bgPath[MAX_PATH] = {0};
 	GetSavePath(path, dirName, confName);
+
+	swprintf_s(bgPath, MAX_PATH, L"%s\\BG.png", dirName);
+	char bgPathMbs[MAX_PATH] = {0};
+	wcstombs(bgPathMbs, bgPath, MAX_PATH);
+
 	int mkdirRet = _wmkdir(dirName);
 	if (mkdirRet < 0)
 		return;
@@ -861,6 +868,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
 	ClearTag();
 	Sleep(200);
 	CaptureBG();
+	cvSaveImage(bgPathMbs, m_pBG);
 	m_curTag = -1;
 	
 	SetTimer(m_CaptureTimer, 500, 0);
