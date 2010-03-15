@@ -22,6 +22,8 @@ using namespace System::Data;
 using namespace System::Drawing;
 using namespace System::Timers;
 using namespace System::Net::Sockets;
+
+using namespace SocketSystem;
 /* set up the video format globals */
 
 #ifdef _WIN32
@@ -184,15 +186,17 @@ namespace googleearth {
 	{
 
 		// variables for socket connection
-		private: static System::Net::Sockets::TcpClient^ tcpClient;
+		private: System::Net::Sockets::TcpClient^ tcpClient;
 		private: static System::Net::Sockets::NetworkStream^ GetNetworkStream;
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
-		private: static String^ ipAddress;
-		private: static Int32 port;
-	    private: static String^ tabletName = "tabletGE_0";
+		private: String^ ipAddress;
+		private: Int32 port;
+	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
+		private: static bool boundaryDirty;
 
-
+		//private : CSocketClient^ socketClient;;
+	private : delegate System::Void updateCallback(System::String^ text);
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -211,6 +215,10 @@ namespace googleearth {
 			//setFullScreen();			
 
 			g_formPtr = this;
+
+			boundaryDirty = false;
+
+			tabletName = "tabletGE_0";
 
 			loadParamsFromFile();
 
@@ -268,8 +276,10 @@ namespace googleearth {
 					 this->animTimer->Start();
 				}
 		
-		private: System::Void setupSocket(){
 
+		private: System::Void setupSocket(){
+			
+	
 			// Attempt to establish a connection
 			tcpClient = gcnew TcpClient(ipAddress ,port );
 			GetNetworkStream = tcpClient->GetStream();
@@ -291,8 +301,22 @@ namespace googleearth {
 			//sendData("11," + tabletName + "\0");
 			//sendData("15,flashGE,tabletGE,geLogin" + "\0");
 			sendData("11," + tabletName);
-			 
+			
+
+			/*socketClient = gcnew CSocketClient(10240, nullptr,
+			gcnew CSocketClient::MESSAGE_HANDLER(&Form1::MessageHandlerClient),
+			  gcnew CSocketClient::CLOSE_HANDLER(&Form1::CloseHandler),
+			  gcnew CSocketClient::ERROR_HANDLER(&Form1::ErrorHandler));*/
 		}
+
+		/*
+		public: static System::Void MessageHandlerClient(CSocketClient^ pSocket, Int32 iNumberOfBytes){
+		}
+		public: static System::Void CloseHandler(CSocketClient^ pSocket){
+		}
+		public: static System::Void ErrorHandler(CSocketClient^ pSocket, Exception^ pException){
+		}		
+		*/
 
         //**********************************************
         /// <summary> Wait for a message to arrive </summary>
@@ -311,8 +335,10 @@ namespace googleearth {
 
         //*********************************************
         /// <summary> Called when a message arrives </summary>
-        /// <param name="ar"> RefType: An async result interface </param>				 
+        /// <param name="ar"> RefType: An async result interface </param>	
+			 
 		private: static System::Void ReceiveComplete(System::IAsyncResult ^ar){
+					 
 			// Is the Network Stream object valid
 			if (GetNetworkStream->CanRead){
 				// Read the current bytes from the stream buffer
@@ -327,6 +353,7 @@ namespace googleearth {
 					
 
 			}
+			
 		}
 
 		private: static System::Void MessageHandler(Int32 iNumberOfBytes){
@@ -386,8 +413,8 @@ namespace googleearth {
 
 
 		//設定tag對應的四個點經緯度位置
-		static void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat)
-		{
+		private: static System::Void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat) {
+		//static void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat){
 			LeftTopLong = LTLong;
 			LeftTopLat = LTLat;
 			LeftDownLong = LDLong;
@@ -396,9 +423,11 @@ namespace googleearth {
 			RightTopLat = RTLat;
 			RightDownLong = RDLong;
 			RightDownLat = RDLat;
+
+			boundaryDirty = true;
 			
-			
-			/*array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			/*
+			array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
 			parameterB[1] = LeftTopLat;
@@ -409,12 +438,13 @@ namespace googleearth {
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 			
-			System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
-			browser->Document->InvokeScript("boundaryLine",parameterB);*/
-			
+			//System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
+			//browser->Document->InvokeScript("boundaryLine",parameterB);
+			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);
+
 			
 			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
-
+			*/
 		}
 
 	protected:
@@ -435,7 +465,7 @@ namespace googleearth {
 			}
 		}
 
-	public: System::Windows::Forms::WebBrowser^  webBrowser1;
+	public: static System::Windows::Forms::WebBrowser^  webBrowser1;
 	//private: System::Windows::Forms::Timer^  arTimer;
 	private: System::ComponentModel::IContainer^  components;
 	private: static int temp = 300;
@@ -455,19 +485,19 @@ namespace googleearth {
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
-			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
+			webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->SuspendLayout();
 			// 
 			// webBrowser1
 			// 
-			this->webBrowser1->Dock = System::Windows::Forms::DockStyle::Fill;
-			this->webBrowser1->Location = System::Drawing::Point(0, 0);
-			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
-			this->webBrowser1->Name = L"webBrowser1";
-			this->webBrowser1->Size = System::Drawing::Size(628, 334);
-			this->webBrowser1->TabIndex = 0;
-			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
+			webBrowser1->Dock = System::Windows::Forms::DockStyle::Fill;
+			webBrowser1->Location = System::Drawing::Point(0, 0);
+			webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
+			webBrowser1->Name = L"webBrowser1";
+			webBrowser1->Size = System::Drawing::Size(628, 334);
+			webBrowser1->TabIndex = 0;
+			webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
 			// animTimer
 			// 
@@ -479,7 +509,7 @@ namespace googleearth {
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(628, 334);
-			this->Controls->Add(this->webBrowser1);
+			this->Controls->Add(webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
@@ -554,8 +584,8 @@ namespace googleearth {
 				String^ _vspaceX = vspaceX.ToString("0.0000");
 				String^ _vspaceY = vspaceY.ToString("0.0000");
 				
-				if(GetNetworkStream != nullptr)
-					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY);
+//				if(GetNetworkStream != nullptr)
+//					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
@@ -583,7 +613,8 @@ namespace googleearth {
 			 ctilt += ((ttilt - ctilt)/2);
  			 croll += ((troll - croll)/2);
 			 */ 
-
+			
+				
 				array<Object^>^ parameter = gcnew array<Object^>(6); 
 			
 				parameter[0] = clatitude;
@@ -606,20 +637,22 @@ namespace googleearth {
 			 
 			 }
 			 
+			 if(boundaryDirty){
+				array<Object^>^ parameterB = gcnew array<Object^>(8); 
+				
+				parameterB[0] = LeftTopLong;
+				parameterB[1] = LeftTopLat;
+				parameterB[2] = LeftDownLong;
+				parameterB[3] = LeftDownLat;
+				parameterB[4] = RightTopLong;
+				parameterB[5] = RightTopLat;
+				parameterB[6] = RightDownLong;
+				parameterB[7] = RightDownLat;
 
-			array<Object^>^ parameterB = gcnew array<Object^>(8); 
-			
-			parameterB[0] = LeftTopLong;
-			parameterB[1] = LeftTopLat;
-			parameterB[2] = LeftDownLong;
-			parameterB[3] = LeftDownLat;
-			parameterB[4] = RightTopLong;
-			parameterB[5] = RightTopLat;
-			parameterB[6] = RightDownLong;
-			parameterB[7] = RightDownLat;
-
-			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
-		
+				webBrowser1->Document->InvokeScript("boundaryLine",parameterB);	
+				
+				boundaryDirty = false;
+			 }
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		
@@ -693,6 +726,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 
 bool animTimerTickFunc()
 {
+	/*
 	try
 	{
 		if(!getFstTag)
@@ -705,16 +739,6 @@ bool animTimerTickFunc()
 		ctilt = ttilt;
 		croll = troll;
 
-		/*
-		 double alpha = 0.2;
-		 clatitude = clatitude*alpha + tlatitude*(1-alpha);
-		 clongitude = clongitude*alpha + tlongitude*(1-alpha);
-		 caltitude = caltitude*alpha + taltitude*(1-alpha);
-		 cheading = cheading*alpha + theading*(1-alpha);
-		 ctilt = ctilt*alpha + ttilt*(1-alpha);
-		 croll = croll*alpha + troll*(1-alpha);
-		*/
-
 		 array<Object^>^ parameter = gcnew array<Object^>(6); 
 		 parameter[0] = clatitude;
 		 parameter[1] = clongitude;
@@ -724,12 +748,14 @@ bool animTimerTickFunc()
 		 parameter[5] = croll;
 		 System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
 		 browser->Document->InvokeScript("cameraView",parameter);
+		
 	}
 
 	catch (System::Exception^ e)
 	{
 		return false;
 	}
+	 */
 
 	return true;
 }
