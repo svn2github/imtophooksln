@@ -6,6 +6,9 @@
 #include "combase.h"
 #include "CMuxTransformFilter.h"
 #include "BGMapping.h"
+#include "MyMediaSample.h"
+#include "MyARTagMediaSample.h"
+
 
 // {D9CC776C-18CC-41f3-98EE-4F897B7350E3}
 DEFINE_GUID(CLSID_BGMappingFilter, 

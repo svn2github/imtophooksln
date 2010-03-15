@@ -10,6 +10,18 @@
 
 using namespace std;
 
+class BGTag{
+public:
+	BGTag();
+	~BGTag();
+	int CurTag ;
+	int TagID ;
+	CvPoint2D32f tagTop;
+	CvPoint2D32f tagDown;
+	char imgPath[260] ;
+
+};
+
 class BackGroundMapping{
 
 public:
@@ -26,6 +38,10 @@ public:
 	std::vector<CvRect>* GetForegroundRect()
 	{	return &foregroundLists;};
 	void findForegroundRect(IplImage* FGImage);
+
+	void loadBGTranData(char* fileDir);
+	void getARLayout();
+	void buildTranBG();
 
 
 public:
@@ -46,6 +62,8 @@ public:
 	IplImage* bgMask ;
 
 	vector<IplImage*> historyBG ;
+	vector<BGTag*> BGTran ;
+	int tagTranNum ;
 
 	IplConvKernel* kernelElement;
 
@@ -59,4 +77,6 @@ public:
 	bool layoutFlip;
 	bool outputFlip;
 };
+
+
 #endif

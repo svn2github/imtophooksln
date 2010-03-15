@@ -1,8 +1,23 @@
 #include "stdafx.h"
 #include "BGMapping.h"
 
-#define BLACK_VALUE 130
 
+#define BLACK_VALUE 130
+#define SHOW_WINDOW true
+
+
+BGTag::BGTag(){
+	CurTag = 0 ;
+	TagID  = 0 ;
+	tagTop.x = 0 ;
+	tagTop.y = 0 ;
+    tagDown.x = 0 ;
+	tagDown.y = 0 ;
+}
+
+BGTag::~BGTag(){
+
+}
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
 
@@ -15,6 +30,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	initKernel(0.5,0.3,0.2);
 	historyBG.clear();
 	imgIndex = 0 ;
+	tagTranNum = 0 ;
 
 	for(int i = 0 ; i < imgMAX ; i ++){
 		imgPool[i] = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -26,6 +42,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	char settingFile[100];
 	sprintf(settingFile,"%s\\ProjectorCalibData\\adjustValue.txt",fileDir) ;
 
+	
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
 	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&WhiteValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
@@ -40,7 +57,8 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	cvSetZero(backgroundImg);
 	historyBG.push_back(backgroundImg);
-	
+	loadBGTranData(fileDir);
+
 }
 
 BackGroundMapping::~BackGroundMapping(){
@@ -117,9 +135,10 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	}
 	
 	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
+	if(SHOW_WINDOW){
 	cvShowImage("background",backgroundImg);
 	cvShowImage("src",resultImg);
-
+	}
 	int BGSize = historyBG.size();
 
 	for(int i = 0 ;i < BGSize; i ++){
@@ -128,26 +147,41 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		if(sum.val[0] <= minValue){
 			minValue = sum.val[0];
 			realBGindex = i ;
-		}
+			/*char title[100];
+			sprintf(title,"%d",i);
+			cvShowImage(title,historyBG[i]);
+			char key = cvWaitKey(1);
+			if(key == 'v')
+				cvWaitKey();*/
+			
+		}	
 	}
 
 	if(historyBG[realBGindex] != NULL){
+		
 		cvSub(resultImg,historyBG[realBGindex],resultImg);
 		cvAnd(resultImg,bgMask,resultImg);
+		if(SHOW_WINDOW){
+			cvShowImage("realBG",historyBG[realBGindex]);
+		}
 	
 	}
 	if(realBGindex != 0){
 		historyBG.erase(historyBG.begin(),historyBG.begin()+realBGindex-1);
 		
 	}
-	cvShowImage("result",resultImg);
-	cvWaitKey(1);
+	if(SHOW_WINDOW){
+		cvShowImage("result",resultImg);
+	}
 	cvCvtColor(resultImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
 		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
-		//cvShowImage("threshold",resultImg);
-		//cvWaitKey(1);
+		if (SHOW_WINDOW)
+		{
+			cvShowImage("threshold",resultImg);
+			cvWaitKey(1);
+		}
 	}
 	findForegroundRect(resultImg);
 
@@ -190,4 +224,29 @@ void  BackGroundMapping::findForegroundRect(IplImage *FGImage){
 	}
 
 	cvReleaseMemStorage(&storage);
+}
+
+void BackGroundMapping::loadBGTranData(char* fileDir){
+
+	char tagConfigFile[100];
+	sprintf(tagConfigFile,"%s\\BackgroundCaliData\\tagConfig.txt",fileDir) ;
+
+	FILE  * pFile ;
+	pFile = fopen(tagConfigFile,"r");
+	fscanf(pFile,"%d " ,&tagTranNum);
+	for(int i = 0 ; i < tagTranNum ; i ++){
+		BGTag *newTag = new BGTag() ;
+
+		fscanf(pFile,"\n%d %d\n%f %f %f %f \n%s \n",&newTag->CurTag , &newTag->TagID,&newTag->tagTop.x,&newTag->tagTop.y,
+		&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
+		BGTran.push_back(newTag);
+
+	}
+}
+
+
+void BackGroundMapping::buildTranBG(){
+
+
+
 }

@@ -7,6 +7,7 @@
 #include "CMuxTransformFilter.h"
 #include "D3DTransformFilterBase.h"
 #include "MyMediaSample.h"
+#include "MyARTagMediaSample.h"
 #include "cv.h"
 
 // {E1C813B2-CD41-43e1-985A-EF40CE6EC88D}
@@ -59,10 +60,11 @@ protected:
 	bool Dirty;
 	bool Block;
 
+
 private:
 	virtual HRESULT CopyInRT2OutTexture();
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
-	virtual HRESULT ReceiveDirty();
+	virtual HRESULT ReceiveDirty(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceivePin);
 	bool getDirty();
 	HRESULT setDirty(bool isDirty);
@@ -74,7 +76,6 @@ public:
 	virtual ~SyncFilter();
 private:
 
-
 	CCritSec m_cSharedState;            // Protects our internal state
 	CCritSec locDirty;
 	CCritSec locBlock;
@@ -82,4 +83,10 @@ private:
 	IplImage* foregroundIplImg;
 	IplImage* cameraInputIplImg;
 
+private:
+	CCritSec locMarkerInfo;
+	ARLayoutConfigData tagConfig ;
+	
+
+	
 };

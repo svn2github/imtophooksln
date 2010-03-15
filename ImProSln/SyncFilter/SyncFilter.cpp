@@ -11,10 +11,12 @@ SyncFilter::SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 { 
 	setDirty(false);
 	setBlock(false);
+	
 }
 SyncFilter::~SyncFilter()
 {
 
+	
 }
 
 
@@ -95,7 +97,19 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 	return S_OK;
 }
 
-HRESULT SyncFilter::ReceiveDirty(){
+HRESULT SyncFilter::ReceiveDirty(IMediaSample *pSample, const IPin* pReceivePin){
+
+	CAutoLock lck(&locMarkerInfo);
+
+
+	ARLayoutConfigData* pARTagResult = NULL;
+	pSample->GetPointer((BYTE**)&pARTagResult);
+	if (pARTagResult == NULL)
+	{
+		return S_FALSE;
+	}
+	tagConfig = *pARTagResult;
+
 	setDirty(true);
     return S_OK;
 }
@@ -244,24 +258,24 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0] && !getBlock())
 	{
 		pSample->GetPointer(&CamData);
-		OutputDebugStringW(L"@@@@ ReceiveCam ---->");
+	//	OutputDebugStringW(L"@@@@ ReceiveCam ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@ ReceiveCam <----");
+	//	OutputDebugStringW(L"@@@@ ReceiveCam <----");
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
-		OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
-		hr = ReceiveDirty();
-		OutputDebugStringW(L"@@@@ ReceiveDirty <----");
+	//	OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
+		hr = ReceiveDirty(pSample, pReceivePin);
+	//	OutputDebugStringW(L"@@@@ ReceiveDirty <----");
 
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
 	{
 
 		pSample->GetPointer(&LayoutData);	
-		OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
+	//	OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
 		hr = ReceiveLayoutImg(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@ ReceiveLayout <----");
+	//	OutputDebugStringW(L"@@@@ ReceiveLayout <----");
 	}
 	return hr;
 }
@@ -412,8 +426,13 @@ HRESULT SyncFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)   
 	{		
 		CheckPointer(pmt, E_POINTER);
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		if (*pmt->FormatType() != FORMAT_VideoInfo && *pmt->Subtype() != GUID_ARLayoutConfigData) {
 			return E_INVALIDARG;
+		}
+		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
+			IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
+		{
+			return NOERROR;
 		}
 		// Can we transform this type
 		if(IsAcceptedType(pmt)){
@@ -543,7 +562,7 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 	{
 		return S_FALSE;
 	}
-	CMediaType outPin0MT = m_pOutputPins[0]->CurrentMediaType();
+	CMediaType outPin0MT = m_pOutputPins[0]->CurrentMediaType();  
 	CMediaType outPin1MT = m_pOutputPins[1]->CurrentMediaType();
 	CMediaType outPin2MT = m_pOutputPins[2]->CurrentMediaType();
 
@@ -573,9 +592,6 @@ HRESULT SyncFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutPin,
 
 	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin )
 	{
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) outPin1MT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = outPin1MT.GetSampleSize();
 
@@ -641,6 +657,15 @@ HRESULT SyncFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMe
 		if (m_pOutTexture == NULL)
 			return S_FALSE;
 		if (iPosition == 0)
+		{
+			CMediaType mt;
+			mt.SetType(&GUID_IMPRO_FeedbackTYPE);
+			mt.SetSubtype(&GUID_ARLayoutConfigData);
+			mt.SetSampleSize(sizeof(ARLayoutConfigData));
+			*pMediaType = mt;
+			return S_OK;
+		}
+		else if (iPosition == 1)
 		{
 			CMediaType mt;
 			D3DSURFACE_DESC desc;

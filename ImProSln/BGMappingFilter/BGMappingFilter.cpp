@@ -4,6 +4,7 @@
 #include "BGMappingProp.h"
 #include "MyMediaSample.h"
 
+
 BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Background Mapping Filter"), 0, CLSID_BGMappingFilter)
 { 
@@ -18,6 +19,7 @@ BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifies
 	 layoutH  = 600;
 	isReceiveCam = false ;
 	isReceiveBG = false ;
+
 	
 }
 BGMappingFilter::~BGMappingFilter()
@@ -183,13 +185,18 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
 		CAutoLock lck(&m_csBGSetting);
+		//OutputDebugStringW(L"@@@@ BGMappingReceiveCam ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
+		//OutputDebugStringW(L"@@@@ BGMappingReceiveCam <----");
 
 	}
 	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
 	{
 		CAutoLock lck(&m_csBGSetting);
+
+	//	OutputDebugStringW(L"@@@@ BGMappingReceiveBackground ---->");
 		hr = ReceiveBackground(pSample, pReceivePin);
+	//	OutputDebugStringW(L"@@@@ BGMappingReceiveBackground <----");
 	}
 	return hr;
 
@@ -274,7 +281,7 @@ HRESULT BGMappingFilter::CreatePins()
 HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 {
 	CheckPointer(pmt, E_POINTER);
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
+	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)  // camera pin
 	{
 		if (*pmt->FormatType() != FORMAT_VideoInfo) {
 			return E_INVALIDARG;
@@ -283,14 +290,19 @@ HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pP
 			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype()) || IsEqualGUID(MEDIASUBTYPE_RGB32, *pmt->Subtype())))
 			return NOERROR;
 	}
-	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
+	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)  // BG pin
 	{
-		if (*pmt->FormatType() != FORMAT_VideoInfo) {
+		if (*pmt->FormatType() != FORMAT_VideoInfo && *pmt->Subtype() != GUID_ARLayoutConfigData) {
 			return E_INVALIDARG;
 		}
 		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
 			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype())))
 			return NOERROR;		
+
+		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
+			(IsEqualGUID(GUID_ARLayoutConfigData, *pmt->Subtype()) ))
+			return NOERROR;
+
 	}
 	return E_FAIL;
 }
@@ -360,30 +372,9 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		cameraInputIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
 		foregroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, camChannel);
 
-		return S_OK;
 
-	}
+		//------------------
 
-	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin)
-	{
-		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
-		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
-		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-		layoutW = bitHeader.biWidth;
-		layoutH = bitHeader.biHeight;
-
-		GUID guidSubType = inputMT.subtype;
-		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
-		{
-			layoutChannel = 3;
-		}
-		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
-		{
-			layoutChannel = 4;
-		}
-		backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, layoutChannel);
-
-		// set the calibration data of homo and mapping table
 		extern HMODULE GetModule();
 		WCHAR str[MAX_PATH] = {0};
 		HMODULE module = GetModule();
@@ -408,6 +399,34 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 		BG->loadHomo(homoDir,mTableDir);
 
 		return S_OK;
+
+	}
+
+	else if (direction == PINDIR_INPUT && m_pInputPins.size() > 1 && m_pInputPins[1] == pMyPin)
+	{
+		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
+		
+		if (*inputMT.FormatType() == FORMAT_VideoInfo){
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			layoutW = bitHeader.biWidth;
+			layoutH = bitHeader.biHeight;
+
+			GUID guidSubType = inputMT.subtype;
+			if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+			{
+				layoutChannel = 3;
+			}
+			else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+			{
+				layoutChannel = 4;
+			}
+			backgroundIplImg = cvCreateImage(cvSize(cameraW, cameraH), 8, layoutChannel);
+
+			// set the calibration data of homo and mapping table
+
+			return S_OK;
+		}
 	}
 	return S_OK;
 }
