@@ -2,21 +2,34 @@
 #include "ARLayoutReg.h"
 #include "ARLayoutDXFilter.h"
 #include "ARLayoutDXProp.h"
-// {9D6C4A7B-57BA-4482-A034-653BF55633F5}
-//DEFINE_GUID(CLSID_ARLayoutReg, 
-//			0x9d6c4a7b, 0x57ba, 0x4482, 0xa0, 0x34, 0x65, 0x3b, 0xf5, 0x56, 0x33, 0xf5);
+#include "ImProGUID.h"
 
 // Setup data for filter registration
 //
-const AMOVIESETUP_MEDIATYPE sudPinTypes =
-{	&MEDIATYPE_NULL,	// Major CLSID
-    &MEDIASUBTYPE_NULL	// Minor type
+
+const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
+{	
+{ &MEDIATYPE_Video, &MEDIASUBTYPE_RGB24 },
+{ &MEDIATYPE_Video, &MEDIASUBTYPE_RGB32 },
+{ &GUID_D3DMEDIATYPE, &GUID_D3DSHARE_RTTEXTURE_POINTER },
+{ &GUID_D3DMEDIATYPE, &GUID_D3DXTEXTURE9_POINTER }
 };
 
 //For DLL Register
 static WCHAR g_wszName[] = L"ARLayoutFilter";
 const AMOVIESETUP_PIN psudARLayoutFilterPins[] =
 { 
+	{ 
+		L"config",		// Pin's string name
+			FALSE,			// Is it rendered
+			FALSE,			// Is it an output
+			FALSE,			// Allowed none
+			FALSE,			// Allowed many
+			&CLSID_NULL,	// Connects to filter
+			L"Output",		// Connects to pin
+			1,				// Number of types
+			sudPinTypes	// Pin type information
+	},
 	{ 
 		L"Layout",		// Pin's string name
 			FALSE,			// Is it rendered
@@ -25,11 +38,11 @@ const AMOVIESETUP_PIN psudARLayoutFilterPins[] =
 			FALSE,			// Allowed many
 			&CLSID_NULL,	// Connects to filter
 			L"Input",		// Connects to pin
-			1,				// Number of types
-			&sudPinTypes	// Pin type information
+			4,				// Number of types
+			sudPinTypes	// Pin type information
 	},
 	{
-	      L"Mask",		// Pin's string name
+	      L"markinfo",		// Pin's string name
 			FALSE,			// Is it rendered
 			TRUE,			// Is it an output
 			FALSE,			// Allowed none
@@ -37,15 +50,29 @@ const AMOVIESETUP_PIN psudARLayoutFilterPins[] =
 			&CLSID_NULL,	// Connects to filter
 			L"Input",		// Connects to pin
 			1,				// Number of types
-			&sudPinTypes	// Pin type information
-		}
+			sudPinTypes	// Pin type information
+		},
+		{
+			L"ROI",		// Pin's string name
+			FALSE,			// Is it rendered
+			TRUE,			// Is it an output
+			FALSE,			// Allowed none
+			FALSE,			// Allowed many
+			&CLSID_NULL,	// Connects to filter
+			L"Input",		// Connects to pin
+			1,				// Number of types
+			sudPinTypes	// Pin type information
+	  }
 };
+
 
 const REGFILTER2 sudARLayoutFilter =
 { 	1,                // Version number.
-MERIT_DO_NOT_USE,     // Merit.
-2,                        // Number of pins.
+MERIT_NORMAL,     // Merit.
+4,                        // Number of pins.
 psudARLayoutFilterPins };         // lpPin
+
+
 
 STDAPI DllRegisterServer(void)
 {
@@ -57,16 +84,19 @@ STDAPI DllRegisterServer(void)
 	{
 		return hr;
 	}
+	
 	IFilterMapper2 *pFM2 = NULL;
 	hr = CoCreateInstance(CLSID_FilterMapper2, NULL, CLSCTX_INPROC_SERVER,
 		IID_IFilterMapper2, (void **)&pFM2);
 	if (SUCCEEDED(hr))
 	{
+		hr = pFM2->CreateCategory(GUID_ImProFilter_Category, MERIT_NORMAL,
+			L"ImPro Filters");
 		hr = pFM2->RegisterFilter(
 			CLSID_ARLayoutFilter,              // Filter CLSID. 
 			g_wszName,                       // Filter name.
 			NULL ,                            // Device moniker. 
-			&CLSID_LegacyAmFilterCategory,  // Video compressor category.
+			&GUID_ImProFilter_Category,  // Video compressor category.
 			g_wszName,                       // Instance data.
 			&sudARLayoutFilter                   // Filter information.
 			);
@@ -90,7 +120,7 @@ STDAPI DllUnregisterServer()
 		IID_IFilterMapper2, (void **)&pFM2);
 	if (SUCCEEDED(hr))
 	{
-		hr = pFM2->UnregisterFilter(&CLSID_VideoCompressorCategory, 
+		hr = pFM2->UnregisterFilter(&GUID_ImProFilter_Category, 
 			g_wszName, CLSID_ARLayoutFilter);
 		pFM2->Release();
 	}

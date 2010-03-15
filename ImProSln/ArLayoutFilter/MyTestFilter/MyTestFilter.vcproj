@@ -240,6 +240,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\MyLib\ImProGUID.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MyTestFilter.h"
 				>
 			</File>
