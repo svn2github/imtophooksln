@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "HomoWarpFilterReg.h"
-
+#include "ImProGUID.h"
 
 static WCHAR g_wszName[] = L"HomoWarp Filter";
 const AMOVIESETUP_PIN psudHomoWarpFilterPins[] =
@@ -60,11 +60,13 @@ STDAPI DllRegisterServer(void)
 		IID_IFilterMapper2, (void **)&pFM2);
 	if (SUCCEEDED(hr))
 	{
+		hr = pFM2->CreateCategory(GUID_ImProFilter_Category, MERIT_NORMAL,
+			L"ImPro Filters");
 		hr = pFM2->RegisterFilter(
 			CLSID_HomoWarpFilter,              // Filter CLSID. 
 			g_wszName,                       // Filter name.
 			NULL ,                            // Device moniker. 
-			&CLSID_LegacyAmFilterCategory,  // Video compressor category.
+			&GUID_ImProFilter_Category,  // Video compressor category.
 			g_wszName,                       // Instance data.
 			&sudHomoWarpFilter                   // Filter information.
 			);
@@ -89,7 +91,7 @@ STDAPI DllUnregisterServer()
 		IID_IFilterMapper2, (void **)&pFM2);
 	if (SUCCEEDED(hr))
 	{
-		hr = pFM2->UnregisterFilter(&CLSID_VideoCompressorCategory, 
+		hr = pFM2->UnregisterFilter(&GUID_ImProFilter_Category, 
 			g_wszName, CLSID_HomoWarpFilter);
 		pFM2->Release();
 	}
