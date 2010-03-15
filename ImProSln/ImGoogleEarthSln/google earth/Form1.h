@@ -34,23 +34,25 @@ char    *vconf = "";
 
 CCritSec g_State;
 
-//double LeftTopLong = 121.564422;
-//double LeftTopLat = 25.033828;
-//double LeftDownLong = 121.564423;
-//double LeftDownLat = 25.033341;
-//double RightDownLong = 121.565153;
-//double RightDownLat = 25.033338;
+double LeftTopLong = 119.506450;
+double LeftTopLat = 25.103415;
+double LeftDownLong = 119.337809;
+double LeftDownLat = 21.968503;
+double RightDownLong = 122.715500;
+double RightDownLat = 22.068132;
+double RightTopLong = 123.348858;
+double RightTopLat = 24.969608;
 
 
 // Zoomout to 101
-double LeftTopLong = 121.55607268966645;
-double LeftTopLat = 25.041212573911324;
-double LeftDownLong = 121.55607268966645;
-double LeftDownLat = 25.025659005961995;
-double RightTopLong = 121;
-double RightTopLat = 25;
-double RightDownLong = 121.57323882736176;
-double RightDownLat = 25.025659005961995;
+//double LeftTopLong = 121.55607268966645;
+//double LeftTopLat = 25.041212573911324;
+//double LeftDownLong = 121.55607268966645;
+//double LeftDownLat = 25.025659005961995;
+//double RightTopLong = 121;
+//double RightTopLat = 25;
+//double RightDownLong = 121.57323882736176;
+//double RightDownLat = 25.025659005961995;
 
 double longitude = 0;
 double latitude = 0;
@@ -187,8 +189,10 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: static String^ ipAddress;
 		private: static Int32 port;
-	    private: static String^ tabletName = "tabletGE";
+	    private: static String^ tabletName = "tabletGE_0";
 		private: System::Windows::Forms::Timer^  animTimer;
+
+
 
 
 	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
@@ -284,8 +288,9 @@ namespace googleearth {
             Receive();
 			
 			// register to TcpServer.
-			sendData("11," + tabletName + "\0");
-			sendData("15,flashGE,tabletGE,geLogin" + "\0");
+			//sendData("11," + tabletName + "\0");
+			//sendData("15,flashGE,tabletGE,geLogin" + "\0");
+			sendData("11," + tabletName);
 			 
 		}
 
@@ -392,8 +397,8 @@ namespace googleearth {
 			RightDownLong = RDLong;
 			RightDownLat = RDLat;
 			
-			/*
-			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			
+			/*array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
 			parameterB[1] = LeftTopLat;
@@ -405,9 +410,9 @@ namespace googleearth {
 			parameterB[7] = RightDownLat;
 			
 			System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
-			browser->Document->InvokeScript("boundaryLine",parameterB);
+			browser->Document->InvokeScript("boundaryLine",parameterB);*/
 			
-			*/
+			
 			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
 
 		}
@@ -613,7 +618,7 @@ namespace googleearth {
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
+			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
 		
 		}
 
@@ -653,6 +658,34 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 					 g_pARCam->ShowARProp();
 				 }
 			 }
+		 }
+private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
+			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			
+			parameterB[0] = LeftTopLong;
+			parameterB[1] = LeftTopLat;
+			parameterB[2] = LeftDownLong;
+			parameterB[3] = LeftDownLat;
+			parameterB[4] = RightTopLong;
+			parameterB[5] = RightTopLat;
+			parameterB[6] = RightDownLong;
+			parameterB[7] = RightDownLat;
+
+			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);	
+		 }
+private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
+			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+			
+			parameterB[0] = LeftTopLong;
+			parameterB[1] = LeftTopLat;
+			parameterB[2] = LeftDownLong;
+			parameterB[3] = LeftDownLat;
+			parameterB[4] = RightTopLong;
+			parameterB[5] = RightTopLat;
+			parameterB[6] = RightDownLong;
+			parameterB[7] = RightDownLat;
+
+			webBrowser1->Document->InvokeScript("remove");	
 		 }
 };
 }
