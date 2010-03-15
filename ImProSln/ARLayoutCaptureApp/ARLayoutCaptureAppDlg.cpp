@@ -53,6 +53,7 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDPath, m_edSavePath);
 	DDX_Control(pDX, IDC_btnStartAutoCapture, m_btnStartAutoCapture);
 	DDX_Control(pDX, IDC_cbCam, m_cbCam);
+	DDX_Control(pDX, IDC_btnSaveCurShot, m_btnSaveCurShot);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -86,6 +87,7 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnStartAutoCapture, &CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture)
 	ON_WM_TIMER()
 
+	ON_BN_CLICKED(IDC_btnSaveCurShot, &CARLayoutCaptureAppDlg::OnBnClickedbtnsavecurshot)
 END_MESSAGE_MAP()
 
 
@@ -228,6 +230,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 	m_btnCropDiff.EnableWindow(TRUE);
 
 	m_btnStartAutoCapture.EnableWindow(TRUE);
+	m_btnSaveCurShot.EnableWindow(TRUE);
 }
 
 void CARLayoutCaptureAppDlg::OnDestroy()
@@ -308,6 +311,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 	m_btnCropDiff.EnableWindow(FALSE);
 
 	m_btnStartAutoCapture.EnableWindow(FALSE);
+	m_btnSaveCurShot.EnableWindow(FALSE);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnplay()
@@ -696,6 +700,60 @@ BOOL CARLayoutCaptureAppDlg::SaveCroppedDiff(WCHAR* path)
 	return TRUE;
 }
 
+BOOL CARLayoutCaptureAppDlg::CaptureCurrentShot()
+{
+	if (m_pDSCam == NULL)
+		return FALSE;
+
+	WCHAR path[MAX_PATH] = {0};
+	WCHAR dirName[MAX_PATH] = {0};
+	WCHAR confName[MAX_PATH] = {0};
+	WCHAR imgPath[MAX_PATH] = {0};
+	WCHAR shotConfPath[MAX_PATH] = {0};
+	GetSavePath(path, dirName, confName);
+	int mkdirRet = _wmkdir(dirName);
+	swprintf_s(imgPath, MAX_PATH, L"%s\\%03d.png", dirName, m_curTag);
+
+
+	fRECT roiRECT;
+	ClearTag();
+	Sleep(200);
+	CaptureBG();
+
+	ShowCurTag();
+	Sleep(200);
+	CaptureTag();
+	cvShowImage("Tag", m_pCaptureFrame);
+	GenerateDiff();
+	cvShowImage("Diff", m_pDiff);
+	GenerateCroppedDiff(&roiRECT);
+	cvShowImage("Diff", m_pDiff);
+	cvShowImage("Cropped Diff", m_pCroppedDiff);
+
+	SaveCroppedDiff(imgPath);
+
+	swprintf_s(shotConfPath, MAX_PATH, L"%s\\shot_config_%03d.txt", 
+		dirName, m_curTag);
+	FILE* file = NULL;
+	_wfopen_s(&file, shotConfPath, L"w");
+	if (file == NULL)
+	{
+		return FALSE;
+	}
+
+	int patt_id = m_pDSCam->GetMarkerID(m_curTag);
+
+
+	fwprintf_s(file, L"\n%d %d\n%f %f %f %f \n%s \n", m_curTag, patt_id, 
+		roiRECT.left, roiRECT.top, roiRECT.right, roiRECT.bottom,
+		imgPath);
+	if (file != NULL)
+	{
+		fclose(file);
+		file = NULL;
+	}
+	return TRUE;
+}
 void CARLayoutCaptureAppDlg::OnBnClickedbtnbrowse()
 {
 	WCHAR curDic[MAX_PATH] = {0};
@@ -792,13 +850,16 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
 	m_btnCropDiff.EnableWindow(FALSE);
 
 	m_btnStartAutoCapture.EnableWindow(FALSE);
+	m_btnSaveCurShot.EnableWindow(FALSE);
+
 	m_edSavePath.EnableWindow(FALSE);
 
 	m_cbAvgFrame.EnableWindow(FALSE);
 	m_slrROIThreshold.EnableWindow(FALSE);
+	
 
 	ClearTag();
-	Sleep(500);
+	Sleep(200);
 	CaptureBG();
 	m_curTag = -1;
 	
@@ -841,6 +902,7 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 			m_btnCropDiff.EnableWindow(TRUE);
 
 			m_btnStartAutoCapture.EnableWindow(TRUE);
+			m_btnSaveCurShot.EnableWindow(TRUE);
 			m_edSavePath.EnableWindow(TRUE);
 
 			m_cbAvgFrame.EnableWindow(TRUE);
@@ -893,3 +955,8 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 	CDialog::OnTimer(nIDEvent);
 }
 
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnsavecurshot()
+{
+	CaptureCurrentShot();
+}

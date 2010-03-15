@@ -56,6 +56,7 @@ private:
 	BOOL GenerateCropDiff();
 	BOOL GetSavePath(WCHAR* path, WCHAR* imageFolder, WCHAR* confName);
 	BOOL SaveCroppedDiff(WCHAR* path);
+	BOOL CaptureCurrentShot();
 public:
 	CButton m_btnOpenCam;
 	CButton m_btnCloseCam;
@@ -112,4 +113,6 @@ public:
 	afx_msg void OnBnClickedbtnstartautocapture();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	CComboBox m_cbCam;
+	CButton m_btnSaveCurShot;
+	afx_msg void OnBnClickedbtnsavecurshot();
 };

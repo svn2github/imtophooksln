@@ -31,6 +31,8 @@
 #define IDC_btnStartAutoCapture         1026
 #define IDC_COMBO1                      1027
 #define IDC_cbCam                       1027
+#define IDC_BUTTON1                     1028
+#define IDC_btnSaveCurShot              1028
 #define IDC_EDPath                      7020
 #define IDC_btnBrowse                   7021
 
@@ -40,7 +42,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1028
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
