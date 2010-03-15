@@ -51,6 +51,8 @@ protected:
 	HWND m_ckDrawTag;
 	HWND m_ckDrawReProj;
 	HWND m_ckGuessPose;
+	HWND m_ckAutoThreshold;
+
 	HWND m_slrThreshold;
 	HWND m_slrBorderW;
 	HWND m_txtThreshold;;

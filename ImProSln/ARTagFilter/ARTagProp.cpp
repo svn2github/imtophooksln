@@ -365,6 +365,7 @@ m_pARProperty(0)
 	m_ckDrawTag = 0;
 	m_ckDrawReProj = 0;
 	m_ckGuessPose = 0;
+	m_ckAutoThreshold = 0;
 	m_slrThreshold = 0;
 	m_slrBorderW = 0;
 	m_txtThreshold = 0;
@@ -433,7 +434,8 @@ bool ARTagGeneralPage::GetSetting()
 	Button_SetCheck(m_ckDrawTag, bDrawTag);
 	bool bGuessPose = m_pARProperty->getbGuessPose();
 	Button_SetCheck(m_ckGuessPose, bGuessPose);
-
+	bool bAutoThreshold = m_pARProperty->getAutoThreshold();
+	Button_SetCheck(m_ckAutoThreshold, bAutoThreshold);
 
 	int poseEstimator = m_pARProperty->getPoseEstimator();
 	ComboBox_SetCurSel(m_cbPoseEstimator, poseEstimator);
@@ -465,6 +467,9 @@ bool ARTagGeneralPage::ApplySetting()
 	{
 		return false;
 	}
+	bool bAutoThreshold = Button_GetCheck(m_ckAutoThreshold);
+	m_pARProperty->setAutoThreshold(bAutoThreshold);
+
 	bool bDrawReproj = Button_GetCheck(m_ckDrawReProj);
 	m_pARProperty->setbDrawReproPt(bDrawReproj);
 	bool bDrawTag = Button_GetCheck(m_ckDrawTag);
@@ -651,6 +656,7 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	}
 	::EnableWindow(this->m_Dlg, TRUE);
 	m_ckGuessPose = GetDlgItem(m_Dlg, IDC_CKGuessPose);
+	m_ckAutoThreshold = GetDlgItem(m_Dlg, IDC_CKAutoThreshold);
 	m_ckDrawReProj = GetDlgItem(m_Dlg, IDC_CKReProj);
 	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
 	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);

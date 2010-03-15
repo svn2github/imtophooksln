@@ -55,6 +55,10 @@ public:
 	virtual int getThreshold();
 	virtual bool setConfThreshold(float v);
 	virtual float getConfThreshold();
+	virtual bool setAutoThreshold(bool nEnable);
+	virtual bool getAutoThreshold();
+	virtual int getAutoThresholdRetryNum();
+	virtual bool setAutoThresholdRetryNum(int nRetry);
 
 	virtual bool setUndistortionMode(int mode);
 	virtual int getUndistortionMode();

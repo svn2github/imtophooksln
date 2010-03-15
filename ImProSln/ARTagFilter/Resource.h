@@ -51,10 +51,11 @@
 #define IDC_edXaxis                     2031
 #define IDC_CKReProj                    2032
 #define IDC_edYaxis                     2033
-#define IDC_CHECK1                      2033
 #define IDC_CKGuessPose                 2033
 #define IDC_EDIT3                       2034
 #define IDC_edZaxis                     2034
+#define IDC_CHECK1                      2034
+#define IDC_CKAutoThreshold             2034
 
 // Next default values for new objects
 // 
@@ -62,7 +63,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        2003
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         2034
+#define _APS_NEXT_CONTROL_VALUE         2035
 #define _APS_NEXT_SYMED_VALUE           2015
 #endif
 #endif

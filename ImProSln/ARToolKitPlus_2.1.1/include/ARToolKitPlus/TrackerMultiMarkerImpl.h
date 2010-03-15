@@ -165,7 +165,9 @@ public:
 
 	void activateAutoThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateAutoThreshold(nEnable);  }
 	bool isAutoThresholdActivated() const  {  return AR_TEMPL_TRACKER::isAutoThresholdActivated();  }
-	void setNumAutoThresholdRetries(int nNumRetries)  {  AR_TEMPL_TRACKER::setNumAutoThresholdRetries(nNumRetries);  }
+	virtual void setNumAutoThresholdRetries(int nNumRetries)  {  AR_TEMPL_TRACKER::setNumAutoThresholdRetries(nNumRetries);  }
+	virtual int getNumAutoThresholdRetries() { return AR_TEMPL_TRACKER::getNumAutoThresholdRetries(); };
+
 	const ARFloat* getModelViewMatrix() const  {  return AR_TEMPL_TRACKER::getModelViewMatrix();  }
 	const ARFloat* getProjectionMatrix() const  {  return AR_TEMPL_TRACKER::getProjectionMatrix();  }
 	const char* getDescription()  {  return AR_TEMPL_TRACKER::getDescription();  }

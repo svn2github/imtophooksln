@@ -71,6 +71,9 @@ public:
 	virtual bool init(const char* nCamParamFile, const char* nMultiFile, ARFloat nNearClip, ARFloat nFarClip,
 					  ARToolKitPlus::Logger* nLogger=NULL) = 0;
 
+	virtual void setNumAutoThresholdRetries(int nRetry) = 0;
+	virtual int getNumAutoThresholdRetries() = 0;
+	
 	/// calculates the transformation matrix
 	/**
 	 *	pass the image as RGBX (32-bits) in 320x240 pixels.

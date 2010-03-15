@@ -1190,7 +1190,33 @@ float ARTagDSFilter::getConfThreshold()
 	}
 	return m_ARTracker->getConfThreshold();
 }
+bool ARTagDSFilter::setAutoThreshold(bool nEnable)
+{
+	if (m_ARTracker == NULL)
+		return false;
+	m_ARTracker->activateAutoThreshold(nEnable);
+	return true;
+}
+bool ARTagDSFilter::getAutoThreshold()
+{
+	if (m_ARTracker == NULL)
+		return false;
+	return m_ARTracker->isAutoThresholdActivated();
+}
 
+int ARTagDSFilter::getAutoThresholdRetryNum()
+{
+	if (m_ARTracker == NULL)
+		return 0;
+	return m_ARTracker->getNumAutoThresholdRetries();
+}
+bool ARTagDSFilter::setAutoThresholdRetryNum(int nRetry)
+{
+	if (m_ARTracker == NULL)
+		return false;
+	m_ARTracker->setNumAutoThresholdRetries(nRetry);
+	return true;
+}
 bool ARTagDSFilter::setUndistortionMode(int mode)
 {
 	CAutoLock lck(&m_csARTracker);
@@ -1328,7 +1354,8 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 		m_ARTracker = NULL;
 	}
 	m_ARTracker = new ARToolKitPlus::TrackerMultiMarkerImpl<6,6,12, 1, 100>(width, height);
-	
+	m_ARTracker->activateAutoThreshold(true);
+	m_ARTracker->setNumAutoThresholdRetries(5);
 	m_ARTracker->setBasisScale(m_WorldBasisScale);
 
 	GUID guidSubType = *inputMT->Subtype();
@@ -1429,6 +1456,8 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	int bDrawTag = this->getbDrawTag();
 	int bDrawReProj = this->getbDrawReproPt();
 	int bGuessPose = this->getbGuessPose();
+	int bAutoThreshold = this->getAutoThreshold();
+
 	float confThreshold = this->getConfThreshold();
 	int threshold = this->getThreshold();
 	float borderWidth = this->getBorderWidth();
@@ -1441,7 +1470,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	this->getWorldBasisScale(worldScale);
 
 	fwprintf_s(filestream, L"%d %d %d \n", poseEstimator, markermode, undistMode);
-	fwprintf_s(filestream, L"%d %d %d \n", bDrawTag,  bDrawReProj, bGuessPose);
+	fwprintf_s(filestream, L"%d %d %d %d \n", bDrawTag,  bDrawReProj, bGuessPose, bAutoThreshold);
 	fwprintf_s(filestream, L"%f %d %f\n", confThreshold, threshold, borderWidth);
 	
 	fwprintf_s(filestream, L"%d %d \n", camXsize, camYsize);
@@ -1475,6 +1504,8 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	int bDrawTag = 1;
 	int bDrawReProj = 1;
 	int bGuessPose = 1;
+	int bAutoThreshold = 1;
+
 	double confThreshold = 0.9;
 	int threshold = 100;
 	double borderWidth = 0.125;
@@ -1485,7 +1516,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	double worldScale[3] = {1};
 
 	fwscanf_s(filestream, L"%d %d %d \n", &poseEstimator, &markermode, &undistMode);
-	fwscanf_s(filestream, L"%d %d %d \n", &bDrawTag, &bDrawReProj, &bGuessPose);
+	fwscanf_s(filestream, L"%d %d %d %d\n", &bDrawTag, &bDrawReProj, &bGuessPose, &bAutoThreshold);
 	fwscanf_s(filestream, L"%lf %d %lf\n", &confThreshold, &threshold, &borderWidth);
 
 	fwscanf_s(filestream, L"%d %d \n", &camXsize, &camYsize);
@@ -1508,6 +1539,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	this->setbDrawTag(bDrawTag);
 	this->setbDrawReproPt(bDrawReProj);
 	this->setbGuessPose(bGuessPose);
+	this->setAutoThreshold(bAutoThreshold);
 	this->setConfThreshold(confThreshold);
 	this->setThreshold(threshold);
 	this->setBorderWidth(borderWidth);
