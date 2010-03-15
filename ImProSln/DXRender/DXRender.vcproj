@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib MSD3DLib.lib MSPersist.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib MSD3DLib.lib MSPersist.lib  commonLib.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;"
 				ModuleDefinitionFile=".\DXRender.def"
@@ -311,26 +311,6 @@
 			<File
 				RelativePath="..\MyLib\MSSD3DClass.h"
 				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MyMediaSample.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MyMediaSample.h"

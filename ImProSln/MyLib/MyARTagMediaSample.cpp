@@ -1,3 +1,4 @@
+#include <InitGuid.h>
 #include "MyARTagMediaSample.h"
 
 
@@ -13,4 +14,33 @@ ARTagResultData::ARTagResultData(const ARMultiMarkerInfoT* pMarkerConfig, const 
 ARTagResultData::~ARTagResultData()
 {
 
+}
+
+
+ARLayoutConfigData::ARLayoutConfigData() : m_ARMarkers(NULL), m_numMarker(0)
+{	}
+ARLayoutConfigData::~ARLayoutConfigData()
+{	
+	if (m_ARMarkers != NULL)
+	{
+		delete[] m_ARMarkers;
+		m_ARMarkers = NULL;
+	}
+}
+
+ARLayoutConfigData& ARLayoutConfigData::operator = (const ARLayoutConfigData &rhs)
+{
+	if (m_ARMarkers != NULL)
+	{
+		delete [] m_ARMarkers;
+		m_ARMarkers = NULL;
+		this->m_numMarker = 0;
+	}
+	this->m_numMarker = rhs.m_numMarker;
+	if (rhs.m_numMarker != 0)
+	{
+		this->m_ARMarkers = new ARMultiEachMarkerInfoT[rhs.m_numMarker];
+		memcpy(this->m_ARMarkers, rhs.m_ARMarkers, sizeof(ARMultiEachMarkerInfoT)*rhs.m_numMarker);
+	}
+	return *this;
 }

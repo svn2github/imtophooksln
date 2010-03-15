@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib OSCSender.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib OSCSender.lib commonLib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
 				ModuleDefinitionFile=".\AR2WarpController.def"
@@ -329,48 +329,8 @@
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\MyARTagMediaSample.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\MyLib\MyARTagMediaSample.h"
 				>
-			</File>
-			<File
-				RelativePath="..\MyLib\MyMediaSample.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\MyLib\MyMediaSample.h"

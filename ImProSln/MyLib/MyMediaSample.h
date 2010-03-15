@@ -1,5 +1,4 @@
 #pragma once
-#include <initguid.h>
 
 //#include "ARToolKitPlus/arMulti.h"
 // {CCBA1F17-0B65-4b88-AE98-CF864D4EB425}
@@ -32,38 +31,16 @@ public:
 	float warpMat[4][4];
 };
 
-#ifndef _fRECT_
-#define _fRECT_
+
 class fRECT
 {
 public:
 	float left, top, right, bottom;
-	fRECT(float l, float t, float r, float b) : left(l), top(t),
-		right(r), bottom(b)
-	{	}
-	fRECT() : left(0), top(0), right(0), bottom(0)
-	{	 	}
-	bool IsIntersect(const fRECT& rectB)
-	{
-		bool intersectX = false, intersectY = false;
-		if ((this->left >= rectB.left && this->left <= rectB.right) ||
-			(this->right >= rectB.left && this->right <= rectB.right) ||
-			(rectB.left >= this->left && rectB.left <= this->right) ||
-			(rectB.right >= this->left && rectB.right <= this->right))
-		{
-			intersectX = true;
-		}
-		if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
-			(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
-			(rectB.top >= this->top && rectB.top <= this->bottom) ||
-			(rectB.bottom >= this->top && rectB.bottom <= this->bottom))
-		{
-			intersectY = true;
-		}
-		return (intersectX && intersectY);
-	}
+	fRECT(float l, float t, float r, float b);
+	fRECT();
+	bool IsIntersect(const fRECT& rectB);
 };
-#endif
+
 class ARLayoutStartegyData
 {
 public:
@@ -71,51 +48,9 @@ public:
 	unsigned int numCamView;
 	fRECT* fingerRects;
 	unsigned int numFingers;
-	ARLayoutStartegyData() : camViews(NULL), numCamView(0), fingerRects(NULL), numFingers(0)
-	{
-	}
-	~ARLayoutStartegyData()
-	{
-		if (camViews != NULL)
-		{
-			delete [] camViews;
-			camViews = NULL;
-		}
-		if (fingerRects != NULL)
-		{
-			delete[] fingerRects;
-			fingerRects = NULL;
-		}
-	}
-	 ARLayoutStartegyData& operator = (const ARLayoutStartegyData &rhs)
-	 {
-		 if (camViews != NULL)
-		 {
-			 delete [] camViews;
-			 camViews = NULL;
-			 this->numCamView = 0;
-
-		 }
-		 if (fingerRects != NULL)
-		 {
-			 delete[] fingerRects;
-			 fingerRects = NULL;
-			 this->numFingers = 0;
-		 }
-		 this->numCamView = rhs.numCamView;
-		 this->numFingers = rhs.numFingers;
-		 if (rhs.numCamView != 0)
-		 {
-			 this->camViews = new fRECT[this->numCamView];
-			 memcpy(this->camViews, rhs.camViews, sizeof(fRECT)*rhs.numCamView);
-		 }
-		 if (rhs.numFingers != 0)
-		 {
-			 this->fingerRects = new fRECT[rhs.numFingers];
-			 memcpy(this->fingerRects, rhs.fingerRects, sizeof(fRECT)*rhs.numFingers);
-		 }
-		 return *this;
-	 }
+	ARLayoutStartegyData();
+	~ARLayoutStartegyData();
+	ARLayoutStartegyData& operator = (const ARLayoutStartegyData &rhs);
 };
 
 class ForegroundRegion
@@ -123,16 +58,8 @@ class ForegroundRegion
 public:
 	fRECT* foregroundRects;
 	unsigned int numForeground;
-	ForegroundRegion() : foregroundRects(NULL), numForeground(0)
-	{	}
-	~ForegroundRegion()
-	{
-		if (foregroundRects != NULL)
-		{
-			delete[] foregroundRects;
-			foregroundRects = NULL;
-		}
-	}
+	ForegroundRegion();
+	~ForegroundRegion();
 };
 
 class MaskVertexData
@@ -141,37 +68,9 @@ public:
 	float* m_points;
 	int m_nPoints;
 	int m_maskflag;
-	MaskVertexData() : m_points(NULL), m_nPoints(0), m_maskflag(2)
-	{
-		
-	}
-	~MaskVertexData()
-	{
-		if (m_points != NULL)
-		{
-			delete [] m_points;
-			m_points = NULL;
-		}
-	}
-
-	MaskVertexData& operator = (const MaskVertexData &rhs)
-	{
-		if (m_points != NULL)
-		{
-			delete [] m_points;
-			m_points = NULL;
-			this->m_points = 0;
-		}
-		this->m_nPoints = rhs.m_nPoints;
-		this->m_maskflag = rhs.m_maskflag;
-		if (rhs.m_nPoints != 0)
-		{
-			this->m_points = new float[rhs.m_nPoints*2];
-			memcpy(this->m_points, rhs.m_points, sizeof(float)*rhs.m_nPoints*2);
-		}
-		return *this;
-	}
-
+	MaskVertexData();
+	~MaskVertexData();
+	MaskVertexData& operator = (const MaskVertexData &rhs);
 };
 
 class ROIData
@@ -179,33 +78,7 @@ class ROIData
 public:
 	fRECT* m_pRECTs;
 	int m_nRECTs;
-	ROIData() : m_pRECTs(NULL), m_nRECTs(0) 
-	{
-
-	}
-	~ROIData()
-	{
-		if (m_pRECTs != NULL)
-		{
-			delete [] m_pRECTs;
-			m_pRECTs = NULL;
-		}
-		m_nRECTs = 0;
-	}
-	ROIData& operator = (const ROIData &rhs)
-	{
-		if (m_pRECTs != NULL)
-		{
-			delete [] m_pRECTs;
-			m_pRECTs = NULL;
-			m_nRECTs = 0;
-		}
-		this->m_nRECTs = rhs.m_nRECTs;
-		if (rhs.m_nRECTs != 0)
-		{
-			this->m_pRECTs = new fRECT[rhs.m_nRECTs];
-			memcpy(this->m_pRECTs, rhs.m_pRECTs, sizeof(fRECT)*rhs.m_nRECTs);
-		}
-		return *this;
-	}
+	ROIData();
+	~ROIData();
+	ROIData& operator = (const ROIData &rhs);
 };
