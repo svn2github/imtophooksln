@@ -48,7 +48,11 @@ protected:
 private:
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin);
+	virtual HRESULT ReceiveARLayout(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual CMuxTransformOutputPin* GetConnectedOutputPin();
+	ARLayoutConfigData tagConfig ;
+	
+
 public:
 	BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~BGMappingFilter();
@@ -66,15 +70,18 @@ public:
 	virtual bool getLayoutFlip();
 	virtual HRESULT setOutputFlip(bool value) ;
 	virtual bool getOutputFlip();
-
 	HRESULT SendForegroundRect();
+
+	void setLayoutVisible();
 
 
 
 private:
 	CCritSec m_csBGSetting;
-	BackGroundMapping* BG ;
+	CCritSec locMarkerInfo;
 	CCritSec m_cSharedState;            // Protects our internal state
+	BackGroundMapping* BG ;
+	
 	IplImage* backgroundIplImg;
 	IplImage* foregroundIplImg;
 	IplImage* cameraInputIplImg;
@@ -86,6 +93,5 @@ private:
 	int layoutChannel;
 	bool isReceiveCam ; 
 	bool isReceiveBG;
-
 
 };

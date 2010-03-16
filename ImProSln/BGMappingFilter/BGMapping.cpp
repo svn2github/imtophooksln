@@ -13,11 +13,17 @@ BGTag::BGTag(){
 	tagTop.y = 0 ;
     tagDown.x = 0 ;
 	tagDown.y = 0 ;
+	isVisible = true ;
+	tagRec.height = 0 ;
+	tagRec.width  = 0 ;
+	tagRec.x = 0 ; 
+	tagRec.y = 0 ;
 }
 
 BGTag::~BGTag(){
-
-}
+	if(tagImg != NULL)
+		cvReleaseImage(&tagImg) ;
+} 
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
 
@@ -31,6 +37,8 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	historyBG.clear();
 	imgIndex = 0 ;
 	tagTranNum = 0 ;
+	imgH = returnH ;
+	imgW = returnW ;
 
 	for(int i = 0 ; i < imgMAX ; i ++){
 		imgPool[i] = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -55,21 +63,33 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
 	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+
+	char whiteBGName[100];
+	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.jpg",fileDir);
+	whiteBG = cvLoadImage(whiteBGName,0);
+	loadBGTranData(fileDir);	
 	cvSetZero(backgroundImg);
+	
 	historyBG.push_back(backgroundImg);
-	loadBGTranData(fileDir);
 
 }
 
 BackGroundMapping::~BackGroundMapping(){
 	cvDestroyAllWindows();
 	cvReleaseMat(&MatHomography);
+	if(mappingTable != NULL)
 	cvReleaseImage(&mappingTable);	
+	if(binaryResult != NULL)
 	cvReleaseImage(&binaryResult);
+	if(resultImg != NULL)
     cvReleaseImage(&resultImg);
+	if(tmpImg != NULL)
 	cvReleaseImage(&tmpImg);
-	cvReleaseImage(&result4CImg);	
+	if(result4CImg != NULL)
+	cvReleaseImage(&result4CImg);
+	if(backgroundImg != NULL)
 	cvReleaseImage(&backgroundImg);
+
 	cvReleaseStructuringElement(&kernelElement);
 	cvReleaseImage(&binarySrc);
 	for(int i = 0 ; i < imgMAX; i ++){
@@ -126,15 +146,13 @@ void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
 	
-	int nonZero = 0  ;
 	int realBGindex  = 0;
 	int minValue = 1e10 ;
 	cvCvtColor( srcImg, resultImg, CV_RGB2GRAY);
 	if(camFlip ==true){
-	cvFlip(resultImg);
+		cvFlip(resultImg);
 	}
 	
-	CvScalar subValue = cvScalar(BGthreshold,BGthreshold,BGthreshold);
 	if(SHOW_WINDOW){
 	cvShowImage("background",backgroundImg);
 	cvShowImage("src",resultImg);
@@ -143,17 +161,13 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	for(int i = 0 ;i < BGSize; i ++){
 	    cvAbsDiff(resultImg,historyBG[i],tmpImg);
+
 		CvScalar sum = cvSum(tmpImg);
+		//double sumRes = imgSum(tmpImg);
 		if(sum.val[0] <= minValue){
 			minValue = sum.val[0];
 			realBGindex = i ;
-			/*char title[100];
-			sprintf(title,"%d",i);
-			cvShowImage(title,historyBG[i]);
-			char key = cvWaitKey(1);
-			if(key == 'v')
-				cvWaitKey();*/
-			
+					
 		}	
 	}
 
@@ -229,7 +243,7 @@ void  BackGroundMapping::findForegroundRect(IplImage *FGImage){
 void BackGroundMapping::loadBGTranData(char* fileDir){
 
 	char tagConfigFile[100];
-	sprintf(tagConfigFile,"%s\\BackgroundCaliData\\tagConfig.txt",fileDir) ;
+	sprintf(tagConfigFile,"%s\BackgroundCaliData\\tagConfig.txt",fileDir) ;
 
 	FILE  * pFile ;
 	pFile = fopen(tagConfigFile,"r");
@@ -239,14 +253,58 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 
 		fscanf(pFile,"\n%d %d\n%f %f %f %f \n%s \n",&newTag->CurTag , &newTag->TagID,&newTag->tagTop.x,&newTag->tagTop.y,
 		&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
-		BGTran.push_back(newTag);
 
+		newTag->tagRec.x = newTag->tagTop.x * imgW;
+		newTag->tagRec.y = newTag->tagTop.y * imgH;
+
+		newTag->tagImg = cvLoadImage(newTag->imgPath,0);
+		newTag->tagRec.height = newTag->tagImg->height ;
+		newTag->tagRec.width = newTag->tagImg->width ;
+		newTag->isVisible = true ;
+		BGTran.push_back(newTag);
 	}
 }
 
 
-void BackGroundMapping::buildTranBG(){
+void BackGroundMapping::setTranBG(){
+
+	cvResize(whiteBG, backgroundImg);
+
+	for (int i = 0 ; i < tagTranNum ; i ++)
+	{
+		if(BGTran[i]->isVisible){
+			cvSetImageROI(backgroundImg,BGTran[i]->tagRec) ;
+			cvSub(backgroundImg,BGTran[i]->tagImg,backgroundImg);
+			cvResetImageROI(backgroundImg);
+		}
+	}
+	cvShowImage("tranBG",backgroundImg);
+	cvWaitKey(1);
 
 
+	cvCopy(backgroundImg,imgPool[imgIndex]);
+	historyBG.push_back(imgPool[imgIndex]);
+	imgIndex++;
+	if(imgIndex == imgMAX){
+		imgIndex = 0 ;
+	}
 
+}
+
+
+double BackGroundMapping::imgSum(IplImage* img){
+	double sumResult  = 0 ;
+	for(int i=0;i<mappingTable->height;i++)
+	{
+		for(int j=0;j<mappingTable->width;j++)
+		{		
+			sumResult += img->imageData[i*img->width+j] ;
+		}
+	}
+	return sumResult;
+
+}
+
+void BackGroundMapping::setLayoutType(int type){
+	
 }

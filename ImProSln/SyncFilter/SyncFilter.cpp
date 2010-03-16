@@ -144,6 +144,7 @@ HRESULT SyncFilter::CopyInRT2OutTexture()
 }
 HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceivePin)
 {
+	
 	if (m_pOutputPins.size() < 2)
 	{
 		return S_FALSE;
@@ -156,8 +157,13 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	ASSERT(pSample);
 	IMediaSample * pOutSampleD3D = NULL;
 	IMediaSample * pOutSampleRGB = NULL;
+	CMediaSample* pOutSampleConfig = NULL ;
+
 	CMuxTransformOutputPin* pOutBGPin = GetConnectedOutputPin(1);
 	CMuxTransformOutputPin* pOutRenderPin = GetConnectedOutputPin(2);
+
+	ARLayoutConfigData sendData ;
+
 
 	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
@@ -170,10 +176,33 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		hr = LayoutTransform(pSample, pOutSampleD3D);
 	}
 	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty()){
+		if(layoutType == 0){
 		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
 		hr = CopyRenderTarget2OutputTexture();
 		hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
+		}
+		else if(layoutType == 1){
+			{
+				CAutoLock lck(&locMarkerInfo);
+				sendData.m_ARMarkers = tagConfig.m_ARMarkers;
+				sendData.m_numMarker = tagConfig.m_numMarker;
+
+				IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
+				
+				pAllocator->GetBuffer((IMediaSample**)&pOutSampleConfig, NULL, NULL, 0);
+				if (pOutSampleConfig == NULL)
+				{
+					sendData.m_ARMarkers = NULL;
+					sendData.m_numMarker = 0;
+					return S_FALSE;
+				}
+			
+				pOutSampleConfig->SetPointer((BYTE*)&sendData, sizeof(ARLayoutConfigData));			
+			}
+
+		}
 	}
+	
 
 	if (FAILED(hr)) {
 		return hr;
@@ -189,11 +218,14 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			if(pOutSampleRGB != NULL){
+			if(pOutSampleRGB != NULL && layoutType == 0){
 				/*OutputDebugStringW(L"@@@@ BGDeliver ---->");*/
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
 				/*OutputDebugStringW(L"@@@@ BGDeliver <----");*/
 				setDirty(false);
+			}
+			if(pOutSampleConfig != NULL && layoutType == 1){
+				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleConfig);
 			}
 			if( pOutSampleD3D != NULL){
 				//OutputDebugStringW(L"@@@@ RenderDeliver ---->");
@@ -224,6 +256,9 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 			}
 		}
 	}
+	sendData.m_ARMarkers = NULL;
+	sendData.m_numMarker = 0;
+
 	if(pOutSampleRGB != NULL)
 	{
 		pOutSampleRGB->Release();
@@ -233,6 +268,11 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	{
 		pOutSampleD3D->Release();
 		pOutSampleD3D = NULL;
+	}
+	if (pOutSampleConfig != NULL)
+	{
+		pOutSampleConfig->Release();
+		pOutSampleConfig = NULL;
 	}
 
 	return S_OK;
@@ -432,10 +472,12 @@ HRESULT SyncFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			IsEqualGUID(*pmt->Subtype(), GUID_ARLayoutConfigData))
 		{
+			layoutType = 1 ;
 			return NOERROR;
 		}
 		// Can we transform this type
 		if(IsAcceptedType(pmt)){
+			layoutType = 0 ;
 			return NOERROR;
 		}		
 	}

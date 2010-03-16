@@ -83,9 +83,11 @@ private:
 	IplImage* foregroundIplImg;
 	IplImage* cameraInputIplImg;
 
+
 private:
 	CCritSec locMarkerInfo;
 	ARLayoutConfigData tagConfig ;
+	int layoutType ; 
 	
 
 	

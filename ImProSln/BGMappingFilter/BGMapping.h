@@ -18,8 +18,10 @@ public:
 	int TagID ;
 	CvPoint2D32f tagTop;
 	CvPoint2D32f tagDown;
+	CvRect tagRec ;
 	char imgPath[260] ;
-
+	IplImage* tagImg;
+	bool isVisible;
 };
 
 class BackGroundMapping{
@@ -41,8 +43,9 @@ public:
 
 	void loadBGTranData(char* fileDir);
 	void getARLayout();
-	void buildTranBG();
-
+	void setTranBG();
+	void setLayoutType(int type);
+	double imgSum(IplImage* img);
 
 public:
 	CvMat srcPoint;
@@ -60,6 +63,7 @@ public:
 	IplImage*binaryResult;
 	IplImage*imgPool[imgMAX];
 	IplImage* bgMask ;
+	IplImage* whiteBG ;
 
 	vector<IplImage*> historyBG ;
 	vector<BGTag*> BGTran ;
@@ -71,11 +75,15 @@ public:
 	int BlackValue;
 	int WhiteValue;
 	int imgIndex ;
+	int imgH ;
+	int imgW ;
 
 	bool isDilate;
 	bool camFlip;
 	bool layoutFlip;
 	bool outputFlip;
+
+	int layoutType ; // 0::RGB   1::MarkerInfo 
 };
 
 

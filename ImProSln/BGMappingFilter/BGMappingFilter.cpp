@@ -72,9 +72,14 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		return S_FALSE;
 	}
 
-	if(isReceiveBG == true){
-		BG->setBackground(backgroundIplImg);
-		isReceiveBG = false ;
+	if(isReceiveBG == true ){
+		if(BG->layoutType == 0){
+			BG->setBackground(backgroundIplImg);
+		}
+		else if(BG->layoutType == 1){
+			BG->setTranBG();
+		}
+			isReceiveBG = false ;
 	}
 
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
@@ -165,6 +170,25 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	return S_OK;
 }
 
+
+
+HRESULT BGMappingFilter::ReceiveARLayout(IMediaSample *pSample, const IPin* pReceivePin)
+{	
+	ARLayoutConfigData* pARTagResult = NULL;
+	pSample->GetPointer((BYTE**)&pARTagResult);
+	if (pARTagResult == NULL)
+	{
+		return S_FALSE;
+	}
+	tagConfig = *pARTagResult;
+	int tagSize = 0 ;
+	tagSize = tagConfig.m_numMarker;
+	for(int i = 0 ; i < tagSize ; i ++){
+		BG->BGTran[i]->isVisible = tagConfig.m_ARMarkers[i].visible ;
+	}
+	return S_OK;
+
+}
 CMuxTransformOutputPin* BGMappingFilter::GetConnectedOutputPin()
 {
 	for (int i =0; i< m_pOutputPins.size(); i++)
@@ -185,19 +209,21 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
 		CAutoLock lck(&m_csBGSetting);
-		//OutputDebugStringW(L"@@@@ BGMappingReceiveCam ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		//OutputDebugStringW(L"@@@@ BGMappingReceiveCam <----");
 
 	}
 	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
 	{
 		CAutoLock lck(&m_csBGSetting);
 
-	//	OutputDebugStringW(L"@@@@ BGMappingReceiveBackground ---->");
-		hr = ReceiveBackground(pSample, pReceivePin);
-	//	OutputDebugStringW(L"@@@@ BGMappingReceiveBackground <----");
+		CMediaType mt = ((CMuxTransformInputPin*)pReceivePin)->CurrentMediaType();
+		if(mt.subtype == GUID_ARLayoutConfigData)
+			hr = ReceiveARLayout(pSample, pReceivePin);
+		else {
+			hr = ReceiveBackground(pSample, pReceivePin);
+		}
 	}
+
 	return hr;
 
 }
@@ -298,11 +324,13 @@ HRESULT BGMappingFilter::CheckInputType( const CMediaType * pmt , const IPin* pP
 		if (IsEqualGUID(*pmt->Type(), MEDIATYPE_Video) && 
 			(IsEqualGUID(MEDIASUBTYPE_RGB24, *pmt->Subtype())))
 			return NOERROR;		
+		
+		
 
 		if (IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) && 
 			(IsEqualGUID(GUID_ARLayoutConfigData, *pmt->Subtype()) ))
 			return NOERROR;
-
+		
 	}
 	return E_FAIL;
 }
@@ -425,7 +453,10 @@ HRESULT BGMappingFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pM
 
 			// set the calibration data of homo and mapping table
 
-			return S_OK;
+			BG->layoutType = 0 ;
+		}
+		else {
+		BG->layoutType = 1;
 		}
 	}
 	return S_OK;
