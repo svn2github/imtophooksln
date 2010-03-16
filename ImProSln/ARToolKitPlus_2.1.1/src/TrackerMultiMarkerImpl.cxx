@@ -217,7 +217,7 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 	m_numLastDetected = numDetected;
 	numDetected = 0;
 	int				tmpNumDetected;
-    ARMarkerInfo    *tmp_markers;
+    ARMarkerInfo    *tmp_markers = NULL;
 
 	if(useDetectLite)
 	{

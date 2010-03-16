@@ -57,6 +57,8 @@ public:
 	virtual float getConfThreshold();
 	virtual bool setAutoThreshold(bool nEnable);
 	virtual bool getAutoThreshold();
+	virtual bool setMultiThreshold(bool nEnable);
+	virtual bool getMultiThreshold();
 	virtual int getAutoThresholdRetryNum();
 	virtual bool setAutoThresholdRetryNum(int nRetry);
 

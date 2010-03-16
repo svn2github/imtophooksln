@@ -145,6 +145,7 @@ public:
 	/// marker detection without using tracking history
 	virtual int arDetectMarkerLite(ARUint8 *dataPtr, int thresh, ARMarkerInfo **marker_info, int *marker_num);
 
+	
 	/// calculates the transformation matrix between camera and the given multi-marker config
 	virtual ARFloat arMultiGetTransMat(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
 
@@ -255,6 +256,11 @@ public:
 	/// Returns true if automatic threshold detection is enabled
 	virtual bool isAutoThresholdActivated() const  {  return autoThreshold.enable;  }
 
+	virtual void activateMultiThreshold(bool nEnable)  {  autoThreshold.useMultiThreshold = nEnable;  }
+
+
+	/// Returns true if automatic threshold detection is enabled
+	virtual bool isMultiThresholdActivated() const  {  return autoThreshold.useMultiThreshold;  }
 	/// Sets the number of times the threshold is randomized in case no marker was visible (Minimum: 1, Default: 2)
 	/**
 	 *  Autothreshold requires a visible marker to estime the optimal thresholding value. If
@@ -508,7 +514,11 @@ protected:
 			MINLUM0 = 255,
 			MAXLUM0 = 0
 		};
+		AutoThreshold() : enable(false), useMultiThreshold(false), minLum(MINLUM0), 
+			maxLum(MAXLUM0), numRandomRetries(2)
+		{
 
+		}
 		void reset()
 		{
 			minLum = MINLUM0;  maxLum = MAXLUM0;
@@ -534,8 +544,9 @@ protected:
 		{
 			return (minLum+maxLum)/2;
 		}
-
+		vector<int> thresholdList;
 		bool enable;
+		bool useMultiThreshold;
 		int minLum,maxLum;
 		int numRandomRetries;
 	} autoThreshold;

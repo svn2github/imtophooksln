@@ -81,7 +81,8 @@ AR_TEMPL_TRACKER::TrackerImpl()
 	wmarker_num = 0;
 	prev_num = 0;
 	sprev_num[0] = sprev_num[1] = 0;
-
+	
+	marker_info2 = NULL;
 	marker_infoTWO = NULL;
 
 	pattern_num = -1;

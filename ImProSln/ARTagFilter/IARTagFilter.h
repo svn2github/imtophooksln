@@ -40,6 +40,8 @@ public:
 	virtual float getConfThreshold();
 	virtual bool setAutoThreshold(bool nEnable);
 	virtual bool getAutoThreshold();
+	virtual bool setMultiThreshold(bool nEnable);
+	virtual bool getMultiThreshold();
 
 	virtual bool setUndistortionMode(int mode);
 	virtual int getUndistortionMode();

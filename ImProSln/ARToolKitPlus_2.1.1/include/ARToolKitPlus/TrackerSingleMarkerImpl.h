@@ -145,6 +145,10 @@ public:
 	int getThreshold() const  {  return AR_TEMPL_TRACKER::getThreshold();  }
 	void activateAutoThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateAutoThreshold(nEnable);  }
 	bool isAutoThresholdActivated() const  {  return AR_TEMPL_TRACKER::isAutoThresholdActivated();  }
+	void activateMultiThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateMultiThreshold(nEnable);  }
+	bool isMultiThresholdActivated() const  {  return AR_TEMPL_TRACKER::isMultiThresholdActivated();  }
+
+
 	void setNumAutoThresholdRetries(int nNumRetries)  {  AR_TEMPL_TRACKER::setNumAutoThresholdRetries(nNumRetries);  }
 	const ARFloat* getModelViewMatrix() const  {  return AR_TEMPL_TRACKER::getModelViewMatrix();  }
 	const ARFloat* getProjectionMatrix() const  {  return AR_TEMPL_TRACKER::getProjectionMatrix();  }

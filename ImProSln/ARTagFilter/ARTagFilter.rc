@@ -172,7 +172,7 @@ BEGIN
     EDITTEXT        IDC_edZaxis,179,169,25,13,ES_AUTOHSCROLL
 END
 
-IDD_ARTag_GeneralSettingPage DIALOGEX 0, 0, 238, 164
+IDD_ARTag_GeneralSettingPage DIALOGEX 0, 0, 238, 185
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
@@ -183,19 +183,20 @@ BEGIN
     LTEXT           "Marker Mode:",IDC_STATIC,17,38,45,8
     COMBOBOX        IDC_COMBO_UndistortMode,66,59,78,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     LTEXT           "UnDistort Mode:",IDC_STATIC,9,60,53,8
-    CONTROL         "",IDC_SLIDER_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,106,154,13
-    RTEXT           "Threshold:",IDC_STATIC,23,107,39,10
-    CTEXT           "static",IDC_txtThreshold,132,120,23,10
-    CONTROL         "",IDC_SLIDER_BorderW,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,133,154,13
-    LTEXT           "Border Width:",IDC_STATIC,16,134,46,8
-    LTEXT           "Static",IDC_txtBorderW,132,148,19,8
-    CONTROL         "",IDC_SLIDER_ConfThreshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,79,154,13
-    CTEXT           "static",IDC_txtConfThreshold,132,91,23,10
-    RTEXT           "Conf Threshold:",IDC_STATIC,7,80,55,10
+    CONTROL         "",IDC_SLIDER_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,115,154,13
+    RTEXT           "Threshold:",IDC_STATIC,23,116,39,10
+    CTEXT           "static",IDC_txtThreshold,132,129,23,10
+    CONTROL         "",IDC_SLIDER_BorderW,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,142,154,13
+    LTEXT           "Border Width:",IDC_STATIC,16,143,46,8
+    LTEXT           "Static",IDC_txtBorderW,132,157,19,8
+    CONTROL         "",IDC_SLIDER_ConfThreshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,88,154,13
+    CTEXT           "static",IDC_txtConfThreshold,132,100,23,10
+    RTEXT           "Conf Threshold:",IDC_STATIC,7,89,55,10
     PUSHBUTTON      "Load ARConfig",IDC_BtnLoadARTag,156,9,65,14
     CONTROL         "Draw ReProj",IDC_CKReProj,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,38,56,10
     CONTROL         "Guess Pose",IDC_CKGuessPose,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,51,53,10
     CONTROL         "Auto Threshold",IDC_CKAutoThreshold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,64,65,10
+    CONTROL         "Multi Threshold",IDC_CKMultiThreshold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,77,64,10
 END
 
 
@@ -244,7 +245,7 @@ BEGIN
         VERTGUIDE, 144
         VERTGUIDE, 156
         TOPMARGIN, 7
-        BOTTOMMARGIN, 157
+        BOTTOMMARGIN, 178
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -197,25 +197,76 @@ AR_TEMPL_TRACKER::arDetectMarker(ARUint8 *dataPtr, int _thresh, ARMarkerInfo **m
     return 0;
 }
 
+class fARRECT
+{
+public:
+	float left, top, right, bottom;
+	fARRECT(float l, float t, float r, float b): left(l), top(t), right(r), bottom(b)
+	{
+	}
+	fARRECT() : left(0), top(0), right(0), bottom(0)
+	{
+	}
+	inline bool IsIntersect(const fARRECT& rectB)
+	{
+		bool intersectX = false, intersectY = false;
+		if ((this->left >= rectB.left && this->left <= rectB.right) ||
+			(this->right >= rectB.left && this->right <= rectB.right) ||
+			(rectB.left >= this->left && rectB.left <= this->right) ||
+			(rectB.right >= this->left && rectB.right <= this->right))
+		{
+			intersectX = true;
+		}
+		if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
+			(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
+			(rectB.top >= this->top && rectB.top <= this->bottom) ||
+			(rectB.bottom >= this->top && rectB.bottom <= this->bottom))
+		{
+			intersectY = true;
+		}
+		return (intersectX && intersectY);
+	};
+};
+BOOL ARMarkerInfo2fRECT(ARMarkerInfo* _marker, fARRECT& frect)
+{
+	if (_marker == NULL)
+		return FALSE;
+	frect.left = min(_marker->vertex[3][0], min(_marker->vertex[2][0] ,min(_marker->vertex[1][0], _marker->vertex[0][0])));
+	frect.right = max(_marker->vertex[3][0], max(_marker->vertex[2][0] ,max(_marker->vertex[1][0], _marker->vertex[0][0])));
+	frect.top = min(_marker->vertex[3][1], min(_marker->vertex[2][1] ,min(_marker->vertex[1][1], _marker->vertex[0][1])));
+	frect.bottom = max(_marker->vertex[3][1], max(_marker->vertex[2][1] ,max(_marker->vertex[1][1], _marker->vertex[0][1])));
 
+	return TRUE;
+}
 // marker detection without using tracking history
 //
 AR_TEMPL_FUNC int
 AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo **marker_info, int *marker_num)
 {
     ARInt16                *limage = NULL;
-    int                    label_num;
-    int                    *area, *clip, *label_ref;
-    ARFloat                 *pos;
+    int                    label_num = 0;
+    int                    *area = NULL, *clip = NULL, *label_ref = NULL;
+    ARFloat                 *pos = NULL;
     int                    i;
 
 	autoThreshold.reset();
 	checkImageBuffer();
 
     *marker_num = 0;
+	vector<ARMarkerInfo> markerInfoList;
+	vector<int> preferThreshold;
 
+	marker_info2 = NULL;
+	wmarker_info = NULL;
+	wmarker_num = 0;
+	//if(autoThreshold.enable)
+	//	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@\n" );
 	for(int numTries = 0;;)
 	{
+		int numFound = 0;
+		//WCHAR str[MAX_PATH] = {0};
+		//swprintf_s(str, MAX_PATH, L"@@@@@@ use Threshold: %d \n", _thresh);
+		//OutputDebugStringW(str);
 		limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
 		if(limage)
 		{
@@ -224,24 +275,107 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
 			{
 				wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
 				if(wmarker_info && wmarker_num>0)
-					break;
+				{
+					//break;
+					if (autoThreshold.enable && autoThreshold.useMultiThreshold)
+					{
+						for (int i = 0; i < wmarker_num; i++)
+						{
+							numFound++;
+							bool alreadyFound = false;
+							fARRECT newRECT;
+							ARMarkerInfo2fRECT(&(wmarker_info[i]), newRECT);
+							for (vector<ARMarkerInfo>::iterator iter = markerInfoList.begin(); 
+								iter != markerInfoList.end(); iter++)
+							{
+								fARRECT preRECT;
+								ARMarkerInfo2fRECT(&(*iter), preRECT);
+								if (preRECT.IsIntersect(newRECT))
+								{
+									numFound--;
+									alreadyFound = true;
+									break;
+								}
+							}
+							if (!alreadyFound)
+							{
+								markerInfoList.push_back(wmarker_info[i]);
+							}
+						}
+					}
+					else if (autoThreshold.enable)
+					{
+						break;
+					}
+					else
+					{
+						break;
+					}
+				}
 			}
+		
 		}
 
 		if(!autoThreshold.enable)
 			break;
+		else if (autoThreshold.useMultiThreshold)
+		{
+			if (numFound > 0)
+			{
+				preferThreshold.push_back(_thresh);
+			}
+			//WCHAR str[MAX_PATH] = {0};
+			if (autoThreshold.thresholdList.size() > numTries)
+			{
+				thresh = autoThreshold.thresholdList[numTries];
+				_thresh = thresh;
+				//swprintf_s(str, MAX_PATH, L"@@@@@@ prefer AutoThreshold: %d \n", _thresh);
+			}
+			else
+			{
+				thresh = (rand() % 230) + 10;
+				_thresh = thresh;
+				//swprintf_s(str, MAX_PATH, L"@@@@@@ random AutoThreshold: %d \n", _thresh);
+			}
+
+			//OutputDebugStringW(str);
+			if(++numTries > autoThreshold.numRandomRetries)
+				break;
+		}
 		else
 		{
 			_thresh = thresh = (rand() % 230) + 10;
-			if(++numTries>autoThreshold.numRandomRetries)
+			//swprintf_s(str, MAX_PATH, L"@@@@@@ random AutoThreshold: %d \n", _thresh);
+			if(++numTries > autoThreshold.numRandomRetries)
 				break;
 		}
-
 	}
+	if(autoThreshold.enable && autoThreshold.useMultiThreshold)
+	{
+		//OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@\n" );
+		autoThreshold.thresholdList = preferThreshold;
 
-	if(!limage || !marker_info2 || !wmarker_info)
+		if (markerInfoList.size() > 0)
+		{
+			int numMarkerPreserve = min((int)markerInfoList.size(),(int) MAX_IMAGE_PATTERNS);
+			memset(wmarker_info, 0, sizeof(ARMarkerInfo)*numMarkerPreserve);
+			wmarker_num = numMarkerPreserve;
+			int idx = 0;
+			for (vector<ARMarkerInfo>::iterator iter = markerInfoList.begin(); iter != markerInfoList.end() && idx < numMarkerPreserve; iter++)
+			{
+				wmarker_info[idx] = *iter;
+				idx++;
+			}
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	if (wmarker_info == NULL || wmarker_num <= 0)
+	{
 		return -1;
-
+	}
 
 /*
     limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
@@ -261,10 +395,8 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
 
     *marker_num  = wmarker_num;
     *marker_info = wmarker_info;
-
-	if(autoThreshold.enable)
+	if (autoThreshold.enable && !autoThreshold.useMultiThreshold)
 		thresh = autoThreshold.calc();
-
     return 0;
 }
 

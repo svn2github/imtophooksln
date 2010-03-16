@@ -215,11 +215,11 @@ public:
 	virtual float getConfThreshold() = 0;
 	/// Enables or disables automatic threshold calculation
 	virtual void activateAutoThreshold(bool nEnable) = 0;
-
+	virtual void activateMultiThreshold(bool nEnable) = 0;
 	
 	/// Returns true if automatic threshold calculation is activated
 	virtual bool isAutoThresholdActivated() const = 0;
-
+	virtual bool isMultiThresholdActivated() const = 0;
 
 	/// Sets the number of times the threshold is randomized in case no marker was visible (Default: 2)
 	/**

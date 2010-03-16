@@ -165,6 +165,9 @@ public:
 
 	void activateAutoThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateAutoThreshold(nEnable);  }
 	bool isAutoThresholdActivated() const  {  return AR_TEMPL_TRACKER::isAutoThresholdActivated();  }
+	void activateMultiThreshold(bool nEnable)  {  AR_TEMPL_TRACKER::activateMultiThreshold(nEnable);  }
+	bool isMultiThresholdActivated() const  {  return AR_TEMPL_TRACKER::isMultiThresholdActivated();  }
+
 	virtual void setNumAutoThresholdRetries(int nNumRetries)  {  AR_TEMPL_TRACKER::setNumAutoThresholdRetries(nNumRetries);  }
 	virtual int getNumAutoThresholdRetries() { return AR_TEMPL_TRACKER::getNumAutoThresholdRetries(); };
 
