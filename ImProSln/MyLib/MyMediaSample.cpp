@@ -17,6 +17,10 @@ bool fRECT::IsIntersect(const fRECT& rectB)
 	{
 		intersectX = true;
 	}
+	if (intersectX == false)
+	{
+		return false;
+	}
 	if ((this->top >= rectB.top && this->top <= rectB.bottom) ||
 		(this->bottom >= rectB.top && this->bottom <= rectB.bottom) ||
 		(rectB.top >= this->top && rectB.top <= this->bottom) ||
