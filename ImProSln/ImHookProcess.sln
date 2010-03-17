@@ -146,6 +146,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARLayoutCaptureApp", "ARLay
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "commonLib", "commonLib\commonLib.vcproj", "{ABBECADB-3740-431A-B9C6-5D7215FC1885}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HookApp", "HookApp\HookApp.vcproj", "{A1149884-942F-4A52-A720-7C5253DB387F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_mdd|Win32 = Debug_mdd|Win32
@@ -406,6 +408,18 @@ Global
 		{ABBECADB-3740-431A-B9C6-5D7215FC1885}.Release|Win32.ActiveCfg = Release|Win32
 		{ABBECADB-3740-431A-B9C6-5D7215FC1885}.Release|Win32.Build.0 = Release|Win32
 		{ABBECADB-3740-431A-B9C6-5D7215FC1885}.Release|x64.ActiveCfg = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug_mdd|Win32.ActiveCfg = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug_mdd|Win32.Build.0 = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug_mdd|x64.ActiveCfg = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug|Win32.Build.0 = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Debug|x64.ActiveCfg = Debug|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release_mdd|Win32.ActiveCfg = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release_mdd|Win32.Build.0 = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release_mdd|x64.ActiveCfg = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release|Win32.ActiveCfg = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release|Win32.Build.0 = Release|Win32
+		{A1149884-942F-4A52-A720-7C5253DB387F}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

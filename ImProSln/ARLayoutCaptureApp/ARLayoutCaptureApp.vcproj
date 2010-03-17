@@ -315,6 +315,22 @@
 				RelativePath="..\MyLib\CameraDS.h"
 				>
 			</File>
+			<File
+				RelativePath="..\MyLib\DSBase.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\MyLib\DSBase.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

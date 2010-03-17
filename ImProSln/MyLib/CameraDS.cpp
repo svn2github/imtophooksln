@@ -6,10 +6,8 @@ CCameraDS::CCameraDS()
 	m_pRenderFilter = NULL;
 	m_pMediaEvent = NULL;
 	m_pSampleGrabberFilter = NULL;
-	m_pGraph = NULL;
 
 	m_pDeviceFilter = NULL;
-	m_pMediaControl = NULL;
 
 	m_pCameraOutput = NULL;
 	m_pRenderInputPin = NULL;
@@ -18,25 +16,20 @@ CCameraDS::CCameraDS()
 	m_pGrabberInput = NULL;
 	m_pGrabberOutput = NULL;
 
-	CoInitialize(NULL);
 }
 
 CCameraDS::~CCameraDS()
 {
 	CloseCamera();
-	CoUninitialize();
 }
 
 void CCameraDS::CloseCamera()
 {
-
-	m_pGraph = NULL;
+	UnInitDS();
 	m_pDeviceFilter = NULL;
-	m_pMediaControl = NULL;
 	m_pSampleGrabberFilter = NULL;
 
 	m_pCameraOutput = NULL;
-	m_pMediaEvent = NULL;
 	m_pRenderFilter = NULL;
 	m_pRenderInputPin = NULL;
 
@@ -48,15 +41,11 @@ void CCameraDS::CloseCamera()
 bool CCameraDS::OpenCamera(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
 {
 	HRESULT hr = S_OK;
-
-	CoInitialize(NULL);
-
 	// Create the Filter Graph Manager.
 	hr = CreateGraph((IGraphBuilder**)&m_pGraph);
 	hr = CreateFilters(nCamID, bDisplayProperties, nWidth, nHeight);
 	hr = ConnectGraph();
 	hr = ConfigFilters();
-   
 	return true;
 }
 HRESULT CCameraDS::ConfigFilters()
@@ -74,17 +63,7 @@ HRESULT CCameraDS::ConnectGraph()
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 	return hr;
 }
-HRESULT CCameraDS::CreateGraph(IGraphBuilder** ppGraph)
-{
-	HRESULT hr;
-	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
-		IID_IGraphBuilder, (void **)ppGraph);
-	
-	hr = m_pGraph->QueryInterface(IID_IMediaControl, (void **) &m_pMediaControl);
-	hr = m_pGraph->QueryInterface(IID_IMediaEvent, (void **) &m_pMediaEvent);
-	hr = m_pGraph->QueryInterface(IID_IVideoWindow, (LPVOID *) &m_pVideoWindow);
-	return hr;
-}
+
 HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight)
 {
 	HRESULT hr;
@@ -188,86 +167,6 @@ HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 	}
 	return S_OK;
 }
-HRESULT CCameraDS::ShowFilterProp(IUnknown* pFilter)
-{
-	if (pFilter == NULL)
-		return S_FALSE;
-
-	CComPtr<ISpecifyPropertyPages> pPages;
-
-	HRESULT hr = pFilter->QueryInterface(IID_ISpecifyPropertyPages, (void**)&pPages);
-	if (SUCCEEDED(hr))
-	{
-		CAUUID caGUID;
-		pPages->GetPages(&caGUID);
-
-		OleCreatePropertyFrame(NULL, 0, 0,
-			L"Property Sheet", 1,
-			(IUnknown **)&(pFilter),
-			caGUID.cElems,
-			caGUID.pElems,
-			0, 0, NULL);
-		CoTaskMemFree(caGUID.pElems);
-	}
-	pPages = NULL;
-	return S_OK;
-}
-bool CCameraDS::SetVideoWindow(HWND hwnd)
-{
-	if (m_pVideoWindow == NULL)
-		return false;
-	HRESULT hr = S_OK;
-	hr = m_pVideoWindow->put_Owner((OAHWND)hwnd);
-	hr = m_pVideoWindow->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
-	hr = m_pVideoWindow->put_Visible(OATRUE);
-	hr = m_pVideoWindow->put_MessageDrain((OAHWND)hwnd);
-	RECT rect;
-	GetWindowRect(hwnd, &rect);
-	hr = m_pVideoWindow->SetWindowPosition(0, 0, rect.right- rect.left,
-		rect.bottom- rect.top);
-	return true;
-}
-
-HRESULT CCameraDS::SaveGraphFile(WCHAR *wszPath) 
-{
-	const WCHAR wszStreamName[] = L"ActiveMovieGraph"; 
-	CComPtr<IGraphBuilder> pGraph = m_pGraph;
-	HRESULT hr;
-
-	IStorage *pStorage = NULL;
-	hr = StgCreateDocfile(
-		wszPath,
-		STGM_CREATE | STGM_TRANSACTED | STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
-		0, &pStorage);
-	if(FAILED(hr)) 
-	{
-		return hr;
-	}
-
-	IStream *pStream;
-	hr = pStorage->CreateStream(
-		wszStreamName,
-		STGM_WRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE,
-		0, 0, &pStream);
-	if (FAILED(hr)) 
-	{
-		pStorage->Release();    
-		return hr;
-	}
-
-	IPersistStream *pPersist = NULL;
-	pGraph->QueryInterface(IID_IPersistStream, (void**)&pPersist);
-	hr = pPersist->Save(pStream, TRUE);
-	pStream->Release();
-	pPersist->Release();
-	if (SUCCEEDED(hr)) 
-	{
-		hr = pStorage->Commit(STGC_DEFAULT);
-	}
-	pStorage->Release();
-	return hr;
-}
-
 
 bool CCameraDS::BindFilter(int nCamID, IBaseFilter **pFilter)
 {
@@ -322,9 +221,6 @@ bool CCameraDS::BindFilter(int nCamID, IBaseFilter **pFilter)
 	return true;
 }
 
-
-
-//将输入crossbar变成PhysConn_Video_Composite
 void CCameraDS::SetCrossBar()
 {
 	int i;
@@ -464,25 +360,6 @@ int CCameraDS::CameraName(int nCamID, WCHAR* sName, int nBufferSize)
 	pEm = NULL;
 
 	return 1;
-}
-
-HRESULT CCameraDS::Play()
-{
-	if (m_pMediaControl == NULL)
-		return S_FALSE;
-	return m_pMediaControl->Run();
-}
-HRESULT CCameraDS::Stop()
-{
-	if (m_pMediaControl == NULL)
-		return S_FALSE;
-	return m_pMediaControl->Stop();
-}
-HRESULT CCameraDS::Pause()
-{
-	if (m_pMediaControl == NULL)
-		return S_FALSE;
-	return m_pMediaControl->Pause();
 }
 
 HRESULT CCameraDS::ShowCamProp()

@@ -23,6 +23,7 @@
 #include "qedit.h"
 #include "dshow.h"
 #include "cv.h"
+#include "DSBase.h"
 #define MYFREEMEDIATYPE(mt)	{if ((mt).cbFormat != 0)		\
 					{CoTaskMemFree((PVOID)(mt).pbFormat);	\
 					(mt).cbFormat = 0;						\
@@ -35,13 +36,10 @@
 				}}									
 
 
-class CCameraDS  
+class CCameraDS : public CDSBase
 {
 protected:
-	
-	CComPtr<IGraphBuilder> m_pGraph;
 	CComPtr<IBaseFilter> m_pDeviceFilter;
-	CComPtr<IMediaControl> m_pMediaControl;
 	CComPtr<IBaseFilter> m_pSampleGrabberFilter;
 
 	CComPtr<ISampleGrabber> m_pSampleGrabber;
@@ -49,10 +47,9 @@ protected:
 	CComPtr<IPin> m_pGrabberOutput;
 
 	CComPtr<IPin> m_pCameraOutput;
-	CComPtr<IMediaEvent> m_pMediaEvent;
 	CComPtr<IBaseFilter> m_pRenderFilter;
 	CComPtr<IPin> m_pRenderInputPin;
-	CComPtr<IVideoWindow> m_pVideoWindow;
+
 
 private:
 	bool BindFilter(int nCamIDX, IBaseFilter **pFilter);
@@ -60,9 +57,7 @@ private:
 protected:
 	virtual HRESULT ConfigFilters();
 	virtual HRESULT ConnectGraph();
-	virtual HRESULT CreateGraph(IGraphBuilder** ppGraph);
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
-	virtual HRESULT ShowFilterProp(IUnknown* pFilter);
 
 public:
 	CCameraDS();
@@ -70,14 +65,9 @@ public:
 
 	virtual bool OpenCamera(int nCamID, bool bDisplayProperties=true, int nWidth=320, int nHeight=240);
 	virtual void CloseCamera();
-	virtual HRESULT Play();
-	virtual HRESULT Stop();
-	virtual HRESULT Pause();
+
 	virtual HRESULT ShowCamProp();
 	virtual HRESULT ShowCamPinProp();
-
-	virtual bool SetVideoWindow(HWND hwnd);
-	virtual HRESULT SaveGraphFile(WCHAR *wszPath);
 
 	HRESULT QueryFrame(IplImage*& pFrame);
 	static int CameraCount(); 
