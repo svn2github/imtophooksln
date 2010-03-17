@@ -381,7 +381,6 @@ HRESULT HookDrawingFilter::CopyRenderTarget2OutputTexture(int idx)
 	D3DSURFACE_DESC surRenderDesc, surOutDesc;
 	m_pAddOutTexture[idx]->GetSurfaceLevel(0, &pOutSurface);
 	m_pAddRenderTarget[idx]->GetSurfaceLevel(0, &pRenderTarget);
-	pRenderTarget->AddRef();
 	pRenderTarget->GetDesc(&surRenderDesc);
 	pOutSurface->GetDesc(&surOutDesc);
 
@@ -651,7 +650,7 @@ HRESULT HookDrawingFilter::SetRenderTarget(int idx)
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
 	LPDIRECT3DSURFACE9 pRTSurface = NULL;
 	m_pAddRenderTarget[idx]->GetSurfaceLevel(0, &pRTSurface);
-	pRTSurface->AddRef();
+	
 
 	hr = pDevice->GetRenderTarget(0, &m_pBackupRenderTarget);
 	hr = pDevice->SetRenderTarget(0, pRTSurface);
