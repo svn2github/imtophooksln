@@ -38,7 +38,7 @@ public:
 	float left, top, right, bottom;
 	fRECT(float l, float t, float r, float b);
 	fRECT();
-	inline bool IsIntersect(const fRECT& rectB);
+	bool IsIntersect(const fRECT& rectB);
 };
 
 class ARLayoutStartegyData
