@@ -18,6 +18,7 @@ ARLayoutDXFilter::ARLayoutDXFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	m_minMarkerWidth = 1.0;
 	m_pARStrategyData = NULL;
 	m_pROIImage = NULL;
+	m_bLayoutChange = true;
 }
 ARLayoutDXFilter::~ARLayoutDXFilter()
 {
@@ -265,23 +266,25 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 				bool bLayoutChange = false;
 				DecideLayout(strategyData->camViews, strategyData->numCamView,
 					strategyData->fingerRects, strategyData->numFingers, bLayoutChange);
-				if (bLayoutChange)
+				m_bLayoutChange = bLayoutChange || m_bLayoutChange;
+			}
+			if (m_bLayoutChange)
+			{
+				sendConfigData();
+				delete strategyData;
+				strategyData = NULL;
+				if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
+					!m_pOutputPins[1]->IsConnected()))
 				{
-					sendConfigData();
-					delete strategyData;
-					strategyData = NULL;
-					if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
-						!m_pOutputPins[1]->IsConnected()))
-					{
-						CAutoLock lck(&m_csARMarker);
-						ARMultiMarkerInfoT markerConfig;
-						memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
-						markerConfig.marker = m_ARMarkers;
-						markerConfig.marker_num = m_numMarker;
-						ComputeROIs(&markerConfig);
-						sendROIData();
-					}
+					CAutoLock lck(&m_csARMarker);
+					ARMultiMarkerInfoT markerConfig;
+					memset((void*)&markerConfig, 0 ,sizeof(ARMultiMarkerInfoT));
+					markerConfig.marker = m_ARMarkers;
+					markerConfig.marker_num = m_numMarker;
+					ComputeROIs(&markerConfig);
+					sendROIData();
 				}
+				m_bLayoutChange = false;
 			}
 		}
 		hr = SetRenderTarget();

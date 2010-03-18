@@ -57,6 +57,7 @@ protected:
 	ARLayoutStartegyData* m_pARStrategyData;
 	CCritSec m_csFrameRate;
 	float m_FrameRate;
+	bool m_bLayoutChange;
 
 	CCritSec m_csROIRects;
 	IplImage* m_pROIImage;

@@ -243,56 +243,6 @@
 				RelativePath=".\res\ARTagFilter.rc2"
 				>
 			</File>
-			<Filter
-				Name="Source Files"
-				Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-				UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
-				>
-				<File
-					RelativePath=".\ARTagD3DDisplay.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ARTagDSFilter.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ARTagFilter.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ARTagFilter.def"
-					>
-				</File>
-				<File
-					RelativePath=".\ARTagProp.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\ARTagReg.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\stdafx.cpp"
-					>
-					<FileConfiguration
-						Name="Debug_mdd|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release_mdd|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="1"
-						/>
-					</FileConfiguration>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="MyLib"
@@ -324,6 +274,56 @@
 			<File
 				RelativePath="..\MyLib\MyMediaSample.h"
 				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			>
+			<File
+				RelativePath=".\ARTagD3DDisplay.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagDSFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagFilter.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagFilter.def"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagProp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ARTagReg.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.cpp"
+				>
+				<FileConfiguration
+					Name="Debug_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release_mdd|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 		<File
