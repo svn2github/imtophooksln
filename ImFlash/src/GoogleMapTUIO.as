@@ -44,7 +44,7 @@ package {
 //			addKeyboardWidget();
 			
 			// add google earth client
-			addGoogleEarthClient();
+			addGoogleEarthClient(2);
 						
 			//add stage listener 
 //			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
@@ -90,9 +90,14 @@ package {
 			addChild(editor);			
 		}
 		
-		private function addGoogleEarthClient():void{
+		private function addGoogleEarthClient(number:Number):void{
 			// add ge delegate control
 			setupSocket();
+			
+			for(var i:Number=0;i<number;i++){
+				var ge:GEControl = multiResMap.addGeControl(socket, 100*(i+1), 100*(i+1));
+				trace("ge.id: " + ge.id);
+			}
 //			var ge1:GEControl = multiResMap.addGeControl(socket, 150, 150);
 //			var ge2:GEControl = multiResMap.addGeControl(socket, 250, 250);
 //			trace("ge1.id: " + ge1.id);		
@@ -105,8 +110,8 @@ package {
 											
 			socket = new XMLSocket();
 			socket.addEventListener(Event.CONNECT, function(event:Event):void{
-				socket.send("11,flashGE"); 
-				socket.send("14,flashGE-login"); // broadcast
+				socket.send("11,flashGE");								
+//				socket.send("14,flashGE-login"); // broadcast
 			});
 			
             socket.addEventListener(DataEvent.DATA, dataHandler);
@@ -124,21 +129,19 @@ package {
 			var from:String = data[2];
 			var cmd:String = data[3];
 			if(cmd=="geLogin"){
-				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
-				socket.send("15," + from + ",flashGE," + "assignID," + geControl.id);
-				trace("assignID: " + geControl.id);				
+//				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
+//				socket.send("15," + from + ",flashGE," + "assignID," + geControl.id);
+//				trace("assignID: " + geControl.id);				
 				
 			}else if(cmd=="geDebug"){
 				var vspaceX:Number = Number(data[4]);
 				var vspaceY:Number = Number(data[5]);
-//				var lat:Number = Number(data[6]);
-//				var lng:Number = Number(data[7]);
 				multiResMap.recvGeCenter(from, vspaceX, vspaceY);
 //				trace("vspace: " + vspaceX + ", " + vspaceY);
 			
 			}else if(cmd=="clientLogout"){
-				var who:String = data[4];
-				multiResMap.removeGeControl(who);
+//				var who:String = data[4];
+//				multiResMap.removeGeControl(who);
 			}
 		}
 		private function onConnect(e:Event):void{

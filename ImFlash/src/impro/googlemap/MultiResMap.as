@@ -166,14 +166,12 @@ package impro.googlemap
 		
 		public function recvGeCenter(id:String, vspaceX:Number, vspaceY:Number):void{
 			var geControl:GEControl = geControlDict[id] as GEControl;			
-			
-			var lresX:Number = vspaceX * Setting.LRes.stageWidth;
-			var lresY:Number = vspaceY * Setting.LRes.stageHeight;
-			geControl.x = lresX;
-			geControl.y = lresY;
-			
-//			var latlng:LatLng = map.fromViewportToLatLng(new Point(geControl.x, geControl.y));
-	
+			if(geControl != null){
+				var lresX:Number = vspaceX * Setting.LRes.stageWidth;
+				var lresY:Number = vspaceY * Setting.LRes.stageHeight;
+				geControl.x = lresX;
+				geControl.y = lresY;				
+			}
 		}
 		
 		public function getViewport (id:Number):MapViewport{
