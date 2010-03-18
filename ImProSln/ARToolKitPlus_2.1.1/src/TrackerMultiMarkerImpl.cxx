@@ -319,10 +319,13 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 			thresh = autoThreshold.calc();
 		for (int i =0; i < tmpNumDetected; i++)
 		{
-			detectedMarkers[numDetected] = tmp_markers[i];
-			detectedMarkerIDs[numDetected++] = tmp_markers[i].id;
-			if(numDetected>=__MAX_IMAGE_PATTERNS)							// increase this value if more markers should be possible to be detected in one image...
-				break;
+			if (tmp_markers[i].id != -1)
+			{
+				detectedMarkers[numDetected] = tmp_markers[i];
+				detectedMarkerIDs[numDetected++] = tmp_markers[i].id;
+				if(numDetected>=__MAX_IMAGE_PATTERNS)							// increase this value if more markers should be possible to be detected in one image...
+					break;
+			}
 		}
 	
 	}
