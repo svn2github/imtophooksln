@@ -1,0 +1,218 @@
+<!--
+  Copyright (c) 2009 Google inc.
+
+  You are free to copy and use this sample.
+  License can be found here: http://code.google.com/apis/ajaxsearch/faq/#license
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Google Earth</title>
+    <script src="http://www.google.com/jsapi?key=ABQIAAAA1XbMiDxx_BTCY2_FkPh06RRaGTYH6UMl8mADNa0YKuWNNa8VNxQEerTAUcfkyrr6OwBovxn7TDAH5Q"></script>
+    <script type="text/javascript">
+
+google.load("earth", "1");
+
+var ge = null;
+var multGeoPlacemark;
+var polygonPlacemark;
+
+function init() {
+
+  google.earth.createInstance("map3d", initCB, failureCB);
+  
+}
+
+function initCB(object) {
+
+  ge = object;
+  
+  ge.getWindow().setVisibility(true);
+  ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);
+  ge.getOptions().setStatusBarVisibility(true);
+  //ge.getOptions().setOverviewMapVisibility(true);
+  
+  ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
+  ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+
+////  boundaryLineStyle1  //////////////////////////////////////////////////////////////////////
+//  var line = ge.createLineString(''); 
+//  line.getCoordinates().pushLatLngAlt(0, 0, 0); 
+//  line.setTessellate(true); 
+//  line.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+//  
+//  var multiGeometry = ge.createMultiGeometry(''); 
+//  multiGeometry.getGeometries().appendChild(line); 
+//  
+//  multGeoPlacemark = ge.createPlacemark(''); 
+//  multGeoPlacemark.setGeometry(multiGeometry); 
+// 
+//  multGeoPlacemark.setStyleSelector(ge.createStyle('')); 
+//  var lineStyle = multGeoPlacemark.getStyleSelector().getLineStyle(); 
+//  lineStyle.setWidth(10); 
+//  lineStyle.getColor().set('5f0000ff'); 
+// 
+//  ge.getFeatures().appendChild(multGeoPlacemark); 
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+////  boundaryLineStyle2  //////////////////////////////////////////////////////////////////////
+// Create the placemark. 
+  polygonPlacemark = ge.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygon = ge.createPolygon(''); 
+  polygon.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  polygonPlacemark.setGeometry(polygon); 
+ 
+  // Add points for the outer shape. 
+//  var outer = ge.createLinearRing(''); 
+//  outer.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+//  outer.getCoordinates().pushLatLngAlt(LeftTopLat+45, LeftTopLong-90, 500); 
+//  outer.getCoordinates().pushLatLngAlt(LeftDownLat-45, LeftDownLong-90, 500); 
+//  outer.getCoordinates().pushLatLngAlt(RightDownLat-45, RightDownLong+90, 500); 
+//  outer.getCoordinates().pushLatLngAlt(RightTopLat+45, RightTopLong+90, 500); 
+//  polygon.setOuterBoundary(outer); 
+ 
+  // Add inner points. 
+//  var inner = ge.createLinearRing(''); 
+//  inner.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+//  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 500); 
+//  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 500); 
+//  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 500); 
+//  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 500); 
+//  polygon.getInnerBoundaries().appendChild(inner); 
+ 
+  //Create a style and set width and color of line 
+//  polygonPlacemark.setStyleSelector(ge.createStyle('')); 
+//  var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
+//  lineStyle.setWidth(5); 
+//  lineStyle.getColor().set('5f0000ff'); 
+  
+//  var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
+//  polyStyle.getColor().set('5f00ffff'); 
+ 
+  // Add the placemark to Earth. 
+  ge.getFeatures().appendChild(polygonPlacemark);
+  
+/////////////////////////////////////////////////////////////////////////////////////////////
+  
+}
+
+function failureCB(object) {
+  /***
+   * This function will be called if plugin fails to load, in case
+   * you need to handle that error condition.
+   ***/
+}
+
+function cameraView(latitude, longitude, altitude, heading, tilt, roll) { 
+   //   function cameraView() { 
+        
+        //省略相機移動的動畫    
+        ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
+      
+        var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+    
+        camera.set(latitude, longitude, altitude, 
+                    ge.ALTITUDE_RELATIVE_TO_GROUND,heading,tilt,roll);
+
+        //camera.set(25.033320,121.563484,300,ge.ALTITUDE_RELATIVE_TO_GROUND,75,33,30);
+    
+        ge.getView().setAbstractView(camera); 
+      
+}
+
+function boundaryLineStyle1(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,RightTopLong,RightTopLat,RightDownLong,RightDownLat){
+  
+  var line = ge.createLineString(''); 
+  line.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 0); 
+  line.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 0); 
+  line.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 0);
+  line.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 0);
+  line.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 0);
+  line.setTessellate(true); 
+  line.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  
+  var multiGeometry = ge.createMultiGeometry(''); 
+  multiGeometry.getGeometries().appendChild(line); 
+  
+  var multGeoPlacemarkNew = ge.createPlacemark(''); 
+  multGeoPlacemarkNew.setGeometry(multiGeometry); 
+ 
+  multGeoPlacemarkNew.setStyleSelector(ge.createStyle('')); 
+  var lineStyle = multGeoPlacemarkNew.getStyleSelector().getLineStyle(); 
+  lineStyle.setWidth(10); 
+  lineStyle.getColor().set('5f0000ff'); 
+ 
+  ge.getFeatures().appendChild(multGeoPlacemarkNew); 
+  
+  ge.getFeatures().removeChild(multGeoPlacemark); 
+  
+  multGeoPlacemark = multGeoPlacemarkNew;
+     
+       
+}
+
+function boundaryLineStyle2(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,RightTopLong,RightTopLat,RightDownLong,RightDownLat) {
+
+  var boundary = RightTopLong - LeftTopLong;  
+  
+  // Create the placemark. 
+  var polygonPlacemarkNew = ge.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygon = ge.createPolygon(''); 
+  polygon.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  polygonPlacemarkNew.setGeometry(polygon); 
+ 
+  // Add points for the outer shape. 
+  var outer = ge.createLinearRing(''); 
+  outer.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(boundary*3), LeftTopLong-(boundary*3), 0); 
+  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(boundary*3), LeftDownLong-(boundary*3), 0); 
+  outer.getCoordinates().pushLatLngAlt(RightDownLat-(boundary*3), RightDownLong+(boundary*3), 0); 
+  outer.getCoordinates().pushLatLngAlt(RightTopLat+(boundary*3), RightTopLong+(boundary*3), 0); 
+  polygon.setOuterBoundary(outer); 
+ 
+  // Add inner points. 
+  var inner = ge.createLinearRing(''); 
+  inner.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 0); 
+  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 0); 
+  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 0); 
+  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 0); 
+  polygon.getInnerBoundaries().appendChild(inner); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkNew.setStyleSelector(ge.createStyle('')); 
+  var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
+  lineStyle.setWidth(5); 
+  lineStyle.getColor().set('7f0000ff'); 
+  
+  var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
+  polyStyle.getColor().set('5f00ffff'); 
+ 
+  // Add the placemark to Earth. 
+  ge.getFeatures().appendChild(polygonPlacemarkNew);
+  
+  ge.getFeatures().removeChild(polygonPlacemark); 
+  
+  polygonPlacemark = polygonPlacemarkNew;
+
+}
+
+function remove() {
+
+    ge.getFeatures().removeChild(polygonPlacemark);    
+
+}
+
+
+</script>
+  </head>
+  <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
+    <div id="map3d" style="width: 500px; height: 380px;"></div>
+  </body>
+</html>
