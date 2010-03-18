@@ -217,11 +217,10 @@ namespace googleearth {
 			//setFullScreen();			
 
 			g_formPtr = this;
-
+			
 			boundaryDirty = false;
-
-			tabletName = "tabletGE_0";
-
+			
+			// read parameters ip, port, tabletID from setting.txt
 			loadParamsFromFile();
 
 			setupBrowser();
@@ -244,13 +243,17 @@ namespace googleearth {
 			String^ line;
 			System::IO::StreamReader^ file = gcnew System::IO::StreamReader(".\\setting.txt");
 			
+			// read parameters ip, port, tabletID
 			line = file->ReadLine();
 			String^ _ip = line->Split(' ')[1];
 			line = file->ReadLine();
 			String^ _port = line->Split(' ')[1];
+			line = file->ReadLine();
+			String^ _tabletID = line->Split(' ')[1];
 
 			ipAddress = _ip;
 			port = Int32::Parse(_port);
+			tabletName = _tabletID;
 		}
 		
 
