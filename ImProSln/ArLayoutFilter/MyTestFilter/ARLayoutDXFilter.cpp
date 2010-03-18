@@ -267,12 +267,12 @@ HRESULT ARLayoutDXFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 				DecideLayout(strategyData->camViews, strategyData->numCamView,
 					strategyData->fingerRects, strategyData->numFingers, bLayoutChange);
 				m_bLayoutChange = bLayoutChange || m_bLayoutChange;
+				delete strategyData;
+				strategyData = NULL;
 			}
 			if (m_bLayoutChange)
 			{
 				sendConfigData();
-				delete strategyData;
-				strategyData = NULL;
 				if (!(m_pOutputPins.size() < 2 || m_pOutputPins[1] == NULL ||
 					!m_pOutputPins[1]->IsConnected()))
 				{
