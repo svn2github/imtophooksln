@@ -216,28 +216,116 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 	}
 	m_numLastDetected = numDetected;
 	numDetected = 0;
-	int				tmpNumDetected;
+	int				tmpNumDetected = 0;
     ARMarkerInfo    *tmp_markers = NULL;
-
-	if(useDetectLite)
+	
+	autoThreshold.reset();
+	map<int, ARMarkerInfo> markerInfoList;
+	vector<int> preferThreshold;
+	WCHAR str[MAX_PATH] = {0};
+	OutputDebugStringW(L"@@@@@@@@@\n");
+	for(int numTries = 0;;)
 	{
-		if(arDetectMarkerLite(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected) < 0)
-			return 0;
+		
+		tmpNumDetected = 0;
+		tmp_markers = NULL;
+		int ret = 0;
+		swprintf_s(str, MAX_PATH, L"@@@@ Use Thresh = %d \n", thresh);
+		OutputDebugStringW(str);
+		if(useDetectLite)
+		{
+			ret = arDetectMarkerLite(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected);
+		}
+		else
+		{
+			ret = arDetectMarker(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected);
+		}
+		int numFound = 0;
+
+		if (autoThreshold.enable && autoThreshold.useMultiThreshold)
+		{
+			for (int i = 0; i < tmpNumDetected; i++)
+			{
+				numFound++;
+				bool alreadyFound = false;
+				if (markerInfoList.find(tmp_markers[i].id) != markerInfoList.end())
+				{
+					numFound--;
+					alreadyFound = true;	
+				}
+				if (!alreadyFound)
+				{
+					markerInfoList[tmp_markers[i].id] = tmp_markers[i];
+				}
+			}
+		}
+		if(!autoThreshold.enable)
+			break;
+		else if (autoThreshold.useMultiThreshold)
+		{
+			if (numFound > 0)
+			{
+				preferThreshold.push_back(thresh);
+			}
+			
+			if (autoThreshold.thresholdList.size() > numTries)
+			{
+				thresh = autoThreshold.thresholdList[numTries];
+				swprintf_s(str, MAX_PATH,L"@@@@ Prefer AutoThresh = %d \n", thresh);
+				OutputDebugStringW(str);	
+			}
+			else
+			{
+				thresh = (rand() % 230) + 10;
+				swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
+				OutputDebugStringW(str);
+			}
+			if(++numTries > autoThreshold.numRandomRetries)
+				break;
+		}
+		else
+		{
+			if (tmpNumDetected)
+				break;
+			else
+			{
+				thresh = (rand() % 230) + 10;
+				swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
+				OutputDebugStringW(str);
+				if(++numTries > autoThreshold.numRandomRetries)
+					break;
+			}
+		}
+	}	
+	OutputDebugStringW(L"@@@@@@@@@\n");
+	if (autoThreshold.enable && autoThreshold.useMultiThreshold)
+	{
+		autoThreshold.thresholdList = preferThreshold;
+		for (map<int, ARMarkerInfo>::iterator iter = markerInfoList.begin();
+			iter != markerInfoList.end(); iter++)
+		{
+			if (iter->second.id != -1)
+			{
+				detectedMarkers[numDetected] = iter->second;
+				detectedMarkerIDs[numDetected++] = iter->second.id;
+				if(numDetected>=__MAX_IMAGE_PATTERNS)							// increase this value if more markers should be possible to be detected in one image...
+					break;
+			}
+		}
 	}
 	else
 	{
-		if(arDetectMarker(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected) < 0)
-			return 0;
-	}
-
-	for(int i=0; i<tmpNumDetected; i++)
-		if(tmp_markers[i].id!=-1)
+		if (autoThreshold.enable)
+			thresh = autoThreshold.calc();
+		for (int i =0; i < tmpNumDetected; i++)
 		{
 			detectedMarkers[numDetected] = tmp_markers[i];
 			detectedMarkerIDs[numDetected++] = tmp_markers[i].id;
 			if(numDetected>=__MAX_IMAGE_PATTERNS)							// increase this value if more markers should be possible to be detected in one image...
 				break;
 		}
+	
+	}
 	/*
 	if(executeMultiMarkerPoseEstimator(tmp_markers, tmpNumDetected, config) < 0)
 		return 0;

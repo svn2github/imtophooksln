@@ -59,7 +59,6 @@ AR_TEMPL_TRACKER::arDetectMarker(ARUint8 *dataPtr, int _thresh, ARMarkerInfo **m
     int                    cid, cdir;
     int                    i, j, k;
 
-	autoThreshold.reset();
 	checkImageBuffer();
 
 //	FILE* fp = fopen("imgdump.raw", "wb");
@@ -68,31 +67,17 @@ AR_TEMPL_TRACKER::arDetectMarker(ARUint8 *dataPtr, int _thresh, ARMarkerInfo **m
 
     *marker_num = 0;
 
-	for(int numTries = 0;;)
+	
+	limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
+	if(limage)
 	{
-		limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
-		if(limage)
+		marker_info2 = arDetectMarker2(limage, label_num, label_ref, area, pos, clip, AR_AREA_MAX, AR_AREA_MIN, 1.0, &wmarker_num);
+		assert(wmarker_num <= MAX_IMAGE_PATTERNS);
+		if(marker_info2)
 		{
-			marker_info2 = arDetectMarker2(limage, label_num, label_ref, area, pos, clip, AR_AREA_MAX, AR_AREA_MIN, 1.0, &wmarker_num);
+			wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
 			assert(wmarker_num <= MAX_IMAGE_PATTERNS);
-			if(marker_info2)
-			{
-				wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
-				assert(wmarker_num <= MAX_IMAGE_PATTERNS);
-				if(wmarker_info && wmarker_num>0)
-					break;
-			}
 		}
-
-		if(!autoThreshold.enable)
-			break;
-		else
-		{
-			_thresh = thresh = (rand() % 230) + 10;
-			if(++numTries>autoThreshold.numRandomRetries)
-				break;
-		}
-
 	}
 
 	if(!limage || !marker_info2 || !wmarker_info)
@@ -191,9 +176,6 @@ AR_TEMPL_TRACKER::arDetectMarker(ARUint8 *dataPtr, int _thresh, ARMarkerInfo **m
 
 	assert(*marker_num <= MAX_IMAGE_PATTERNS);
 
-	if(autoThreshold.enable)
-		thresh = autoThreshold.calc();
-
     return 0;
 }
 
@@ -253,127 +235,22 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
     ARFloat                 *pos = NULL;
     int                    i;
 
-	autoThreshold.reset();
 	checkImageBuffer();
 
     *marker_num = 0;
-	vector<ARMarkerInfo> markerInfoList;
-	vector<int> preferThreshold;
 
 	marker_info2 = NULL;
 	wmarker_info = NULL;
 	wmarker_num = 0;
-	//if(autoThreshold.enable)
-	//	OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@\n" );
-	for(int numTries = 0;;)
+
+
+	limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
+	if(limage)
 	{
-		int numFound = 0;
-		//WCHAR str[MAX_PATH] = {0};
-		//swprintf_s(str, MAX_PATH, L"@@@@@@ use Threshold: %d \n", _thresh);
-		//OutputDebugStringW(str);
-		limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
-		if(limage)
+		marker_info2 = arDetectMarker2(limage, label_num, label_ref, area, pos, clip, AR_AREA_MAX, AR_AREA_MIN, 1.0, &wmarker_num);
+		if(marker_info2)
 		{
-			marker_info2 = arDetectMarker2(limage, label_num, label_ref, area, pos, clip, AR_AREA_MAX, AR_AREA_MIN, 1.0, &wmarker_num);
-			if(marker_info2)
-			{
-				wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
-				if(wmarker_info && wmarker_num>0)
-				{
-					//break;
-					if (autoThreshold.enable && autoThreshold.useMultiThreshold)
-					{
-						for (int i = 0; i < wmarker_num; i++)
-						{
-							numFound++;
-							bool alreadyFound = false;
-							fARRECT newRECT;
-							ARMarkerInfo2fRECT(&(wmarker_info[i]), newRECT);
-							for (vector<ARMarkerInfo>::iterator iter = markerInfoList.begin(); 
-								iter != markerInfoList.end(); iter++)
-							{
-								fARRECT preRECT;
-								ARMarkerInfo2fRECT(&(*iter), preRECT);
-								if (preRECT.IsIntersect(newRECT))
-								{
-									numFound--;
-									alreadyFound = true;
-									break;
-								}
-							}
-							if (!alreadyFound)
-							{
-								markerInfoList.push_back(wmarker_info[i]);
-							}
-						}
-					}
-					else if (autoThreshold.enable)
-					{
-						break;
-					}
-					else
-					{
-						break;
-					}
-				}
-			}
-		
-		}
-
-		if(!autoThreshold.enable)
-			break;
-		else if (autoThreshold.useMultiThreshold)
-		{
-			if (numFound > 0)
-			{
-				preferThreshold.push_back(_thresh);
-			}
-			//WCHAR str[MAX_PATH] = {0};
-			if (autoThreshold.thresholdList.size() > numTries)
-			{
-				thresh = autoThreshold.thresholdList[numTries];
-				_thresh = thresh;
-				//swprintf_s(str, MAX_PATH, L"@@@@@@ prefer AutoThreshold: %d \n", _thresh);
-			}
-			else
-			{
-				thresh = (rand() % 230) + 10;
-				_thresh = thresh;
-				//swprintf_s(str, MAX_PATH, L"@@@@@@ random AutoThreshold: %d \n", _thresh);
-			}
-
-			//OutputDebugStringW(str);
-			if(++numTries > autoThreshold.numRandomRetries)
-				break;
-		}
-		else
-		{
-			_thresh = thresh = (rand() % 230) + 10;
-			//swprintf_s(str, MAX_PATH, L"@@@@@@ random AutoThreshold: %d \n", _thresh);
-			if(++numTries > autoThreshold.numRandomRetries)
-				break;
-		}
-	}
-	if(autoThreshold.enable && autoThreshold.useMultiThreshold)
-	{
-		//OutputDebugStringW(L"@@@@@@@@@@@@@@@@@@@\n" );
-		autoThreshold.thresholdList = preferThreshold;
-
-		if (markerInfoList.size() > 0)
-		{
-			int numMarkerPreserve = min((int)markerInfoList.size(),(int) MAX_IMAGE_PATTERNS);
-			memset(wmarker_info, 0, sizeof(ARMarkerInfo)*numMarkerPreserve);
-			wmarker_num = numMarkerPreserve;
-			int idx = 0;
-			for (vector<ARMarkerInfo>::iterator iter = markerInfoList.begin(); iter != markerInfoList.end() && idx < numMarkerPreserve; iter++)
-			{
-				wmarker_info[idx] = *iter;
-				idx++;
-			}
-		}
-		else
-		{
-			return -1;
+			wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
 		}
 	}
 	if (wmarker_info == NULL || wmarker_num <= 0)
@@ -381,26 +258,13 @@ AR_TEMPL_TRACKER::arDetectMarkerLite(ARUint8 *dataPtr, int _thresh, ARMarkerInfo
 		return -1;
 	}
 
-/*
-    limage = arLabeling(dataPtr, _thresh, &label_num, &area, &pos, &clip, &label_ref);
-    if( limage == 0 )    return -1;
-
-    marker_info2 = arDetectMarker2(limage, label_num, label_ref, area, pos, clip, AR_AREA_MAX, AR_AREA_MIN, 1.0, &wmarker_num);
-    if( marker_info2 == 0 ) return -1;
-
-    wmarker_info = arGetMarkerInfo(dataPtr, marker_info2, &wmarker_num, _thresh);
-    if( wmarker_info == 0 ) return -1;
-*/
-	
     for( i = 0; i < wmarker_num; i++ )
         if( wmarker_info[i].cf < 0.5 )
 			wmarker_info[i].id = -1;
 	
-
     *marker_num  = wmarker_num;
     *marker_info = wmarker_info;
-	if (autoThreshold.enable && !autoThreshold.useMultiThreshold)
-		thresh = autoThreshold.calc();
+	
     return 0;
 }
 
