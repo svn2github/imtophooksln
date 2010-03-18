@@ -1,4 +1,4 @@
-<!--
+5<!--
   Copyright (c) 2009 Google inc.
 
   You are free to copy and use this sample.
@@ -17,6 +17,7 @@ google.load("earth", "1");
 var ge = null;
 var multGeoPlacemark;
 var polygonPlacemark;
+var lineStringPlacemark;
 
 function init() {
 
@@ -57,7 +58,7 @@ function initCB(object) {
 //  ge.getFeatures().appendChild(multGeoPlacemark); 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-////  boundaryLineStyle2  //////////////////////////////////////////////////////////////////////
+////  boundaryLineStyle2 & 3  //////////////////////////////////////////////////////////////////////
 // Create the placemark. 
   polygonPlacemark = ge.createPlacemark(''); 
  
@@ -66,36 +67,21 @@ function initCB(object) {
   polygon.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
   polygonPlacemark.setGeometry(polygon); 
  
-  // Add points for the outer shape. 
-//  var outer = ge.createLinearRing(''); 
-//  outer.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
-//  outer.getCoordinates().pushLatLngAlt(LeftTopLat+45, LeftTopLong-90, 500); 
-//  outer.getCoordinates().pushLatLngAlt(LeftDownLat-45, LeftDownLong-90, 500); 
-//  outer.getCoordinates().pushLatLngAlt(RightDownLat-45, RightDownLong+90, 500); 
-//  outer.getCoordinates().pushLatLngAlt(RightTopLat+45, RightTopLong+90, 500); 
-//  polygon.setOuterBoundary(outer); 
- 
-  // Add inner points. 
-//  var inner = ge.createLinearRing(''); 
-//  inner.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
-//  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 500); 
-//  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 500); 
-//  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 500); 
-//  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 500); 
-//  polygon.getInnerBoundaries().appendChild(inner); 
- 
-  //Create a style and set width and color of line 
-//  polygonPlacemark.setStyleSelector(ge.createStyle('')); 
-//  var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
-//  lineStyle.setWidth(5); 
-//  lineStyle.getColor().set('5f0000ff'); 
-  
-//  var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
-//  polyStyle.getColor().set('5f00ffff'); 
- 
-  // Add the placemark to Earth. 
   ge.getFeatures().appendChild(polygonPlacemark);
   
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+////  boundaryLineStyle4  //////////////////////////////////////////////////////////////////////
+// Create the placemark. 
+//  polygonPlacemark = ge.createPlacemark(''); 
+// 
+//  
+//  var polygon = ge.createPolygon(''); 
+//  polygon.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+//  polygonPlacemark.setGeometry(polygon); 
+// 
+//  ge.getFeatures().appendChild(polygonPlacemark);
+//  
 /////////////////////////////////////////////////////////////////////////////////////////////
   
 }
@@ -203,9 +189,59 @@ function boundaryLineStyle2(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
 
 }
 
+function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,RightTopLong,RightTopLat,RightDownLong,RightDownLat) {
+
+  var marginLong = RightTopLong - LeftTopLong;  
+  var marginLat = LeftTopLat - LeftDownLat;
+  
+  // Create the placemark. 
+  var polygonPlacemarkNew = ge.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygon = ge.createPolygon(''); 
+  polygon.setExtrude(true); 
+  polygon.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND); //ge.ALTITUDE_CLAMP_TO_GROUND
+  polygonPlacemarkNew.setGeometry(polygon); 
+ 
+  // Add points for the outer shape. 
+  var outer = ge.createLinearRing(''); 
+  outer.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), 100); 
+  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), 100); 
+  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), 100); 
+  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), 100); 
+  polygon.setOuterBoundary(outer); 
+ 
+  // Add inner points. 
+  var inner = ge.createLinearRing(''); 
+  inner.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 100); 
+  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 100); 
+  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 100); 
+  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 100); 
+  polygon.getInnerBoundaries().appendChild(inner); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkNew.setStyleSelector(ge.createStyle('')); 
+  var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
+  lineStyle.setWidth(5); 
+  lineStyle.getColor().set('7f0000ff'); 
+  
+  var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
+  polyStyle.getColor().set('af00ffff'); 
+ 
+  // Add the placemark to Earth. 
+  ge.getFeatures().appendChild(polygonPlacemarkNew);
+  
+  ge.getFeatures().removeChild(polygonPlacemark); 
+  
+  polygonPlacemark = polygonPlacemarkNew;
+
+}
+
 function remove() {
 
-    ge.getFeatures().removeChild(polygonPlacemark);    
+    ge.getFeatures().removeChild(lineStringPlacemark);    
 
 }
 
