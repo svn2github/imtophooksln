@@ -55,15 +55,16 @@ namespace SocketSystem
                 //strMessage = strMessage.Trim('\0');
                 //Console.WriteLine("commServer: " + strMessage);
                 
-                String[] temp = strMessage.Split('\0');
-                String templong = "";
-                for (int i = 0; i < temp.Length; i++)
-                    templong += temp[i];
+                //String[] temp = strMessage.Split('\0');
+                //String templong = "";
+                //for (int i = 0; i < temp.Length; i++)
+                //    templong += temp[i];
+                //String[] strMessages = { templong };
 
-                String[] strMessages = { templong };
+                String[] strMessages = strMessage.Split('\0');
                 for (int i = 0; i < strMessages.Length; i++)
                 {
-                    //Console.WriteLine(msgs[i]);
+                    Console.WriteLine(strMessages[i]);
 
                     if (strMessages[i].Length > 0)
                     {
