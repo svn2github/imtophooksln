@@ -23,7 +23,7 @@ using namespace System::Drawing;
 using namespace System::Timers;
 using namespace System::Net::Sockets;
 
-using namespace SocketSystem;
+//using namespace SocketSystem;
 /* set up the video format globals */
 
 #ifdef _WIN32
@@ -194,6 +194,8 @@ namespace googleearth {
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
+	private: System::Windows::Forms::Button^  button1;
+	private: System::Windows::Forms::Button^  button2;
 
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
@@ -253,7 +255,8 @@ namespace googleearth {
 		
 
 		private: System::Void setupBrowser(){
-			String^ URL = "file:///C:/googleEarth.html";
+			/*String^ URL = "file:///C:/googleEarth.html";*/
+			String^ URL = "file:///C:/GE.html";
 			this->webBrowser1->Navigate(URL);
 		}
 
@@ -465,7 +468,7 @@ namespace googleearth {
 			}
 		}
 
-	public: static System::Windows::Forms::WebBrowser^  webBrowser1;
+	public: System::Windows::Forms::WebBrowser^  webBrowser1;
 	//private: System::Windows::Forms::Timer^  arTimer;
 	private: System::ComponentModel::IContainer^  components;
 	private: static int temp = 300;
@@ -485,31 +488,55 @@ namespace googleearth {
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
-			webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
+			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->button2 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
 			// 
-			webBrowser1->Dock = System::Windows::Forms::DockStyle::Fill;
-			webBrowser1->Location = System::Drawing::Point(0, 0);
-			webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
-			webBrowser1->Name = L"webBrowser1";
-			webBrowser1->Size = System::Drawing::Size(628, 334);
-			webBrowser1->TabIndex = 0;
-			webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
+			this->webBrowser1->Dock = System::Windows::Forms::DockStyle::Fill;
+			this->webBrowser1->Location = System::Drawing::Point(0, 0);
+			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
+			this->webBrowser1->Name = L"webBrowser1";
+			this->webBrowser1->Size = System::Drawing::Size(628, 334);
+			this->webBrowser1->TabIndex = 0;
+			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
 			// animTimer
 			// 
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
+			// button1
+			// 
+			this->button1->Location = System::Drawing::Point(0, 0);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(75, 23);
+			this->button1->TabIndex = 1;
+			this->button1->Text = L"button1";
+			this->button1->UseVisualStyleBackColor = true;
+			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click_1);
+			// 
+			// button2
+			// 
+			this->button2->Location = System::Drawing::Point(0, 39);
+			this->button2->Name = L"button2";
+			this->button2->Size = System::Drawing::Size(75, 23);
+			this->button2->TabIndex = 2;
+			this->button2->Text = L"button2";
+			this->button2->UseVisualStyleBackColor = true;
+			this->button2->Click += gcnew System::EventHandler(this, &Form1::button2_Click_1);
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(628, 334);
-			this->Controls->Add(webBrowser1);
+			this->Controls->Add(this->button2);
+			this->Controls->Add(this->button1);
+			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
@@ -649,7 +676,7 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLine",parameterB);	
+				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
 				
 				boundaryDirty = false;
 			 }
@@ -692,21 +719,12 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 				 }
 			 }
 		 }
-private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
-			array<Object^>^ parameterB = gcnew array<Object^>(8); 
-			
-			parameterB[0] = LeftTopLong;
-			parameterB[1] = LeftTopLat;
-			parameterB[2] = LeftDownLong;
-			parameterB[3] = LeftDownLat;
-			parameterB[4] = RightTopLong;
-			parameterB[5] = RightTopLat;
-			parameterB[6] = RightDownLong;
-			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);	
+private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs^  e) {
+				webBrowser1->Document->InvokeScript("remove");		
 		 }
-private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
+
+private: System::Void button2_Click_1(System::Object^  sender, System::EventArgs^  e) {
 			array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
@@ -718,7 +736,7 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("remove");	
+			webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
 		 }
 };
 }
