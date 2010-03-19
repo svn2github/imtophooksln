@@ -151,7 +151,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
+				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonlib.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
 				ModuleDefinitionFile=".\SyncFilter.def"

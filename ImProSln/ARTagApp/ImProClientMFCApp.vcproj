@@ -151,9 +151,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbase_mdd.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="strmbase_mdd.lib cv200.lib cxcore200.lib DSBaseClass.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"

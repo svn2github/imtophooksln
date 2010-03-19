@@ -135,9 +135,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbase_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9.lib d3d9.lib winmm.lib comctl32.lib"
+				AdditionalDependencies="strmbase_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9.lib d3d9.lib winmm.lib comctl32.lib DSBaseClass.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib"
+				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib;..\..\bin"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"

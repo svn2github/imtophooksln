@@ -128,6 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/MyLib/leadtool/Include/&quot;;&quot;$(SolutionDir)/HookDrawingFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -150,7 +151,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="strmbase.lib cv200.lib cxcore200.lib highgui200.lib commonLib.lib DSBaseClass.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;;&quot;$(SolutionDir)\MyLib\bin&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
