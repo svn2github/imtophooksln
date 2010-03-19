@@ -1,4 +1,3 @@
-
 #include "ARLayoutCameraDS.h"
 
 ARLayoutCameraDS::ARLayoutCameraDS(void)
@@ -65,7 +64,6 @@ HRESULT ARLayoutCameraDS::ConfigFilters()
 HRESULT ARLayoutCameraDS::ConnectGraph()
 {
 	HRESULT hr;
-	
 	hr = m_pGraph->Connect(m_pARLayoutOutputPin, m_pARWarpInputPin);
 	hr = m_pGraph->Connect(m_pARWarpOutputPin, m_pDXRenderInputPin);
 

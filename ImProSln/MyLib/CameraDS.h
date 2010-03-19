@@ -24,6 +24,8 @@
 #include "dshow.h"
 #include "cv.h"
 #include "DSBase.h"
+#include "DSBaseClass.h"
+
 #define MYFREEMEDIATYPE(mt)	{if ((mt).cbFormat != 0)		\
 					{CoTaskMemFree((PVOID)(mt).pbFormat);	\
 					(mt).cbFormat = 0;						\
@@ -36,7 +38,7 @@
 				}}									
 
 
-class CCameraDS : public CDSBase
+class DSBASECLASSES_API CCameraDS : public CDSBase
 {
 protected:
 	CComPtr<IBaseFilter> m_pDeviceFilter;

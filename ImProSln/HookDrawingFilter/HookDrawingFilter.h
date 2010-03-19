@@ -9,9 +9,7 @@
 #include "IHookDrawingStream.h"
 #include "MSPersist.h"
 #include "MyMediaSample.h"
-// {30A0104E-A12F-4238-9BA4-D195BA8FB58A}
-DEFINE_GUID(CLSID_HookDrawingFilter, 
-			0x30a0104e, 0xa12f, 0x4238, 0x9b, 0xa4, 0xd1, 0x95, 0xba, 0x8f, 0xb5, 0x8a);
+
 #define NUMHOOKPIN 4
 #define RENDERSTEP 2
 class HookDrawingStream : public CMuxTransformStream, public IHookDrawingStream, 

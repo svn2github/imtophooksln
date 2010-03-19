@@ -1,10 +1,10 @@
 #pragma once
-#include "oaidl.h"
-#include "ocidl.h"
+#include "DSBaseClass.h"
 #include <atlbase.h>
 #include "dshow.h"
 
-class CDSBase
+
+class DSBASECLASSES_API CDSBase
 {
 protected:
 	CComPtr<IGraphBuilder> m_pGraph;
@@ -13,8 +13,7 @@ protected:
 	CComPtr<IVideoWindow> m_pVideoWindow;
 
 protected:
-	virtual bool InitDS();
-	virtual bool UnInitDS();
+
 
 	virtual HRESULT ConfigFilters();
 	virtual HRESULT ConnectGraph();
@@ -25,7 +24,8 @@ protected:
 public:
 	CDSBase();
 	virtual ~CDSBase();
-
+	virtual HRESULT InitDS();
+	virtual HRESULT UnInitDS();
 	virtual HRESULT Play();
 	virtual HRESULT Stop();
 	virtual HRESULT Pause();

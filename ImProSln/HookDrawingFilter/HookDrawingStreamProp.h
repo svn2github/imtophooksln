@@ -4,10 +4,6 @@
 #include "streams.h"
 #include "resource.h"
 #include "afxwin.h"
-// {ABD0634D-075F-4f30-8040-67C8703D8DA7}
-DEFINE_GUID(CLSID_HookDrawingStreamPropPage, 
-			0xabd0634d, 0x75f, 0x4f30, 0x80, 0x40, 0x67, 0xc8, 0x70, 0x3d, 0x8d, 0xa7);
-
 
 class HookDrawingStreamPropPage : public CMFCBasePropertyPage
 {

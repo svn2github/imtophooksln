@@ -556,6 +556,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Export.def"
+				>
+			</File>
+			<File
 				RelativePath=".\mtype.cpp"
 				>
 			</File>

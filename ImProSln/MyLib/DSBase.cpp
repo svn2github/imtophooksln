@@ -1,3 +1,4 @@
+
 #include "DSBase.h"
 
 
@@ -17,16 +18,16 @@ CDSBase::~CDSBase()
 	CoUninitialize();
 }
 
-bool CDSBase::UnInitDS()
+HRESULT CDSBase::UnInitDS()
 {
 	m_pGraph = NULL;
 	m_pMediaControl = NULL;
 	m_pMediaEvent = NULL;
 	m_pVideoWindow = NULL;
-	return true;
+	return S_OK;
 }
 
-bool CDSBase::InitDS()
+HRESULT CDSBase::InitDS()
 {
 	HRESULT hr = S_OK;
 	// Create the Filter Graph Manager.
@@ -35,7 +36,7 @@ bool CDSBase::InitDS()
 	hr = ConnectGraph();
 	hr = ConfigFilters();
 
-	return true;
+	return S_OK;
 }
 HRESULT CDSBase::ConfigFilters()
 {

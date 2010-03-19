@@ -1,8 +1,9 @@
 #pragma once
+#include "DSBaseClass.h"
 #include "camerads.h"
 #include "IARTagFilter.h"
 
-class ARTagCameraDS :
+class DSBASECLASSES_API ARTagCameraDS :
 	public CCameraDS
 {
 protected:

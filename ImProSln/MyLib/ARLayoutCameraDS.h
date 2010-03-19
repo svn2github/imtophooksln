@@ -1,12 +1,12 @@
 #pragma once
-
+#include "DSBaseClass.h"
 #include "CameraDS.h"
 #include <InitGuid.h>
 #include "IARLayoutFilter.h"
 #include "IDXRenderer.h"
 #include "IHomoWarpFilter.h"
 
-class ARLayoutCameraDS :
+ class DSBASECLASSES_API ARLayoutCameraDS :
 	public CCameraDS
 {
 protected:

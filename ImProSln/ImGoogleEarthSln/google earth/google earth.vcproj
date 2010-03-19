@@ -60,9 +60,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib"
+				AdditionalDependencies="strmbasd_mdd.lib cv200.lib cxcore200.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib DSBaseClass.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib"
+				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;..\..\OpenCV2.0\lib;..\..\DSLib\lib;..\..\bin"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
@@ -279,64 +279,12 @@
 			Name="ARTag"
 			>
 			<File
-				RelativePath="..\..\MyLib\ARTagCameraDS.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\MyLib\ARTagCameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\MyLib\CameraDS.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\..\MyLib\CameraDS.h"
 				>
-			</File>
-			<File
-				RelativePath="..\..\MyLib\DSBase.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\MyLib\DSBase.h"
