@@ -222,16 +222,16 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 	autoThreshold.reset();
 	map<int, ARMarkerInfo> markerInfoList;
 	vector<int> preferThreshold;
-	WCHAR str[MAX_PATH] = {0};
-	OutputDebugStringW(L"@@@@@@@@@\n");
+	//WCHAR str[MAX_PATH] = {0};
+	//OutputDebugStringW(L"@@@@@@@@@\n");
 	for(int numTries = 0;;)
 	{
 		
 		tmpNumDetected = 0;
 		tmp_markers = NULL;
 		int ret = 0;
-		swprintf_s(str, MAX_PATH, L"@@@@ Use Thresh = %d \n", thresh);
-		OutputDebugStringW(str);
+		//swprintf_s(str, MAX_PATH, L"@@@@ Use Thresh = %d \n", thresh);
+		//OutputDebugStringW(str);
 		if(useDetectLite)
 		{
 			ret = arDetectMarkerLite(const_cast<unsigned char*>(nImage), this->thresh, &tmp_markers, &tmpNumDetected);
@@ -271,14 +271,14 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 			if (autoThreshold.thresholdList.size() > numTries)
 			{
 				thresh = autoThreshold.thresholdList[numTries];
-				swprintf_s(str, MAX_PATH,L"@@@@ Prefer AutoThresh = %d \n", thresh);
-				OutputDebugStringW(str);	
+				//swprintf_s(str, MAX_PATH,L"@@@@ Prefer AutoThresh = %d \n", thresh);
+				//OutputDebugStringW(str);	
 			}
 			else
 			{
 				thresh = (rand() % 230) + 10;
-				swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
-				OutputDebugStringW(str);
+				//swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
+				//OutputDebugStringW(str);
 			}
 			if(++numTries > autoThreshold.numRandomRetries)
 				break;
@@ -290,14 +290,14 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 			else
 			{
 				thresh = (rand() % 230) + 10;
-				swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
-				OutputDebugStringW(str);
+				//swprintf_s(str, MAX_PATH,L"@@@@ rand AutoThresh = %d \n", thresh);
+				//OutputDebugStringW(str);
 				if(++numTries > autoThreshold.numRandomRetries)
 					break;
 			}
 		}
 	}	
-	OutputDebugStringW(L"@@@@@@@@@\n");
+	//OutputDebugStringW(L"@@@@@@@@@\n");
 	if (autoThreshold.enable && autoThreshold.useMultiThreshold)
 	{
 		autoThreshold.thresholdList = preferThreshold;
