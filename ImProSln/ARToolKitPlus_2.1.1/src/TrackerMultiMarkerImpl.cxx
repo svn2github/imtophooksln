@@ -270,10 +270,6 @@ ARMM_TEMPL_TRACKER::calc(const unsigned char* nImage, bool bGuessPose)
 			
 			if (autoThreshold.thresholdList.size() > numTries)
 			{
-				if (thresh == autoThreshold.thresholdList[numTries])
-				{
-
-				}
 				thresh = autoThreshold.thresholdList[numTries];
 				//swprintf_s(str, MAX_PATH,L"@@@@ Prefer AutoThresh = %d \n", thresh);
 				//OutputDebugStringW(str);	
