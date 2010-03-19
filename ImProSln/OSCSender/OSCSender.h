@@ -26,7 +26,7 @@ public:
 	HRESULT AddRef();
 	HRESULT Release();
 
-	void connectSocket(string ip_address, int port);
+	void connectSocket(char* ip_address, int port);
 	void disConnectSocket();
 	bool isConnected();
 	void fingerDown(TouchData data);
@@ -38,7 +38,7 @@ public:
 	void sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2]);
 
 public:
-	string m_ipAddress;
+	char m_ipAddress[MAX_PATH];
 	int m_port;
 protected:
 	OSCSender(void);

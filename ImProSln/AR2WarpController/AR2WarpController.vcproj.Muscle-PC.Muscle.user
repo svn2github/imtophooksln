@@ -9,9 +9,9 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="C:\Program Files\Final Codecs\Codecs\GraphEdit.exe "
+				Command="d:\Projects\ImProSln\tool\GraphEdit.exe "
 				WorkingDirectory=""
-				CommandArguments="D:\Projects\ImProSln\setting\AR2WarpController.grf"
+				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"

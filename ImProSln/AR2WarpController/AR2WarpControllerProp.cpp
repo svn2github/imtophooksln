@@ -102,10 +102,10 @@ bool AR2WarpControllerPropertyPage::GetSetting()
 	{
 		return false;
 	}
-	string ipaddress;
+	char ipaddress[MAX_PATH] = {0};
 	int port = 3333;
 	m_pFilter->GetIPAddress(ipaddress);
-	::SetWindowTextA(m_edIP.GetSafeHwnd(),ipaddress.c_str());
+	::SetWindowTextA(m_edIP.GetSafeHwnd(),ipaddress);
 	WCHAR str[MAX_PATH];
 	port = m_pFilter->GetPort();
 	swprintf(str, MAX_PATH, L"%d", port);
@@ -134,7 +134,6 @@ void AR2WarpControllerPropertyPage::OnBnClickedBtnconnect()
 	}
 	char addressIP[MAX_PATH] = {0};
 	::GetWindowTextA(m_edIP.GetSafeHwnd(), addressIP, MAX_PATH);
-	string strAddressIP = addressIP;
 	int port = 3333;
 	WCHAR str[MAX_PATH];
 	m_edPort.GetWindowText(str, MAX_PATH);
@@ -145,7 +144,7 @@ void AR2WarpControllerPropertyPage::OnBnClickedBtnconnect()
 	}
 	else
 	{
-		m_pFilter->ConnectOSC(strAddressIP, port);
+		m_pFilter->ConnectOSC(addressIP, port);
 	}
 	GetSetting();
 }

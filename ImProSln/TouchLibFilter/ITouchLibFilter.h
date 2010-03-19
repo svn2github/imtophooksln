@@ -24,9 +24,9 @@ public:
 	virtual void registerListener(ITouchListener *listener);
 	virtual void unregisterListener(ITouchListener *listener);
 	virtual bool IsOSCConnected();
-	virtual bool ConnectOSC(string ipaddress, int port);
+	virtual bool ConnectOSC(char* ipaddress, int port);
 	virtual bool DisConnectOSC();
-	virtual bool GetIPAddress(string& outIpAddress);
+	virtual bool GetIPAddress(char* outIpAddress);
 	virtual int GetPort();
 	virtual bool IsTouchReady();
 	virtual bool ClearBackground();

@@ -946,7 +946,7 @@ bool TouchLibFilter::IsOSCConnected()
 {
 	return m_oscSender->isConnected();
 }
-bool TouchLibFilter::ConnectOSC(string ipaddress, int port)
+bool TouchLibFilter::ConnectOSC(char* ipaddress, int port)
 {
 	if (m_oscSender->isConnected())
 	{
@@ -960,9 +960,9 @@ bool TouchLibFilter::DisConnectOSC()
 	m_oscSender->disConnectSocket();
 	return true;
 }
-bool TouchLibFilter::GetIPAddress(string& outIpAddress)
+bool TouchLibFilter::GetIPAddress(char* outIpAddress)
 {
-	outIpAddress = m_oscSender->m_ipAddress;
+	strcpy_s(outIpAddress, MAX_PATH, m_oscSender->m_ipAddress);
 	return true;
 }
 int TouchLibFilter::GetPort()

@@ -35,7 +35,8 @@ OSCSender::OSCSender(void)
 {	
 	m_transmitSocket = NULL;
 	m_frameSeq = 0;
-	m_ipAddress = "127.0.0.1";
+	memset(m_ipAddress, 0, sizeof(char)*MAX_PATH);
+	sprintf_s(m_ipAddress, MAX_PATH, "127.0.0.1");
 	m_port = 3333;
 }
 
@@ -47,17 +48,18 @@ OSCSender::~OSCSender(void)
 		m_transmitSocket = NULL;
 	}
 }
-void OSCSender::connectSocket(std::string ip_address, int port)
+void OSCSender::connectSocket(char* ip_address, int port)
 {			
 	if (m_transmitSocket != NULL)
 	{
 		delete m_transmitSocket;
 		m_transmitSocket = NULL;
 	}
-	m_transmitSocket = new UdpTransmitSocket( IpEndpointName( ip_address.c_str(), port ) );
+
+	m_transmitSocket = new UdpTransmitSocket( IpEndpointName( ip_address, port ) );
 	m_frameSeq = 0;
 	m_port = port;
-	m_ipAddress = ip_address;
+	strcpy_s(m_ipAddress, ip_address);
 }
 void OSCSender::disConnectSocket()
 {

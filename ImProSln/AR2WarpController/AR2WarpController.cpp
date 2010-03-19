@@ -1231,7 +1231,7 @@ bool AR2WarpController::IsOSCConnected()
 {
 	return m_pOSCSender->isConnected();
 }
-bool AR2WarpController::ConnectOSC(string ipaddress, int port)
+bool AR2WarpController::ConnectOSC(char* ipaddress, int port)
 {
 	if (m_pOSCSender->isConnected())
 	{
@@ -1245,9 +1245,9 @@ bool AR2WarpController::DisConnectOSC()
 	m_pOSCSender->disConnectSocket();
 	return true;
 }
-bool AR2WarpController::GetIPAddress(string& outIpAddress)
+bool AR2WarpController::GetIPAddress(char* outIpAddress)
 {
-	outIpAddress = m_pOSCSender->m_ipAddress;
+	strcpy_s(outIpAddress, MAX_PATH, m_pOSCSender->m_ipAddress);
 	return true;
 }
 int AR2WarpController::GetPort()
