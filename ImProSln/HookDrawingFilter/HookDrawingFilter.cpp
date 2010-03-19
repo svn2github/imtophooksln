@@ -289,10 +289,10 @@ HRESULT HookDrawingFilter::CreatePins()
 		if (m_pD3DDisplay == NULL)
 		{
 			CreateHookWindow(320, 240); // size doesn't matter
-			HRESULT hr = initD3D(1024, 768);
+			HRESULT hr = initD3D(1600, 600);
 			if (SUCCEEDED(hr))
 			{
-				hr = CreateInTexture(2048, 768);
+				hr = CreateInTexture(1600, 600);
 				HOOKINJECT::SetHookServer(m_hHookRecMsgWnd);
 				HOOKINJECT::SetHookServerProcID(GetCurrentProcessId());
 			}
@@ -684,7 +684,7 @@ HRESULT HookDrawingFilter::initD3D(UINT rtWidth, UINT rtHeight )
 {
 	HRESULT hr;
 	hr = __super::initD3D(rtWidth, rtHeight);
-	hr = initAddTextures(1024, 768);
+	hr = initAddTextures(800, 600);
 	return hr;
 	
 }
