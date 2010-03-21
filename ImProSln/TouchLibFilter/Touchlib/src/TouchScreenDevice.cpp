@@ -5,7 +5,7 @@ using namespace touchlib;
 
 CTouchScreen *TouchScreenDevice::tscreen = 0;
 
-ITouchScreen *TouchScreenDevice::getTouchScreen(float cw, float ch)
+ITouchScreen *TouchScreenDevice::getTouchScreen(int cw, int ch)
 {
 	if(!tscreen)
 	{

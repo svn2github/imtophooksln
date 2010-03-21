@@ -36,6 +36,8 @@ public:
 	virtual bool setDrawFingers(bool drawing);
 	virtual bool getDrawROI();
 	virtual bool setDrawROI(bool drawing);
+	virtual int getNumFrameFix();
+	virtual bool setNumFrameFix(int nFrame);
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);

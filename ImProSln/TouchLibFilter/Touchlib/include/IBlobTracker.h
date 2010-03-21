@@ -18,7 +18,8 @@ public:
 	IBlobTracker();
 
 	// ----  pure virtual functions  -----------------------------------------
-
+	virtual int getNumFrameFix() = 0;
+	virtual bool setNumFrameFix(int nFrame) = 0;
 	virtual bool findBlobs(BwImage& frame) = 0;
 	virtual void trackBlobs() = 0;
 	virtual void gatherEvents() = 0;

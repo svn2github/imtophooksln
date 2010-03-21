@@ -21,6 +21,8 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CKFingerFlipY, m_ckFingerFlipY);
 	DDX_Control(pDX, IDC_CKDrawROI, m_ckDrawROI);
 	DDX_Control(pDX, IDC_CKSkipBG, m_ckSkipBGRemove);
+	DDX_Control(pDX, IDC_SLRNUMFRAMEFIX, m_slrNumFrameFix);
+	DDX_Control(pDX, IDC_TXTNumFrameFix, m_txtNumFrameFix);
 }
 
 
@@ -35,6 +37,8 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_CKFingerFlipY, &TouchLibPropPage::OnBnClickedCkfingerflipy)
 	ON_BN_CLICKED(IDC_CKDrawROI, &TouchLibPropPage::OnBnClickedCkdrawroi)
 	ON_BN_CLICKED(IDC_CKSkipBG, &TouchLibPropPage::OnBnClickedCkskipbg)
+	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnTRBNThumbPosChangingSlrnumframefix)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnNMCustomdrawSlrnumframefix)
 END_MESSAGE_MAP()
 
 
@@ -92,6 +96,8 @@ HRESULT TouchLibPropPage::OnActivate(void)
 	if (m_pFilter != NULL && m_pFilter->IsTouchReady())
 	{
 		EnableWindow(TRUE);
+		m_slrNumFrameFix.SetRangeMin(0, TRUE);
+		m_slrNumFrameFix.SetRangeMax(15, TRUE);
 		GetSetting();
 	}
 	else
@@ -212,6 +218,9 @@ bool TouchLibPropPage::GetSetting()
 	m_ckFingerFlipY.SetCheck(m_pFilter->GetbFlipY());
 	m_ckDrawROI.SetCheck(m_pFilter->getDrawROI());
 	m_ckSkipBGRemove.SetCheck(m_pFilter->GetIsSkipBGRemove());
+	m_slrNumFrameFix.SetPos(m_pFilter->getNumFrameFix());
+	swprintf_s(str, MAX_PATH, L"%d", m_pFilter->getNumFrameFix());
+	m_txtNumFrameFix.SetWindowText(str);
 	if (m_pFilter->IsOSCConnected())
 	{
 		m_edIP.EnableWindow(FALSE);
@@ -299,4 +308,27 @@ void TouchLibPropPage::OnBnClickedCkskipbg()
 	if (m_pFilter == NULL)
 		return;
 	m_pFilter->SetIsSKipBGRemove(m_ckSkipBGRemove.GetCheck());
+}
+
+void TouchLibPropPage::OnTRBNThumbPosChangingSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// This feature requires Windows Vista or greater.
+	// The symbol _WIN32_WINNT must be >= 0x0600.
+	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+}
+
+void TouchLibPropPage::OnNMCustomdrawSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	if (m_pFilter == NULL)
+		return;
+	WCHAR str[MAX_PATH];
+	int numFrameFix = m_slrNumFrameFix.GetPos();
+	m_pFilter->setNumFrameFix(numFrameFix);
+	swprintf_s(str, MAX_PATH, L"%d", numFrameFix);
+	m_txtNumFrameFix.SetWindowText(str);
 }

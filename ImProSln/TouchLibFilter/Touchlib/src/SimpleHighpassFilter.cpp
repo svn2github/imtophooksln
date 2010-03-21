@@ -1,5 +1,7 @@
 #include <SimpleHighpassFilter.h>
 #include <highgui.h>
+#include <algorithm>
+using namespace std;
 
 
 // ----  initialization of non-integral constants  ----------------------------

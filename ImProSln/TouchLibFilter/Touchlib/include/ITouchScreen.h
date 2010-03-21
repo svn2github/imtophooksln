@@ -102,6 +102,8 @@ namespace touchlib
 
 		virtual bool setDrawROI(bool bDraw) = 0;
 		virtual bool getDrawROI() = 0;
+		virtual int getNumFrameFix() = 0;
+		virtual bool setNumFrameFix(int nFrame) = 0;
 	};
 
 }

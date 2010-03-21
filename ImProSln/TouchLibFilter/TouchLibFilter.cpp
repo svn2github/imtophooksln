@@ -354,7 +354,7 @@ HRESULT TouchLibFilter::GetPages(CAUUID *pPages)
 	return S_OK;
 }
 
-bool TouchLibFilter::CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove)
+bool TouchLibFilter::CreateTouchScreen(int cw, int ch, bool bSkipbackgroundRemove)
 {
 	CAutoLock lck(&m_csTouchScreen);
 	if (m_pTouchScreen != NULL)
@@ -1057,7 +1057,25 @@ bool TouchLibFilter::setDrawROI(bool drawing)
 	CAutoLock lck(&m_csTouchScreen);
 	return m_pTouchScreen->setDrawROI(drawing);
 }
-
+int TouchLibFilter::getNumFrameFix()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	return m_pTouchScreen->getNumFrameFix();
+}
+bool TouchLibFilter::setNumFrameFix(int nFrame)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	m_pTouchScreen->setNumFrameFix(nFrame);
+	return true;
+}
 HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 {
 	FILE* filestream = NULL;

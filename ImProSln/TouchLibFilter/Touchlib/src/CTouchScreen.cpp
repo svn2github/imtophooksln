@@ -32,74 +32,10 @@ pthread_mutex_t CTouchScreen::eventListMutex = PTHREAD_MUTEX_INITIALIZER;
 
 // FIXME: Maybe some of this calibration stuff should be moved to the config app
 
-CTouchScreen::CTouchScreen()
+CTouchScreen::CTouchScreen(int cw, int ch) : m_imgW(cw), m_imgH(ch)
 {
 	// Initialize BwImage frame
-	frame = 0;
-	pTrackingFrame = NULL;
-	bDrawFinger = true;
-	bDrawROI = true;
-	pBlackImage = NULL;
-	pROIMergeResult = NULL;
-	hThread = 0;
-	eventListMutex = 0;
-#ifdef WIN32
-	tracker = 0;	// just reset the pointer to be safe...
-	eventListMutex = CreateMutex(NULL, 0, NULL);	// Initialize Windows mutex
-#else
-	pthread_mutex_init(&eventListMutex, NULL);	// Initialize Linux/Apple mutex
-#endif
-
-/** These are all initializations of default config.xml variables	*/
-	reject_distance_threshold = 250;	// The distance and
-	reject_min_dimension = 2;			// min
-	reject_max_dimension = 250;			// max dimension limits on blobs
-
-	ghost_frames = 0;
-	minimumDisplacementThreshold = IBlobTracker::DEFAULT_MINIMUM_DISPLACEMENT_THRESHOLD;
-
-	screenBB = rect2df(vector2df(0.0f, 0.0f), vector2df(1.0f, 1.0f));	// Initialize the screen bounding box
-	initScreenPoints();		// Calculates the calibration points based on a 4:3 aspect ratio
-	initCameraPoints();		// Calculates the camera resolution or defaults to 640x480
-
-	debugMode = true;		// Initialization assumes you want to show trackbar sliders in your windows for manual calibration
-	bTracking = false;		// We are not yet tracking any blobs, so we initialize this flag to false
-
-	screenMesh.recalcBoundingBox();		// Initialize the screen mesh
-
-	// Initialize the triangles[72] with the [GRID_X * GRID_Y * 2t * 3i] indices for the points
-	int i,j;
-	int t = 0;
-	for(j=0; j<GRID_Y; j++)
-	{
-		for(i=0; i<GRID_X; i++)
-		{
-			triangles[t+0] = (i+0) + ((j+0) * (GRID_X+1));
-			triangles[t+1] = (i+1) + ((j+0) * (GRID_X+1));
-			triangles[t+2] = (i+0) + ((j+1) * (GRID_X+1));
-
-			t += 3;
-
-			triangles[t+0] = (i+1) + ((j+0) * (GRID_X+1));
-			triangles[t+1] = (i+1) + ((j+1) * (GRID_X+1));
-			triangles[t+2] = (i+0) + ((j+1) * (GRID_X+1));
-
-			t += 3;
-		}
-	}
-
-
-	bCalibrating = false;		// Set the calibration flag to false (toggled when recording finger data as new mesh points)
-	calibrationStep = 0;		// Start at the beginning
-
-
-	this->tracker = NULL;	// create a default blob tracker
-        setBlobTracker(new CBlobTracker());
-}
-
-CTouchScreen::CTouchScreen(float cw, float ch)
-{
-	// Initialize BwImage frame
+	
 	frame = 0;
 	pTrackingFrame = NULL;
 	bDrawFinger = false;
@@ -225,7 +161,19 @@ CTouchScreen::~CTouchScreen()
 		pROIMergeResult = NULL;
 	}
 }
-
+int CTouchScreen::getNumFrameFix()
+{
+	if (tracker == NULL)
+		return 0;
+	return tracker->getNumFrameFix();
+}
+bool CTouchScreen::setNumFrameFix(int nFrame)
+{
+	if (tracker == NULL)
+		return 0;
+	tracker->setNumFrameFix(nFrame);
+	return true;
+}
 void CTouchScreen::initScreenPoints()
 {
 	int p = 0;	// Create some local variable placeholders
@@ -837,12 +785,13 @@ bool CTouchScreen::drawROIs(IplImage* img, ROIData* roiData)
 	float x =0, y = 0, width = 0, height = 0;
 	for (int i =0; i< roiData->m_nRECTs; i++)
 	{
-		x = roiData->m_pRECTs[i].left * img->width;
-		y = roiData->m_pRECTs[i].top * img->height;
-		width = (roiData->m_pRECTs[i].right - roiData->m_pRECTs[i].left)*img->width;
-		height = (roiData->m_pRECTs[i].bottom - roiData->m_pRECTs[i].top)*img->height;
+		x = roiData->m_pRECTs[i].left * (img->width-1);
+		y = roiData->m_pRECTs[i].top * (img->height-1);
+		width = (roiData->m_pRECTs[i].right - roiData->m_pRECTs[i].left)*(img->width-1);
+		height = (roiData->m_pRECTs[i].bottom - roiData->m_pRECTs[i].top)*(img->height-1);
 		cvDrawRect(img, cvPoint(x,y), 
 			cvPoint(x + width, y + height), cvScalar(0, 255, 0), 3);
+		
 	}
 	return true;
 }

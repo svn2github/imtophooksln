@@ -73,7 +73,7 @@ protected:
 	OSCSender* m_oscSender;
 	CCritSec m_csFilterState;
 protected:
-	bool CreateTouchScreen(float cw, float ch, bool bSkipbackgroundRemove = false);
+	bool CreateTouchScreen(int cw, int ch, bool bSkipbackgroundRemove = false);
 	bool IsAcceptedType(const CMediaType *pmt);
 public:
 	TouchLibFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
@@ -95,7 +95,8 @@ public:
 	virtual bool setDrawFingers(bool drawing);
 	virtual bool getDrawROI();
 	virtual bool setDrawROI(bool drawing);
-
+	virtual int getNumFrameFix();
+	virtual bool setNumFrameFix(int nFrame);
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);

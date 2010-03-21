@@ -72,4 +72,8 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedCkdrawroi();
 	CButton m_ckSkipBGRemove;
 	afx_msg void OnBnClickedCkskipbg();
+	CSliderCtrl m_slrNumFrameFix;
+	afx_msg void OnTRBNThumbPosChangingSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMCustomdrawSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult);
+	CStatic m_txtNumFrameFix;
 };

@@ -12,7 +12,7 @@
 #include "TouchData.h"
 
 #include "IBlobTracker.h"
-
+#include "cv.h"
 
 #define HISTORY_FRAMES	10
 #define MAX_NUMFINGER 12
@@ -54,12 +54,32 @@ namespace touchlib
 	class CFinger : public CBlob
 	{
 	public:
+		int ID;
+		vector2df delta;
+		vector2df predictedPos;
+		vector2df displacement;
+		float deltaArea;
+		bool markedForDeletion;
+		int framesLeft;
+		bool bGeneratedByKalman;
+
+		std::vector<float> error;
+		std::vector<int> closest;		// ID's of the closest points, sorted..
+	public:
 		CFinger() 
 		{
 			ID = -1;
 			markedForDeletion = false;
 			framesLeft = 0;
-
+			
+			delta.X = 0;
+			delta.Y = 0;
+			predictedPos.X = 0;
+			predictedPos.Y = 0;
+			displacement.X = 0;
+			displacement.Y = 0;
+			deltaArea = 0;
+			bGeneratedByKalman = false;
 		}
 
 		CFinger(const CBlob &b)
@@ -71,6 +91,16 @@ namespace touchlib
 			angle = b.angle;
 			weight = b.weight;
 			tagID = b.tagID;
+
+			delta.X = 0;
+			delta.Y = 0;
+			predictedPos.X = 0;
+			predictedPos.Y = 0;
+			displacement.X = 0;
+			displacement.Y = 0;
+			deltaArea = 0;
+			bGeneratedByKalman = false;
+
 		}
 
 		int getLowestError()
@@ -111,45 +141,63 @@ namespace touchlib
 			return data;
 		};
 
-		int ID;
 
-		vector2df delta;
-		vector2df predictedPos;
-
-		vector2df displacement;
-
-		float deltaArea;
-
-		bool markedForDeletion;
-		int framesLeft;
-
-		std::vector<float> error;
-		std::vector<int> closest;		// ID's of the closest points, sorted..
 	};
 
 
-
+	class FingerKalman
+	{
+	private:
+		CvKalman* generateKalman();
+		
+	protected:
+		CvKalman* m_kalman;
+		CvKalman* m_tmpKalman;
+		CFinger m_lastFinger;
+		//float m_lastVx;
+		//float m_lastVy;
+	public:
+		int m_lostTimes;
+	public:
+		FingerKalman();
+		~FingerKalman();
+		BOOL init(const CFinger* curFinger);
+		BOOL update(const CFinger* curFinger);
+		BOOL predict(int dt, float* posX, float* posY, float* vX = NULL, float* vY = NULL, float* aX = NULL, float* aY = NULL);
+		BOOL GetLastFinger(CFinger* finger);
+		
+	};
 	class  CBlobTracker : public IBlobTracker
 	{
 	public:
 		CBlobTracker();
-
+		~CBlobTracker();
+		virtual int getNumFrameFix() { return m_nKalmanFix;}
+		virtual bool setNumFrameFix(int nFrame) { m_nKalmanFix = nFrame; return true;};
 		bool findBlobs(BwImage &img);
 		void trackBlobs();
 		void gatherEvents();
 		std::vector<CvRect>* GetForeground()
 		{	return &foregroundLists;	};
 		bool drawFingers(IplImage* img);
-
+		
 	private:
 		inline void permute2(int k);
 		inline bool checkValid(int start);
 		inline bool checkValidNew(int start);
+		
+	
 
 		int level;
 		float getError(CFinger &old, CFinger &cur);
-
-
+		//Kalman filter tracking & predict
+		int m_nKalmanFix;
+		std::map<int, FingerKalman*> m_fKalman; //ID, kalman, missing times		
+		BOOL updateFingerKalman(const CFinger* curFinger);
+		BOOL updateAllFingerKalman();
+		BOOL correctLostFingerByKalman();
+		BOOL findOldFinger(int _id, CFinger& finger);
+		BOOL findCurFinger(int _id, CFinger& finger);
 #ifdef WIN32
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html
 #endif
@@ -163,6 +211,7 @@ namespace touchlib
 		std::vector<std::vector<CFinger> > history;
 		std::vector<CBlob> blobList;
 		std::vector<CFinger> current;
+
 		std::vector<CvRect> foregroundLists;
 #ifdef WIN32
 #pragma warning( default : 4251 )

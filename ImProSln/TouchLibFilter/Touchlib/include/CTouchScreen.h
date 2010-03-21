@@ -25,8 +25,7 @@ namespace touchlib
 	class CTouchScreen : public ITouchScreen, public ITouchListener
 	{
 	public:
-		CTouchScreen();
-		CTouchScreen(float cw, float ch);
+		CTouchScreen(int cw, int ch);
 		~CTouchScreen();
 
 // ITouchScreen
@@ -108,7 +107,8 @@ namespace touchlib
 		
 		virtual bool setDrawROI(bool bDraw) { bDrawROI = bDraw; return true;};
 		virtual bool getDrawROI() { return bDrawROI;};
-
+		virtual int getNumFrameFix();
+		virtual bool setNumFrameFix(int nFrame);
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
 		virtual IplImage* getFilterImage(int step);
@@ -166,6 +166,7 @@ namespace touchlib
 #ifdef WIN32
 #pragma warning( disable : 4251 )  // http://www.unknownroad.com/rtfm/VisualStudio/warningC4251.html
 #endif
+		float m_imgW, m_imgH;
 		IplImage* pTrackingFrame;
 		IplImage* pBlackImage;
 		IplImage* pROIMergeResult;

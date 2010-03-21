@@ -24,10 +24,24 @@ using namespace touchlib;
 
 CBlobTracker::CBlobTracker() : IBlobTracker()
 {
+
 	currentID = 1;
 	extraIDs = 0;
+	m_nKalmanFix = 2;
 }
+CBlobTracker::~CBlobTracker()
+{
 
+	for (map<int, FingerKalman*>::iterator iter = m_fKalman.begin(); iter != m_fKalman.end(); iter++)
+	{
+		if (iter->second != NULL)
+		{
+			delete iter->second;
+			iter->second = NULL;
+		}
+	}
+	m_fKalman.clear();
+}
 // stolen from opencv - squares.c sample
 // helper function:
 // finds a cosine of angle between vectors
@@ -411,7 +425,7 @@ void CBlobTracker::trackBlobs()
 				current[i].ID = (*prev)[matrix[best_error_ndx][i]].ID;
 			else
 				current[i].ID = -1;
-
+			
 			if(current[i].ID != -1)
 			{
 				CFinger *oldfinger = &(*prev)[matrix[best_error_ndx][i]];
@@ -425,12 +439,13 @@ void CBlobTracker::trackBlobs()
 				current[i].predictedPos = current[i].center;
 				current[i].displacement = vector2df(0.0f, 0.0f);
 			}
+			
 		}
 
 		//printf("Best index = %d\n", best_error_ndx);
 	}
-
-
+	updateAllFingerKalman();
+	correctLostFingerByKalman();
 }
 
 void CBlobTracker::gatherEvents()
@@ -506,18 +521,45 @@ bool CBlobTracker::drawFingers(IplImage* img)
 	{
 		return false;
 	}
+	char str[MAX_PATH] = {0};
 	float x =0, y = 0, width = 0, height = 0;
+	CvScalar color;
 	for (int i =0; i< current.size(); i++)
 	{
 		x = current[i].box.getCenter().X ;
 		y = current[i].box.getCenter().Y ;
 		width = current[i].box.getWidth();
 		height = current[i].box.getHeight();
+		if (current[i].bGeneratedByKalman)
+		{
+			color = cvScalar(0,255,255);
+		}
+		else
+		{
+			color = cvScalar(0, 0, 255);
+		}
 		cvDrawRect(img, cvPoint(x - 0.5*width, y-0.5*height), 
-			cvPoint(x+ 0.5*width, y+0.5*height), cvScalar(0, 0, 255), 3);
+			cvPoint(x+ 0.5*width, y+0.5*height), color, 1);
+		sprintf_s(str, MAX_PATH, "%d\0", current[i].ID);
+		cvPutText(img, str, cvPoint(x, y), &cvFont(1), color);
+		
+		int fID = current[i].ID;
+		float posX = 0, posY = 0;
+	
+		if (fID != -1)
+		{
+			FingerKalman* kalman = m_fKalman[fID];
+			for (int i = 0; i < 5; i ++)
+			{
+				kalman->predict(i*12, &posX, &posY);
+				cvDrawCircle(img, cvPoint(posX, posY), 0.5*width, cvScalar(255,255,0));
+			}
+		}
 	}
 	return true;
 }
+
+
 inline void CBlobTracker::permute2(int start)
 {  
   if (start == ids.size()) 
@@ -608,3 +650,244 @@ float CBlobTracker::getError(CFinger &old, CFinger &cur)
 	return (float) dev.getLength();
 }
 
+BOOL CBlobTracker::updateFingerKalman(const CFinger* curFinger)
+{
+	if (curFinger == NULL || curFinger->ID == -1) 
+		return FALSE;
+	int fID = curFinger->ID;
+	if (m_fKalman.find(fID) == m_fKalman.end())
+	{
+		FingerKalman* kalman = new FingerKalman();
+		kalman->init(curFinger);
+		m_fKalman[fID] = kalman;
+		return TRUE;
+	}
+	else
+	{
+		m_fKalman[fID]->update(curFinger);
+		return TRUE;
+	}
+	return TRUE;
+}
+BOOL CBlobTracker::updateAllFingerKalman()
+{
+	int fID = -1;
+	for (map<int, FingerKalman*>::iterator iter = m_fKalman.begin(); iter != m_fKalman.end(); iter++)
+	{
+		iter->second->m_lostTimes++;
+	}
+	for ( int i =0; i < current.size(); i++)
+	{
+		fID = current[i].ID;
+		if (fID == -1)
+		{
+			continue;
+		}
+		updateFingerKalman(&current[i]);
+		m_fKalman[fID]->m_lostTimes = 0;
+	}
+	return TRUE;
+}
+BOOL CBlobTracker::findOldFinger(int _id, CFinger& finger)
+{
+	int hSize = history.size();
+	if (hSize <= 0)
+		return FALSE;
+
+	for (int i =0; i < history[hSize-1].size(); i++)
+	{
+		if (history[hSize-1][i].ID == _id)
+		{
+			finger = history[hSize-1][i];
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+BOOL CBlobTracker::findCurFinger(int _id, CFinger& finger)
+{
+	for (int i =0; i < current.size(); i++)
+	{
+		if (current[i].ID == _id)
+		{
+			finger = current[i];
+			return TRUE;
+		}
+	}
+	return FALSE;
+}
+BOOL CBlobTracker::correctLostFingerByKalman()
+{
+	vector<CFinger> fixedFingers;
+	vector<int> removeKalmanID;
+	for(map<int, FingerKalman*>::iterator iter = m_fKalman.begin(); iter != m_fKalman.end(); iter++)
+	{
+		if (iter->second->m_lostTimes > 0)
+		{
+			CFinger ffinger;
+			iter->second->GetLastFinger(&ffinger);
+			int fID = ffinger.ID;
+			if (iter->second->m_lostTimes > m_nKalmanFix)
+			{
+				removeKalmanID.push_back(fID);
+				continue;
+			}
+			
+			float posX =0, posY =0;
+			m_fKalman[fID]->predict(1, &posX, &posY);
+			ffinger.center.X = posX;
+			ffinger.center.Y = posY;
+			float halfx = (ffinger.box.lowerRightCorner.X - ffinger.box.upperLeftCorner.X)*0.5;
+			float halfy = (ffinger.box.lowerRightCorner.Y - ffinger.box.upperLeftCorner.Y)*0.5;
+			ffinger.box.upperLeftCorner.set(ffinger.center.X-halfx, ffinger.center.Y-halfy);
+			ffinger.box.lowerRightCorner.set(ffinger.center.X+halfx, ffinger.center.Y+halfy);
+
+			m_fKalman[fID]->update(&ffinger);
+			
+			fixedFingers.push_back(ffinger);
+			
+		}
+	}
+	for (int i =0; i < removeKalmanID.size(); i++)
+	{
+		int key = removeKalmanID[i];
+		if (m_fKalman[key] != NULL)
+		{
+			delete m_fKalman[key];
+			m_fKalman[key] = NULL;
+		}
+		m_fKalman.erase(key);
+	}
+	for (int i =0; i < fixedFingers.size(); i++)
+	{
+		current.push_back(fixedFingers[i]);
+	}
+	return TRUE;
+}
+FingerKalman::FingerKalman() 
+{
+	m_kalman = generateKalman();
+	m_tmpKalman = generateKalman();
+	m_lostTimes = 0;
+	//m_lastVx = 0;
+	//m_lastVy = 0;
+}
+FingerKalman::~FingerKalman()
+{
+	if (m_kalman != NULL)
+	{
+		cvReleaseKalman(&m_kalman);
+		m_kalman = NULL;
+	}
+	if (m_tmpKalman != NULL)
+	{
+		cvReleaseKalman(&m_tmpKalman);
+		m_tmpKalman = NULL;
+	}
+}
+
+CvKalman* FingerKalman::generateKalman()
+{
+	const float A[] = { 1, 0, 1, 0,// 0, 0,   // 1*x + 0*y + 1*Vx + 0*Vy + 0Ax + 0Ay= x
+						0, 1, 0, 1,//	0, 0,   // 0*x + 1*y + 0*Vx + 1*Vy + 0Ax + 0Ay = y
+						0, 0, 1, 0,// 1, 0,   // 0*x + 0*y + 1*Vx + 0*Vy + 1Ax + 0Ay = Vx
+						0, 0, 0, 1};// 0, 1,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Vy
+	                    //0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
+						//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
+	CvKalman* retKalman = NULL;
+	retKalman = cvCreateKalman( 4, 4, 0 );
+
+	memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
+	cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
+	cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
+	cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
+	cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
+
+	return retKalman;
+}
+
+BOOL FingerKalman::init(const CFinger* curFinger)
+{
+	if (m_kalman == NULL || curFinger == NULL)
+		return FALSE;
+	/* state is (x, y, vx, vy, ax, ay )*/
+	m_kalman->state_post->data.fl[0] = curFinger->center.X ;
+	m_kalman->state_post->data.fl[1] = curFinger->center.Y ;
+	m_kalman->state_post->data.fl[2] = 0;
+	m_kalman->state_post->data.fl[3] = 0;
+	//m_kalman->state_post->data.fl[4] = 0;
+	//m_kalman->state_post->data.fl[5] = 0;
+
+	m_lastFinger = *curFinger;
+	return TRUE;
+}
+BOOL FingerKalman::update(const CFinger* curFinger)
+{
+	if (m_kalman == NULL || curFinger == NULL)
+		return FALSE;
+	//measure: x, y
+	CvMat* measurement = cvCreateMat( 4, 1, CV_32FC1 );
+	float posX = curFinger->center.X ;
+	float posY = curFinger->center.Y ;
+	float vX = curFinger->center.X - m_lastFinger.center.X;
+	float vY = curFinger->center.Y - m_lastFinger.center.Y;
+	//float aX = vX - m_lastVx;
+	//float aY = vY - m_lastVy;
+	measurement->data.fl[0] = posX;
+	measurement->data.fl[1] = posY;
+	measurement->data.fl[2] = vX;
+	measurement->data.fl[3] = vY;
+	//measurement->data.fl[4] = 0;//aX;
+	//measurement->data.fl[5] = 0;//aY;
+	
+	//m_lastVx = vX;
+	//m_lastVy = vY;
+
+	cvKalmanCorrect(m_kalman, measurement);
+	cvReleaseMat(&measurement);
+	measurement = NULL;
+	m_lastFinger = *curFinger;
+	return TRUE;
+}
+
+BOOL FingerKalman::predict(int dt, float* posX, float* posY, float* vX, float* vY, float* aX, float* aY)
+{
+	if (m_kalman == NULL || posX == NULL || posY == NULL || dt <= 0)
+		return FALSE;
+	const float A[] = { 1, 0, dt, 0,// 0, 0,   // 1*x + 0*y + t*Vx + 0*Vy + 0Ax + 0Ay= x
+		0, 1, 0, dt,//0, 0,   // 0*x + 1*y + 0*Vx + t*Vy + 0Ax + 0Ay = y
+		0, 0, 1, 0, //dt, 0,  // 0*x + 0*y + 1*Vx + 0*Vy + tAx + 0Ay = Vx
+		0, 0, 0, 1};// 0, dt,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + tAy = Vy
+		//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
+		//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
+	const float orgA[] = { 1, 0, 1, 0,// 0, 0,   // 1*x + 0*y + 1*Vx + 0*Vy + 0Ax + 0Ay= x
+		0, 1, 0, 1, //0, 0,   // 0*x + 1*y + 0*Vx + 1*Vy + 0Ax + 0Ay = y
+		0, 0, 1, 0, //1, 0,   // 0*x + 0*y + 1*Vx + 0*Vy + 1Ax + 0Ay = Vx
+		0, 0, 0, 1}; //0, 1,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Vy
+		//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
+		//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
+	memcpy( m_kalman->transition_matrix->data.fl, A, sizeof(A));
+	
+	const CvMat* predictResult = cvKalmanPredict(m_kalman, NULL);
+ 	*posX = predictResult->data.fl[0];
+	*posY = predictResult->data.fl[1];
+	if (vX != NULL)
+		*vX = predictResult->data.fl[2];
+	if (vY != NULL)
+		*vY = predictResult->data.fl[3];	
+	//if (aX != NULL)
+	//	*aX = predictResult->data.fl[4] * (m_imgW - 1);
+	//if (aY != NULL)
+	//	*aY = predictResult->data.fl[5] * (m_imgH - 1);
+	memcpy( m_kalman->transition_matrix->data.fl, orgA, sizeof(orgA));
+	
+	return TRUE;
+}
+BOOL FingerKalman::GetLastFinger(CFinger* finger)
+{
+	if (finger == NULL)
+		return FALSE;
+	*finger = m_lastFinger;
+	finger->bGeneratedByKalman = true;
+	return TRUE;
+}

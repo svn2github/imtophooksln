@@ -11,7 +11,7 @@ namespace touchlib
 	class  TouchScreenDevice 
 	{
 	public:
-		static ITouchScreen *getTouchScreen(float cw = 640.0, float ch = 480.0);
+		static ITouchScreen *getTouchScreen(int cw = 640, int ch = 480.0);
 		static void destroy();
 	private:
 		static CTouchScreen *tscreen;
