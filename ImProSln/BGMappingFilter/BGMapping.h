@@ -73,7 +73,7 @@ public:
 
 	int BGthreshold;
 	int BlackValue;
-	int WhiteValue;
+	int subValue;
 	int imgIndex ;
 	int imgH ;
 	int imgW ;

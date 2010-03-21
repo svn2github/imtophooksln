@@ -17,6 +17,7 @@ BEGIN_MESSAGE_MAP(CBGMappingPorpertyPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_BUTTON1, &CBGMappingPorpertyPage::OnBnClickedButton1)
 	ON_EN_CHANGE(IDC_EDIT_WHITE, &CBGMappingPorpertyPage::OnEnChangeEditWhite)
 	ON_BN_CLICKED(IDC_CHECK_Layout, &CBGMappingPorpertyPage::OnBnClickedCheckLayout)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER_WHITE, &CBGMappingPorpertyPage::OnNMCustomdrawSliderWhite)
 END_MESSAGE_MAP()
 
 
@@ -157,7 +158,8 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	::SLIDER_SetPos(m_blackValue,m_pFilter->getBlackValue());
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
 
-	::SLIDER_SetRange(m_whiteValue, 0, 255);
+	::SLIDER_SetRange(m_whiteValue, 
+		-255, 255);
 	::SLIDER_SetPos(m_whiteValue,m_pFilter->getWhiteValue());
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
 
@@ -234,4 +236,11 @@ void CBGMappingPorpertyPage::OnEnChangeEditWhite()
 void CBGMappingPorpertyPage::OnBnClickedCheckLayout()
 {
 	// TODO: 在此加入控制項告知處理常式程式碼
+}
+
+void CBGMappingPorpertyPage::OnNMCustomdrawSliderWhite(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: 在此加入控制項告知處理常式程式碼
+	*pResult = 0;
 }

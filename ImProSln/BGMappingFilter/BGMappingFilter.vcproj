@@ -129,7 +129,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;..\Detours\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"

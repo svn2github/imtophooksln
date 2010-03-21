@@ -54,9 +54,6 @@ protected:
 	HRESULT LayoutTransform( IMediaSample *pIn, IMediaSample *pOut);
 
 protected:
-	BYTE* InData;
-	BYTE* LayoutData;
-	BYTE* CamData;
 	bool Dirty;
 	bool Block;
 

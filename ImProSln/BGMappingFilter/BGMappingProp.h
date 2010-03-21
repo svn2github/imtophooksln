@@ -64,4 +64,5 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnEnChangeEditWhite();
 	afx_msg void OnBnClickedCheckLayout();
+	afx_msg void OnNMCustomdrawSliderWhite(NMHDR *pNMHDR, LRESULT *pResult);
 };

@@ -9,14 +9,27 @@
 SyncFilter::SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Sync Filter"), 0, CLSID_SyncFilter)
 { 
+	backgroundIplImg = NULL;
+	foregroundIplImg = NULL;
+	cameraInputIplImg = NULL;
 	setDirty(false);
 	setBlock(false);
 	
 }
 SyncFilter::~SyncFilter()
 {
-
-	
+	if(backgroundIplImg != NULL){
+		cvReleaseImage(&backgroundIplImg);
+		backgroundIplImg = NULL;
+	}
+	if(foregroundIplImg != NULL){
+		cvReleaseImage(&foregroundIplImg);
+		foregroundIplImg = NULL;
+	}
+	if(cameraInputIplImg != NULL){
+		cvReleaseImage(&cameraInputIplImg);
+		cameraInputIplImg = NULL;
+	}
 }
 
 
@@ -100,8 +113,6 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 HRESULT SyncFilter::ReceiveDirty(IMediaSample *pSample, const IPin* pReceivePin){
 
 	CAutoLock lck(&locMarkerInfo);
-
-
 	ARLayoutConfigData* pARTagResult = NULL;
 	pSample->GetPointer((BYTE**)&pARTagResult);
 	if (pARTagResult == NULL)
@@ -175,10 +186,11 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		hr = InitializeOutputSample(pSample, pReceivePin, pOutRenderPin, &pOutSampleD3D);
 		hr = LayoutTransform(pSample, pOutSampleD3D);
 	}
-	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty()){
+	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty() == true){
 		if(layoutType == 0){
 		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
 		hr = CopyRenderTarget2OutputTexture();
+		
 		hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
 		}
 		else if(layoutType == 1){
@@ -219,18 +231,14 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		if (hr == NOERROR) {
 
 			if(pOutSampleRGB != NULL && layoutType == 0){
-				/*OutputDebugStringW(L"@@@@ BGDeliver ---->");*/
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
-				/*OutputDebugStringW(L"@@@@ BGDeliver <----");*/
 				setDirty(false);
 			}
 			if(pOutSampleConfig != NULL && layoutType == 1){
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleConfig);
 			}
 			if( pOutSampleD3D != NULL){
-				//OutputDebugStringW(L"@@@@ RenderDeliver ---->");
 				hr = GetConnectedOutputPin(2)->Deliver(pOutSampleD3D);// Pin2 :: Render every frame deliver
-				//OutputDebugStringW(L"@@@@ RenderDeliver <----");
 			}
 			setBlock(false);
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
@@ -297,25 +305,16 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	HRESULT hr = S_OK;
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[0] && !getBlock())
 	{
-		pSample->GetPointer(&CamData);
-	//	OutputDebugStringW(L"@@@@ ReceiveCam ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-	//	OutputDebugStringW(L"@@@@ ReceiveCam <----");
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
-	//	OutputDebugStringW(L"@@@@ ReceiveDirty ---->");
 		hr = ReceiveDirty(pSample, pReceivePin);
-	//	OutputDebugStringW(L"@@@@ ReceiveDirty <----");
 
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
-	{
-
-		pSample->GetPointer(&LayoutData);	
-	//	OutputDebugStringW(L"@@@@ ReceiveLayout ---->");
+	{	
 		hr = ReceiveLayoutImg(pSample, pReceivePin);
-	//	OutputDebugStringW(L"@@@@ ReceiveLayout <----");
 	}
 	return hr;
 }
@@ -556,8 +555,9 @@ HRESULT SyncFilter::CamTransform( IMediaSample *pIn, IMediaSample *pOut)
 {
 	HRESULT hr = S_OK;
 	long cbData;
-	BYTE* outByte;
+	BYTE* outByte = NULL;
 	// Access the sample's data buffer
+	BYTE* CamData = NULL;
 	pIn->GetPointer(&CamData);
 	pOut->GetPointer(&outByte);
 	cbData = pOut->GetSize();

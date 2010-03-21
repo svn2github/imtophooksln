@@ -13,7 +13,7 @@ BGTag::BGTag(){
 	tagTop.y = 0 ;
     tagDown.x = 0 ;
 	tagDown.y = 0 ;
-	isVisible = true ;
+	isVisible = false ;
 	tagRec.height = 0 ;
 	tagRec.width  = 0 ;
 	tagRec.x = 0 ; 
@@ -29,7 +29,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 
 	BGthreshold = 0;
 	BlackValue = 0;
-	WhiteValue = 0 ;
+	subValue = 0 ;
 	camFlip = false; 
 	layoutFlip = false ;
     kerMat = cvCreateMat(5,5,CV_32F);
@@ -50,10 +50,9 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	char settingFile[100];
 	sprintf(settingFile,"%s\\ProjectorCalibData\\adjustValue.txt",fileDir) ;
 
-	
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
-	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&WhiteValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
+	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	binaryResult = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -65,8 +64,9 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 
 	char whiteBGName[100];
-	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.jpg",fileDir);
+	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.png",fileDir);
 	whiteBG = cvLoadImage(whiteBGName,0);
+	
 	loadBGTranData(fileDir);	
 	cvSetZero(backgroundImg);
 	
@@ -113,7 +113,7 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 		for(int j=0;j<mappingTable->width;j++)
 		{
 			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + BlackValue;
-			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -WhiteValue;
+			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -subValue;
 			
 			if((int)(uchar)BGImg->imageData[i*BGImg->widthStep+j*BGchannel]< BLACK_VALUE){
 				backgroundImg->imageData[i*backgroundImg->width+j] = black;
@@ -154,39 +154,37 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	}
 	
 	if(SHOW_WINDOW){
-	cvShowImage("background",backgroundImg);
 	cvShowImage("src",resultImg);
 	}
 	int BGSize = historyBG.size();
 
 	for(int i = 0 ;i < BGSize; i ++){
-	    cvAbsDiff(resultImg,historyBG[i],tmpImg);
-
+		cvAddS(historyBG[i],cvScalar(subValue,subValue,subValue),tmpImg);
+	    cvAbsDiff(resultImg,tmpImg,tmpImg);
 		CvScalar sum = cvSum(tmpImg);
-		//double sumRes = imgSum(tmpImg);
 		if(sum.val[0] <= minValue){
 			minValue = sum.val[0];
-			realBGindex = i ;
-					
+			realBGindex = i ;					
 		}	
 	}
 
 	if(historyBG[realBGindex] != NULL){
-		
-		cvSub(resultImg,historyBG[realBGindex],resultImg);
+		cvAddS(historyBG[realBGindex],cvScalar(subValue,subValue,subValue),tmpImg);
+		cvSub(resultImg,tmpImg,resultImg);
 		cvAnd(resultImg,bgMask,resultImg);
+
 		if(SHOW_WINDOW){
-			cvShowImage("realBG",historyBG[realBGindex]);
+			cvShowImage("sub",resultImg);
+			cvShowImage("realBG",tmpImg);
 		}
-	
 	}
 	if(realBGindex != 0){
 		historyBG.erase(historyBG.begin(),historyBG.begin()+realBGindex-1);
 		
 	}
-	if(SHOW_WINDOW){
+	/*if(SHOW_WINDOW){
 		cvShowImage("result",resultImg);
-	}
+	}*/
 	cvCvtColor(resultImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
@@ -260,7 +258,7 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 		newTag->tagImg = cvLoadImage(newTag->imgPath,0);
 		newTag->tagRec.height = newTag->tagImg->height ;
 		newTag->tagRec.width = newTag->tagImg->width ;
-		newTag->isVisible = true ;
+		newTag->isVisible = false ;
 		BGTran.push_back(newTag);
 	}
 }
@@ -278,9 +276,6 @@ void BackGroundMapping::setTranBG(){
 			cvResetImageROI(backgroundImg);
 		}
 	}
-	cvShowImage("tranBG",backgroundImg);
-	cvWaitKey(1);
-
 
 	cvCopy(backgroundImg,imgPool[imgIndex]);
 	historyBG.push_back(imgPool[imgIndex]);

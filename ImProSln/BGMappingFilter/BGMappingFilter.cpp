@@ -186,6 +186,7 @@ HRESULT BGMappingFilter::ReceiveARLayout(IMediaSample *pSample, const IPin* pRec
 	for(int i = 0 ; i < tagSize ; i ++){
 		BG->BGTran[i]->isVisible = tagConfig.m_ARMarkers[i].visible ;
 	}
+	isReceiveBG = true ;
 	return S_OK;
 
 }
@@ -625,13 +626,13 @@ HRESULT BGMappingFilter::setBlackValue(int bValue){
 
 
 int BGMappingFilter::getWhiteValue(){
-	if(BG->WhiteValue == NULL)
+	if(BG->subValue == NULL)
 		return 0 ;
-	return BG->WhiteValue;
+	return BG->subValue;
 }
 
 HRESULT BGMappingFilter::setWhiteValue(int wValue){
-	BG->WhiteValue = wValue;
+	BG->subValue = wValue;
 	return S_OK;
 }
 
