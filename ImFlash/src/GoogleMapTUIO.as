@@ -1,13 +1,18 @@
 package {
 	
+	import com.google.maps.LatLng;
+	
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.net.XMLSocket;
 	import flash.ui.Keyboard;
+	import flash.utils.Dictionary;
 	
 	import impro.IImproApp;
 	import impro.NUIPad.MTEditor;
 	import impro.Setting;
+	import impro.element.GoogleAddress;
+	import impro.element.ImageButton;
 	import impro.googlemap.*;
 	import impro.multiview.IMView;
 	
@@ -18,6 +23,9 @@ package {
 		private var multiResMap:MultiResMap;			
 		private	var editor:MTEditor;
 		private var socket:XMLSocket;
+		private var imgLoader:ImagesLoader;
+//		private var sightSeeingBtns:Dictionary;
+		private var sights:Dictionary;
 		
 		public function GoogleMapTUIO()
 		{									
@@ -44,8 +52,13 @@ package {
 //			addKeyboardWidget();
 			
 			// add google earth client
-			addGoogleEarthClient(2);
+			addGoogleEarthClient(3);			
+			
+			// add sightSeeing buttons
+			addSightSeeings();
 						
+//			addChild(new FPSMonitor());
+
 			//add stage listener 
 //			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
 //			stage.addEventListener(TouchEvent.CLICK, touchDown);
@@ -64,12 +77,62 @@ package {
 			
 //			var iview:IMView = multiResMap.getMapStage();
 			
-//			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
+			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
 			  
 		}  
+		
+		private function addSightSeeings():void{
+ 			
+ 			sights = new Dictionary;
+ 			sights["sight_Eiffel"] = new GoogleAddress("sight_Eiffel", new LatLng(48.85780097266282, 2.295967680887427), 16); 			
+			sights["sight_Christ"] = new GoogleAddress("sight_Christ", new LatLng(-22.950407157676, -43.20953574843956), 16);
+			sights["sight_Canyon"] = new GoogleAddress("sight_Canyon", new LatLng(36.14936973429993, -111.839335188889), 16);
+			sights["sight_Forbidden"] = new GoogleAddress("sight_Forbidden", new LatLng(39.91379916102216, 116.3908088768237), 16);
+			sights["sight_Fuji"] = new GoogleAddress("sight_Fuji", new LatLng(35.34063009043844, 138.7818265722904), 16);
+			sights["sight_Peters"] = new GoogleAddress("sight_Peters", new LatLng(41.90238356414683, 12.45863229278517), 16);
+			sights["sight_London"] = new GoogleAddress("sight_London", new LatLng(51.50295856070689, -0.1208037863755851), 16);
+			sights["sight_Taipei101"] = new GoogleAddress("sight_Taipei101", new LatLng(25.03403, 121.564643), 16);		
+						
+			imgLoader = new ImagesLoader(sightImageLoaded);			
+			for each (var value:Object in sights) {
+				var location:String = (value as GoogleAddress).location;
+//				imgLoader.push("assets/sightseeings/"+location+".png", location);
+				imgLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/sightseeings/"+location+".png", location);				
+			}
+		} 	
+		
+		private function sightImageLoaded():void{
 
-		public function close():void{
+			var btnWidth:Number = 100;
+			var btnMargin:Number = 1;
 			
+			var i:Number = 1;
+			var row:Number = 3;
+			for each (var value:Object in sights) {
+				var gAddress:GoogleAddress = value as GoogleAddress;
+				var sightBtn:ImageButton = new ImageButton(gAddress.location, imgLoader.getImage(gAddress.location), btnWidth, btnWidth);
+				sightBtn.addEventListener(TouchEvent.MOUSE_UP, tuioUpEvent);
+				sightBtn.addEventListener(MouseEvent.MOUSE_UP, mouseUpEvent);
+				sightBtn.x = Setting.LRes.stageWidth - btnWidth*btnMargin*(Math.floor(i/row)+1);
+				sightBtn.y = Setting.LRes.stageHeight - btnWidth*btnMargin*(i%row+1);
+				addChild(sightBtn);				
+				i++;
+			}			
+		}
+
+		private function tuioUpEvent(e:TouchEvent):void{
+			var location:String = e.currentTarget.name;
+			var gAdress:GoogleAddress = sights[location] as GoogleAddress;			
+			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);
+		}
+		
+		private function mouseUpEvent(e:MouseEvent):void{
+			var location:String = e.currentTarget.name;
+			var gAdress:GoogleAddress = sights[location] as GoogleAddress;
+			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);			
+		}
+
+		public function close():void{			
 		}		
 
 		private function addMultiResMap():void{
@@ -105,7 +168,7 @@ package {
 			
 //			multiResMap.removeGeControl(ge1.id);
 		}
-
+		
 		private function setupSocket():void{
 											
 			socket = new XMLSocket();
@@ -138,7 +201,14 @@ package {
 				var vspaceY:Number = Number(data[5]);
 				multiResMap.recvGeCenter(from, vspaceX, vspaceY);
 //				trace("vspace: " + vspaceX + ", " + vspaceY);
-			
+			}else if(cmd=="clientLogin"){
+				var who:String = data[4];
+				trace(who + " login");
+				
+				var ge:GEControl = multiResMap.getGeControl(who);
+				if(ge != null)
+					ge.update();			
+				
 			}else if(cmd=="clientLogout"){
 //				var who:String = data[4];
 //				multiResMap.removeGeControl(who);

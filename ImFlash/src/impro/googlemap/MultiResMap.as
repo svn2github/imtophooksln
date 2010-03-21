@@ -89,6 +89,10 @@ package impro.googlemap
 			geocoder.geocode(place);
 		}
 		
+		public function flyToLatlng(latlng:LatLng, zoom:Number):void{
+	    	map.setCenter(latlng, zoom);	        			
+		}
+		
 		private function geoCodingSuccess(event:GeocodingEvent):void{
           var placemarks:Array = event.response.placemarks;
           if (placemarks.length > 0) {
@@ -143,6 +147,10 @@ package impro.googlemap
 				addChild(geControl);		
 
 			return geControl;
+		}
+		
+		public function getGeControl(id:String):GEControl{
+			return geControlDict[id] as GEControl;
 		}
 		
 //		public function getGeControl(id:String):GEControl{
