@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="detours.lib detoured.lib strmbasd.lib winmm.lib"
+				AdditionalDependencies="detours.lib detoured.lib strmbase.lib winmm.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\Detours\lib; ../DSLib/lib;"
 				GenerateDebugInformation="true"

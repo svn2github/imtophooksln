@@ -228,6 +228,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			UseOfMFC="1"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -247,7 +248,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;"
-				RuntimeLibrary="1"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_AFXDLL"
+				RuntimeLibrary="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -260,6 +262,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
