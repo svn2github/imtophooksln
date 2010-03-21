@@ -137,6 +137,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SplitterFilter", "SplitterF
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SyncFilter", "SyncFilter\SyncFilter.vcproj", "{049A7630-DC7F-40A9-A579-AABE708E10B4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{973EA635-6747-4048-998D-491F65CB89ED} = {973EA635-6747-4048-998D-491F65CB89ED}
+		{C9B814C2-5FA8-4FFE-9A84-9B7ED9D44AEB} = {C9B814C2-5FA8-4FFE-9A84-9B7ED9D44AEB}
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA} = {E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ARLayoutCaptureApp", "ARLayoutCaptureApp\ARLayoutCaptureApp.vcproj", "{4482524B-B02D-4F2A-A8DE-23FA3A552EE7}"
 	ProjectSection(ProjectDependencies) = postProject

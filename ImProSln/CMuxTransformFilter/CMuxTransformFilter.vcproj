@@ -224,7 +224,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release_mdd|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)\MyLib\bin"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			UseOfMFC="1"
