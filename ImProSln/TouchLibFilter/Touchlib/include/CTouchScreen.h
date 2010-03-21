@@ -109,6 +109,8 @@ namespace touchlib
 		virtual bool getDrawROI() { return bDrawROI;};
 		virtual int getNumFrameFix();
 		virtual bool setNumFrameFix(int nFrame);
+		virtual bool getUseKalmanFilter();
+		virtual bool setUseKalmanFilter(bool bUse);
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
 		virtual IplImage* getFilterImage(int step);

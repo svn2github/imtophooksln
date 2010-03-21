@@ -76,4 +76,6 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnTRBNThumbPosChangingSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMCustomdrawSlrnumframefix(NMHDR *pNMHDR, LRESULT *pResult);
 	CStatic m_txtNumFrameFix;
+	CButton m_ckUseKalman;
+	afx_msg void OnBnClickedckusekalman();
 };

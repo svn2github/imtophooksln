@@ -23,6 +23,7 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CKSkipBG, m_ckSkipBGRemove);
 	DDX_Control(pDX, IDC_SLRNUMFRAMEFIX, m_slrNumFrameFix);
 	DDX_Control(pDX, IDC_TXTNumFrameFix, m_txtNumFrameFix);
+	DDX_Control(pDX, IDC_ckUseKalman, m_ckUseKalman);
 }
 
 
@@ -39,6 +40,7 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_CKSkipBG, &TouchLibPropPage::OnBnClickedCkskipbg)
 	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnTRBNThumbPosChangingSlrnumframefix)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnNMCustomdrawSlrnumframefix)
+	ON_BN_CLICKED(IDC_ckUseKalman, &TouchLibPropPage::OnBnClickedckusekalman)
 END_MESSAGE_MAP()
 
 
@@ -218,6 +220,8 @@ bool TouchLibPropPage::GetSetting()
 	m_ckFingerFlipY.SetCheck(m_pFilter->GetbFlipY());
 	m_ckDrawROI.SetCheck(m_pFilter->getDrawROI());
 	m_ckSkipBGRemove.SetCheck(m_pFilter->GetIsSkipBGRemove());
+	m_ckUseKalman.SetCheck(m_pFilter->getUseKalmanFilter());
+
 	m_slrNumFrameFix.SetPos(m_pFilter->getNumFrameFix());
 	swprintf_s(str, MAX_PATH, L"%d", m_pFilter->getNumFrameFix());
 	m_txtNumFrameFix.SetWindowText(str);
@@ -331,4 +335,13 @@ void TouchLibPropPage::OnNMCustomdrawSlrnumframefix(NMHDR *pNMHDR, LRESULT *pRes
 	m_pFilter->setNumFrameFix(numFrameFix);
 	swprintf_s(str, MAX_PATH, L"%d", numFrameFix);
 	m_txtNumFrameFix.SetWindowText(str);
+}
+
+void TouchLibPropPage::OnBnClickedckusekalman()
+{
+	if (m_pFilter == NULL)
+		return;
+	WCHAR str[MAX_PATH];
+	bool bUseKalman  = m_ckUseKalman.GetCheck();
+	m_pFilter->setUseKalmanFilter(bUseKalman);
 }

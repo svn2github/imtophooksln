@@ -1076,6 +1076,25 @@ bool TouchLibFilter::setNumFrameFix(int nFrame)
 	m_pTouchScreen->setNumFrameFix(nFrame);
 	return true;
 }
+
+bool TouchLibFilter::getUseKalmanFilter()
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	return m_pTouchScreen->getUseKalmanFilter();
+}
+bool TouchLibFilter::setUseKalmanFilter(bool bUse)
+{
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	CAutoLock lck(&m_csTouchScreen);
+	return m_pTouchScreen->setUseKalmanFilter(bUse);
+}
 HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 {
 	FILE* filestream = NULL;
@@ -1094,6 +1113,11 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bool bDrawROI = false;
 	bool bFlipY = false;
 	bool bSkipBG = false;
+	bool bUseKalman = true;
+	int nFrameFix = 0;
+
+	bUseKalman = getUseKalmanFilter();
+	nFrameFix = getNumFrameFix();
 	bSkipBG = GetIsSkipBGRemove();
 	GetBGThreshold(bgThreshold);
 	GetSimpleHighPassDeNoise(deNoise);
@@ -1105,9 +1129,9 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bDrawFinger = getDrawFingers();
 	bDrawROI = getDrawROI();
 	bFlipY = GetbFlipY();
-	fwprintf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n",
+	fwprintf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d\n",
 		bSkipBG, bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
-		bStartTracking, bDrawFinger, bDrawROI, bFlipY);
+		bStartTracking, bDrawFinger, bDrawROI, bFlipY, bUseKalman, nFrameFix);
 	fclose(filestream);
 	return S_OK;
 }
@@ -1130,9 +1154,11 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 	int bDrawROI = false;
 	int bFlipY = false;
 	int bSkipBG = false;
-	fwscanf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n",
+	int bUseKalman = true;
+	int nFrameFix = 0;
+	fwscanf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d\n",
 		&bSkipBG, &bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
-		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY);
+		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY, &bUseKalman, &nFrameFix);
 	fclose(filestream);
 	SetIsSKipBGRemove(bSkipBG);
 	SetBGThreshold(bgThreshold);
@@ -1145,6 +1171,9 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 	setDrawFingers(bDrawFinger);
 	setDrawROI(bDrawROI);
 	SetbFlipY(bFlipY);
+
+	setUseKalmanFilter(bUseKalman);
+	setNumFrameFix(nFrameFix);
 	return S_OK;
 }
 HRESULT TouchLibFilter::GetName(WCHAR* name, UINT szName)

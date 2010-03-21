@@ -174,6 +174,20 @@ bool CTouchScreen::setNumFrameFix(int nFrame)
 	tracker->setNumFrameFix(nFrame);
 	return true;
 }
+bool CTouchScreen::getUseKalmanFilter()
+{
+	if (tracker == NULL)
+		return 0;
+	return tracker->getUseKalmanFilter();
+}
+
+bool CTouchScreen::setUseKalmanFilter(bool bUse)
+{
+	if (tracker == NULL)
+		return 0;
+	return tracker->setUseKalmanFilter(bUse);
+}
+
 void CTouchScreen::initScreenPoints()
 {
 	int p = 0;	// Create some local variable placeholders

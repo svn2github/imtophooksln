@@ -153,6 +153,7 @@ BEGIN
     LTEXT           "Num Frame Fix:",IDC_STATIC,12,135,51,8
     CONTROL         "",IDC_SLRNUMFRAMEFIX,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,69,135,93,11
     CTEXT           "__",IDC_TXTNumFrameFix,170,134,19,8
+    CONTROL         "Use Kalman Filter",IDC_ckUseKalman,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,131,120,65,10
 END
 
 

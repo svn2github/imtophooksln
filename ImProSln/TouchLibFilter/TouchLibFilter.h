@@ -97,6 +97,8 @@ public:
 	virtual bool setDrawROI(bool drawing);
 	virtual int getNumFrameFix();
 	virtual bool setNumFrameFix(int nFrame);
+	virtual bool getUseKalmanFilter();
+	virtual bool setUseKalmanFilter(bool bUse);
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);

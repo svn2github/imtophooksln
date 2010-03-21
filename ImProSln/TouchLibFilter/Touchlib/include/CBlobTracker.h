@@ -172,6 +172,8 @@ namespace touchlib
 	public:
 		CBlobTracker();
 		~CBlobTracker();
+		virtual bool getUseKalmanFilter();
+		virtual bool setUseKalmanFilter(bool bUse);
 		virtual int getNumFrameFix() { return m_nKalmanFix;}
 		virtual bool setNumFrameFix(int nFrame) { m_nKalmanFix = nFrame; return true;};
 		bool findBlobs(BwImage &img);
@@ -191,11 +193,13 @@ namespace touchlib
 		int level;
 		float getError(CFinger &old, CFinger &cur);
 		//Kalman filter tracking & predict
+		bool m_bUseKalmanFilter;
 		int m_nKalmanFix;
 		std::map<int, FingerKalman*> m_fKalman; //ID, kalman, missing times		
 		BOOL updateFingerKalman(const CFinger* curFinger);
 		BOOL updateAllFingerKalman();
 		BOOL correctLostFingerByKalman();
+		BOOL replaceFingerPosByKalman();
 		BOOL findOldFinger(int _id, CFinger& finger);
 		BOOL findCurFinger(int _id, CFinger& finger);
 #ifdef WIN32

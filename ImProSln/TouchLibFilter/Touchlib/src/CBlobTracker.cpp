@@ -28,6 +28,7 @@ CBlobTracker::CBlobTracker() : IBlobTracker()
 	currentID = 1;
 	extraIDs = 0;
 	m_nKalmanFix = 2;
+	m_bUseKalmanFilter = true;
 }
 CBlobTracker::~CBlobTracker()
 {
@@ -444,10 +445,32 @@ void CBlobTracker::trackBlobs()
 
 		//printf("Best index = %d\n", best_error_ndx);
 	}
-	updateAllFingerKalman();
-	correctLostFingerByKalman();
+	if (m_bUseKalmanFilter)
+	{
+		updateAllFingerKalman();
+		correctLostFingerByKalman();
+		replaceFingerPosByKalman();
+	}
+}
+bool CBlobTracker::getUseKalmanFilter()
+{
+	return m_bUseKalmanFilter;
 }
 
+bool CBlobTracker::setUseKalmanFilter(bool bUse)
+{
+	if (m_bUseKalmanFilter && !bUse)
+	{
+		for(int i =0; i < m_fKalman.size(); i++)
+		{
+			delete m_fKalman[i];
+			m_fKalman[i] = NULL;
+		}
+		m_fKalman.clear();
+	}
+	m_bUseKalmanFilter = bUse; 
+	return true;
+};
 void CBlobTracker::gatherEvents()
 {
 	vector<CFinger> *prev = &history[history.size()-1];
@@ -545,14 +568,19 @@ bool CBlobTracker::drawFingers(IplImage* img)
 		
 		int fID = current[i].ID;
 		float posX = 0, posY = 0;
-	
-		if (fID != -1)
+		if (m_bUseKalmanFilter)
 		{
-			FingerKalman* kalman = m_fKalman[fID];
-			for (int i = 0; i < 5; i ++)
+			if (fID != -1)
 			{
-				kalman->predict(i*12, &posX, &posY);
-				cvDrawCircle(img, cvPoint(posX, posY), 0.5*width, cvScalar(255,255,0));
+				FingerKalman* kalman = m_fKalman[fID];
+				if (kalman != NULL)
+				{
+					for (int i = 0; i < 5; i ++)
+					{
+						kalman->predict(i*12, &posX, &posY);
+						cvDrawCircle(img, cvPoint(posX, posY), 0.5*width, cvScalar(255,255,0));
+					}
+				}
 			}
 		}
 	}
@@ -764,6 +792,24 @@ BOOL CBlobTracker::correctLostFingerByKalman()
 	}
 	return TRUE;
 }
+BOOL CBlobTracker::replaceFingerPosByKalman()
+{
+	int fID = -1;
+	for (int i =0; i < current.size(); i++)
+	{
+		fID = current[i].ID;
+		if (fID != -1)
+		{
+			FingerKalman* fkalman = m_fKalman[fID];
+			if (fkalman == NULL)
+				continue;
+			fkalman->predict(0, &current[i].center.X, &current[i].center.Y, NULL, NULL, NULL, NULL);
+		}
+	}
+
+	return TRUE;
+}
+
 FingerKalman::FingerKalman() 
 {
 	m_kalman = generateKalman();
@@ -852,35 +898,46 @@ BOOL FingerKalman::update(const CFinger* curFinger)
 
 BOOL FingerKalman::predict(int dt, float* posX, float* posY, float* vX, float* vY, float* aX, float* aY)
 {
-	if (m_kalman == NULL || posX == NULL || posY == NULL || dt <= 0)
+	if (m_kalman == NULL || posX == NULL || posY == NULL || dt < 0)
 		return FALSE;
-	const float A[] = { 1, 0, dt, 0,// 0, 0,   // 1*x + 0*y + t*Vx + 0*Vy + 0Ax + 0Ay= x
-		0, 1, 0, dt,//0, 0,   // 0*x + 1*y + 0*Vx + t*Vy + 0Ax + 0Ay = y
-		0, 0, 1, 0, //dt, 0,  // 0*x + 0*y + 1*Vx + 0*Vy + tAx + 0Ay = Vx
-		0, 0, 0, 1};// 0, dt,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + tAy = Vy
-		//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
-		//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
-	const float orgA[] = { 1, 0, 1, 0,// 0, 0,   // 1*x + 0*y + 1*Vx + 0*Vy + 0Ax + 0Ay= x
-		0, 1, 0, 1, //0, 0,   // 0*x + 1*y + 0*Vx + 1*Vy + 0Ax + 0Ay = y
-		0, 0, 1, 0, //1, 0,   // 0*x + 0*y + 1*Vx + 0*Vy + 1Ax + 0Ay = Vx
-		0, 0, 0, 1}; //0, 1,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Vy
-		//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
-		//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
-	memcpy( m_kalman->transition_matrix->data.fl, A, sizeof(A));
-	
-	const CvMat* predictResult = cvKalmanPredict(m_kalman, NULL);
- 	*posX = predictResult->data.fl[0];
-	*posY = predictResult->data.fl[1];
-	if (vX != NULL)
-		*vX = predictResult->data.fl[2];
-	if (vY != NULL)
-		*vY = predictResult->data.fl[3];	
-	//if (aX != NULL)
-	//	*aX = predictResult->data.fl[4] * (m_imgW - 1);
-	//if (aY != NULL)
-	//	*aY = predictResult->data.fl[5] * (m_imgH - 1);
-	memcpy( m_kalman->transition_matrix->data.fl, orgA, sizeof(orgA));
-	
+	if (dt == 0)
+	{
+		*posX = m_kalman->state_post->data.fl[0];
+		*posY = m_kalman->state_post->data.fl[1];
+		if (vX != NULL)
+			*vX = m_kalman->state_post->data.fl[2];
+		if (vY != NULL)
+			*vY = m_kalman->state_post->data.fl[3];	
+	}
+	else
+	{
+		const float A[] = { 1, 0, dt, 0,// 0, 0,   // 1*x + 0*y + t*Vx + 0*Vy + 0Ax + 0Ay= x
+			0, 1, 0, dt,//0, 0,   // 0*x + 1*y + 0*Vx + t*Vy + 0Ax + 0Ay = y
+			0, 0, 1, 0, //dt, 0,  // 0*x + 0*y + 1*Vx + 0*Vy + tAx + 0Ay = Vx
+			0, 0, 0, 1};// 0, dt,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + tAy = Vy
+			//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
+			//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
+		const float orgA[] = { 1, 0, 1, 0,// 0, 0,   // 1*x + 0*y + 1*Vx + 0*Vy + 0Ax + 0Ay= x
+			0, 1, 0, 1, //0, 0,   // 0*x + 1*y + 0*Vx + 1*Vy + 0Ax + 0Ay = y
+			0, 0, 1, 0, //1, 0,   // 0*x + 0*y + 1*Vx + 0*Vy + 1Ax + 0Ay = Vx
+			0, 0, 0, 1}; //0, 1,   // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Vy
+			//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
+			//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
+		memcpy( m_kalman->transition_matrix->data.fl, A, sizeof(A));
+		
+		const CvMat* predictResult = cvKalmanPredict(m_kalman, NULL);
+ 		*posX = predictResult->data.fl[0];
+		*posY = predictResult->data.fl[1];
+		if (vX != NULL)
+			*vX = predictResult->data.fl[2];
+		if (vY != NULL)
+			*vY = predictResult->data.fl[3];	
+		//if (aX != NULL)
+		//	*aX = predictResult->data.fl[4] * (m_imgW - 1);
+		//if (aY != NULL)
+		//	*aY = predictResult->data.fl[5] * (m_imgH - 1);
+		memcpy( m_kalman->transition_matrix->data.fl, orgA, sizeof(orgA));
+	}
 	return TRUE;
 }
 BOOL FingerKalman::GetLastFinger(CFinger* finger)

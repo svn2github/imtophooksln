@@ -19,8 +19,9 @@
 #define IDC_CKDrawROI                   16013
 #define IDC_CKSkipBG                    16014
 #define IDC_SLRNUMFRAMEFIX              16016
-#define IDC_TXT                         16017
 #define IDC_TXTNumFrameFix              16017
+#define IDC_CHECK1                      16018
+#define IDC_ckUseKalman                 16018
 
 // Next default values for new objects
 // 
@@ -28,7 +29,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        16001
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         16018
+#define _APS_NEXT_CONTROL_VALUE         16019
 #define _APS_NEXT_SYMED_VALUE           16000
 #endif
 #endif

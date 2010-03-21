@@ -104,6 +104,8 @@ namespace touchlib
 		virtual bool getDrawROI() = 0;
 		virtual int getNumFrameFix() = 0;
 		virtual bool setNumFrameFix(int nFrame) = 0;
+		virtual bool getUseKalmanFilter() = 0;
+		virtual bool setUseKalmanFilter(bool bUse) = 0;
 	};
 
 }

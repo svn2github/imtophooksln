@@ -18,6 +18,8 @@ public:
 	IBlobTracker();
 
 	// ----  pure virtual functions  -----------------------------------------
+	virtual bool getUseKalmanFilter() = 0;
+	virtual bool setUseKalmanFilter(bool bUse) = 0;
 	virtual int getNumFrameFix() = 0;
 	virtual bool setNumFrameFix(int nFrame) = 0;
 	virtual bool findBlobs(BwImage& frame) = 0;
