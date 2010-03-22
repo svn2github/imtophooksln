@@ -152,7 +152,7 @@ namespace touchlib
 		
 	protected:
 		CvKalman* m_kalman;
-		CvKalman* m_tmpKalman;
+		
 		CFinger m_lastFinger;
 		//float m_lastVx;
 		//float m_lastVy;

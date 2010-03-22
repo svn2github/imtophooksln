@@ -813,7 +813,6 @@ BOOL CBlobTracker::replaceFingerPosByKalman()
 FingerKalman::FingerKalman() 
 {
 	m_kalman = generateKalman();
-	m_tmpKalman = generateKalman();
 	m_lostTimes = 0;
 	//m_lastVx = 0;
 	//m_lastVy = 0;
@@ -825,11 +824,7 @@ FingerKalman::~FingerKalman()
 		cvReleaseKalman(&m_kalman);
 		m_kalman = NULL;
 	}
-	if (m_tmpKalman != NULL)
-	{
-		cvReleaseKalman(&m_tmpKalman);
-		m_tmpKalman = NULL;
-	}
+
 }
 
 CvKalman* FingerKalman::generateKalman()
