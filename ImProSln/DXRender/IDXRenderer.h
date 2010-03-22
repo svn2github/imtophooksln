@@ -30,4 +30,10 @@ IDXRenderer: public IUnknown
 	virtual HRESULT SetWindowZoom(BOOL bZoom);
 	virtual BOOL SetHideBorder(BOOL bHideBorder);
 	virtual BOOL IsHideBorder();
+
+	virtual DWORD GetProcessPriority();
+	virtual BOOL SetProcessPriority(DWORD dwPriorityClass);
+	virtual BOOL GetRenderThreadPriority(int& nPriority);
+	virtual BOOL SetRenderThreadPriority(int nPriority);
+
 };

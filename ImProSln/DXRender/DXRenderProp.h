@@ -28,6 +28,12 @@ protected:
 	IDXRenderer *m_pFilter;
 	bool GetSetting();
 	bool ApplySetting();
+	BOOL SetProcessPriority();
+	BOOL GetProcessPriority();
+
+	BOOL SetRenderThreadPriority();
+	BOOL GetRenderThreadPriority();
+	
 public:
 	// Dialog Data
 	enum {IDD = IDD_DXRenderFilterProp};
@@ -73,4 +79,8 @@ public: //inherit from CMFCBaseProperty Page
 //	afx_msg void OnBnHotItemChangeRapoint(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedRapoint();
 	afx_msg void OnBnClickedRalinear();
+	CComboBox m_cbThreadPriority;
+	afx_msg void OnCbnSelchangeCbthreadpriority();
+	CComboBox m_cbProcessPriority;
+	afx_msg void OnCbnSelchangeCbprocesspriority();
 };

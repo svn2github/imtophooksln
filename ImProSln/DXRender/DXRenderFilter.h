@@ -16,7 +16,8 @@ class DXRenderFilter :
 protected:
 	CCritSec m_csDisplayState;
 	CMediaType m_InputMT;
-
+	CCritSec m_csThreadHandle;
+	HANDLE m_ThreadHandle;
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 
@@ -25,6 +26,9 @@ public:
 	DECLARE_IUNKNOWN;
 
 	// from CBaseRenderer
+	virtual HRESULT OnStartStreaming();
+	virtual HRESULT OnStopStreaming();
+
 	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 	virtual HRESULT BreakConnect();
 
@@ -54,6 +58,11 @@ public:
 	virtual bool SetFlipY(bool v);
 	virtual bool GetbDrawFPS();
 	virtual bool SetbDrawFPS(bool v);
+	
+	virtual DWORD GetProcessPriority();
+    virtual BOOL SetProcessPriority(DWORD dwPriorityClass);
+	virtual BOOL GetRenderThreadPriority(int& nPriority);
+	virtual BOOL SetRenderThreadPriority(int nPriority);
 
 	virtual BOOL IsWindowZoom();
 	virtual HRESULT GetWindowRect(RECT& rect);
@@ -65,4 +74,5 @@ public:
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
+
 };

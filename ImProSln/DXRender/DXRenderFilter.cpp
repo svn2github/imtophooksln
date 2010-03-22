@@ -7,7 +7,8 @@
 #include "CMuxTransformFilter.h"
 DXRenderFilter::DXRenderFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : DXBaseRenderer(CLSID_DXRenderFilter, NAME("DXRender Filter"), pOuter, phr)
-{ 
+{
+	m_ThreadHandle = 0;
 }
 DXRenderFilter::~DXRenderFilter()
 {
@@ -49,7 +50,17 @@ HRESULT DXRenderFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 		return CBaseFilter::NonDelegatingQueryInterface(iid, ppv);
 	}
 }
+HRESULT DXRenderFilter::OnStartStreaming()
+{
+	m_ThreadHandle = 0;
+	return S_OK;
+}
 
+HRESULT DXRenderFilter::OnStopStreaming()
+{
+	m_ThreadHandle = 0;
+	return S_OK;
+}
 HRESULT DXRenderFilter::CheckMediaType(const CMediaType *pmt)
 {
 	GUID guidSubType = *pmt->Subtype();
@@ -162,6 +173,13 @@ HRESULT DXRenderFilter::GetPages(CAUUID *pPages)
 
 HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 {
+	{
+		CAutoLock lck(&m_csThreadHandle);
+		if (m_ThreadHandle == 0)
+		{
+			m_ThreadHandle = GetCurrentThread();
+		}
+	}
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	{
 		CCritSec* pD3DCS = NULL;
@@ -178,6 +196,13 @@ HRESULT DXRenderFilter::DoRenderSample(IMediaSample *pMediaSample)
 
 void DXRenderFilter::OnReceiveFirstSample(IMediaSample *pMediaSample)
 {
+	{
+		CAutoLock lck(&m_csThreadHandle);
+		if (m_ThreadHandle == 0)
+		{
+			m_ThreadHandle = GetCurrentThread();
+		}
+	}
 	CopyInputImage2InputTexture(pMediaSample, &m_InputMT, false);
 	{
 		CCritSec* pD3DCS = NULL;
@@ -286,6 +311,33 @@ bool DXRenderFilter::SetbDrawFPS(bool v)
 	CAutoLock lck0(&m_csD3DDisplay);
 	((DXRenderDisplay*)m_pD3DDisplay)->m_bDrawFPS = v;
 	return true;
+}
+
+BOOL DXRenderFilter::GetRenderThreadPriority(int& nPriority)
+{
+	CAutoLock lck(&m_csThreadHandle);
+	if (m_ThreadHandle == 0)
+		return FALSE;
+	nPriority = GetThreadPriority(m_ThreadHandle);
+	return TRUE;
+}
+BOOL DXRenderFilter::SetRenderThreadPriority(int nPriority)
+{
+	CAutoLock lck(&m_csThreadHandle);
+	if (m_ThreadHandle == 0)
+		return FALSE;
+	return SetThreadPriority(m_ThreadHandle, nPriority);
+	
+}
+DWORD DXRenderFilter::GetProcessPriority()
+{
+	HANDLE hProcess = GetCurrentProcess();
+	return GetPriorityClass(hProcess);
+}
+BOOL DXRenderFilter::SetProcessPriority(DWORD dwPriorityClass)
+{
+	HANDLE hProcess = GetCurrentProcess();
+	return SetPriorityClass(hProcess, dwPriorityClass);
 }
 HRESULT DXRenderFilter::SaveToFile(WCHAR* path)
 {
