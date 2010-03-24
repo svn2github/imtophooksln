@@ -36,25 +36,25 @@ char    *vconf = "";
 
 CCritSec g_State;
 
-double LeftTopLong = 119.506450;
-double LeftTopLat = 25.103415;
-double LeftDownLong = 119.337809;
-double LeftDownLat = 21.968503;
-double RightDownLong = 122.715500;
-double RightDownLat = 22.068132;
-double RightTopLong = 123.348858;
-double RightTopLat = 24.969608;
+//double LeftTopLong = 119.506450;
+//double LeftTopLat = 25.103415;
+//double LeftDownLong = 119.337809;
+//double LeftDownLat = 21.968503;
+//double RightDownLong = 122.715500;
+//double RightDownLat = 22.068132;
+//double RightTopLong = 0;
+//double RightTopLat = 0;
 
 
 // Zoomout to 101
-//double LeftTopLong = 121.55607268966645;
-//double LeftTopLat = 25.041212573911324;
-//double LeftDownLong = 121.55607268966645;
-//double LeftDownLat = 25.025659005961995;
-//double RightTopLong = 121;
-//double RightTopLat = 25;
-//double RightDownLong = 121.57323882736176;
-//double RightDownLat = 25.025659005961995;
+double LeftTopLong = 121.55607268966645;
+double LeftTopLat = 25.041212573911324;
+double LeftDownLong = 121.55607268966645;
+double LeftDownLat = 25.025659005961995;
+double RightTopLong = 121.57323882736176;
+double RightTopLat = 25.041212573911324;
+double RightDownLong = 121.57323882736176;
+double RightDownLat = 25.025659005961995;
 
 double longitude = 0;
 double latitude = 0;
@@ -227,7 +227,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 			
-			setupSocket();
+			//setupSocket();
 						
 		}
 
@@ -646,7 +646,6 @@ namespace googleearth {
 			
 				
 				array<Object^>^ parameter = gcnew array<Object^>(6); 
-			
 				parameter[0] = clatitude;
 				parameter[1] = clongitude;
 				parameter[2] = caltitude;
@@ -662,12 +661,17 @@ namespace googleearth {
 						return ;
 					}
 				}
-
 				webBrowser1->Document->InvokeScript("cameraView",parameter);
+
+
+				array<Object^>^ parameterModel = gcnew array<Object^>(2); 
+				parameterModel[0] = GEData.getIntersect_point().y;
+				parameterModel[1] = GEData.getIntersect_point().x;
+				webBrowser1->Document->InvokeScript("setModelLoc",parameterModel);
 			 
 			 }
 			 
-			 if(boundaryDirty){
+			 //if(boundaryDirty){
 				array<Object^>^ parameterB = gcnew array<Object^>(8); 
 				
 				parameterB[0] = LeftTopLong;
@@ -679,10 +683,11 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
+				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);
+				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
 				
-				boundaryDirty = false;
-			 }
+				//boundaryDirty = false;
+			 //}
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		
