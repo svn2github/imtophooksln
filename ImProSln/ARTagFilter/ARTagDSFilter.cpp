@@ -363,13 +363,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
-			if (m_bDrawReproPt)
-			{
-				const ARFloat* matARView = m_ARTracker->getModelViewMatrix();
-				const ARFloat* matARProj = m_ARTracker->getProjectionMatrix();
-				ShowReprojectImage(imgOut, 0,
-					NULL, NULL, matARView, matARProj );
-			}
+		
 			/*
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{
@@ -672,7 +666,7 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	{
 		float predExtrinc[16] = {0};
 		drawColor = cvScalar(255,255,0);
-		for (int dt = 2; dt <= 10; dt += 2)
+		for (int dt = 2; dt <= 4; dt += 2)
 		{
 			m_ARTracker->predictCVPose(dt, predExtrinc);
 			for (int row =0 ; row < 4; row++)

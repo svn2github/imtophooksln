@@ -575,7 +575,7 @@ bool CBlobTracker::drawFingers(IplImage* img)
 				FingerKalman* kalman = m_fKalman[fID];
 				if (kalman != NULL)
 				{
-					for (int i = 1; i < 5; i ++)
+					for (int i = 1; i < 3; i ++)
 					{
 						kalman->predict(i*3, &posX, &posY);
 						cvDrawCircle(img, cvPoint(posX, posY), 0.5*width, cvScalar(255,255,0));

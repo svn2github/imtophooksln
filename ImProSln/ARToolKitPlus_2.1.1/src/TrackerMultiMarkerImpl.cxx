@@ -149,7 +149,6 @@ BOOL PoseKalman::update(float* curT, float* curR)
 	cvKalmanCorrect(m_QuaternionKalman, measurementQ);
 	
 	cvReleaseMat(&measurementT);
-
 	cvReleaseMat(&measurementQ);
 	measurementT = NULL;
 
@@ -181,10 +180,7 @@ BOOL PoseKalman::predict(int dt, float* predT, float* predR, float* predV, float
 		m_QuaternionKalman->state_post->data.fl[1],
 		m_QuaternionKalman->state_post->data.fl[2],
 		m_QuaternionKalman->state_post->data.fl[3]};
-		WCHAR str[MAX_PATH] = {0};
-		swprintf_s(str, MAX_PATH, L"@@@@ prdict quanterion: %.4f, %.4f, %.4f, %.4f\n",
-			quanterion[0], quanterion[1], quanterion[2], quanterion[3]);
-		OutputDebugStringW(str);
+
 		float axisAngle[4] = {0};
 		Quaternion2AxisAngle(quanterion, axisAngle);
 		float axisLength = sqrt(axisAngle[0]*axisAngle[0] + 
@@ -404,7 +400,7 @@ ARMM_TEMPL_FUNC
 ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 {
 	m_pPoseKalman = NULL;
-	m_nFixFrame = 0;
+	m_nFixFrame = 3;
 	this->logger = NULL;
 	for (int i =0; i <3; i++)
 		m_basisScale[i] = 1;
