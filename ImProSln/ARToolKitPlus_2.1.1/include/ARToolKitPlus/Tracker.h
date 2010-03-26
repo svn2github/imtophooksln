@@ -299,6 +299,9 @@ public:
 	virtual ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config) = 0;
 	virtual bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config,
 		bool bUseLastGuess = false, double* lastExtrinsic = NULL) = 0;
+	virtual bool predictCVPose(int dt, float* cvTrans) = 0;
+	virtual bool getbUseKalman() = 0;
+	virtual bool setbUseKalman(bool v) = 0;
 };
 
 

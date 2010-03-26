@@ -55,6 +55,8 @@ public:
 	virtual bool setbDrawReproPt(bool v);
 	virtual bool getbGuessPose();
 	virtual bool setbGuessPose(bool v);
+	virtual bool getbUseKalman();
+	virtual bool setbUseKalman(bool v);
 
 	virtual bool setWorldBasisScale(double v[3]);
 	virtual bool getWorldBasisScale(double v[3]);

@@ -63,15 +63,39 @@ typedef struct {
     int     visibleR;
 } ARMultiEachMarkerInfoT;
 
-typedef struct {
+struct ARMultiMarkerInfoT{
     ARMultiEachMarkerInfoT  *marker;
     int                     marker_num;
     ARFloat                  trans[3][4];
     int                     prevF;
 /*---*/
     ARFloat                  transR[3][4];
-	double                   cvTrans[4][4];                   
-} ARMultiMarkerInfoT;
+	double                   cvTrans[4][4];
+	bool                     bKalmanFixed;
+	float                  rotVector[3];
+	ARMultiMarkerInfoT()
+	{
+		bKalmanFixed = false;
+		marker = NULL;
+		marker_num = 0;
+		prevF = 0;
+		for (int row = 0; row < 3; row++ )
+		{
+			for (int col = 0; col < 4; col++)
+			{
+				trans[row][col] = 0;
+				transR[row][col] = 0;
+				cvTrans[row][col] = 0;
+			}
+		}
+		for (int i =0; i < 4; i++)
+		{
+			cvTrans[3][i] = 0;
+		}
+		memset(rotVector, 0, sizeof(rotVector));
+	}
+	
+};
 
 
 } // namespace ARToolKitPlus

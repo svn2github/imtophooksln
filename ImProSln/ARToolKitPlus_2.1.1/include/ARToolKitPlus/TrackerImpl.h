@@ -65,7 +65,7 @@
 
 
 namespace ARToolKitPlus {
-
+	
 
 // Compile time information...
 //
@@ -331,8 +331,9 @@ public:
 		bool bUseLastGuess = false, double* lastExtrinsic = NULL);
 
 protected:
+	
 	bool buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat);
-	bool findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* objectPoint, CvMat* camExtrin, 
+	bool findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* objectPoint, CvMat* camRot, CvMat* camExtrin, 
 				bool bUseGuess = false, float* guessR = NULL, float* guessT = NULL);
 	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 	bool checkPixelFormat();
@@ -576,7 +577,6 @@ protected:
 
     int						arGetContour_wx[AR_CHAIN_MAX];
     int						arGetContour_wy[AR_CHAIN_MAX];
-
 	
 	// arGetCode.cpp
 	float  conf_threshold; 

@@ -52,7 +52,7 @@ protected:
 	HWND m_ckDrawReProj;
 	HWND m_ckGuessPose;
 	HWND m_ckAutoThreshold;
-	HWND m_ckMultiThreshold;
+	HWND m_ckUseKalman;
 
 	HWND m_slrThreshold;
 	HWND m_slrBorderW;

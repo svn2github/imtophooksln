@@ -55,8 +55,8 @@
 #define IDC_EDIT3                       2034
 #define IDC_edZaxis                     2034
 #define IDC_CKAutoThreshold             2034
-#define IDC_CHECK1                      2035
 #define IDC_CKMultiThreshold            2035
+#define IDC_CKUseKalman                 2035
 
 // Next default values for new objects
 // 

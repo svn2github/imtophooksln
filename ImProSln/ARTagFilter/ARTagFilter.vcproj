@@ -67,10 +67,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkLibraryDependencies="false"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd_mdd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib  ARToolKitPlusD.lib MSD3DLib.lib  commonLib_mdd.lib"
+				AdditionalDependencies="strmbasd_mdd.lib winmm.lib d3dx9.lib d3d9.lib highgui200.lib MSPersist.lib cv200.lib cxcore200.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib ARToolKitPlusD.lib MSD3DLib.lib commonLib_mdd.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\bin&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"

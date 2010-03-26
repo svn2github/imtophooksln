@@ -75,6 +75,9 @@ public:
 	virtual bool setbDrawReproPt(bool v);
 	virtual bool getbGuessPose();
 	virtual bool setbGuessPose(bool v);
+	virtual bool getbUseKalman();
+	virtual bool setbUseKalman(bool v);
+
 
 	virtual bool IsReady();
 	virtual bool setWorldBasisScale(double v[3]);
@@ -94,6 +97,8 @@ protected:
 	bool             m_bGuessPose;
 	bool			 m_bDrawTag;
 	bool             m_bDrawReproPt;
+
+
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;
 	void** m_callbackArgv;

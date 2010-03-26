@@ -45,11 +45,39 @@
 #include <ARToolKitPlus/TrackerMultiMarker.h>
 #include <ARToolKitPlus/TrackerImpl.h>
 #include <ARToolKitPlus/Logger.h>
-
+#include <d3d9.h>
+#include <d3dx9math.h>
 
 #define ARMM_TEMPL_FUNC template <int __PATTERN_SIZE_X, int __PATTERN_SIZE_Y, int __PATTERN_SAMPLE_NUM, int __MAX_LOAD_PATTERNS, int __MAX_IMAGE_PATTERNS>
 #define ARMM_TEMPL_TRACKER TrackerMultiMarkerImpl<__PATTERN_SIZE_X, __PATTERN_SIZE_Y, __PATTERN_SAMPLE_NUM, __MAX_LOAD_PATTERNS, __MAX_IMAGE_PATTERNS>
-
+class PoseKalman
+{
+private:
+	enum KalmanType
+	{
+		Kalman_Translate = 0,
+		Kalman_Quanterion = 1
+	};
+	CvKalman* generateKalman(KalmanType kType);
+	bool Quaternion2AxisAngle(const float* quaternion, float* axisAngle);
+	bool AxisAngle2Quaternion(float* axisAngle, float* quaternion);
+	bool QuanterionMultiply(float* Q1, float* Q2, float* Qout);
+protected:
+	CvKalman* m_TKalman;
+	
+	CvKalman* m_QuaternionKalman;
+	float m_lastQuaterion[4];
+	float m_lastT[3];
+public:
+	int m_lostTimes;
+public:
+	PoseKalman();
+	~PoseKalman();
+	BOOL init(float* curT, float* curR);
+	BOOL update(float* curT, float* curR);
+	BOOL predict(int dt, float* predT, float* predR, float* predV = NULL, float* predVR = NULL);
+	BOOL GetLastPose(float* lastT, float* lastR);
+};
 
 namespace ARToolKitPlus
 {
@@ -187,20 +215,30 @@ public:
 	ARFloat executeSingleMarkerPoseEstimator(ARMarkerInfo *marker_info, ARFloat center[2], ARFloat width, ARFloat conv[3][4])  {  return AR_TEMPL_TRACKER::executeSingleMarkerPoseEstimator(marker_info, center, width, conv);  }
 	ARFloat executeMultiMarkerPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config)  {  return AR_TEMPL_TRACKER::executeMultiMarkerPoseEstimator(marker_info, marker_num, config);  }
 	bool executeCVPoseEstimator(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config, bool bUseLastGuess = false, double* lastExtrinsic = NULL)  {  return AR_TEMPL_TRACKER::executeCVPoseEstimator(marker_info, marker_num, config, bUseLastGuess, lastExtrinsic);  }
+	bool predictCVPose(int dt, float* cvTrans);
+	bool getbUseKalman();
+	bool setbUseKalman(bool v);
 	static void* operator new(size_t size);
+
 
 	static void operator delete(void *rawMemory);
 
 	static size_t getMemoryRequirements();
 
 protected:
+	PoseKalman*     m_pPoseKalman;
+	int             m_nFixFrame;
 	int             m_numLastDetected;
 	int				numDetected;
+	bool            bUseKalman;
 	bool			useDetectLite;
 	ARMultiMarkerInfoT  *config;
 
 	int				detectedMarkerIDs[AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS];
 	ARMarkerInfo	detectedMarkers[AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS];
+private:
+	bool updatePoseKalman(ARMarkerInfo *marker_info, int marker_num, ARMultiMarkerInfoT *config);
+	bool replaceCvPoseByKalman(ARMultiMarkerInfoT *config);
 };
 
 

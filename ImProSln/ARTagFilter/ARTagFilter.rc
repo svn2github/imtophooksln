@@ -196,7 +196,7 @@ BEGIN
     CONTROL         "Draw ReProj",IDC_CKReProj,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,38,56,10
     CONTROL         "Guess Pose",IDC_CKGuessPose,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,51,53,10
     CONTROL         "Auto Threshold",IDC_CKAutoThreshold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,64,65,10
-    CONTROL         "Multi Threshold",IDC_CKMultiThreshold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,77,64,10
+    CONTROL         "Use Kalman Filter",IDC_CKUseKalman,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,77,71,10
 END
 
 

@@ -50,7 +50,7 @@
 
 namespace ARToolKitPlus {
 
-
+	
 AR_TEMPL_FUNC 
 AR_TEMPL_TRACKER::TrackerImpl()
 {
@@ -209,6 +209,8 @@ AR_TEMPL_TRACKER::~TrackerImpl()
 	if(descriptionString)
 		delete [] descriptionString;
 	descriptionString = NULL;
+
+	
 }
 
 
@@ -642,7 +644,7 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::buildExtrinsicMat(CvMat* rotation, CvMat* t
 	return true;
 }
 
-AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* object3D, CvMat* camExtrin, 
+AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, CvMat* object3D, CvMat* camRot, CvMat* camExtrin, 
 															bool bUseGuess, float* guessR, float* guessT){
 	float intriMat[9] = {1,0,0, 0,1,0, 0,0,1};
 	float dist_factor[4] = { this->arCamera->dist_factor[0], this->arCamera->dist_factor[1], this->arCamera->dist_factor[2], this->arCamera->dist_factor[3]};
@@ -669,12 +671,16 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::findWorld2CamExtrinsic(CvMat* cameraPoint, 
 		transW2C = cvMat(3, 1, CV_32F, guessT);
 	}
 	cvFindExtrinsicCameraParams2(object3D, cameraPoint, &camIntrinsic, &camDisto, &rotateTmp, &transW2C, bUseGuess);
-	
+	WCHAR str[MAX_PATH] = {0};
+
 	cvRodrigues2(&rotateTmp, &rotateW2C);
 
 	buildExtrinsicMat(&rotateW2C, &transW2C, camExtrin);
+	cvCopy(&rotateTmp, camRot);
+
 	return true;
 }
+
 AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detectedMarkers, int nDetected, ARMultiMarkerInfoT *config
 															,bool bUseLastGuess = false, double* lastExtrinsic = NULL)
 {
@@ -793,6 +799,8 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 		float initV2[9] = {1,0,0, 0,1,0, 0,0,1};
 		CvMat cvlastRotMat = cvMat(3, 3, CV_32F, (void*)initV2);
 		CvMat cvlastRotVec = cvMat(3, 1, CV_32F, (void*)initV1);
+		CvMat cvCurRotVec = cvMat(3, 1, CV_32F, (void*)initV1);
+
 		for (int row = 0; row <3; row ++)
 			for (int col =0; col<3; col++)	
 				cvmSet(&cvlastRotMat, row, col, lastExtrinsic[row*4 + col]);
@@ -801,11 +809,20 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 		{
 			lastRotVec[i] = cvmGet(&cvlastRotVec, i, 0);
 		}
-		findWorld2CamExtrinsic(&cvPt2D, &cv3DPts, &camExtrin, true, lastRotVec, lastTVec);
+		findWorld2CamExtrinsic(&cvPt2D, &cv3DPts, &cvCurRotVec, &camExtrin, true, lastRotVec, lastTVec);
+		config->rotVector[0] = cvCurRotVec.data.fl[0];
+		config->rotVector[1] = cvCurRotVec.data.fl[1];
+		config->rotVector[2] = cvCurRotVec.data.fl[2];
 	}
 	else
 	{
-		findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &camExtrin, false, NULL, NULL);
+		float initV1[3] = {0,0,0};
+		CvMat cvCurRotVec = cvMat(3, 1, CV_32F, (void*)initV1);
+		findWorld2CamExtrinsic(&cvPt2D,&cv3DPts, &cvCurRotVec, &camExtrin, false, NULL, NULL);
+		
+		config->rotVector[0] = cvCurRotVec.data.fl[0];
+		config->rotVector[1] = cvCurRotVec.data.fl[1];
+		config->rotVector[2] = cvCurRotVec.data.fl[2];
 	}
 
 	for (int row =0 ; row < 4; row++)
@@ -820,7 +837,6 @@ AR_TEMPL_FUNC bool AR_TEMPL_TRACKER::executeCVPoseEstimator(ARMarkerInfo *detect
 	free(pos3d);
 	return true;
 }
-
 
 AR_TEMPL_FUNC void
 AR_TEMPL_TRACKER::activateVignettingCompensation(bool nEnable, int nCorners, int nLeftRight, int nTopBottom)

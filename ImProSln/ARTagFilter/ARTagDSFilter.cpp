@@ -363,6 +363,13 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
+			if (m_bDrawReproPt)
+			{
+				const ARFloat* matARView = m_ARTracker->getModelViewMatrix();
+				const ARFloat* matARProj = m_ARTracker->getProjectionMatrix();
+				ShowReprojectImage(imgOut, 0,
+					NULL, NULL, matARView, matARProj );
+			}
 			/*
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{
@@ -557,6 +564,10 @@ bool ARTagDSFilter::ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*
 HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, const ARMarkerInfo* detectedMarkers, 
 										   const ARMultiMarkerInfoT* config, const double* matView, const double* matProj)
 {
+	if (nDetected < 0 && (config == NULL || config->bKalmanFixed == false))
+	{
+		return S_OK;
+	}
 	if (srcImage == NULL)
 		return S_FALSE;
 	
@@ -631,6 +642,11 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 	D3DXMatrixScaling(&matInvScale, 1.0/ bscale[0], 1.0/bscale[1], 1.0/bscale[2]);
 
 	matExtrin = matScale * matExtrin;
+	CvScalar drawColor = cvScalar(255, 0, 0);
+	if (config->bKalmanFixed)
+	{
+		drawColor = cvScalar(0, 255, 255);
+	}
 	for (int i =0; i< nValidDetected; i++)
 	{
 		for (int j =0; j<4;j++)
@@ -648,9 +664,45 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 			
 			int x = vtmp.x;
 			int y = vtmp.y;
-			cvDrawCircle(srcImage, cvPoint(x, y), 3, cvScalar(255,0,0), 2);	
+			cvDrawCircle(srcImage, cvPoint(x, y), 3, drawColor, 2);	
 		}
 	}
+	// Draw Predict
+	/*
+	float predExtrinc[16] = {0};
+	drawColor = cvScalar(255,255,0);
+	for (int dt = 2; dt <= 10; dt += 2)
+	{
+		m_ARTracker->predictCVPose(dt, predExtrinc);
+		for (int row =0 ; row < 4; row++)
+		{
+			for(int col =0; col<4; col++)
+			{
+				matExtrin.m[col][row] = predExtrinc[row*4 + col];
+			}
+		}
+		matExtrin = matScale * matExtrin;
+		for (int i =0; i< nValidDetected; i++)
+		{
+			for (int j =0; j<4;j++)
+			{
+				D3DXVECTOR4 vtmp(0,0,0,0);
+				D3DXVECTOR3 v3d;
+				v3d.x = pos3d[4*3*i + 3*j + 0]; 
+				v3d.y = pos3d[4*3*i + 3*j + 1]; 
+				v3d.z = pos3d[4*3*i + 3*j + 2]; 
+
+				D3DXVec3Transform(&vtmp, &v3d, &matExtrin);
+				vtmp.x /= vtmp.z;
+				vtmp.y  /= vtmp.z;
+				D3DXVec4Transform(&vtmp, &vtmp, &m_matIntri);
+
+				int x = vtmp.x;
+				int y = vtmp.y;
+				cvDrawCircle(srcImage, cvPoint(x, y), 3, drawColor, 2);	
+			}
+		}
+	}*/
 	free(pos3d);
 
 	return S_OK;
@@ -1320,6 +1372,26 @@ bool ARTagDSFilter::setbGuessPose(bool v)
 	m_bGuessPose = v;
 	return true;
 }
+bool ARTagDSFilter::getbUseKalman()
+{
+	CAutoLock lck(&m_csARTracker);
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->getbUseKalman();
+}
+bool ARTagDSFilter::setbUseKalman(bool v)
+{
+	CAutoLock lck(&m_csARTracker);
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->setbUseKalman(v);
+}
+
+
 bool ARTagDSFilter::IsReady()
 {
 	if (m_ARTracker == NULL)
@@ -1474,7 +1546,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	int bDrawReProj = this->getbDrawReproPt();
 	int bGuessPose = this->getbGuessPose();
 	int bAutoThreshold = this->getAutoThreshold();
-	int bMultiThreshold = this->getMultiThreshold();
+	int bUseKalman = this->getbUseKalman();
 
 	float confThreshold = this->getConfThreshold();
 	int threshold = this->getThreshold();
@@ -1488,7 +1560,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	this->getWorldBasisScale(worldScale);
 
 	fwprintf_s(filestream, L"%d %d %d \n", poseEstimator, markermode, undistMode);
-	fwprintf_s(filestream, L"%d %d %d %d %d\n", bDrawTag,  bDrawReProj, bGuessPose, bAutoThreshold, bMultiThreshold);
+	fwprintf_s(filestream, L"%d %d %d %d %d\n", bDrawTag,  bDrawReProj, bGuessPose, bAutoThreshold, bUseKalman);
 	fwprintf_s(filestream, L"%f %d %f\n", confThreshold, threshold, borderWidth);
 	
 	fwprintf_s(filestream, L"%d %d \n", camXsize, camYsize);
@@ -1523,7 +1595,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	int bDrawReProj = 1;
 	int bGuessPose = 1;
 	int bAutoThreshold = 0;
-	int bMultiThreshold = 0;
+	int bUseKalman = 0;
 	double confThreshold = 0.9;
 	int threshold = 100;
 	double borderWidth = 0.125;
@@ -1534,7 +1606,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	double worldScale[3] = {1};
 
 	fwscanf_s(filestream, L"%d %d %d \n", &poseEstimator, &markermode, &undistMode);
-	fwscanf_s(filestream, L"%d %d %d %d %d\n", &bDrawTag, &bDrawReProj, &bGuessPose, &bAutoThreshold, &bMultiThreshold);
+	fwscanf_s(filestream, L"%d %d %d %d %d\n", &bDrawTag, &bDrawReProj, &bGuessPose, &bAutoThreshold, &bUseKalman);
 	fwscanf_s(filestream, L"%lf %d %lf\n", &confThreshold, &threshold, &borderWidth);
 
 	fwscanf_s(filestream, L"%d %d \n", &camXsize, &camYsize);
@@ -1558,7 +1630,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	this->setbDrawReproPt(bDrawReProj);
 	this->setbGuessPose(bGuessPose);
 	this->setAutoThreshold(bAutoThreshold);
-	this->setMultiThreshold(bMultiThreshold);
+	this->setbUseKalman(bUseKalman);
 	this->setConfThreshold(confThreshold);
 	this->setThreshold(threshold);
 	this->setBorderWidth(borderWidth);
