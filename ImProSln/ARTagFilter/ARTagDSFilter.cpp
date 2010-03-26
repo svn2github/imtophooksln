@@ -668,41 +668,43 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 		}
 	}
 	// Draw Predict
-	/*
-	float predExtrinc[16] = {0};
-	drawColor = cvScalar(255,255,0);
-	for (int dt = 2; dt <= 10; dt += 2)
+	if (getbUseKalman())
 	{
-		m_ARTracker->predictCVPose(dt, predExtrinc);
-		for (int row =0 ; row < 4; row++)
+		float predExtrinc[16] = {0};
+		drawColor = cvScalar(255,255,0);
+		for (int dt = 2; dt <= 10; dt += 2)
 		{
-			for(int col =0; col<4; col++)
+			m_ARTracker->predictCVPose(dt, predExtrinc);
+			for (int row =0 ; row < 4; row++)
 			{
-				matExtrin.m[col][row] = predExtrinc[row*4 + col];
+				for(int col =0; col<4; col++)
+				{
+					matExtrin.m[col][row] = predExtrinc[row*4 + col];
+				}
+			}
+			matExtrin = matScale * matExtrin;
+			for (int i =0; i< nValidDetected; i++)
+			{
+				for (int j =0; j<4;j++)
+				{
+					D3DXVECTOR4 vtmp(0,0,0,0);
+					D3DXVECTOR3 v3d;
+					v3d.x = pos3d[4*3*i + 3*j + 0]; 
+					v3d.y = pos3d[4*3*i + 3*j + 1]; 
+					v3d.z = pos3d[4*3*i + 3*j + 2]; 
+
+					D3DXVec3Transform(&vtmp, &v3d, &matExtrin);
+					vtmp.x /= vtmp.z;
+					vtmp.y  /= vtmp.z;
+					D3DXVec4Transform(&vtmp, &vtmp, &m_matIntri);
+
+					int x = vtmp.x;
+					int y = vtmp.y;
+					cvDrawCircle(srcImage, cvPoint(x, y), 3, drawColor, 2);	
+				}
 			}
 		}
-		matExtrin = matScale * matExtrin;
-		for (int i =0; i< nValidDetected; i++)
-		{
-			for (int j =0; j<4;j++)
-			{
-				D3DXVECTOR4 vtmp(0,0,0,0);
-				D3DXVECTOR3 v3d;
-				v3d.x = pos3d[4*3*i + 3*j + 0]; 
-				v3d.y = pos3d[4*3*i + 3*j + 1]; 
-				v3d.z = pos3d[4*3*i + 3*j + 2]; 
-
-				D3DXVec3Transform(&vtmp, &v3d, &matExtrin);
-				vtmp.x /= vtmp.z;
-				vtmp.y  /= vtmp.z;
-				D3DXVec4Transform(&vtmp, &vtmp, &m_matIntri);
-
-				int x = vtmp.x;
-				int y = vtmp.y;
-				cvDrawCircle(srcImage, cvPoint(x, y), 3, drawColor, 2);	
-			}
-		}
-	}*/
+	}
 	free(pos3d);
 
 	return S_OK;
