@@ -563,8 +563,8 @@ bool CBlobTracker::drawFingers(IplImage* img)
 		}
 		cvDrawRect(img, cvPoint(x - 0.5*width, y-0.5*height), 
 			cvPoint(x+ 0.5*width, y+0.5*height), color, 1);
-		sprintf_s(str, MAX_PATH, "%d\0", current[i].ID);
-		cvPutText(img, str, cvPoint(x, y), &cvFont(1), color);
+		//sprintf_s(str, MAX_PATH, "%d\0", current[i].ID);
+		//cvPutText(img, str, cvPoint(x, y), &cvFont(1), color);
 		
 		int fID = current[i].ID;
 		float posX = 0, posY = 0;
@@ -575,9 +575,9 @@ bool CBlobTracker::drawFingers(IplImage* img)
 				FingerKalman* kalman = m_fKalman[fID];
 				if (kalman != NULL)
 				{
-					for (int i = 0; i < 5; i ++)
+					for (int i = 1; i < 5; i ++)
 					{
-						kalman->predict(i*12, &posX, &posY);
+						kalman->predict(i*3, &posX, &posY);
 						cvDrawCircle(img, cvPoint(posX, posY), 0.5*width, cvScalar(255,255,0));
 					}
 				}
