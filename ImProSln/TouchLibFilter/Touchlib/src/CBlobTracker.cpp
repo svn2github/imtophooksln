@@ -842,9 +842,9 @@ CvKalman* FingerKalman::generateKalman()
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
 		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-3) );
+		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
-		cvZero( retKalman->error_cov_post);
 		cvZero(retKalman->temp1);
 		cvZero(retKalman->temp2);
 		cvZero(retKalman->temp3);
