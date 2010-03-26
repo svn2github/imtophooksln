@@ -838,11 +838,19 @@ CvKalman* FingerKalman::generateKalman()
 	CvKalman* retKalman = NULL;
 	retKalman = cvCreateKalman( 4, 4, 0 );
 
-	memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
-	cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
-	cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-	cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
-	cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
+		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
+		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
+		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-3) );
+		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
+
+		cvZero( retKalman->error_cov_post);
+		cvZero(retKalman->temp1);
+		cvZero(retKalman->temp2);
+		cvZero(retKalman->temp3);
+		cvZero(retKalman->temp4);
+		cvZero(retKalman->temp5);
+		cvZero(retKalman->gain);
 
 	return retKalman;
 }
