@@ -661,7 +661,7 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 			cvDrawCircle(srcImage, cvPoint(x, y), 3, drawColor, 2);	
 		}
 	}
-	// Draw Predict
+	/*// Draw Predict
 	if (getbUseKalman())
 	{
 		float predExtrinc[16] = {0};
@@ -698,7 +698,7 @@ HRESULT ARTagDSFilter::ShowReprojectImage(IplImage* srcImage, int nDetected, con
 				}
 			}
 		}
-	}
+	}*/
 	free(pos3d);
 
 	return S_OK;
