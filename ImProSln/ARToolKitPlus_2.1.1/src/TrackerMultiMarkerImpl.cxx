@@ -276,7 +276,14 @@ BOOL PoseKalman::predict(int dt, float* predT, float* predR, float* predV, float
 		Quaternion2AxisAngle(quanterion, axisAngle);
 		float axisLength = sqrt(axisAngle[0]*axisAngle[0] + 
 			axisAngle[1]*axisAngle[1]+ axisAngle[2]*axisAngle[2]);
-
+		while(axisAngle[3] > 2*CV_PI)
+		{
+			axisAngle[3] -= 2*CV_PI;
+		}
+		while(axisAngle[3] < 0)
+		{
+			axisAngle[3] += 2*CV_PI;
+		}
 		for (int i = 0; i < 3 ;i++)
 		{
 			predR[i] = axisAngle[i]/axisLength * axisAngle[3];
@@ -293,6 +300,20 @@ BOOL PoseKalman::GetLastPose(float* lastT, float* lastR)
 	if (lastT == NULL || lastR == NULL)
 		return FALSE;
 	memcpy(m_lastT, lastT, sizeof(m_lastT) );
+	return TRUE;
+}
+BOOL PoseKalman::GetMeasureNoiseCov(float& fNoiseCov)
+{
+	if (m_QuaternionKalman == NULL)
+		return FALSE;
+	fNoiseCov = m_QuaternionKalman->measurement_noise_cov->data.fl[0];
+	return TRUE;
+}
+BOOL PoseKalman::SetMeasureNoiseCov(float fNoiseCov)
+{
+	if (m_QuaternionKalman == NULL)
+		return FALSE;
+	cvSetIdentity(m_QuaternionKalman->measurement_noise_cov, cvRealScalar(fNoiseCov));
 	return TRUE;
 }
 CvKalman* PoseKalman::generateKalman(KalmanType kType)
@@ -312,7 +333,7 @@ CvKalman* PoseKalman::generateKalman(KalmanType kType)
 		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-5) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
@@ -426,6 +447,7 @@ ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 {
 	m_pPoseKalman = NULL;
 	m_nFixFrame = 0;
+	m_KalmanMNoise = 0.1;
 	this->logger = NULL;
 	for (int i =0; i <3; i++)
 		m_basisScale[i] = 1;
@@ -497,7 +519,18 @@ ARMM_TEMPL_FUNC bool ARMM_TEMPL_TRACKER::setbUseKalman(bool v)
 	bUseKalman = v;
 	return true;
 }
-
+ARMM_TEMPL_FUNC BOOL ARMM_TEMPL_TRACKER::GetMeasureNoiseCov(float& fNoiseCov)
+{
+	fNoiseCov = m_KalmanMNoise;
+	return TRUE;
+}
+ARMM_TEMPL_FUNC BOOL ARMM_TEMPL_TRACKER::SetMeasureNoiseCov(float fNoiseCov)
+{
+	m_KalmanMNoise = fNoiseCov;
+	if (m_pPoseKalman != NULL)
+		m_pPoseKalman->SetMeasureNoiseCov(fNoiseCov);
+	return TRUE;
+}
 ARMM_TEMPL_FUNC bool
 ARMM_TEMPL_TRACKER::init(const char* nCamParamFile, const char* nMultiFile, ARFloat nNearClip, ARFloat nFarClip,
 						 ARToolKitPlus::Logger* nLogger)
@@ -805,6 +838,7 @@ ARMM_TEMPL_FUNC bool ARMM_TEMPL_TRACKER::updatePoseKalman(ARMarkerInfo *marker_i
 	{
 		m_pPoseKalman = new PoseKalman();
 		m_pPoseKalman->init(curT, curR);
+		m_pPoseKalman->SetMeasureNoiseCov(m_KalmanMNoise);
 
 	}
 	else if (marker_num > 0 && m_pPoseKalman != NULL)

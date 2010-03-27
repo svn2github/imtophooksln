@@ -57,6 +57,8 @@ public:
 	virtual bool setbGuessPose(bool v);
 	virtual bool getbUseKalman();
 	virtual bool setbUseKalman(bool v);
+	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov);
+	virtual BOOL SetMeasureNoiseCov(float fNoiseCov);
 
 	virtual bool setWorldBasisScale(double v[3]);
 	virtual bool getWorldBasisScale(double v[3]);

@@ -77,6 +77,8 @@ public:
 	BOOL update(float* curT, float* curR);
 	BOOL predict(int dt, float* predT, float* predR, float* predV = NULL, float* predVR = NULL);
 	BOOL GetLastPose(float* lastT, float* lastR);
+	BOOL GetMeasureNoiseCov(float& fNoiseCov);
+	BOOL SetMeasureNoiseCov(float fNoiseCov);
 };
 
 namespace ARToolKitPlus
@@ -218,6 +220,9 @@ public:
 	bool predictCVPose(int dt, float* cvTrans);
 	bool getbUseKalman();
 	bool setbUseKalman(bool v);
+	BOOL GetMeasureNoiseCov(float& fNoiseCov);
+	BOOL SetMeasureNoiseCov(float fNoiseCov);
+
 	static void* operator new(size_t size);
 
 
@@ -232,6 +237,7 @@ protected:
 	int				numDetected;
 	bool            bUseKalman;
 	bool			useDetectLite;
+	float           m_KalmanMNoise;
 	ARMultiMarkerInfoT  *config;
 
 	int				detectedMarkerIDs[AR_TEMPL_TRACKER::MAX_IMAGE_PATTERNS];

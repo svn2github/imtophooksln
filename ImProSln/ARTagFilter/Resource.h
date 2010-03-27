@@ -40,8 +40,10 @@
 #define IDC_txtBorderW                  2022
 #define IDC_Mat32                       2023
 #define IDC_SLIDER_ConfThreshold        2023
+#define IDC_SLIDER_MeasureNoise         2023
 #define IDC_Mat33                       2024
 #define IDC_txtConfThreshold            2024
+#define IDC_txtMeasureNoise             2024
 #define IDC_Mat20                       2025
 #define IDC_Mat21                       2026
 #define IDC_Mat22                       2027
@@ -55,7 +57,6 @@
 #define IDC_EDIT3                       2034
 #define IDC_edZaxis                     2034
 #define IDC_CKAutoThreshold             2034
-#define IDC_CKMultiThreshold            2035
 #define IDC_CKUseKalman                 2035
 
 // Next default values for new objects

@@ -302,6 +302,8 @@ public:
 	virtual bool predictCVPose(int dt, float* cvTrans) = 0;
 	virtual bool getbUseKalman() = 0;
 	virtual bool setbUseKalman(bool v) = 0;
+	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov) = 0;
+	virtual BOOL SetMeasureNoiseCov(float fNoiseCov) = 0;
 };
 
 

@@ -189,9 +189,9 @@ BEGIN
     CONTROL         "",IDC_SLIDER_BorderW,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,142,154,13
     LTEXT           "Border Width:",IDC_STATIC,16,143,46,8
     LTEXT           "Static",IDC_txtBorderW,132,157,19,8
-    CONTROL         "",IDC_SLIDER_ConfThreshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,88,154,13
-    CTEXT           "static",IDC_txtConfThreshold,132,100,23,10
-    RTEXT           "Conf Threshold:",IDC_STATIC,7,89,55,10
+    CONTROL         "",IDC_SLIDER_MeasureNoise,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,88,154,13
+    CTEXT           "static",IDC_txtMeasureNoise,132,100,23,10
+    RTEXT           "Measure Noise:",IDC_STATIC,7,89,55,10
     PUSHBUTTON      "Load ARConfig",IDC_BtnLoadARTag,156,9,65,14
     CONTROL         "Draw ReProj",IDC_CKReProj,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,38,56,10
     CONTROL         "Guess Pose",IDC_CKGuessPose,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,51,53,10

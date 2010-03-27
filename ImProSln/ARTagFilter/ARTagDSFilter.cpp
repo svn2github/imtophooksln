@@ -1387,7 +1387,24 @@ bool ARTagDSFilter::setbUseKalman(bool v)
 	return m_ARTracker->setbUseKalman(v);
 }
 
-
+BOOL ARTagDSFilter::GetMeasureNoiseCov(float& fNoiseCov)
+{
+	CAutoLock lck(&m_csARTracker);
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->GetMeasureNoiseCov(fNoiseCov);
+}
+BOOL ARTagDSFilter::SetMeasureNoiseCov(float fNoiseCov)
+{
+	CAutoLock lck(&m_csARTracker);
+	if (m_ARTracker == NULL)
+	{
+		return false;
+	}
+	return m_ARTracker->SetMeasureNoiseCov(fNoiseCov);
+}
 bool ARTagDSFilter::IsReady()
 {
 	if (m_ARTracker == NULL)
