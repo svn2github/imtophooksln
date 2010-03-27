@@ -568,7 +568,7 @@ bool CBlobTracker::drawFingers(IplImage* img)
 		
 		int fID = current[i].ID;
 		float posX = 0, posY = 0;
-		if (m_bUseKalmanFilter)
+		/*if (m_bUseKalmanFilter)
 		{
 			if (fID != -1)
 			{
@@ -582,7 +582,7 @@ bool CBlobTracker::drawFingers(IplImage* img)
 					}
 				}
 			}
-		}
+		}*/
 	}
 	return true;
 }
@@ -760,20 +760,7 @@ BOOL CBlobTracker::correctLostFingerByKalman()
 				removeKalmanID.push_back(fID);
 				continue;
 			}
-			
-			float posX =0, posY =0;
-			m_fKalman[fID]->predict(1, &posX, &posY);
-			ffinger.center.X = posX;
-			ffinger.center.Y = posY;
-			float halfx = (ffinger.box.lowerRightCorner.X - ffinger.box.upperLeftCorner.X)*0.5;
-			float halfy = (ffinger.box.lowerRightCorner.Y - ffinger.box.upperLeftCorner.Y)*0.5;
-			ffinger.box.upperLeftCorner.set(ffinger.center.X-halfx, ffinger.center.Y-halfy);
-			ffinger.box.lowerRightCorner.set(ffinger.center.X+halfx, ffinger.center.Y+halfy);
-
-			m_fKalman[fID]->update(&ffinger);
-			
-			fixedFingers.push_back(ffinger);
-			
+			fixedFingers.push_back(ffinger);		
 		}
 	}
 	for (int i =0; i < removeKalmanID.size(); i++)
@@ -803,7 +790,22 @@ BOOL CBlobTracker::replaceFingerPosByKalman()
 			FingerKalman* fkalman = m_fKalman[fID];
 			if (fkalman == NULL)
 				continue;
-			fkalman->predict(0, &current[i].center.X, &current[i].center.Y, NULL, NULL, NULL, NULL);
+			if (fkalman->m_lostTimes > 0)
+			{
+				WCHAR str[MAX_PATH] = {0};
+				swprintf_s(str, MAX_PATH, L"@@@@ id = %d, lostTime = %d \n", fID, fkalman->m_lostTimes);
+				OutputDebugStringW(str);
+			}
+			float kPosX = 0, kPosY=0;
+			fkalman->predict(fkalman->m_lostTimes, &kPosX, &kPosY, NULL, NULL, NULL, NULL);
+			
+			current[i].center.X = kPosX;
+			current[i].center.Y = kPosY;
+			float halfx = (current[i].box.lowerRightCorner.X - current[i].box.upperLeftCorner.X)*0.5;
+			float halfy = (current[i].box.lowerRightCorner.Y - current[i].box.upperLeftCorner.Y)*0.5;
+			current[i].box.upperLeftCorner.set(current[i].center.X-halfx, current[i].center.Y-halfy);
+			current[i].box.lowerRightCorner.set(current[i].center.X+halfx, current[i].center.Y+halfy);
+
 		}
 	}
 
@@ -841,7 +843,7 @@ CvKalman* FingerKalman::generateKalman()
 		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-3) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
@@ -896,6 +898,10 @@ BOOL FingerKalman::update(const CFinger* curFinger)
 	cvReleaseMat(&measurement);
 	measurement = NULL;
 	m_lastFinger = *curFinger;
+
+	//if we never call predict, openCV kalman will in a wrong state.
+	float predX = 0, predY = 0;
+	this->predict(1, &posX, &posY);
 	return TRUE;
 }
 
@@ -927,7 +933,7 @@ BOOL FingerKalman::predict(int dt, float* posX, float* posY, float* vX, float* v
 			//0, 0, 0, 0, 1, 0,   // 0*x + 0*y + 0*Vx + 0*Vy + 1Ax + 0Ay = Ax
 			//0, 0, 0, 0, 0, 1};  // 0*x + 0*y + 0*Vx + 1*Vy + 0Ax + 1Ay = Ay
 		memcpy( m_kalman->transition_matrix->data.fl, A, sizeof(A));
-		
+	
 		const CvMat* predictResult = cvKalmanPredict(m_kalman, NULL);
  		*posX = predictResult->data.fl[0];
 		*posY = predictResult->data.fl[1];
