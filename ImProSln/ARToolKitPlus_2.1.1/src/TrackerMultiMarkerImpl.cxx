@@ -93,10 +93,10 @@ BOOL PoseKalman::init(float* curT, float* curR)
 	m_QuaternionKalman->state_post->data.fl[2] = quanterion[2];
 	m_QuaternionKalman->state_post->data.fl[3] = quanterion[3];
 
-	m_QuaternionKalman->state_post->data.fl[0] = 0;
-	m_QuaternionKalman->state_post->data.fl[1] = 0;
-	m_QuaternionKalman->state_post->data.fl[2] = 0;
-	m_QuaternionKalman->state_post->data.fl[3] = 0;
+	m_QuaternionKalman->state_post->data.fl[4] = 0;
+	m_QuaternionKalman->state_post->data.fl[5] = 0;
+	m_QuaternionKalman->state_post->data.fl[6] = 0;
+	m_QuaternionKalman->state_post->data.fl[7] = 0;
 
 	memcpy(m_lastT, curT, sizeof(m_lastT));	
 	memcpy(m_lastQuaterion, quanterion, sizeof(m_lastQuaterion));
@@ -861,9 +861,6 @@ ARMM_TEMPL_FUNC	bool ARMM_TEMPL_TRACKER::replaceCvPoseByKalman(ARMultiMarkerInfo
 	{
 		normCurR[i] = curR[i] / angle;
 	}
-	swprintf_s(str, MAX_PATH, L"@@@@@ kalman rotVector: %.2f, %.2f, %.2f, %.2f \n",
-		normCurR[0], normCurR[1], normCurR[2], angle);
-	OutputDebugStringW(str);
 
 	float normOrgR[3] = {0}, OrgAngle = 0;
 	OrgAngle = sqrt(config->rotVector[0]*config->rotVector[0] + 
@@ -872,30 +869,13 @@ ARMM_TEMPL_FUNC	bool ARMM_TEMPL_TRACKER::replaceCvPoseByKalman(ARMultiMarkerInfo
 	{
 		normOrgR[i] = config->rotVector[i] / OrgAngle;
 	}
-	swprintf_s(str, MAX_PATH, L"@@@@@ org rotVector: %.2f, %.2f, %.2f, %.2f \n",
-		normOrgR[0], normOrgR[1], normOrgR[2], OrgAngle);
-	OutputDebugStringW(str);
 	
 	for (int i = 0; i <3; i ++)
 	{
 		cvRotVec->data.fl[i] = curR[i];
 	}
 	cvRodrigues2(cvRotVec, cvRotMat);
-	OutputDebugStringW(L"@@@@@ cvRotMat: \n");
-		
-	for (int row = 0; row < 3; row++)
-	{
-		swprintf_s(str, MAX_PATH, L"@@@@@      ");
-		for (int col = 0; col<3; col++)
-		{
-			swprintf_s(str, MAX_PATH, L"%s %.2f", str, cvRotMat->data.fl[row*3 + col]);
-		}
-		swprintf_s(str, MAX_PATH, L"%s \n", str);
-		OutputDebugStringW(str);
-	}
 	
-
-
 	for(int i = 0 ; i <3 ; i ++){
 		for(int j = 0 ; j <3 ; j ++){
 			config->cvTrans[i][j] = cvmGet(cvRotMat,i,j);
