@@ -194,8 +194,8 @@ namespace googleearth {
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
-	private: System::Windows::Forms::Button^  button1;
-	private: System::Windows::Forms::Button^  button2;
+
+
 
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
@@ -214,7 +214,7 @@ namespace googleearth {
 			//
 			
 			//full screen mode
-			//setFullScreen();			
+			setFullScreen();			
 
 			g_formPtr = this;
 			
@@ -227,7 +227,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 			
-			//setupSocket();
+			setupSocket();
 						
 		}
 
@@ -493,8 +493,6 @@ namespace googleearth {
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
-			this->button1 = (gcnew System::Windows::Forms::Button());
-			this->button2 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -512,33 +510,11 @@ namespace googleearth {
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
-			// button1
-			// 
-			this->button1->Location = System::Drawing::Point(0, 0);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(75, 23);
-			this->button1->TabIndex = 1;
-			this->button1->Text = L"button1";
-			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click_1);
-			// 
-			// button2
-			// 
-			this->button2->Location = System::Drawing::Point(0, 39);
-			this->button2->Name = L"button2";
-			this->button2->Size = System::Drawing::Size(75, 23);
-			this->button2->TabIndex = 2;
-			this->button2->Text = L"button2";
-			this->button2->UseVisualStyleBackColor = true;
-			this->button2->Click += gcnew System::EventHandler(this, &Form1::button2_Click_1);
-			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
 			this->ClientSize = System::Drawing::Size(628, 334);
-			this->Controls->Add(this->button2);
-			this->Controls->Add(this->button1);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
@@ -608,14 +584,16 @@ namespace googleearth {
 
 				double vspaceX = (double)intersect_origin_point.x / (double)1.33;
 				double vspaceY = -intersect_origin_point.y;
+				double heading = GEData.getHeading();
 				//double lat = intersect_point.y;
 				//double lng = intersect_point.x;
 
 				String^ _vspaceX = vspaceX.ToString("0.0000");
 				String^ _vspaceY = vspaceY.ToString("0.0000");
+				String^ _heading = heading.ToString("0.0000");
 				
-//				if(GetNetworkStream != nullptr)
-//					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY);
+				if(GetNetworkStream != nullptr)
+					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY + "," + _heading);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
@@ -667,11 +645,13 @@ namespace googleearth {
 				array<Object^>^ parameterModel = gcnew array<Object^>(2); 
 				parameterModel[0] = GEData.getIntersect_point().y;
 				parameterModel[1] = GEData.getIntersect_point().x;
-				webBrowser1->Document->InvokeScript("setModelLoc",parameterModel);
+				
+				//webBrowser1->Document->InvokeScript("setModelLoc",parameterModel);
+				webBrowser1->Document->InvokeScript("setIconLoc",parameterModel);
 			 
 			 }
 			 
-			 //if(boundaryDirty){
+			 if(boundaryDirty){
 				array<Object^>^ parameterB = gcnew array<Object^>(8); 
 				
 				parameterB[0] = LeftTopLong;
@@ -686,8 +666,8 @@ namespace googleearth {
 				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);
 				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
 				
-				//boundaryDirty = false;
-			 //}
+				boundaryDirty = false;
+			 }
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		

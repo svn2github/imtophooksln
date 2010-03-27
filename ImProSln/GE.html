@@ -27,6 +27,11 @@ var placemarkModel;
 var model;
 var link;   
 
+//for icon
+var placemarkIcon;
+var icon;
+var point; 
+
 function init() {
 
   google.earth.createInstance("map3d-1", initCB1, failureCB);
@@ -57,12 +62,27 @@ function initCB1(object) {
   placemarkModel.setGeometry(model); 
   
   var link = ge.createLink(''); 
-  link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImProSln/model/Ball/models/Ball.dae'); 
+  link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImProSln/model/circle.dae'); 
   model.setLink(link); 
   
   ge.getFeatures().appendChild(placemarkModel);
 
 //////////////////////////////////////////////////////////////////////////////////////////////////  
+
+////////icon//////////////////////////////////////////////////////////////////////////////////////////
+
+placemarkIcon = ge.createPlacemark(''); 
+icon = ge.createIcon(''); 
+icon.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImProSln/model/marker512.png'); 
+var style = ge.createStyle(''); 
+style.getIconStyle().setIcon(icon); 
+style.getIconStyle().setScale(2.0); 
+placemarkIcon.setStyleSelector(style); 
+point = ge.createPoint(''); 
+
+ge.getFeatures().appendChild(placemarkIcon);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////  boundaryLineStyle1  //////////////////////////////////////////////////////////////////////
 //  var line = ge.createLineString(''); 
@@ -335,14 +355,24 @@ function setModelLoc(latitude,longitude) {
     var loc = ge.createLocation(''); 
     loc.setLatitude(latitude); 
     loc.setLongitude(longitude); 
+    loc.setAltitude(10);
     
     var scale = ge.createScale('');
-    scale.setX(2);
-    scale.setY(2);
-    scale.setZ(2);
+    scale.setX(50);
+    scale.setY(50);
+    scale.setZ(50);
     
     model.setLocation(loc); 
     model.setScale(scale);
+
+}
+
+function setIconLoc(latitude,longitude) {
+ 
+    point.setLatitude(latitude); 
+    point.setLongitude(longitude); 
+    
+    placemarkIcon.setGeometry(point);
 
 }
 
@@ -356,7 +386,7 @@ function remove() {
 </script>
   </head>
   <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
-    <div id="map3d-1" style="width: 500px; height: 380px;"></div>
+    <div id="map3d-1" style="width: 1024px; height: 600px;"></div>
     <div id="map3d-2" style="position: absolute; left: 20px; top: 40px; width: 150px; height: 140px;"></div>
   </body>
 </html>
