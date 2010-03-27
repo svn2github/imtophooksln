@@ -1,11 +1,9 @@
 package impro.googlemap
 {
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.geom.Point;
-	import flash.text.TextField;
-	import flash.text.TextFieldAutoSize;
-	import flash.text.TextFormat;
 	
 	public class ViewportControl extends Sprite //RotatableScalable
 	{
@@ -40,6 +38,7 @@ package impro.googlemap
 			this.updateCallback = callback;
 			this.w = w;
 			this.h = h;
+			
 			
 			if(DEBUG)
 			{

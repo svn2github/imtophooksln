@@ -19,7 +19,13 @@ package
 		
 		public function push(url:String, label:String):void{
 			imagesInfo.push({ url: url, label: label});
-			loadImage(url, label);
+//			loadImage(url, label);
+		}
+		
+		public function startLoading():void{
+			for each(var object:Object in imagesInfo){
+				loadImage(object.url, object.label);
+			}	
 		}
 		
 		private function loadImage(url:String, label:String):void{

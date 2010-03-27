@@ -7,6 +7,7 @@ package impro.googlemap
 	import com.google.maps.MapZoomEvent;
 	import com.google.maps.controls.MapTypeControl;
 	import com.google.maps.controls.NavigationControl;
+	import com.google.maps.overlays.Marker;
 	import com.google.maps.services.ClientGeocoder;
 	import com.google.maps.services.GeocodingEvent;
 	
@@ -14,6 +15,8 @@ package impro.googlemap
 	import flash.events.Event;
 	import flash.events.TUIO;
 	import flash.geom.Point;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 	import flash.net.XMLSocket;
 	import flash.text.TextField;
 	import flash.utils.Dictionary;
@@ -90,19 +93,24 @@ package impro.googlemap
 		}
 		
 		public function flyToLatlng(latlng:LatLng, zoom:Number):void{
-	    	map.setCenter(latlng, zoom);	        			
-		}
+	    	map.setCenter(latlng, zoom);
+ 	        
+			 	        // Create our "tiny" marker icon
+			
+ 	        var marker:Marker = new Marker(latlng);
+ 	        map.addOverlay(marker); 	
+		}		
 		
 		private function geoCodingSuccess(event:GeocodingEvent):void{
-          var placemarks:Array = event.response.placemarks;
-          if (placemarks.length > 0) {
-            map.setCenter(placemarks[0].point);
+//          var placemarks:Array = event.response.placemarks;
+//          if (placemarks.length > 0) {
+//            map.setCenter(placemarks[0].point);
 //            var marker:Marker = new Marker(placemarks[0].point);          
 //            marker.addEventListener(MapMouseEvent.CLICK, function (event:MapMouseEvent):void {
 //                marker.openInfoWindow(new InfoWindowOptions({content: placemarks[0].address}));
 //            });
 //            map.addOverlay(marker);
-          }			
+//          }			
 		}
 
         private function geoCodingFailure(event:GeocodingEvent):void {
@@ -171,17 +179,7 @@ package impro.googlemap
 			}
 			return geControl;
 		}
-		
-		public function recvGeCenter(id:String, vspaceX:Number, vspaceY:Number):void{
-			var geControl:GEControl = geControlDict[id] as GEControl;			
-			if(geControl != null){
-				var lresX:Number = vspaceX * Setting.LRes.stageWidth;
-				var lresY:Number = vspaceY * Setting.LRes.stageHeight;
-				geControl.x = lresX;
-				geControl.y = lresY;				
-			}
-		}
-		
+				
 		public function getViewport (id:Number):MapViewport{
 			return viewportDict[id];
 		}

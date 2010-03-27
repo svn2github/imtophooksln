@@ -3,6 +3,7 @@ package impro.googlemap
 	import com.google.maps.LatLng;
 	import com.google.maps.Map;
 	
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.geom.Point;
@@ -10,6 +11,7 @@ package impro.googlemap
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
+	
 	
 	public class GEControl extends Sprite
 	{	
@@ -27,6 +29,8 @@ package impro.googlemap
 //		private var roll:Number = 0;
 
 //		private var debugGUI:Sprite;		
+		private var arrow:Bitmap;
+		private var arrowSprite:Sprite;
 
 		//-------------------------------------- DEBUG VARS
 		private var DEBUG:Boolean = true;
@@ -76,7 +80,20 @@ package impro.googlemap
 			return _id;
 		}		
 		
-
+		public function setArrowIcon(icon:Bitmap):void{
+			icon.x = -icon.width/2
+			icon.y = -icon.height/2			
+			arrowSprite = new Sprite();
+			arrowSprite.addChild(icon);
+			addChild(arrowSprite);
+		}
+		
+		public function setPositionHeading(posX:Number, posY:Number, heading:Number):void{
+			arrowSprite.rotation = heading;			
+			this.x = posX;
+			this.y = posY;
+		}
+		
 		private function pickUp(event:MouseEvent):void {
 		    event.target.startDrag(false);
 		}
@@ -102,8 +119,9 @@ package impro.googlemap
 		public function update():void{
 //			updateMap();
 			updateSend();
+			updateControl();
+			
 			if(DEBUG){
-				updateControl();
 				updateDebug();
 			}
 		}
@@ -112,23 +130,46 @@ package impro.googlemap
 			// clear drawing
 			this.graphics.clear();
 
-			var w:Number = 50, h:Number = 50;
-			this.graphics.beginFill(0x0000ff, 0.4);
-			this.graphics.drawRect(-w/2, -h/2, w, h);
-			this.graphics.endFill();
+			var w:Number = 55, h:Number = 55;
+
+//			this.graphics.beginFill(0x0000ff, 0.4);
+//			this.graphics.drawRect(-w/2, -h/2, w, h);
+//			this.graphics.endFill();
 			
+//			// draw cross line
+//			this.graphics.beginFill(0x0000ff, 1);
+//			this.graphics.drawRect(0, -h/2, 1, h);
+//			this.graphics.drawRect(-w/2, 0, w, 1);			
+//			this.graphics.endFill();
+//			
+//			this.graphics.lineStyle(1, 0x0000ff);
+//			this.graphics.moveTo(-w/2, -h/2);
+//			this.graphics.lineTo(w/2, -h/2);
+//			this.graphics.lineTo(w/2, h/2);			
+//			this.graphics.lineTo(-w/2, h/2);
+//			this.graphics.lineTo(-w/2, -h/2);
+			
+			var c:uint = 0x0000ff;			
+			if(this._id == "tabletGE_0"){
+				c = 0xff0000;
+			}
+			else if(this._id == "tabletGE_1"){
+				c = 0x00ff00;
+			}
+			else if(this._id == "tabletGE_2"){
+				c = 0x0000ff;
+			}
+			
+			this.graphics.beginFill(c, 0.5);
+			this.graphics.lineStyle(2, c);
+			this.graphics.drawCircle(0, 0, w/2);
+
 			// draw cross line
-			this.graphics.beginFill(0x0000ff, 1);
-			this.graphics.drawRect(0, -h/2, 1, h);
+			this.graphics.beginFill(c, 1);
+			this.graphics.drawRect(0, -w/2, 1, w);
 			this.graphics.drawRect(-w/2, 0, w, 1);			
 			this.graphics.endFill();
-			
-			this.graphics.lineStyle(1, 0x0000ff);
-			this.graphics.moveTo(-w/2, -h/2);
-			this.graphics.lineTo(w/2, -h/2);
-			this.graphics.lineTo(w/2, h/2);			
-			this.graphics.lineTo(-w/2, h/2);
-			this.graphics.lineTo(-w/2, -h/2);		
+			 		
 			
 			// connecting line
 //			this.graphics.lineStyle(2, 0x00ff00, 0.6);

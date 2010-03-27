@@ -1,9 +1,13 @@
 package {
 	
+	import com.adobe.serialization.json.JSON;
 	import com.google.maps.LatLng;
 	
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.*;
+	import flash.net.URLLoader;
+	import flash.net.URLRequest;
 	import flash.net.XMLSocket;
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
@@ -24,6 +28,8 @@ package {
 		private	var editor:MTEditor;
 		private var socket:XMLSocket;
 		private var imgLoader:ImagesLoader;
+		private var arrowLoader:ImagesLoader;
+		private var panoramioLoader:ImagesLoader;
 //		private var sightSeeingBtns:Dictionary;
 		private var sights:Dictionary;
 		
@@ -52,13 +58,28 @@ package {
 //			addKeyboardWidget();
 			
 			// add google earth client
-			addGoogleEarthClient(3);			
+			addGoogleEarthClient(2);			
 			
 			// add sightSeeing buttons
 			addSightSeeings();
 						
 //			addChild(new FPSMonitor());
-
+			arrowLoader = new ImagesLoader(function():void{
+				var ge0:GEControl = multiResMap.getGeControl("tabletGE_0");
+				var ge1:GEControl = multiResMap.getGeControl("tabletGE_1");
+				var ge2:GEControl = multiResMap.getGeControl("tabletGE_2");
+				if(ge0!=null)	ge0.setArrowIcon(arrowLoader.getImage("red"));
+				if(ge1!=null)	ge1.setArrowIcon(arrowLoader.getImage("green"));
+				if(ge2!=null)	ge2.setArrowIcon(arrowLoader.getImage("blue"));
+				
+				if(ge0!=null)	ge0.setPositionHeading(100, 100, 60);
+				if(ge1!=null)	ge1.setPositionHeading(200, 200, 120);
+				if(ge2!=null)	ge2.setPositionHeading(300, 300, 180);
+			});
+			arrowLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/ui/redArrow.png", "red");
+			arrowLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/ui/greenArrow.png", "green");
+			arrowLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/ui/blueArrow.png", "blue");
+			arrowLoader.startLoading();
 			//add stage listener 
 //			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
 //			stage.addEventListener(TouchEvent.CLICK, touchDown);
@@ -97,13 +118,14 @@ package {
 			for each (var value:Object in sights) {
 				var location:String = (value as GoogleAddress).location;
 //				imgLoader.push("assets/sightseeings/"+location+".png", location);
-				imgLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/sightseeings/"+location+".png", location);				
+				imgLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/sightseeings/"+location+".png", location);								
 			}
-		} 	
+			imgLoader.startLoading();
+		}
 		
 		private function sightImageLoaded():void{
 
-			var btnWidth:Number = 100;
+			var btnWidth:Number = 60;
 			var btnMargin:Number = 1;
 			
 			var i:Number = 1;
@@ -118,20 +140,89 @@ package {
 				addChild(sightBtn);				
 				i++;
 			}			
-		}
+		}		
 
 		private function tuioUpEvent(e:TouchEvent):void{
 			var location:String = e.currentTarget.name;
-			var gAdress:GoogleAddress = sights[location] as GoogleAddress;			
-			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);
+			var gAdress:GoogleAddress = sights[location] as GoogleAddress;
+			gotoSightseeing(gAdress);
 		}
 		
 		private function mouseUpEvent(e:MouseEvent):void{
 			var location:String = e.currentTarget.name;
 			var gAdress:GoogleAddress = sights[location] as GoogleAddress;
-			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);			
+			gotoSightseeing(gAdress);
+		}
+		
+		private function gotoSightseeing(gAdress:GoogleAddress):void{						
+			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);
+//			queryPanoramio(gAdress);			
+		} 
+
+		private function queryPanoramio(gAdress:GoogleAddress):void  
+		{  
+			
+		    var panoramioURL:String = "http://www.panoramio.com/map/get_panoramas.php?order=popularity&set=public&from=0&to=50&minx=-180&miny=-90&maxx=180&maxy=90&size=medium";  
+		    var request:URLRequest = new URLRequest(panoramioURL);  
+		    var loader:URLLoader = new URLLoader(request);  
+		    loader.addEventListener(Event.COMPLETE, panoramioQueryComplete);  
+		    loader.addEventListener(  
+		        IOErrorEvent.IO_ERROR,  
+		        function(event:Event):void  
+		        {  		             
+		            trace("There was an IO error contacting Panoramio");
+//		            Alert.show("There was an IO error contacting Panoramio");  
+		        }  
+		    );  
+		    loader.addEventListener(		      
+		        SecurityErrorEvent.SECURITY_ERROR,  
+		        function(event:Event):void  
+		        {		        	 
+		        	trace("There was a security error contacting Panoramio");
+//		            Alert.show("There was a security error contacting Panoramio");  
+		        }  
+		    );  
 		}
 
+		private function panoramioQueryComplete(event:Event):void  
+		{  
+			panoramioLoader = new ImagesLoader(panoramioLoaded);
+			
+		    var response:URLLoader = URLLoader(event.target);  
+		    var responseData:Object = JSON.decode(response.data);  
+		  	var locx:Number = 100;
+		  	var index:Number = 1;
+		  	for each (var image:Object in responseData.photos)  
+		    {  	
+		    	if(index <= 5){
+			    	trace("photo_file_url: " + image.photo_file_url);
+			    	trace("width: " + image.width);
+			    	trace("height: " + image.height);
+			    	trace("longitude: "+ image.longitude);
+			    	trace("latitude: " + image.latitude);
+			    	
+			    	panoramioLoader.push(image.photo_file_url, "panoramio_" + index);				
+	//		    	multiResMap.overlayPhoto(image.latitude, image.longitude, image.photo_file_url);
+					index++;		    		
+		    	}  
+		    }
+		    panoramioLoader.startLoading();
+		}
+		
+		private function panoramioLoaded():void{
+			for(var i:Number = 1;i<=5;i++){
+				var bitmap:Bitmap = panoramioLoader.getImage("panoramio_" + i);
+				if(bitmap!=null){
+					bitmap.x = 50;
+					bitmap.y = i*100;
+					bitmap.scaleX = bitmap.scaleY = 100/bitmap.width; 
+					 
+					addChild(bitmap);					
+				}
+			}			
+		}
+
+		
 		public function close():void{			
 		}		
 
@@ -199,7 +290,15 @@ package {
 			}else if(cmd=="geDebug"){
 				var vspaceX:Number = Number(data[4]);
 				var vspaceY:Number = Number(data[5]);
-				multiResMap.recvGeCenter(from, vspaceX, vspaceY);
+				var heading:Number = Number(data[6]);
+				heading = (heading + 180) % 360;
+
+				var ge:GEControl = multiResMap.getGeControl(from);
+				if(ge!=null){
+					var lresX:Number = vspaceX * Setting.LRes.stageWidth;
+					var lresY:Number = vspaceY * Setting.LRes.stageHeight;
+					ge.setPositionHeading(lresX, lresY, heading);					
+				}
 //				trace("vspace: " + vspaceX + ", " + vspaceY);
 			}else if(cmd=="clientLogin"){
 				var who:String = data[4];
