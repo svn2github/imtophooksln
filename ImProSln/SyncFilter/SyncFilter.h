@@ -76,15 +76,11 @@ private:
 	CCritSec m_cSharedState;            // Protects our internal state
 	CCritSec locDirty;
 	CCritSec locBlock;
-	IplImage* backgroundIplImg;
-	IplImage* foregroundIplImg;
-	IplImage* cameraInputIplImg;
-
 
 private:
 	CCritSec locMarkerInfo;
 	ARLayoutConfigData tagConfig ;
-	int layoutType ; 
+	int layoutType ;       // 0:: RGB 1:: LayoutConfig
 	
 
 	

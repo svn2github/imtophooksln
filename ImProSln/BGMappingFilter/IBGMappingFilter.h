@@ -10,8 +10,8 @@ IBGMappingFilter: public IUnknown
 public:
 	virtual HRESULT setBGThreshold(int BGthres) ;
 	virtual int getBGThreshold();
-	virtual HRESULT setWhiteValue(int wValue) ;
-	virtual int getWhiteValue();
+	virtual HRESULT setSubValue(int wValue) ;
+	virtual int getSubValue();
 	virtual HRESULT setBlackValue(int bValue) ;
 	virtual int getBlackValue();
 

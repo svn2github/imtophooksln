@@ -13,23 +13,36 @@ BGMappingFilter::BGMappingFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifies
 	cameraInputIplImg = NULL;
 	camChannel = 3 ;
 	layoutChannel = 3;
-	 cameraW  = 640;
-	 cameraH  = 480;
-	 layoutW  = 800;
-	 layoutH  = 600;
-	isReceiveCam = false ;
-	isReceiveBG = false ;
-
-	
+	cameraW  = 640;
+	cameraH  = 480;
+	layoutW  = 800;
+	layoutH  = 600;
+	setIsReceiveBG(false);
 }
+
 BGMappingFilter::~BGMappingFilter()
 {
-	if(backgroundIplImg!= NULL)
-	cvReleaseImage(&backgroundIplImg);
-	if(foregroundIplImg!= NULL)
-	cvReleaseImage(&foregroundIplImg);
-	if(cameraInputIplImg!= NULL)
-	cvReleaseImage(&cameraInputIplImg);
+	if(backgroundIplImg!= NULL){
+		cvReleaseImage(&backgroundIplImg);
+		backgroundIplImg = NULL;
+	}
+	if(foregroundIplImg!= NULL){
+		cvReleaseImage(&foregroundIplImg);
+		foregroundIplImg = NULL;
+	}
+	if(cameraInputIplImg!= NULL){
+		cvReleaseImage(&cameraInputIplImg);
+		cameraInputIplImg = NULL;
+	}
+
+	for (int i = 0 ; i < tagConfigVec.size(); i++)
+	{
+		if(tagConfigVec[i] != NULL){
+			delete tagConfigVec[i];
+			tagConfigVec[i] = NULL;
+		}
+	}
+	tagConfigVec.clear();
 }
 
 
@@ -71,15 +84,34 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 	{
 		return S_FALSE;
 	}
+	CAutoLock lck(&m_csBGSetting);
+	if(getIsReceiveBG() == true ){
+		
 
-	if(isReceiveBG == true ){
 		if(BG->layoutType == 0){
 			BG->setBackground(backgroundIplImg);
 		}
 		else if(BG->layoutType == 1){
-			BG->setTranBG();
+			for(int numConfig = 0 ; numConfig < tagConfigVec.size() ; numConfig++){
+				int tagSize = 0 ;
+				
+				tagSize = tagConfigVec[numConfig]->m_numMarker;
+				for(int i = 0 ; i < tagSize ; i ++){
+					BG->BGTran[i]->isVisible = tagConfigVec[numConfig]->m_ARMarkers[i].visible ;
+				}
+				BG->setTranBG();
+			}
+			
+			for (int i = 0 ; i < tagConfigVec.size(); i++)
+			{
+				if(tagConfigVec[i] != NULL){
+					delete tagConfigVec[i];
+					tagConfigVec[i] = NULL;
+				}
+			}
+			tagConfigVec.clear();
 		}
-			isReceiveBG = false ;
+			setIsReceiveBG(false);
 	}
 
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
@@ -148,10 +180,12 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 
 HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin)
 {	
+	CAutoLock lck(&m_csBGSetting);
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
 	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
 		return S_OK;
 	}
+
 	ASSERT(pSample);
 	long bsize = pSample->GetSize();
 
@@ -162,31 +196,28 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 
 	cvResize(backgroundtmp,backgroundIplImg);
 
-	CAutoLock cAutoLockShared(&m_cSharedState);
-	isReceiveBG = true ;  // move the setBackground function to ReceiveCamImg 
+	setIsReceiveBG(true);
 	//BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 
 	return S_OK;
 }
 
-
-
 HRESULT BGMappingFilter::ReceiveARLayout(IMediaSample *pSample, const IPin* pReceivePin)
 {	
 	ARLayoutConfigData* pARTagResult = NULL;
+	ARLayoutConfigData* tagConfig = new ARLayoutConfigData() ;
+
 	pSample->GetPointer((BYTE**)&pARTagResult);
 	if (pARTagResult == NULL)
 	{
 		return S_FALSE;
 	}
-	tagConfig = *pARTagResult;
-	int tagSize = 0 ;
-	tagSize = tagConfig.m_numMarker;
-	for(int i = 0 ; i < tagSize ; i ++){
-		BG->BGTran[i]->isVisible = tagConfig.m_ARMarkers[i].visible ;
-	}
-	isReceiveBG = true ;
+    CAutoLock lck(&m_csBGSetting);
+	*tagConfig = *pARTagResult;
+	tagConfigVec.push_back(tagConfig);
+	setIsReceiveBG(true);
+	
 	return S_OK;
 
 }
@@ -218,8 +249,9 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 		CAutoLock lck(&m_csBGSetting);
 
 		CMediaType mt = ((CMuxTransformInputPin*)pReceivePin)->CurrentMediaType();
-		if(mt.subtype == GUID_ARLayoutConfigData)
+		if(mt.subtype == GUID_ARLayoutConfigData){
 			hr = ReceiveARLayout(pSample, pReceivePin);
+		}
 		else {
 			hr = ReceiveBackground(pSample, pReceivePin);
 		}
@@ -625,14 +657,14 @@ HRESULT BGMappingFilter::setBlackValue(int bValue){
 }
 
 
-int BGMappingFilter::getWhiteValue(){
+int BGMappingFilter::getSubValue(){
 	if(BG->subValue == NULL)
 		return 0 ;
 	return BG->subValue;
 }
 
-HRESULT BGMappingFilter::setWhiteValue(int wValue){
-	BG->subValue = wValue;
+HRESULT BGMappingFilter::setSubValue(int sValue){
+	BG->subValue = sValue;
 	return S_OK;
 }
 
@@ -704,4 +736,13 @@ HRESULT BGMappingFilter:: setOutputFlip(bool value) {
 }
 bool BGMappingFilter::getOutputFlip(){
 	return BG->outputFlip;
+}
+
+void BGMappingFilter::setIsReceiveBG(bool bRecBG){
+	CAutoLock loc(&m_csRecBG);
+	isReceiveBG = bRecBG;
+}
+bool BGMappingFilter::getIsReceiveBG(){
+	CAutoLock loc(&m_csRecBG);
+	return isReceiveBG;
 }

@@ -24,6 +24,23 @@ public:
 	bool isVisible;
 };
 
+class BGCandidate{
+public:
+	BGCandidate();
+	~BGCandidate();
+	
+	IplImage* getUsedImg(int index);
+	int getUsedImgCount() ;
+	int getUnusedImgIndex();
+	void setToUnused(int index);
+	void init(int imgH , int imgW);
+
+
+	vector <int> unusedImg;
+	vector <int> usedImg;
+	IplImage* imgPool[imgMAX];
+};
+
 class BackGroundMapping{
 
 public:
@@ -44,7 +61,6 @@ public:
 	void loadBGTranData(char* fileDir);
 	void getARLayout();
 	void setTranBG();
-	void setLayoutType(int type);
 	double imgSum(IplImage* img);
 
 public:
@@ -55,19 +71,19 @@ public:
 
 	IplImage*mappingTable;
 	IplImage*backgroundImg;
-	IplImage*resultImg;
+	IplImage*camImg;
 	IplImage*tmpImg;
 	IplImage*result4CImg;
 	IplImage*foregroundImg;
-	IplImage*binarySrc;
-	IplImage*binaryResult;
-	IplImage*imgPool[imgMAX];
 	IplImage* bgMask ;
 	IplImage* whiteBG ;
 
 	vector<IplImage*> historyBG ;
 	vector<BGTag*> BGTran ;
+
 	int tagTranNum ;
+
+	BGCandidate candidate ;
 
 	IplConvKernel* kernelElement;
 

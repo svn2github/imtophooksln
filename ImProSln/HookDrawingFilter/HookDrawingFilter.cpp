@@ -289,7 +289,7 @@ HRESULT HookDrawingFilter::CreatePins()
 		if (m_pD3DDisplay == NULL)
 		{
 			CreateHookWindow(320, 240); // size doesn't matter
-			HRESULT hr = initD3D(1600, 600);
+			HRESULT hr = initD3D(800, 600);
 			if (SUCCEEDED(hr))
 			{
 				hr = CreateInTexture(1600, 600);

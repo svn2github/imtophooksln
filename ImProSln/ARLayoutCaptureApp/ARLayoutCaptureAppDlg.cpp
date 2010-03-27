@@ -118,8 +118,8 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	m_cbAvgFrame.AddString(L"3");
 	m_cbAvgFrame.AddString(L"5");
 	m_cbAvgFrame.AddString(L"10");
-	m_cbAvgFrame.SetCurSel(0);
-	m_nAvgFrame = 1;
+	m_cbAvgFrame.SetCurSel(2);
+	m_nAvgFrame = 5;
 
 	int camCount = CCameraDS::CameraCount();
 	m_CamDevice.clear();

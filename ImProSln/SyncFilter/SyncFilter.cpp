@@ -9,27 +9,12 @@
 SyncFilter::SyncFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("Sync Filter"), 0, CLSID_SyncFilter)
 { 
-	backgroundIplImg = NULL;
-	foregroundIplImg = NULL;
-	cameraInputIplImg = NULL;
 	setDirty(false);
 	setBlock(false);
 	
 }
 SyncFilter::~SyncFilter()
 {
-	if(backgroundIplImg != NULL){
-		cvReleaseImage(&backgroundIplImg);
-		backgroundIplImg = NULL;
-	}
-	if(foregroundIplImg != NULL){
-		cvReleaseImage(&foregroundIplImg);
-		foregroundIplImg = NULL;
-	}
-	if(cameraInputIplImg != NULL){
-		cvReleaseImage(&cameraInputIplImg);
-		cameraInputIplImg = NULL;
-	}
 }
 
 
@@ -72,19 +57,13 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 	}
 	ASSERT(pSample);
 	IMediaSample * pOutSample = NULL;
-	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
 	HRESULT hr = S_OK;
-	// Set up the output sample
-	
-	// Start timing the transform (if PERF is defined)
 	MSR_START(m_idTransform);
-	//since we just try to sync them, we don't need copy it, we just pass it.
 
 	pOutSample = pSample;
 	pOutSample->AddRef();
 
-	// Stop the clock and log it (if PERF is defined)
 	MSR_STOP(m_idTransform);
 
 	if (FAILED(hr)) {
@@ -105,7 +84,6 @@ HRESULT SyncFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceive
 			}
 		}
 	}
-
 	pOutSample->Release();
 	return S_OK;
 }
@@ -166,15 +144,14 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 		return S_OK;
 	}
 	ASSERT(pSample);
-	IMediaSample * pOutSampleD3D = NULL;
-	IMediaSample * pOutSampleRGB = NULL;
+	IMediaSample* pOutSampleD3D = NULL;
+	IMediaSample* pOutSampleRGB = NULL;
 	CMediaSample* pOutSampleConfig = NULL ;
 
 	CMuxTransformOutputPin* pOutBGPin = GetConnectedOutputPin(1);
 	CMuxTransformOutputPin* pOutRenderPin = GetConnectedOutputPin(2);
 
 	ARLayoutConfigData sendData ;
-
 
 	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
@@ -188,10 +165,9 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	}
 	if(pOutBGPin != NULL && pOutBGPin->IsConnected() && getDirty() == true){
 		if(layoutType == 0){
-		hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
-		hr = CopyRenderTarget2OutputTexture();
-		
-		hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
+			hr = InitializeOutputSample(pSample, pReceivePin, pOutBGPin, &pOutSampleRGB);
+			hr = CopyRenderTarget2OutputTexture();	
+			hr = CopyOutputTexture2OutputData(pOutSampleRGB,&pOutBGPin->CurrentMediaType(),0);
 		}
 		else if(layoutType == 1){
 			{
@@ -199,7 +175,7 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 				sendData.m_ARMarkers = tagConfig.m_ARMarkers;
 				sendData.m_numMarker = tagConfig.m_numMarker;
 
-				IMemAllocator* pAllocator = m_pOutputPins[0]->Allocator();
+				IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
 				
 				pAllocator->GetBuffer((IMediaSample**)&pOutSampleConfig, NULL, NULL, 0);
 				if (pOutSampleConfig == NULL)
@@ -214,7 +190,6 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 
 		}
 	}
-	
 
 	if (FAILED(hr)) {
 		return hr;
@@ -230,12 +205,13 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 	} else {
 		if (hr == NOERROR) {
 
-			if(pOutSampleRGB != NULL && layoutType == 0){
+			if(pOutSampleRGB != NULL && layoutType == 0 && getDirty()== true){
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleRGB);// Pin1 :: BG  only deliver in layout change
 				setDirty(false);
 			}
-			if(pOutSampleConfig != NULL && layoutType == 1){
+			if(pOutSampleConfig != NULL && layoutType == 1 && getDirty()== true){
 				hr = GetConnectedOutputPin(1)->Deliver(pOutSampleConfig);
+				setDirty(false);
 			}
 			if( pOutSampleD3D != NULL){
 				hr = GetConnectedOutputPin(2)->Deliver(pOutSampleD3D);// Pin2 :: Render every frame deliver
@@ -288,13 +264,12 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 
 
 
-CMuxTransformOutputPin* SyncFilter::GetConnectedOutputPin(int i )
+CMuxTransformOutputPin* SyncFilter::GetConnectedOutputPin(int pinNum )
 {
-	if (m_pOutputPins[i]->IsConnected())
+	if (m_pOutputPins[pinNum]->IsConnected())
 	{
-		return m_pOutputPins[i];
+		return m_pOutputPins[pinNum];
 	}
-	
 	return NULL;
 }
 
@@ -310,7 +285,6 @@ HRESULT SyncFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[1])
 	{
 		hr = ReceiveDirty(pSample, pReceivePin);
-
 	}
 	if (m_pInputPins.size() >= 3 && pReceivePin == m_pInputPins[2])
 	{	

@@ -118,8 +118,8 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	}
 	m_pFilter->setBGThreshold(::SLIDER_GetPos(m_threshold));
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
-	m_pFilter->setWhiteValue(::SLIDER_GetPos(m_whiteValue));
-	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
+	m_pFilter->setSubValue(::SLIDER_GetPos(m_whiteValue));
+	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getSubValue());
 	m_pFilter->setBlackValue(::SLIDER_GetPos(m_blackValue));
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
 	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
@@ -160,8 +160,8 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 
 	::SLIDER_SetRange(m_whiteValue, 
 		-255, 255);
-	::SLIDER_SetPos(m_whiteValue,m_pFilter->getWhiteValue());
-	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getWhiteValue());
+	::SLIDER_SetPos(m_whiteValue,m_pFilter->getSubValue());
+	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getSubValue());
 
 	m_checkCamFlip->SetCheck(m_pFilter->getCamFlip());
 	m_checkLayoutFlip->SetCheck(m_pFilter->getLayoutFlip());
@@ -218,7 +218,7 @@ void CBGMappingPorpertyPage::OnBnClickedButton1()  // save Button
 	FILE  * pFile ;
 	pFile = fopen(Dir,"w");
 	// threshold , blackvalue , whiteValue , camFlip , layoutFlip, outputFlip
-	fprintf(pFile ,"[ %d %d %d %d %d %d] \n",m_pFilter->getBGThreshold() , m_pFilter->getBlackValue(),m_pFilter->getWhiteValue(),m_pFilter->getCamFlip(),m_pFilter->getLayoutFlip(),m_pFilter->getOutputFlip());  
+	fprintf(pFile ,"[ %d %d %d %d %d %d] \n",m_pFilter->getBGThreshold() , m_pFilter->getBlackValue(),m_pFilter->getSubValue(),m_pFilter->getCamFlip(),m_pFilter->getLayoutFlip(),m_pFilter->getOutputFlip());  
 
 	fclose(pFile);
 }

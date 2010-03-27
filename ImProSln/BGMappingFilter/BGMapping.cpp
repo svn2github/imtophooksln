@@ -21,8 +21,65 @@ BGTag::BGTag(){
 }
 
 BGTag::~BGTag(){
-	if(tagImg != NULL)
+	if(tagImg != NULL){
 		cvReleaseImage(&tagImg) ;
+		tagImg = NULL;
+	} 
+}
+
+BGCandidate ::BGCandidate(){
+}
+
+BGCandidate ::~BGCandidate(){
+
+	for(int i = 0 ; i < imgMAX; i ++){
+		if(imgPool[i] != NULL){
+			cvReleaseImage(&imgPool[i]);
+			imgPool[i] = NULL;
+		}
+	}
+}
+
+
+void BGCandidate::init(int imgH, int imgW){
+	for(int i = 0 ; i <imgMAX ; i ++){
+		unusedImg.push_back(i);
+	}
+	for(int i = 0 ;i < imgMAX ; i ++){
+		imgPool[i] = cvCreateImage(cvSize(imgW,imgH),IPL_DEPTH_8U,1);
+	}
+}
+
+int BGCandidate::getUnusedImgIndex(){
+	int unusedNo = 0 ;
+	
+	if(unusedImg.empty() == true){
+		unusedNo = usedImg[0];
+		usedImg.erase(usedImg.begin());
+		usedImg.push_back(unusedNo);
+	}
+	else{
+		unusedNo = unusedImg[0];
+		unusedImg.erase(unusedImg.begin());
+		usedImg.push_back(unusedNo);
+	}
+	return unusedNo;
+}
+
+int BGCandidate::getUsedImgCount(){
+	return usedImg.size();
+}
+
+IplImage* BGCandidate::getUsedImg(int index){
+	return imgPool[usedImg[index]];
+}
+
+void BGCandidate::setToUnused(int index){
+
+	for(int i = 0 ; i < index ; i ++){
+		unusedImg.push_back(usedImg[0]);
+		usedImg.erase(usedImg.begin());
+	}
 } 
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
@@ -40,9 +97,11 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	imgH = returnH ;
 	imgW = returnW ;
 
-	for(int i = 0 ; i < imgMAX ; i ++){
+	candidate.init(imgH,imgW);
+
+	/*for(int i = 0 ; i < imgMAX ; i ++){
 		imgPool[i] = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
-	}
+	}*/
 	char bgMaskName[100];
 	sprintf(bgMaskName,"%s\\BackgroundCaliData\\bgMask.jpg",fileDir);
 	bgMask = cvLoadImage(bgMaskName,0);
@@ -53,48 +112,54 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
 	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
+	
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
-	binaryResult = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
-	resultImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	camImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	tmpImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	result4CImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,camChannel);
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
-	binarySrc =  cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 
 	char whiteBGName[100];
 	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.png",fileDir);
 	whiteBG = cvLoadImage(whiteBGName,0);
-	
+
 	loadBGTranData(fileDir);	
 	cvSetZero(backgroundImg);
 	
-	historyBG.push_back(backgroundImg);
-
+	cvCopy(backgroundImg,candidate.imgPool[0]);
 }
 
 BackGroundMapping::~BackGroundMapping(){
 	cvDestroyAllWindows();
 	cvReleaseMat(&MatHomography);
-	if(mappingTable != NULL)
-	cvReleaseImage(&mappingTable);	
-	if(binaryResult != NULL)
-	cvReleaseImage(&binaryResult);
-	if(resultImg != NULL)
-    cvReleaseImage(&resultImg);
-	if(tmpImg != NULL)
-	cvReleaseImage(&tmpImg);
-	if(result4CImg != NULL)
-	cvReleaseImage(&result4CImg);
-	if(backgroundImg != NULL)
-	cvReleaseImage(&backgroundImg);
 
+	if(mappingTable != NULL){
+	cvReleaseImage(&mappingTable);
+	mappingTable = NULL ;
+	}
+	if( camImg != NULL){
+		cvReleaseImage(&camImg);
+		camImg = NULL ;
+	}
+	if(tmpImg != NULL){
+		cvReleaseImage(&tmpImg);
+		tmpImg = NULL; 
+	}
+	if(result4CImg != NULL){
+		cvReleaseImage(&result4CImg);
+		result4CImg = NULL ;
+	}
+	if(backgroundImg != NULL){
+		cvReleaseImage(&backgroundImg);
+		backgroundImg = NULL ;
+	}
 	cvReleaseStructuringElement(&kernelElement);
-	cvReleaseImage(&binarySrc);
 	for(int i = 0 ; i < imgMAX; i ++){
 		if(historyBG[i] != NULL){
 			cvReleaseImage(&historyBG[i]);
+			historyBG[i] = NULL;
 		}
 	}
 }
@@ -126,14 +191,15 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	}		
 
 	//cvCopy(backgroundImg,temp);
-	cvFilter2D(backgroundImg,imgPool[imgIndex],kerMat);
-	cvSmooth(imgPool[imgIndex],backgroundImg,2,3);
-	cvCopy(backgroundImg,imgPool[imgIndex]);
-	historyBG.push_back(imgPool[imgIndex]);
+	//cvFilter2D(backgroundImg,imgPool[imgIndex],kerMat);
+	//cvSmooth(imgPool[imgIndex],backgroundImg,2,3);
+	//cvCopy(backgroundImg,imgPool[imgIndex]);
+	//
+	/*historyBG.push_back(imgPool[imgIndex]);
 	imgIndex++;
 	if(imgIndex == imgMAX){
 		imgIndex = 0 ;
-	}
+	}*/
 
 }
 
@@ -145,57 +211,41 @@ void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
 
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	
-	
 	int realBGindex  = 0;
 	int minValue = 1e10 ;
-	cvCvtColor( srcImg, resultImg, CV_RGB2GRAY);
-	if(camFlip ==true){
-		cvFlip(resultImg);
+	cvCvtColor( srcImg, camImg, CV_RGB2GRAY);
+	if(camFlip == true){
+		cvFlip(camImg);
 	}
-	
-	if(SHOW_WINDOW){
-	cvShowImage("src",resultImg);
-	}
-	int BGSize = historyBG.size();
 
-	for(int i = 0 ;i < BGSize; i ++){
-		cvAddS(historyBG[i],cvScalar(subValue,subValue,subValue),tmpImg);
-	    cvAbsDiff(resultImg,tmpImg,tmpImg);
+	int BGCandiSize = candidate.usedImg.size();
+
+	for(int i = 0 ;i < BGCandiSize; i ++){
+		cvAddS(candidate.getUsedImg(i),cvScalar(subValue,subValue,subValue),tmpImg);
+	    cvAbsDiff(camImg,tmpImg,tmpImg);
+		
 		CvScalar sum = cvSum(tmpImg);
-		if(sum.val[0] <= minValue){
+		if(sum.val[0] < minValue){
 			minValue = sum.val[0];
-			realBGindex = i ;					
+			realBGindex = i;			
 		}	
 	}
 
-	if(historyBG[realBGindex] != NULL){
-		cvAddS(historyBG[realBGindex],cvScalar(subValue,subValue,subValue),tmpImg);
-		cvSub(resultImg,tmpImg,resultImg);
-		cvAnd(resultImg,bgMask,resultImg);
+	if(candidate.getUsedImg(realBGindex) != NULL){
+		cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
+		cvSub(camImg,tmpImg,camImg);
+		cvAnd(camImg,bgMask,camImg);
+	}
 
-		if(SHOW_WINDOW){
-			cvShowImage("sub",resultImg);
-			cvShowImage("realBG",tmpImg);
-		}
-	}
 	if(realBGindex != 0){
-		historyBG.erase(historyBG.begin(),historyBG.begin()+realBGindex-1);
-		
+		candidate.setToUnused(realBGindex);
 	}
-	/*if(SHOW_WINDOW){
-		cvShowImage("result",resultImg);
-	}*/
-	cvCvtColor(resultImg, result4CImg, CV_GRAY2RGB);
+	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
-		cvThreshold(resultImg,resultImg,BGthreshold,255,0);
-		if (SHOW_WINDOW)
-		{
-			cvShowImage("threshold",resultImg);
-			cvWaitKey(1);
-		}
+		cvThreshold(camImg,camImg,BGthreshold,255,0);
 	}
-	findForegroundRect(resultImg);
+	findForegroundRect(camImg);
 
 	if(outputFlip == true){
 		cvFlip(result4CImg);
@@ -265,9 +315,7 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 
 
 void BackGroundMapping::setTranBG(){
-
 	cvResize(whiteBG, backgroundImg);
-
 	for (int i = 0 ; i < tagTranNum ; i ++)
 	{
 		if(BGTran[i]->isVisible){
@@ -277,13 +325,9 @@ void BackGroundMapping::setTranBG(){
 		}
 	}
 
-	cvCopy(backgroundImg,imgPool[imgIndex]);
-	historyBG.push_back(imgPool[imgIndex]);
-	imgIndex++;
-	if(imgIndex == imgMAX){
-		imgIndex = 0 ;
-	}
+	int index = candidate.getUnusedImgIndex();
 
+	cvCopy(backgroundImg, candidate.imgPool[index]);	
 }
 
 
@@ -298,8 +342,4 @@ double BackGroundMapping::imgSum(IplImage* img){
 	}
 	return sumResult;
 
-}
-
-void BackGroundMapping::setLayoutType(int type){
-	
 }

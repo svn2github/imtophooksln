@@ -50,7 +50,7 @@ private:
 	virtual HRESULT ReceiveBackground(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual HRESULT ReceiveARLayout(IMediaSample *pSample, const IPin* pReceivePin);
 	virtual CMuxTransformOutputPin* GetConnectedOutputPin();
-	ARLayoutConfigData tagConfig ;
+	vector <ARLayoutConfigData*> tagConfigVec ;
 	
 
 public:
@@ -62,8 +62,8 @@ public:
 	virtual int getBGThreshold();
 	virtual HRESULT setBlackValue(int bValue) ;
 	virtual int getBlackValue();
-	virtual HRESULT setWhiteValue(int wValue) ;
-	virtual int getWhiteValue();
+	virtual HRESULT setSubValue(int sValue) ;
+	virtual int getSubValue();
 	virtual HRESULT setCamFlip(bool value) ;
 	virtual bool getCamFlip();
 	virtual HRESULT setLayoutFlip(bool value) ;
@@ -74,9 +74,14 @@ public:
 
 	void setLayoutVisible();
 
+private:
+	void setIsReceiveBG(bool bRecBG) ;
+	bool getIsReceiveBG();
+
 
 
 private:
+	CCritSec m_csRecBG;
 	CCritSec m_csBGSetting;
 	CCritSec locMarkerInfo;
 	CCritSec m_cSharedState;            // Protects our internal state
@@ -91,7 +96,6 @@ private:
 	int layoutH ;
 	int camChannel;
 	int layoutChannel;
-	bool isReceiveCam ; 
 	bool isReceiveBG;
 
 };
