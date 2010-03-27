@@ -96,6 +96,7 @@ package {
 //			});  
 			
 			
+			
 //			var iview:IMView = multiResMap.getMapStage();
 			
 			TUIO.init(Setting.LRes, this, 'localhost', 3000, '', Setting.DEBUG);
@@ -158,10 +159,10 @@ package {
 			multiResMap.flyToLatlng(gAdress.latlng, gAdress.zoom);
 //			queryPanoramio(gAdress);			
 		} 
-
+		
+		/*
 		private function queryPanoramio(gAdress:GoogleAddress):void  
 		{  
-			
 		    var panoramioURL:String = "http://www.panoramio.com/map/get_panoramas.php?order=popularity&set=public&from=0&to=50&minx=-180&miny=-90&maxx=180&maxy=90&size=medium";  
 		    var request:URLRequest = new URLRequest(panoramioURL);  
 		    var loader:URLLoader = new URLLoader(request);  
@@ -171,7 +172,6 @@ package {
 		        function(event:Event):void  
 		        {  		             
 		            trace("There was an IO error contacting Panoramio");
-//		            Alert.show("There was an IO error contacting Panoramio");  
 		        }  
 		    );  
 		    loader.addEventListener(		      
@@ -179,11 +179,10 @@ package {
 		        function(event:Event):void  
 		        {		        	 
 		        	trace("There was a security error contacting Panoramio");
-//		            Alert.show("There was a security error contacting Panoramio");  
 		        }  
 		    );  
 		}
-
+		
 		private function panoramioQueryComplete(event:Event):void  
 		{  
 			panoramioLoader = new ImagesLoader(panoramioLoaded);
@@ -215,25 +214,25 @@ package {
 				if(bitmap!=null){
 					bitmap.x = 50;
 					bitmap.y = i*100;
-					bitmap.scaleX = bitmap.scaleY = 100/bitmap.width; 
-					 
+					bitmap.scaleX = bitmap.scaleY = 100/bitmap.width; 					 
 					addChild(bitmap);					
 				}
 			}			
 		}
-
+		*/
 		
 		public function close():void{			
 		}		
 
-		private function addMultiResMap():void{
+		private function addMultiResMap():void{	
+			
 			// add low resolution views
 			var lres:IMView = Setting.LRes;
 			multiResMap = new MultiResMap(0, 0, lres.stageWidth, lres.stageHeight, Setting.DEBUG);
 			// add high resolution views
 			for each (var view:IMView in Setting.HRes)
 				multiResMap.addViewport(view.id, view.stageX, view.stageY, view.stageWidth, view.stageHeight) 
-			addChild(multiResMap);			
+			addChild(multiResMap);	
 		}
 		
 		private function addKeyboardWidget():void{
@@ -297,9 +296,17 @@ package {
 				if(ge!=null){
 					var lresX:Number = vspaceX * Setting.LRes.stageWidth;
 					var lresY:Number = vspaceY * Setting.LRes.stageHeight;
-					ge.setPositionHeading(lresX, lresY, heading);					
+					
+					var radius:Number = 0;
+					if(lresX < 0)	radius = Math.abs(lresX);
+					if(lresX > Setting.LRes.stageWidth)
+						radius = Math.max(radius, lresX - Setting.LRes.stageWidth);						
+					if(lresY < 0)	radius = Math.max(radius, -lresY);
+					if(lresY > Setting.LRes.stageHeight)
+						radius = Math.max(radius, lresY - Setting.LRes.stageHeight);
+						
+					ge.setPositionHeading(lresX, lresY, heading, radius);
 				}
-//				trace("vspace: " + vspaceX + ", " + vspaceY);
 			}else if(cmd=="clientLogin"){
 				var who:String = data[4];
 				trace(who + " login");

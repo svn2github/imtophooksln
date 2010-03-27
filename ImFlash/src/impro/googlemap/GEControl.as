@@ -12,6 +12,7 @@ package impro.googlemap
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	
+	import impro.Setting;
 	
 	public class GEControl extends Sprite
 	{	
@@ -29,8 +30,8 @@ package impro.googlemap
 //		private var roll:Number = 0;
 
 //		private var debugGUI:Sprite;		
-		private var arrow:Bitmap;
-		private var arrowSprite:Sprite;
+		private var uiSprite:Sprite;
+		private var halo:Number = 0;
 
 		//-------------------------------------- DEBUG VARS
 		private var DEBUG:Boolean = true;
@@ -49,6 +50,9 @@ package impro.googlemap
 			this.addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
 			this.addEventListener(MouseEvent.MOUSE_UP, dropIt);
 			
+			uiSprite = new Sprite();
+			addChild(uiSprite);				
+
 			if(DEBUG){
 
 //				debugGUI = new Sprite();
@@ -78,20 +82,23 @@ package impro.googlemap
 		
 		public function get id():String{
 			return _id;
-		}		
-		
+		}
+				
 		public function setArrowIcon(icon:Bitmap):void{
 			icon.x = -icon.width/2
 			icon.y = -icon.height/2			
-			arrowSprite = new Sprite();
-			arrowSprite.addChild(icon);
-			addChild(arrowSprite);
+			uiSprite.addChild(icon);
 		}
 		
-		public function setPositionHeading(posX:Number, posY:Number, heading:Number):void{
-			arrowSprite.rotation = heading;			
+		public function setPositionHeading(posX:Number, posY:Number, heading:Number, halo:Number=0):void{
+			uiSprite.rotation = heading;			
 			this.x = posX;
 			this.y = posY;
+			this.halo = halo;	
+		}
+		
+		public function setHalo(value:Number):void{
+			this.halo = value;
 		}
 		
 		private function pickUp(event:MouseEvent):void {
@@ -128,27 +135,9 @@ package impro.googlemap
 		
 		public function updateControl():void{
 			// clear drawing
-			this.graphics.clear();
+			uiSprite.graphics.clear();
 
-			var w:Number = 55, h:Number = 55;
-
-//			this.graphics.beginFill(0x0000ff, 0.4);
-//			this.graphics.drawRect(-w/2, -h/2, w, h);
-//			this.graphics.endFill();
-			
-//			// draw cross line
-//			this.graphics.beginFill(0x0000ff, 1);
-//			this.graphics.drawRect(0, -h/2, 1, h);
-//			this.graphics.drawRect(-w/2, 0, w, 1);			
-//			this.graphics.endFill();
-//			
-//			this.graphics.lineStyle(1, 0x0000ff);
-//			this.graphics.moveTo(-w/2, -h/2);
-//			this.graphics.lineTo(w/2, -h/2);
-//			this.graphics.lineTo(w/2, h/2);			
-//			this.graphics.lineTo(-w/2, h/2);
-//			this.graphics.lineTo(-w/2, -h/2);
-			
+			var w:Number = 55, h:Number = 55;		
 			var c:uint = 0x0000ff;			
 			if(this._id == "tabletGE_0"){
 				c = 0xff0000;
@@ -160,21 +149,23 @@ package impro.googlemap
 				c = 0x0000ff;
 			}
 			
-			this.graphics.beginFill(c, 0.5);
-			this.graphics.lineStyle(2, c);
-			this.graphics.drawCircle(0, 0, w/2);
+			uiSprite.graphics.beginFill(c, 0.5);
+			uiSprite.graphics.lineStyle(2, c);
+			uiSprite.graphics.drawCircle(0, 0, w/2);
 
 			// draw cross line
-			this.graphics.beginFill(c, 1);
-			this.graphics.drawRect(0, -w/2, 1, w);
-			this.graphics.drawRect(-w/2, 0, w, 1);			
-			this.graphics.endFill();
-			 		
-			
+			uiSprite.graphics.beginFill(c, 1);
+			uiSprite.graphics.drawRect(0, -w/2, 1, w);
+			uiSprite.graphics.drawRect(-w/2, 0, w, 1);			
+			uiSprite.graphics.endFill();
+		
 			// connecting line
-//			this.graphics.lineStyle(2, 0x00ff00, 0.6);
-//			this.graphics.moveTo(0, 0);
-//			this.graphics.lineTo(debugGUI.x, debugGUI.y);			
+//			uiSprite.graphics.lineStyle(8, c, 0.2);
+//			uiSprite.graphics.moveTo(0, 0);
+//			uiSprite.graphics.lineTo(0, -w*4);
+			
+			// DRAW HALO
+			uiSprite.graphics.drawCircle(0, 0, halo);
 		}
 		
 		public function moveLeft(value:Number=1):void{
