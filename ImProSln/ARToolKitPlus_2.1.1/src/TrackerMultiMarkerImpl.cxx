@@ -129,12 +129,33 @@ BOOL PoseKalman::update(float* curT, float* curR)
 	}
 
 	float quanterion[4] = {0};
+	float equalQuanterion[4] = {0};
 	float mQuanterion[4] = {0};
 	float measureAxisAngle[4] = {normCurR[0], normCurR[1], normCurR[2], Rlength};
 	AxisAngle2Quaternion(measureAxisAngle, mQuanterion);
-	
-	for (int i = 0; i <4; i++)
-		quanterion[i] = mQuanterion[i];
+
+	for (int i =0; i < 4; i++)
+		equalQuanterion[i] = -mQuanterion[i];
+
+	float dEQ = (equalQuanterion[0] - m_lastQuaterion[0])*(equalQuanterion[0] - m_lastQuaterion[0]) +
+				(equalQuanterion[1] - m_lastQuaterion[1])*(equalQuanterion[1] - m_lastQuaterion[1]) +
+				(equalQuanterion[2] - m_lastQuaterion[2])*(equalQuanterion[2] - m_lastQuaterion[2]) +
+				(equalQuanterion[3] - m_lastQuaterion[3])*(equalQuanterion[3] - m_lastQuaterion[3]);
+	float dQ =  (mQuanterion[0] - m_lastQuaterion[0])*(mQuanterion[0] - m_lastQuaterion[0]) +
+		(mQuanterion[1] - m_lastQuaterion[1])*(mQuanterion[1] - m_lastQuaterion[1]) +
+		(mQuanterion[2] - m_lastQuaterion[2])*(mQuanterion[2] - m_lastQuaterion[2]) +
+		(mQuanterion[3] - m_lastQuaterion[3])*(mQuanterion[3] - m_lastQuaterion[3]);
+
+	if (dEQ > dQ)
+	{
+		for (int i = 0; i <4; i++)
+			quanterion[i] = mQuanterion[i];
+	}
+	else
+	{
+		for (int i = 0; i <4; i++)
+			quanterion[i] = equalQuanterion[i];
+	}
 	measurementQ->data.fl[0] = quanterion[0];
 	measurementQ->data.fl[1] = quanterion[1];
 	measurementQ->data.fl[2] = quanterion[2];
@@ -145,6 +166,7 @@ BOOL PoseKalman::update(float* curT, float* curR)
 	measurementQ->data.fl[6] = quanterion[2] - m_lastQuaterion[2];
 	measurementQ->data.fl[7] = quanterion[3] - m_lastQuaterion[3];
 	
+
 	cvKalmanCorrect(m_TKalman, measurementT);
 	cvKalmanCorrect(m_QuaternionKalman, measurementQ);
 	
@@ -186,7 +208,7 @@ BOOL PoseKalman::predict(int dt, float* predT, float* predR, float* predV, float
 
 		float axisAngle[4] = {0};
 		Quaternion2AxisAngle(quanterion, axisAngle);
-	
+
 		float axisLength = sqrt(axisAngle[0]*axisAngle[0] + 
 			axisAngle[1]*axisAngle[1]+ axisAngle[2]*axisAngle[2]);
 		
