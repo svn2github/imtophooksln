@@ -1133,9 +1133,11 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bool bSkipBG = false;
 	bool bUseKalman = true;
 	int nFrameFix = 0;
+	float mnoise = 0.01;
 
 	bUseKalman = getUseKalmanFilter();
 	nFrameFix = getNumFrameFix();
+	getKalmanMNoise(mnoise);
 	bSkipBG = GetIsSkipBGRemove();
 	GetBGThreshold(bgThreshold);
 	GetSimpleHighPassDeNoise(deNoise);
@@ -1147,9 +1149,9 @@ HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 	bDrawFinger = getDrawFingers();
 	bDrawROI = getDrawROI();
 	bFlipY = GetbFlipY();
-	fwprintf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d\n",
+	fwprintf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d %f\n",
 		bSkipBG, bgThreshold, blur, deNoise, scaleLevel, rectifyLevel,
-		bStartTracking, bDrawFinger, bDrawROI, bFlipY, bUseKalman, nFrameFix);
+		bStartTracking, bDrawFinger, bDrawROI, bFlipY, bUseKalman, nFrameFix, mnoise);
 	fclose(filestream);
 	return S_OK;
 }
@@ -1174,9 +1176,11 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 	int bSkipBG = false;
 	int bUseKalman = true;
 	int nFrameFix = 0;
-	fwscanf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d\n",
+	double mnoise = 0;
+
+	fwscanf_s(filestream, L"%d %d %d %d %d %d\n %d %d %d %d\n %d %d %lf\n",
 		&bSkipBG, &bgThreshold, &blur, &deNoise, &scaleLevel, &rectifyLevel, 
-		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY, &bUseKalman, &nFrameFix);
+		&bStartTracking, &bDrawFinger, &bDrawROI, &bFlipY, &bUseKalman, &nFrameFix, &mnoise);
 	fclose(filestream);
 	SetIsSKipBGRemove(bSkipBG);
 	SetBGThreshold(bgThreshold);
@@ -1192,6 +1196,7 @@ HRESULT TouchLibFilter::LoadFromFile(WCHAR* path)
 
 	setUseKalmanFilter(bUseKalman);
 	setNumFrameFix(nFrameFix);
+	setKalmanMNoise(mnoise);
 	return S_OK;
 }
 HRESULT TouchLibFilter::GetName(WCHAR* name, UINT szName)

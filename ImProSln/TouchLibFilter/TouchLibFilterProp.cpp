@@ -232,14 +232,14 @@ bool TouchLibPropPage::GetSetting()
 	m_slrNumFrameFix.SetPos(m_pFilter->getNumFrameFix());
 	swprintf_s(str, MAX_PATH, L"%d", m_pFilter->getNumFrameFix());
 	m_txtNumFrameFix.SetWindowText(str);
-	/*float mnoise = 0.01;
+	float mnoise = 0.01;
 	int intMNoise = 2;
 	m_pFilter->getKalmanMNoise(mnoise);
 	intMNoise = abs(log10(mnoise));
 	m_slrMNoise.SetPos(intMNoise);
 	swprintf_s(str, MAX_PATH, L"%d", intMNoise);
 	m_txtMNoise.SetWindowText(str);
-*/
+
 
 	if (m_pFilter->IsOSCConnected())
 	{
