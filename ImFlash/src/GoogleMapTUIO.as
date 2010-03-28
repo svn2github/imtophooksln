@@ -62,7 +62,7 @@ package {
 			
 			// add sightSeeing buttons
 			addSightSeeings();
-						
+				   		
 //			addChild(new FPSMonitor());
 			arrowLoader = new ImagesLoader(function():void{
 				var ge0:GEControl = multiResMap.getGeControl("tabletGE_0");
