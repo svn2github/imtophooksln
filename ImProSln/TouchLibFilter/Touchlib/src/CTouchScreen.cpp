@@ -816,7 +816,7 @@ bool CTouchScreen::drawROIs(IplImage* img, ROIData* roiData)
 		width = (roiData->m_pRECTs[i].right - roiData->m_pRECTs[i].left)*(img->width-1);
 		height = (roiData->m_pRECTs[i].bottom - roiData->m_pRECTs[i].top)*(img->height-1);
 		cvDrawRect(img, cvPoint(x,y), 
-			cvPoint(x + width, y + height), cvScalar(0, 255, 0), 3);
+			cvPoint(x + width, y + height), cvScalar(0, 255, 0), 1);
 		
 	}
 	return true;
