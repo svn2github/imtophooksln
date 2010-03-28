@@ -166,7 +166,6 @@ BOOL PoseKalman::update(float* curT, float* curR)
 	measurementQ->data.fl[6] = quanterion[2] - m_lastQuaterion[2];
 	measurementQ->data.fl[7] = quanterion[3] - m_lastQuaterion[3];
 	
-
 	cvKalmanCorrect(m_TKalman, measurementT);
 	cvKalmanCorrect(m_QuaternionKalman, measurementQ);
 	
@@ -205,6 +204,7 @@ BOOL PoseKalman::predict(int dt, float* predT, float* predR, float* predV, float
 		m_QuaternionKalman->state_post->data.fl[1],
 		m_QuaternionKalman->state_post->data.fl[2],
 		m_QuaternionKalman->state_post->data.fl[3]};
+
 
 		float axisAngle[4] = {0};
 		Quaternion2AxisAngle(quanterion, axisAngle);
@@ -335,7 +335,7 @@ CvKalman* PoseKalman::generateKalman(KalmanType kType)
 		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-3) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
@@ -366,7 +366,7 @@ CvKalman* PoseKalman::generateKalman(KalmanType kType)
 		
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-3) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
@@ -449,7 +449,7 @@ ARMM_TEMPL_TRACKER::TrackerMultiMarkerImpl(int nWidth, int nHeight)
 {
 	m_pPoseKalman = NULL;
 	m_nFixFrame = 0;
-	m_KalmanMNoise = 0.1;
+	m_KalmanMNoise = 0.001;
 	this->logger = NULL;
 	for (int i =0; i <3; i++)
 		m_basisScale[i] = 1;
@@ -889,7 +889,6 @@ ARMM_TEMPL_FUNC	bool ARMM_TEMPL_TRACKER::replaceCvPoseByKalman(ARMultiMarkerInfo
 	CvMat* cvRotVec = NULL;
 	cvRotMat = cvCreateMat(3, 3, CV_32F);
 	cvRotVec = cvCreateMat(3, 1, CV_32F);
-	WCHAR str[MAX_PATH] = {0};
 	
 	float normCurR[3] = {0}, angle = 0;
 	angle = sqrt(curR[0]*curR[0] + curR[1]*curR[1] + curR[2]*curR[2]);
@@ -910,6 +909,7 @@ ARMM_TEMPL_FUNC	bool ARMM_TEMPL_TRACKER::replaceCvPoseByKalman(ARMultiMarkerInfo
 	{
 		cvRotVec->data.fl[i] = curR[i];
 	}
+
 	cvRodrigues2(cvRotVec, cvRotMat);
 	
 	for(int i = 0 ; i <3 ; i ++){

@@ -315,7 +315,7 @@ void ProjectorTrans2World::getProjHomo(){
 	for(int i = 0 ;i< 4; i ++){
 		cvmSet(pro3DPointsMat,i,0,(float)(cvmGet(pro3DPointsMat,i,0)-minX)/xLength);
 		cvmSet(pro3DPointsMat,i,1,(float)(cvmGet(pro3DPointsMat,i,1)-minY)/yLength);
-		_dprintf(L" proj3DpointNormal %f %f ", cvmGet(pro3DPointsMat,i,0),cvmGet(pro3DPointsMat,i,1));
+		//_dprintf(L" proj3DpointNormal %f %f ", cvmGet(pro3DPointsMat,i,0),cvmGet(pro3DPointsMat,i,1));
 	}
 	
 
