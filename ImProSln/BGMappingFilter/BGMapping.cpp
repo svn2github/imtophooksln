@@ -3,8 +3,7 @@
 
 
 #define BLACK_VALUE 130
-#define SHOW_WINDOW true
-
+#define SHOW_WINDOW false
 
 BGTag::BGTag(){
 	CurTag = 0 ;
@@ -225,13 +224,14 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	    cvAbsDiff(camImg,tmpImg,tmpImg);
 		cvErode(tmpImg,tmpImg,NULL,erodeValue);
 
-		//char frame[MAX_PATH];
-		//sprintf(frame ,"%d",i) ;
-		//cvShowImage(frame,camImg);
+		if(SHOW_WINDOW){
+			char frame[MAX_PATH];
+			sprintf(frame ,"%d",i) ;
+			cvShowImage(frame,camImg);
 
-		//sprintf(frame ,"sub%d",i) ;
-		//cvShowImage(frame,tmpImg);
-		//
+			sprintf(frame ,"sub%d",i) ;
+			cvShowImage(frame,tmpImg);
+		}
 		CvScalar sum = cvSum(tmpImg);
 		if(sum.val[0] < minValue){
 			minValue = sum.val[0];
@@ -248,7 +248,6 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvSub(camImg,tmpImg,camImg);
 		if(SHOW_WINDOW == true){
 			cvShowImage("sub", camImg);	
-			cvWaitKey(1);
 
 		}
 		cvAnd(camImg,bgMask,camImg);
@@ -260,7 +259,11 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	cvErode(camImg,camImg,NULL,erodeValue);
 	cvDilate(camImg,camImg,NULL,erodeValue);
-	cvShowImage("erode",camImg);
+	if(SHOW_WINDOW){
+		cvShowImage("erode",camImg);
+		cvWaitKey(1);
+	}
+
 	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
@@ -271,6 +274,8 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	if(outputFlip == true){
 		cvFlip(result4CImg);
 	}
+	if(SHOW_WINDOW)
+	cvDestroyAllWindows();
 	return result4CImg;
 }
 
