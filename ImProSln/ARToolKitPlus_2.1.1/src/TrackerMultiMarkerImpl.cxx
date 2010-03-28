@@ -313,7 +313,9 @@ BOOL PoseKalman::SetMeasureNoiseCov(float fNoiseCov)
 {
 	if (m_QuaternionKalman == NULL)
 		return FALSE;
+	cvSetIdentity(m_TKalman->measurement_noise_cov, cvRealScalar(fNoiseCov));
 	cvSetIdentity(m_QuaternionKalman->measurement_noise_cov, cvRealScalar(fNoiseCov));
+	
 	return TRUE;
 }
 CvKalman* PoseKalman::generateKalman(KalmanType kType)
@@ -333,7 +335,7 @@ CvKalman* PoseKalman::generateKalman(KalmanType kType)
 		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-5) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
