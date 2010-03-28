@@ -223,23 +223,46 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	for(int i = 0 ;i < BGCandiSize; i ++){
 		cvAddS(candidate.getUsedImg(i),cvScalar(subValue,subValue,subValue),tmpImg);
 	    cvAbsDiff(camImg,tmpImg,tmpImg);
-		
+		cvErode(tmpImg,tmpImg,NULL,2);
+
+		//char frame[MAX_PATH];
+		//sprintf(frame ,"%d",i) ;
+		//cvShowImage(frame,camImg);
+
+		//sprintf(frame ,"sub%d",i) ;
+		//cvShowImage(frame,tmpImg);
+		//
 		CvScalar sum = cvSum(tmpImg);
 		if(sum.val[0] < minValue){
 			minValue = sum.val[0];
 			realBGindex = i;			
 		}	
 	}
-
+	
 	if(candidate.getUsedImg(realBGindex) != NULL){
 		cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
+		if(SHOW_WINDOW == true){
+			cvShowImage("src", camImg);
+			cvShowImage("BG" , tmpImg);
+		}
 		cvSub(camImg,tmpImg,camImg);
+		if(SHOW_WINDOW == true){
+			cvShowImage("sub", camImg);	
+			cvWaitKey(1);
+
+		}
 		cvAnd(camImg,bgMask,camImg);
 	}
 
 	if(realBGindex != 0){
 		candidate.setToUnused(realBGindex);
 	}
+
+	
+
+	cvErode(camImg,camImg,NULL,2);
+	cvDilate(camImg,camImg,NULL,2);
+	//cvShowImage("erode",camImg);
 	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){
