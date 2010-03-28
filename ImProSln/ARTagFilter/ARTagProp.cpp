@@ -448,7 +448,7 @@ bool ARTagGeneralPage::GetSetting()
 	ComboBox_SetCurSel(m_cbUnDistortMode, undistortMode);
 	int threshold = m_pARProperty->getThreshold();
 	SLIDER_SetPos(m_slrThreshold, threshold);
-	float measurenoise = 0.1;
+	float measurenoise = 0.001;
 	m_pARProperty->GetMeasureNoiseCov(measurenoise);
 	int intMeasurenoise = abs(log10(measurenoise));
 	SLIDER_SetPos(m_slrMeasureNoise, intMeasurenoise);
