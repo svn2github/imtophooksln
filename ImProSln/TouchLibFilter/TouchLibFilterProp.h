@@ -78,4 +78,8 @@ public: //inherit from CMFCBaseProperty Page
 	CStatic m_txtNumFrameFix;
 	CButton m_ckUseKalman;
 	afx_msg void OnBnClickedckusekalman();
+	CSliderCtrl m_slrMNoise;
+	CStatic m_txtMNoise;
+	afx_msg void OnTRBNThumbPosChangingslrmnoise(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMCustomdrawslrmnoise(NMHDR *pNMHDR, LRESULT *pResult);
 };

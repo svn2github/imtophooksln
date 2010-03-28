@@ -99,6 +99,8 @@ public:
 	virtual bool setNumFrameFix(int nFrame);
 	virtual bool getUseKalmanFilter();
 	virtual bool setUseKalmanFilter(bool bUse);
+	virtual bool getKalmanMNoise(float& fMNoise);
+	virtual bool setKalmanMNoise(float fMNoise);
 
 	virtual bool SetBGThreshold(int threshold);
 	virtual bool GetBGThreshold(int& threshold);

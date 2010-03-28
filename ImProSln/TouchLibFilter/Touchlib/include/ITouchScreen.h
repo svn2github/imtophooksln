@@ -106,6 +106,9 @@ namespace touchlib
 		virtual bool setNumFrameFix(int nFrame) = 0;
 		virtual bool getUseKalmanFilter() = 0;
 		virtual bool setUseKalmanFilter(bool bUse) = 0;
+		virtual BOOL getKalmanMNoise(float& fMNoise) = 0;
+		virtual BOOL setKalmanMNoise(float fMNoise) = 0;
+
 	};
 
 }

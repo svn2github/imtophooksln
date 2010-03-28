@@ -20,8 +20,10 @@
 #define IDC_CKSkipBG                    16014
 #define IDC_SLRNUMFRAMEFIX              16016
 #define IDC_TXTNumFrameFix              16017
-#define IDC_CHECK1                      16018
 #define IDC_ckUseKalman                 16018
+#define IDC_slrMNoise                   16019
+#define IDC_TXTNumFrameFix2             16020
+#define IDC_txtMNoise                   16020
 
 // Next default values for new objects
 // 

@@ -29,6 +29,7 @@ CBlobTracker::CBlobTracker() : IBlobTracker()
 	extraIDs = 0;
 	m_nKalmanFix = 2;
 	m_bUseKalmanFilter = true;
+	m_kalmanMNoise = 0.01;
 }
 CBlobTracker::~CBlobTracker()
 {
@@ -587,7 +588,24 @@ bool CBlobTracker::drawFingers(IplImage* img)
 	return true;
 }
 
-
+BOOL CBlobTracker::GetMeasureNoiseCov(float& fNoiseCov)
+{
+	fNoiseCov = m_kalmanMNoise;
+	return TRUE;
+}
+BOOL CBlobTracker::SetMeasureNoiseCov(float fNoiseCov)
+{
+	m_kalmanMNoise = fNoiseCov;
+	for (map<int, FingerKalman*>::iterator iter = m_fKalman.begin(); iter != m_fKalman.end(); iter++)
+	{
+		if (iter->second == NULL)
+		{
+			continue;
+		}
+		iter->second->SetMeasureNoiseCov(fNoiseCov);
+	}
+	return TRUE;
+}
 inline void CBlobTracker::permute2(int start)
 {  
   if (start == ids.size()) 
@@ -687,6 +705,7 @@ BOOL CBlobTracker::updateFingerKalman(const CFinger* curFinger)
 	{
 		FingerKalman* kalman = new FingerKalman();
 		kalman->init(curFinger);
+		kalman->SetMeasureNoiseCov(m_kalmanMNoise);
 		m_fKalman[fID] = kalman;
 		return TRUE;
 	}
@@ -702,7 +721,10 @@ BOOL CBlobTracker::updateAllFingerKalman()
 	int fID = -1;
 	for (map<int, FingerKalman*>::iterator iter = m_fKalman.begin(); iter != m_fKalman.end(); iter++)
 	{
-		iter->second->m_lostTimes++;
+		if (iter->second != NULL)
+		{
+			iter->second->m_lostTimes++;
+		}
 	}
 	for ( int i =0; i < current.size(); i++)
 	{
@@ -790,12 +812,7 @@ BOOL CBlobTracker::replaceFingerPosByKalman()
 			FingerKalman* fkalman = m_fKalman[fID];
 			if (fkalman == NULL)
 				continue;
-			if (fkalman->m_lostTimes > 0)
-			{
-				WCHAR str[MAX_PATH] = {0};
-				swprintf_s(str, MAX_PATH, L"@@@@ id = %d, lostTime = %d \n", fID, fkalman->m_lostTimes);
-				OutputDebugStringW(str);
-			}
+
 			float kPosX = 0, kPosY=0;
 			fkalman->predict(fkalman->m_lostTimes, &kPosX, &kPosY, NULL, NULL, NULL, NULL);
 			
@@ -843,7 +860,7 @@ CvKalman* FingerKalman::generateKalman()
 		memcpy( retKalman->transition_matrix->data.fl, A, sizeof(A));
 		cvSetIdentity( retKalman->measurement_matrix, cvRealScalar(1) );
 		cvSetIdentity( retKalman->process_noise_cov, cvRealScalar(1e-5) );
-		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(1e-1) );
+		cvSetIdentity( retKalman->measurement_noise_cov, cvRealScalar(0.03) );
 		cvSetIdentity( retKalman->error_cov_post, cvRealScalar(1));
 		cvSetIdentity( retKalman->error_cov_pre, cvRealScalar(1));
 
@@ -956,4 +973,11 @@ BOOL FingerKalman::GetLastFinger(CFinger* finger)
 	*finger = m_lastFinger;
 	finger->bGeneratedByKalman = true;
 	return TRUE;
+}
+BOOL FingerKalman::SetMeasureNoiseCov(float fNoiseCov)
+{
+	if (m_kalman == NULL)
+		return FALSE;
+	cvSetIdentity(m_kalman->measurement_noise_cov, cvRealScalar(fNoiseCov));
+	cvSetIdentity(m_kalman->measurement_noise_cov, cvRealScalar(fNoiseCov));
 }

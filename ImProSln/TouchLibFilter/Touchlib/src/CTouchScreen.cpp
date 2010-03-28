@@ -187,7 +187,19 @@ bool CTouchScreen::setUseKalmanFilter(bool bUse)
 		return 0;
 	return tracker->setUseKalmanFilter(bUse);
 }
+BOOL CTouchScreen::getKalmanMNoise(float& fMNoise)
+{
+	if (tracker == NULL)
+		return FALSE;
+	return tracker->GetMeasureNoiseCov(fMNoise);
 
+}
+BOOL CTouchScreen::setKalmanMNoise(float fMNoise)
+{
+	if (tracker == NULL)
+		return FALSE;
+	return tracker->SetMeasureNoiseCov(fMNoise);
+}
 void CTouchScreen::initScreenPoints()
 {
 	int p = 0;	// Create some local variable placeholders

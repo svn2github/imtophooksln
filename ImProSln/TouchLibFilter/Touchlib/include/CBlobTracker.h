@@ -165,6 +165,7 @@ namespace touchlib
 		BOOL update(const CFinger* curFinger);
 		BOOL predict(int dt, float* posX, float* posY, float* vX = NULL, float* vY = NULL, float* aX = NULL, float* aY = NULL);
 		BOOL GetLastFinger(CFinger* finger);
+		BOOL SetMeasureNoiseCov(float fNoiseCov);
 		
 	};
 	class  CBlobTracker : public IBlobTracker
@@ -182,7 +183,8 @@ namespace touchlib
 		std::vector<CvRect>* GetForeground()
 		{	return &foregroundLists;	};
 		bool drawFingers(IplImage* img);
-		
+		BOOL GetMeasureNoiseCov(float& fNoiseCov);
+		BOOL SetMeasureNoiseCov(float fNoiseCov);
 	private:
 		inline void permute2(int k);
 		inline bool checkValid(int start);
@@ -195,6 +197,7 @@ namespace touchlib
 		//Kalman filter tracking & predict
 		bool m_bUseKalmanFilter;
 		int m_nKalmanFix;
+		float m_kalmanMNoise;
 		std::map<int, FingerKalman*> m_fKalman; //ID, kalman, missing times		
 		BOOL updateFingerKalman(const CFinger* curFinger);
 		BOOL updateAllFingerKalman();

@@ -1095,6 +1095,24 @@ bool TouchLibFilter::setUseKalmanFilter(bool bUse)
 	CAutoLock lck(&m_csTouchScreen);
 	return m_pTouchScreen->setUseKalmanFilter(bUse);
 }
+bool TouchLibFilter::getKalmanMNoise(float& fMNoise)
+{
+	CAutoLock lck(&m_csTouchScreen);
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	return m_pTouchScreen->getKalmanMNoise(fMNoise);
+}
+bool TouchLibFilter::setKalmanMNoise(float fMNoise)
+{
+	CAutoLock lck(&m_csTouchScreen);
+	if (m_pTouchScreen == NULL)
+	{
+		return false;
+	}
+	return m_pTouchScreen->setKalmanMNoise(fMNoise);
+}
 HRESULT TouchLibFilter::SaveToFile(WCHAR* path)
 {
 	FILE* filestream = NULL;

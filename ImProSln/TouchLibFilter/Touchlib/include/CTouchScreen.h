@@ -111,6 +111,8 @@ namespace touchlib
 		virtual bool setNumFrameFix(int nFrame);
 		virtual bool getUseKalmanFilter();
 		virtual bool setUseKalmanFilter(bool bUse);
+		virtual BOOL getKalmanMNoise(float& fMNoise);
+		virtual BOOL setKalmanMNoise(float fMNoise);
 		// get an image from the filter chain
 		virtual IplImage* getFilterImage(std::string & label);
 		virtual IplImage* getFilterImage(int step);

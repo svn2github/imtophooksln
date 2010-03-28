@@ -2,6 +2,7 @@
 #include "TouchLibFilterProp.h"
 #include "TouchLibFilterApp.h"
 #include <string>
+#include <math.h>
 using namespace std;
 extern CTouchLibFilterApp theApp;
 
@@ -24,6 +25,8 @@ void TouchLibPropPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SLRNUMFRAMEFIX, m_slrNumFrameFix);
 	DDX_Control(pDX, IDC_TXTNumFrameFix, m_txtNumFrameFix);
 	DDX_Control(pDX, IDC_ckUseKalman, m_ckUseKalman);
+	DDX_Control(pDX, IDC_slrMNoise, m_slrMNoise);
+	DDX_Control(pDX, IDC_txtMNoise, m_txtMNoise);
 }
 
 
@@ -41,6 +44,8 @@ BEGIN_MESSAGE_MAP(TouchLibPropPage, CMFCBasePropertyPage)
 	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnTRBNThumbPosChangingSlrnumframefix)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLRNUMFRAMEFIX, &TouchLibPropPage::OnNMCustomdrawSlrnumframefix)
 	ON_BN_CLICKED(IDC_ckUseKalman, &TouchLibPropPage::OnBnClickedckusekalman)
+	ON_NOTIFY(TRBN_THUMBPOSCHANGING, IDC_slrMNoise, &TouchLibPropPage::OnTRBNThumbPosChangingslrmnoise)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_slrMNoise, &TouchLibPropPage::OnNMCustomdrawslrmnoise)
 END_MESSAGE_MAP()
 
 
@@ -100,6 +105,8 @@ HRESULT TouchLibPropPage::OnActivate(void)
 		EnableWindow(TRUE);
 		m_slrNumFrameFix.SetRangeMin(0, TRUE);
 		m_slrNumFrameFix.SetRangeMax(15, TRUE);
+		m_slrMNoise.SetRangeMin(0, TRUE);
+		m_slrMNoise.SetRangeMax(10, TRUE);
 		GetSetting();
 	}
 	else
@@ -225,6 +232,15 @@ bool TouchLibPropPage::GetSetting()
 	m_slrNumFrameFix.SetPos(m_pFilter->getNumFrameFix());
 	swprintf_s(str, MAX_PATH, L"%d", m_pFilter->getNumFrameFix());
 	m_txtNumFrameFix.SetWindowText(str);
+	/*float mnoise = 0.01;
+	int intMNoise = 2;
+	m_pFilter->getKalmanMNoise(mnoise);
+	intMNoise = abs(log10(mnoise));
+	m_slrMNoise.SetPos(intMNoise);
+	swprintf_s(str, MAX_PATH, L"%d", intMNoise);
+	m_txtMNoise.SetWindowText(str);
+*/
+
 	if (m_pFilter->IsOSCConnected())
 	{
 		m_edIP.EnableWindow(FALSE);
@@ -344,4 +360,32 @@ void TouchLibPropPage::OnBnClickedckusekalman()
 	WCHAR str[MAX_PATH];
 	bool bUseKalman  = m_ckUseKalman.GetCheck();
 	m_pFilter->setUseKalmanFilter(bUseKalman);
+}
+
+void TouchLibPropPage::OnTRBNThumbPosChangingslrmnoise(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	// This feature requires Windows Vista or greater.
+	// The symbol _WIN32_WINNT must be >= 0x0600.
+	NMTRBTHUMBPOSCHANGING *pNMTPC = reinterpret_cast<NMTRBTHUMBPOSCHANGING *>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	
+	
+}
+
+void TouchLibPropPage::OnNMCustomdrawslrmnoise(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+
+	WCHAR str[MAX_PATH] = {0};
+	float mnoise = 0.01;
+	int intMNoise = 2;
+
+	intMNoise = m_slrMNoise.GetPos();
+	swprintf_s(str, MAX_PATH, L"%d", intMNoise);
+	m_txtMNoise.SetWindowText(str);
+	mnoise = pow(0.1, intMNoise);
+	m_pFilter->setKalmanMNoise(mnoise);
 }
