@@ -85,7 +85,7 @@ void BGCandidate::setToUnused(int index){
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
 
 	BGthreshold = 0;
-	BlackValue = 0;
+	erodeValue = 0;
 	subValue = 0 ;
 	camFlip = false; 
 	layoutFlip = false ;
@@ -111,7 +111,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
-	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &BlackValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
+	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &erodeValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
 	
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -177,7 +177,7 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	{
 		for(int j=0;j<mappingTable->width;j++)
 		{
-			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + BlackValue;
+			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + erodeValue;
 			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -subValue;
 			
 			if((int)(uchar)BGImg->imageData[i*BGImg->widthStep+j*BGchannel]< BLACK_VALUE){
@@ -223,7 +223,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	for(int i = 0 ;i < BGCandiSize; i ++){
 		cvAddS(candidate.getUsedImg(i),cvScalar(subValue,subValue,subValue),tmpImg);
 	    cvAbsDiff(camImg,tmpImg,tmpImg);
-		cvErode(tmpImg,tmpImg,NULL,2);
+		cvErode(tmpImg,tmpImg,NULL,erodeValue);
 
 		//char frame[MAX_PATH];
 		//sprintf(frame ,"%d",i) ;
@@ -258,11 +258,9 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		candidate.setToUnused(realBGindex);
 	}
 
-	
-
-	cvErode(camImg,camImg,NULL,2);
-	cvDilate(camImg,camImg,NULL,2);
-	//cvShowImage("erode",camImg);
+	cvErode(camImg,camImg,NULL,erodeValue);
+	cvDilate(camImg,camImg,NULL,erodeValue);
+	cvShowImage("erode",camImg);
 	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
 
 	if(BGthreshold != 0){

@@ -154,7 +154,7 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
 
-	::SLIDER_SetRange(m_blackValue, 0, 255);
+	::SLIDER_SetRange(m_blackValue, 0, 10);
 	::SLIDER_SetPos(m_blackValue,m_pFilter->getBlackValue());
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getBlackValue());
 

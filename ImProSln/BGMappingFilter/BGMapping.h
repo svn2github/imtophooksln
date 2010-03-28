@@ -88,7 +88,7 @@ public:
 	IplConvKernel* kernelElement;
 
 	int BGthreshold;
-	int BlackValue;
+	int erodeValue;
 	int subValue;
 	int imgIndex ;
 	int imgH ;

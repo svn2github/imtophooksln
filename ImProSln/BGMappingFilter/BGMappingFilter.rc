@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文 (台灣) resources
+// Chinese (Taiwan) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 #ifdef _WIN32
@@ -73,12 +73,12 @@ BEGIN
     IDS_BGMappingPropertyPageTitle "BackgroundMapping"
 END
 
-#endif    // 中文 (台灣) resources
+#endif    // Chinese (Taiwan) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英文 (美國) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -161,14 +161,14 @@ BEGIN
     EDITTEXT        IDC_EDIT_WHITE,118,95,21,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_BLACK,118,69,21,12,ES_AUTOHSCROLL
     LTEXT           "BGAddValue",IDC_STATIC,28,86,40,13
-    LTEXT           "BlackValue",IDC_STATIC,30,54,44,12
+    LTEXT           "ErodeValue",IDC_STATIC,30,54,44,12
     PUSHBUTTON      "Save",IDC_BUTTON1,153,105,26,15
     CONTROL         "CameraFlip",IDC_CHECK_camera,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,13,49,11
     CONTROL         "LayoutFlip",IDC_CHECK_Layout,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,70,14,47,8
     CONTROL         "OutputFlip",IDC_CHECK_Output,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,14,47,8
 END
 
-#endif    // 英文 (美國) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -646,13 +646,13 @@ HRESULT BGMappingFilter::setBGThreshold(int BGthres){
 }
 
 int BGMappingFilter::getBlackValue(){
-	if(BG->BlackValue == NULL)
+	if(BG->erodeValue == NULL)
 		return 0 ;
-	return BG->BlackValue;
+	return BG->erodeValue;
 }
 
 HRESULT BGMappingFilter::setBlackValue(int bValue){
-	BG->BlackValue = bValue;
+	BG->erodeValue = bValue;
 	return S_OK;
 }
 
