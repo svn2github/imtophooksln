@@ -2,6 +2,7 @@ package impro.googlemap
 {	
 	import com.google.maps.LatLng;
 	import com.google.maps.Map;
+	import com.google.maps.MapType;
 	import com.google.maps.MapEvent;
 	import com.google.maps.MapMoveEvent;
 	import com.google.maps.MapZoomEvent;
@@ -56,7 +57,6 @@ package impro.googlemap
 			map.addEventListener(MapEvent.MAP_READY, onMapReady);
 			map.addEventListener(MapZoomEvent.ZOOM_CHANGED, onMapZoom);
 			map.addEventListener(MapMoveEvent.MOVE_STEP, onMapMove);
-			map.addEventListener(MapEvent.MAPTYPE_CHANGED, onMapTypeChanged);						
 			addChild(map);
 			
 			this.addEventListener(HResEvent.POSE_CHANGE, hresPosChange);
@@ -135,11 +135,15 @@ package impro.googlemap
 		private function hresPosChange(e:Event):void{
 			
 			var he:HResEvent = e as HResEvent;
-//			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);
-			
-			getViewport(he.ID).setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
-			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
-			getViewport(he.ID).update();
+			for each (var viewport:MapViewport in viewportDict){
+				viewport.setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
+				viewport.setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
+				viewport.update();
+   			}
+//			trace(he.ID + ": " + he.rx1 + ", "+ he.ry1 + ", "+ he.rx2 + ", "+ he.ry2);			
+//			getViewport(he.ID).setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
+//			getViewport(he.ID).setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
+//			getViewport(he.ID).update();
 		}
 		
 		public function addViewport(id:String, x:Number, y:Number, width:Number, height:Number):MapViewport{			
@@ -155,11 +159,11 @@ package impro.googlemap
 		
 		public function addGeControl(socket:XMLSocket, x:Number, y:Number):GEControl{
 			
-			var geControl:GEControl = new GEControl(socket, map);
+			var geControl:GEControl = new GEControl(socket, map, DEBUG);
 			geControl.x = x;
 			geControl.y = y;
 			geControlDict[geControl.id] = geControl;	
-			if(DEBUG)
+//			if(DEBUG)
 				addChild(geControl);		
 
 			return geControl;

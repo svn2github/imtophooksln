@@ -57,32 +57,36 @@ package impro.googlemap
 			}			
 			
 			setViewport(cx, cy, w, h);
+
+			if(DEBUG){
 							
-			// draw handle			
-			handle.graphics.beginFill(0xffffff, 0.5);
-			handle.graphics.drawRect(-handleSize/2, -handleSize/2, handleSize, handleSize);
-			handle.graphics.endFill();
+				// draw handle			
+				handle.graphics.beginFill(0xffffff, 0.5);
+				handle.graphics.drawRect(-handleSize/2, -handleSize/2, handleSize, handleSize);
+				handle.graphics.endFill();
+				
+				// draw handle outline
+				handle.graphics.lineStyle(1, 0x000000);
+				handle.graphics.moveTo(-handleSize/2, -handleSize/2);
+				handle.graphics.lineTo(handleSize/2, -handleSize/2);
+				handle.graphics.lineTo(handleSize/2, handleSize/2);			
+				handle.graphics.lineTo(-handleSize/2, handleSize/2);
+				handle.graphics.lineTo(-handleSize/2, -handleSize/2);
+				handle.graphics.moveTo(-handleSize/2, -handleSize/2);
+				handle.graphics.lineTo(handleSize/2, handleSize/2);			
+				handle.graphics.moveTo(handleSize/2, -handleSize/2);
+				handle.graphics.lineTo(-handleSize/2, handleSize/2);
+				addChild(handle);
+				
+				handle.addEventListener(MouseEvent.MOUSE_DOWN, pickUp);
+				handle.addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
+				handle.addEventListener(MouseEvent.MOUSE_UP, dropIt);
+				
+				addEventListener(MouseEvent.MOUSE_DOWN, pickUp);
+				addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
+				addEventListener(MouseEvent.MOUSE_UP, dropIt);
+			}
 			
-			// draw handle outline
-			handle.graphics.lineStyle(1, 0x000000);
-			handle.graphics.moveTo(-handleSize/2, -handleSize/2);
-			handle.graphics.lineTo(handleSize/2, -handleSize/2);
-			handle.graphics.lineTo(handleSize/2, handleSize/2);			
-			handle.graphics.lineTo(-handleSize/2, handleSize/2);
-			handle.graphics.lineTo(-handleSize/2, -handleSize/2);
-			handle.graphics.moveTo(-handleSize/2, -handleSize/2);
-			handle.graphics.lineTo(handleSize/2, handleSize/2);			
-			handle.graphics.moveTo(handleSize/2, -handleSize/2);
-			handle.graphics.lineTo(-handleSize/2, handleSize/2);
-			addChild(handle);
-			
-			handle.addEventListener(MouseEvent.MOUSE_DOWN, pickUp);
-			handle.addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
-			handle.addEventListener(MouseEvent.MOUSE_UP, dropIt);
-			
-			addEventListener(MouseEvent.MOUSE_DOWN, pickUp);
-			addEventListener(MouseEvent.MOUSE_MOVE, pickMove);
-			addEventListener(MouseEvent.MOUSE_UP, dropIt);
 //			this.addEventListener(MouseEvent.MOUSE_WHEEL, tiltIt);
 			
 //			addEventListener(TouchEvent.MOUSE_DOWN, touchPickUp);
@@ -103,7 +107,8 @@ package impro.googlemap
 			handle.x = w/2-handleSize/2;
 			handle.y = h/2-handleSize/2;			
 			
-			updateControl();
+			if(DEBUG)
+				updateControl();
 		}
 		
 		public function setViewportBound(rx1:Number, ry1:Number, rx2:Number, ry2:Number):void{
@@ -113,7 +118,9 @@ package impro.googlemap
 			this.y = ry1 + this.h/2;
 			handle.x = w/2-handleSize/2;
 			handle.y = h/2-handleSize/2;						
-			updateControl();
+
+			if(DEBUG)
+				updateControl();
 		}
 		
 		public function setViewportOriPts(pt1:Point, pt2:Point, pt3:Point, pt4:Point):void{
@@ -125,7 +132,9 @@ package impro.googlemap
 			oriPt3.y = pt3.y - this.y;
 			oriPt4.x = pt4.x - this.x;
 			oriPt4.y = pt4.y - this.y;
-			updateControl();
+
+			if(DEBUG)
+				updateControl();
 		}
 
 		private function touchPickUp(event:TouchEvent):void {

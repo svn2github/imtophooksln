@@ -16,8 +16,7 @@ package {
 	import impro.googlemap.*;
 	import impro.multiview.IMView;
 	
-	[SWF(width=2048, height=768, frameRate=24, backgroundColor=0xEB7F00)]
-//	[SWF(width=1600, height=600, frameRate=24, backgroundColor=0xEB7F00)]
+	[SWF(width=1600, height=600, frameRate=24, backgroundColor=0xEB7F00)]
 	public class GoogleMapTUIO extends Sprite implements IImproApp
 	{
 		private var multiResMap:MultiResMap;			
@@ -29,7 +28,7 @@ package {
 		private var arrowLoader:ImagesLoader;
 		private var panoramioLoader:ImagesLoader;
 		
-		private var loadLocal:Boolean = false;
+		private var loadLocal:Boolean = true;
 		private var sights_101:Dictionary;
 		private var imgLoader_101:ImagesLoader;
 		private var sights_NY:Dictionary;
@@ -56,7 +55,7 @@ package {
 			
 			// add multi-resolution map
 			addMultiResMap();
-			
+
 			// add keyborad widget
 //			addKeyboardWidget();
 			
@@ -190,7 +189,8 @@ package {
 		
 		private function sightImageLoaded():void{
 			var btnWidth:Number = 60;
-			var btnMargin:Number = 1;
+			var btnMarginX:Number = 1.5;
+			var btnMarginY:Number = 1.1;
 			
 			var i:Number = 1;
 			var row:Number = 3;
@@ -199,8 +199,8 @@ package {
 				var sightBtn:ImageButton = new ImageButton(gAddress.location, imgLoader.getImage(gAddress.location), btnWidth, btnWidth);
 				sightBtn.addEventListener(TouchEvent.MOUSE_UP, tuioUpEvent);
 				sightBtn.addEventListener(MouseEvent.MOUSE_UP, mouseUpEvent);
-				sightBtn.x = Setting.LRes.stageWidth - btnWidth*btnMargin*(Math.floor(i/row)+1);
-				sightBtn.y = Setting.LRes.stageHeight - btnWidth*btnMargin*(i%row+1);
+				sightBtn.x = Setting.LRes.stageWidth - btnWidth*btnMarginX*(Math.floor(i/row)+1);
+				sightBtn.y = Setting.LRes.stageHeight - btnWidth*btnMarginY*(i%row+1);
 				addChild(sightBtn);				
 				i++;
 			}			
@@ -239,52 +239,56 @@ package {
 		} 
 		
 		/*
-		private function queryPanoramio(gAdress:GoogleAddress):void  
-		{  
-		    var panoramioURL:String = "http://www.panoramio.com/map/get_panoramas.php?order=popularity&set=public&from=0&to=50&minx=-180&miny=-90&maxx=180&maxy=90&size=medium";  
-		    var request:URLRequest = new URLRequest(panoramioURL);  
-		    var loader:URLLoader = new URLLoader(request);  
-		    loader.addEventListener(Event.COMPLETE, panoramioQueryComplete);  
-		    loader.addEventListener(  
-		        IOErrorEvent.IO_ERROR,  
-		        function(event:Event):void  
-		        {  		             
-		            trace("There was an IO error contacting Panoramio");
-		        }  
-		    );  
-		    loader.addEventListener(		      
-		        SecurityErrorEvent.SECURITY_ERROR,  
-		        function(event:Event):void  
-		        {		        	 
-		        	trace("There was a security error contacting Panoramio");
-		        }  
-		    );  
-		}
-		
-		private function panoramioQueryComplete(event:Event):void  
-		{  
-			panoramioLoader = new ImagesLoader(panoramioLoaded);
-			
-		    var response:URLLoader = URLLoader(event.target);  
-		    var responseData:Object = JSON.decode(response.data);  
-		  	var locx:Number = 100;
-		  	var index:Number = 1;
-		  	for each (var image:Object in responseData.photos)  
-		    {  	
-		    	if(index <= 5){
-			    	trace("photo_file_url: " + image.photo_file_url);
-			    	trace("width: " + image.width);
-			    	trace("height: " + image.height);
-			    	trace("longitude: "+ image.longitude);
-			    	trace("latitude: " + image.latitude);
-			    	
-			    	panoramioLoader.push(image.photo_file_url, "panoramio_" + index);				
-	//		    	multiResMap.overlayPhoto(image.latitude, image.longitude, image.photo_file_url);
-					index++;		    		
-		    	}  
-		    }
-		    panoramioLoader.startLoading();
-		}
+//		private function queryPanoramio(gAdress:GoogleAddress):void  
+//		{  
+//			
+//		    var panoramioURL:String = "http://www.panoramio.com/map/get_panoramas.php?order=popularity&set=public&from=0&to=50&minx=-180&miny=-90&maxx=180&maxy=90&size=medium";  
+//		    var request:URLRequest = new URLRequest(panoramioURL);  
+//		    var loader:URLLoader = new URLLoader(request);  
+//		    loader.addEventListener(Event.COMPLETE, panoramioQueryComplete);  
+//		    loader.addEventListener(  
+//		        IOErrorEvent.IO_ERROR,  
+//		        function(event:Event):void  
+//		        {  		             
+//		            trace("There was an IO error contacting Panoramio");
+////		            Alert.show("There was an IO error contacting Panoramio");  
+//		        }  
+//		    );  
+//		    loader.addEventListener(		      
+//		        SecurityErrorEvent.SECURITY_ERROR,  
+//		        function(event:Event):void  
+//		        {		        	 
+//		        	trace("There was a security error contacting Panoramio");
+////		            Alert.show("There was a security error contacting Panoramio");  
+//		        }  
+//		    );  
+//		}
+	
+	
+//		private function panoramioQueryComplete(event:Event):void  
+//		{  
+//			panoramioLoader = new ImagesLoader(panoramioLoaded);
+//			
+//		    var response:URLLoader = URLLoader(event.target);  
+//		    var responseData:Object = JSON.decode(response.data);  
+//		  	var locx:Number = 100;
+//		  	var index:Number = 1;
+//		  	for each (var image:Object in responseData.photos)  
+//		    {  	
+//		    	if(index <= 5){
+//			    	trace("photo_file_url: " + image.photo_file_url);
+//			    	trace("width: " + image.width);
+//			    	trace("height: " + image.height);
+//			    	trace("longitude: "+ image.longitude);
+//			    	trace("latitude: " + image.latitude);
+//			    	
+//			    	panoramioLoader.push(image.photo_file_url, "panoramio_" + index);				
+//	//		    	multiResMap.overlayPhoto(image.latitude, image.longitude, image.photo_file_url);
+//					index++;		    		
+//		    	}  
+//		    }
+//		    panoramioLoader.startLoading();
+//		}
 		
 		private function panoramioLoaded():void{
 			for(var i:Number = 1;i<=5;i++){
@@ -329,12 +333,11 @@ package {
 				var ge:GEControl = multiResMap.addGeControl(socket, 100*(i+1), 100*(i+1));
 				trace("ge.id: " + ge.id);
 			}
+			
 //			var ge1:GEControl = multiResMap.addGeControl(socket, 150, 150);
 //			var ge2:GEControl = multiResMap.addGeControl(socket, 250, 250);
 //			trace("ge1.id: " + ge1.id);		
 //			trace("ge2.id: " + ge2.id);
-			
-//			multiResMap.removeGeControl(ge1.id);
 			
 			// load GE arrows
 			arrowLoader = new ImagesLoader(function():void{
