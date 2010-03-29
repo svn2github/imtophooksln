@@ -2,6 +2,7 @@ package impro.googlemap
 {
 	
 	import com.google.maps.LatLng;
+	import com.google.maps.LatLngBounds;
 	import com.google.maps.Map;
 	import com.google.maps.Map3D;
 	import com.google.maps.MapEvent;
@@ -10,7 +11,10 @@ package impro.googlemap
 	import com.google.maps.View;
 	import com.google.maps.geom.Attitude;
 	import com.google.maps.interfaces.IMapType;
+	import com.google.maps.overlays.GroundOverlay;
+	import com.google.maps.overlays.Marker;
 	
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
@@ -18,6 +22,8 @@ package impro.googlemap
 	import flash.text.TextField;
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
+	
+	import impro.element.GoogleAddress;
 
 	public class MapViewport extends Sprite
 	{			
@@ -117,6 +123,16 @@ package impro.googlemap
 				this.addChild( TYPE_BUTTON );						
 	//			this.setChildIndex(TYPE_BUTTON, this.numChildren-1);
 			} 			
+		}
+		
+		public function addOverlay(gAddress:GoogleAddress, image:Bitmap):void{
+ 	        var marker:Marker = new Marker(gAddress.latlng);
+ 	        childMap.addOverlay(marker);
+
+ 	        var ll:LatLng = new LatLng(gAddress.latlng.lat()+0.001, gAddress.latlng.lng()+0.001);
+			var groundOverlay:GroundOverlay = new GroundOverlay(
+			        image, new LatLngBounds	(gAddress.latlng, ll));
+			childMap.addOverlay(groundOverlay); 				
 		}
 		
 		public function updateCallback(vpControl:ViewportControl):void{

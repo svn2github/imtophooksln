@@ -11,17 +11,16 @@ package impro.googlemap
 	import com.google.maps.services.ClientGeocoder;
 	import com.google.maps.services.GeocodingEvent;
 	
+	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.TUIO;
 	import flash.geom.Point;
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
 	import flash.net.XMLSocket;
 	import flash.text.TextField;
 	import flash.utils.Dictionary;
 	
-	import impro.Setting;
+	import impro.element.GoogleAddress;
 	import impro.googlemap.events.HResEvent;
 	
 	public class MultiResMap extends Sprite 
@@ -88,6 +87,16 @@ package impro.googlemap
 			}
 		}
 		
+		public function addPhoto(gAddress:GoogleAddress, image:Bitmap):void{
+ 	        
+ 	        var marker:Marker = new Marker(gAddress.latlng);
+ 	        map.addOverlay(marker);
+ 	        
+			for each (var viewport:MapViewport in viewportDict) 
+	            viewport.addOverlay(gAddress, image);
+        			
+		}
+		
 		public function flyToPlace(place:String):void{
 			geocoder.geocode(place);
 		}
@@ -95,10 +104,9 @@ package impro.googlemap
 		public function flyToLatlng(latlng:LatLng, zoom:Number):void{
 	    	map.setCenter(latlng, zoom);
  	        
-			 	        // Create our "tiny" marker icon
-			
- 	        var marker:Marker = new Marker(latlng);
- 	        map.addOverlay(marker); 	
+			// Create our "tiny" marker icon
+// 	        var marker:Marker = new Marker(latlng);
+// 	        map.addOverlay(marker); 	
 		}		
 		
 		private function geoCodingSuccess(event:GeocodingEvent):void{
