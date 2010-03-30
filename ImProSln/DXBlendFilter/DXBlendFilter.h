@@ -34,6 +34,8 @@ public:
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType);
 	virtual HRESULT CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
+	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin);
+	
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
 	//from IMSPersist
@@ -44,11 +46,16 @@ public:
 	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
 	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 	//implement IDXBlendFilterProperty
+protected:
+	CCritSec m_csInTextureList[NUMINPUT];
+	LPDIRECT3DTEXTURE9 m_pInTextureList[NUMINPUT];
 	
 protected:
 
-	HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
-
+	//virtual float GetFrameRateLimit(IPin* pPin) { return 60;}
+	
+	virtual HRESULT CreateInTexture(int idx, UINT w, UINT h);
+	virtual HRESULT CopyInputImage2InputTexture(int idx, IMediaSample *pIn, const CMediaType* pInMediaType, bool bFlipY = false );
 protected:
 
 	virtual bool         IsAcceptedType(const CMediaType *pMT);
@@ -57,7 +64,12 @@ protected:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 private:
-
+	CAMEvent m_FillBufferEndSignal;
+	CAMEvent m_ReceiveEndSignal[NUMINPUT];
+	CCritSec m_csInputDirty[NUMINPUT];
+	BOOL m_InputDirty[NUMINPUT];
+	BOOL GetInputDirty(int idx);
+	BOOL SetInputDirty(int idx, BOOL v);
 public:
 	DXBlendFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~DXBlendFilter();

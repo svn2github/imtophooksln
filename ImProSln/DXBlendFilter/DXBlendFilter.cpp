@@ -7,11 +7,23 @@
 DXBlendFilter::DXBlendFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("DXBlend Filter"), 0, CLSID_DXBlendFilter)
 { 
-
+	for (int i = 0; i < NUMINPUT; i++)
+	{
+		m_InputDirty[i] = FALSE;
+	}
+	memset(m_pInTextureList, 0, sizeof(m_pInTextureList));
+	
 }
 DXBlendFilter::~DXBlendFilter()
 {
-
+	for (int i =0; i < NUMINPUT; i++)
+	{
+		if (m_pInTextureList[i] != NULL)
+		{
+			m_pInTextureList[i]->Release();
+			m_pInTextureList[i] = NULL;
+		}
+	}
 }
 
 CUnknown *WINAPI DXBlendFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -50,12 +62,45 @@ HRESULT DXBlendFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 	}
 }
 
-
-
-
 HRESULT DXBlendFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
-	HRESULT hr;
+	if (m_pStreamPins.size() < 1 || m_pStreamPins[0]->IsConnected() == FALSE)
+	{
+		return S_FALSE;
+	}
+	int idx = -1;
+	for (int i =0; i < m_pInputPins.size(); i++)
+	{
+		if (pReceivePin == m_pInputPins[i])
+		{
+			idx = i;
+		}
+	}
+	if (idx < 0 )
+	{
+		return S_FALSE;
+	}
+	if (GetInputDirty(idx))
+	{
+		//m_FillBufferEndSignal.Wait(1000);
+	}
+	//WCHAR str[MAX_PATH] = {0};
+
+	HRESULT hr = S_OK;
+	CMediaType mt = ((CMuxTransformInputPin*)pReceivePin)->CurrentMediaType();
+
+	{
+		CAutoLock lck0(&m_csInTextureList[idx]);
+		//swprintf_s(str, MAX_PATH, L"@@@@@ Receive %d ---->\n", idx);
+		//OutputDebugStringW(str);
+		hr = CopyInputImage2InputTexture(idx, pSample, &mt);
+		if (SUCCEEDED(hr))
+		{
+			SetInputDirty(idx, TRUE);
+		}
+		//swprintf_s(str, MAX_PATH, L"@@@@@ Receive %d <----\n", idx);
+		//OutputDebugStringW(str);
+	}
 
 	return S_OK;
 
@@ -103,33 +148,23 @@ HRESULT DXBlendFilter::CreatePins()
 HRESULT DXBlendFilter::CheckInputType( const CMediaType * pmt , const IPin* pPin)
 {
 	CheckPointer(pmt, E_POINTER);
-	if (m_pInputPins.size() >= 1 && m_pInputPins[0] == pPin)
-	{	
-		CheckPointer(pmt, E_POINTER);
-		if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo) && 
-			!IsEqualGUID(*pmt->FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC)) 
-		{
-			return E_INVALIDARG;
-		}
-		// Can we transform this type
-		if(IsAcceptedType(pmt)){
-			return NOERROR;
-		}
-	}
-	else if (m_pInputPins.size() >= 2 && m_pInputPins[1] == pPin)
+	if (!IsEqualGUID(*pmt->FormatType(), FORMAT_VideoInfo) && 
+		!IsEqualGUID(*pmt->FormatType(), GUID_FORMATTYPE_D3DXTEXTURE9DESC)) 
 	{
-		if ( !IsEqualGUID(*pmt->Type(), GUID_IMPRO_FeedbackTYPE) || ! IsEqualGUID(*pmt->Subtype(), GUID_WarpConfig))
-		{
-			return E_INVALIDARG;
-		}
+		return E_INVALIDARG;
+	}
+	// Can we transform this type
+	if(IsAcceptedType(pmt)){
 		return NOERROR;
 	}
+	
+
 	return E_FAIL;
 }
 
 HRESULT DXBlendFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPin)
 {
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pPin)
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pPin)
 	{
 		CheckPointer(pmt, E_POINTER);
 		if (*pmt->FormatType() != FORMAT_VideoInfo && 
@@ -142,11 +177,10 @@ HRESULT DXBlendFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPi
 		if(IsAcceptedType(pmt)){
 			return NOERROR;
 		}
-	}
-	else if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pPin)
-	{
-		CheckPointer(pmt, E_POINTER);
-		return NOERROR;
+		if (*pmt->Type() == GUID_D3DMEDIATYPE && *pmt->Subtype() == GUID_D3DSHARE_RTTEXTURE_POINTER)
+		{
+			return NOERROR;
+		}
 	}
 	return E_FAIL;
 }
@@ -154,6 +188,7 @@ HRESULT DXBlendFilter::CheckOutputType( const CMediaType * pmt , const IPin* pPi
 HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin)
 {
 	HRESULT hr = S_OK;
+	int w =0, h = 0;
 	if (direction == PINDIR_INPUT && m_pInputPins.size() > 0 && m_pInputPins[0] == pMyPin)
 	{
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
@@ -161,8 +196,8 @@ HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
 		{
 			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
-			initD3D(desc->Width, desc->Height);
-			return S_OK;
+			w = desc->Width; h = desc->Height;
+			initD3D(desc->Width, desc->Height);	
 		}
 		else if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
 			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
@@ -172,29 +207,39 @@ HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			m_pInputPins[0]->QueryD3DDevice(pDevice);
 			if (pDevice == NULL)
 				return S_FALSE;
+			w = desc->Width; h = desc->Height;
 			initD3D(desc->Width, desc->Height, pDevice);
 			pDevice->Release();
-			pDevice = NULL;
-			return S_OK;
+			pDevice = NULL;	
 		}
 		else
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			w = bitHeader.biWidth; h = bitHeader.biHeight;
 			initD3D(bitHeader.biWidth, bitHeader.biHeight);
-			return S_OK;
 		}
 	}
-	if (direction == PINDIR_OUTPUT && m_pOutputPins.size() > 1)
+	if (direction == PINDIR_INPUT)
 	{
-		for (vector<CMuxTransformOutputPin*>::iterator iter = m_pOutputPins.begin(); iter != m_pOutputPins.end(); iter++)
+		if (m_pD3DDisplay == NULL)
 		{
-			if (*iter != pMyPin)
+			return E_FAIL;
+		}
+		int idx = -1;
+		for (int i =0; i < m_pInputPins.size(); i++)
+		{
+			if (m_pInputPins[i] == pMyPin)
 			{
-				(*iter)->m_bVisible = false;
+				idx = i;
+				break;
 			}
 		}
-		return S_OK;
+		if (idx < 0 )
+		{
+			return E_FAIL;
+		}
+		CreateInTexture(idx, w, h);
 	}
 	return S_OK;
 }
@@ -219,10 +264,9 @@ HRESULT DXBlendFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutP
 		return S_FALSE;
 	}
 
-
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin )
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pOutPin )
 	{
-		CMediaType mt = m_pOutputPins[0]->CurrentMediaType();
+		CMediaType mt =m_pStreamPins[0]->CurrentMediaType();
 
 		pProp->cBuffers = 1;
 		pProp->cbBuffer = mt.GetSampleSize();
@@ -231,27 +275,6 @@ HRESULT DXBlendFilter::DecideBufferSize(IMemAllocator *pAlloc, const IPin* pOutP
 			pProp->cbAlign = 1;
 		}
 
-		ALLOCATOR_PROPERTIES Actual;
-		hr = pAlloc->SetProperties(pProp,&Actual);
-		if (FAILED(hr)) {
-			return hr;
-		}
-		ASSERT( Actual.cBuffers == 1 );
-		if (pProp->cBuffers > Actual.cBuffers ||
-			pProp->cbBuffer > Actual.cbBuffer) {
-				return E_FAIL;
-		}
-	}
-
-	else if (m_pOutputPins.size() >= 2 && m_pOutputPins[1] == pOutPin)
-	{
-		CMediaType mt = m_pOutputPins[1]->CurrentMediaType();
-		pProp->cBuffers = 1;
-		pProp->cbBuffer = mt.GetSampleSize();
-		if (pProp->cbAlign == 0)
-		{
-			pProp->cbAlign = 1;
-		}
 		ALLOCATOR_PROPERTIES Actual;
 		hr = pAlloc->SetProperties(pProp,&Actual);
 		if (FAILED(hr)) {
@@ -273,40 +296,10 @@ HRESULT DXBlendFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 	{
 		return S_FALSE;
 	}
-	if (m_pOutputPins.size() > 0 && m_pOutputPins[0] == pOutPin)
+	if (m_pStreamPins.size() > 0 && m_pStreamPins[0] == pOutPin)
 	{
 		if (m_pOutTexture == NULL)
 			return S_FALSE;
-		if (iPosition == 0)
-		{
-			CMediaType mt;
-			D3DSURFACE_DESC desc;
-			m_pOutTexture->GetLevelDesc(0, &desc);
-			mt.SetType(&MEDIATYPE_Video);
-			mt.SetFormatType(&FORMAT_VideoInfo);
-			mt.SetTemporalCompression(FALSE);
-			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
-			mt.SetSampleSize(desc.Width*desc.Height*4);
-
-			VIDEOINFOHEADER pvi;
-			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
-			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
-			pvi.bmiHeader.biWidth = desc.Width;
-			pvi.bmiHeader.biHeight = desc.Height;
-			pvi.bmiHeader.biBitCount = 32;
-			SetRectEmpty(&(pvi.rcSource));
-			SetRectEmpty(&(pvi.rcTarget));
-			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
-			*pMediaType = mt;
-			return S_OK;
-		}
-		else
-		{
-			return VFW_S_NO_MORE_ITEMS;
-		}
-	}
-	if (m_pOutputPins.size() > 1 && m_pOutputPins[1] == pOutPin)
-	{
 		if (iPosition == 0)
 		{
 			CMediaType mt;
@@ -337,7 +330,32 @@ HRESULT DXBlendFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 			*pMediaType = mt;
 			return S_OK;
 		}
+		else if (iPosition == 2)
+		{
+			CMediaType mt;
+			D3DSURFACE_DESC desc;
+			m_pOutTexture->GetLevelDesc(0, &desc);
+			mt.SetType(&MEDIATYPE_Video);
+			mt.SetFormatType(&FORMAT_VideoInfo);
+			mt.SetTemporalCompression(FALSE);
+			mt.SetSubtype(&MEDIASUBTYPE_RGB32);
+			mt.SetSampleSize(desc.Width*desc.Height*4);
+
+			VIDEOINFOHEADER pvi;
+			memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
+			pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
+			pvi.bmiHeader.biWidth = desc.Width;
+			pvi.bmiHeader.biHeight = desc.Height;
+			pvi.bmiHeader.biBitCount = 32;
+			SetRectEmpty(&(pvi.rcSource));
+			SetRectEmpty(&(pvi.rcTarget));
+			mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
+			*pMediaType = mt;
+			return S_OK;
+		}
+		
 	}
+	
 	return VFW_S_NO_MORE_ITEMS;
 }
 
@@ -370,11 +388,7 @@ bool DXBlendFilter::IsAcceptedType(const CMediaType *pmt)
 	{
 		return true;
 	}
-	else if (IsEqualGUID(*pmt->Type(), GUID_D3DMEDIATYPE) && 
-		IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
-	{
-		return true;
-	}
+
 	return false;
 }
 
@@ -455,5 +469,220 @@ HRESULT DXBlendFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
 		cs = &m_csD3DDisplay;
 		return S_OK;
 	}
+	return S_OK;
+}
+
+HRESULT DXBlendFilter::CreateInTexture(int idx, UINT w, UINT h)
+{
+	if (idx < 0 || idx >= NUMINPUT || m_pD3DDisplay == NULL)
+	{
+		return E_FAIL;
+	}
+	if ( w <= 0 || h <= 0)
+	{
+		return E_FAIL;
+	}
+	HRESULT hr = S_FALSE;
+	CAutoLock lck(&m_csInTextureList[idx]);
+	if (m_pInTextureList[idx] != NULL)
+	{
+		m_pInTextureList[idx]->Release();
+		m_pInTextureList[idx] = NULL;
+	}
+	hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+		0,  0, D3DFMT_X8R8G8B8, D3DPOOL_MANAGED, &m_pInTextureList[idx]);
+	return hr;
+}	
+
+HRESULT DXBlendFilter::CopyInputImage2InputTexture(int idx, IMediaSample *pIn, const CMediaType* pInMediaType, bool bFlipY)
+{
+	if (idx < 0 || idx >= NUMINPUT)
+	{
+		return E_FAIL;
+	}
+	CAutoLock lck(&m_csInTextureList[idx]);
+
+	LPDIRECT3DTEXTURE9 pInTexture = m_pInTextureList[idx];
+	if (pIn == NULL || pInMediaType == NULL || pInTexture == NULL)
+	{
+		return S_FALSE;
+	}
+	HRESULT hr = S_OK;
+
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	GUID guidSubType = pInMediaType->subtype;
+
+	LPDIRECT3DSURFACE9 pInSurface = NULL;
+	D3DSURFACE_DESC surInDesc;
+	pInTexture->GetLevelDesc(0, &surInDesc);
+
+	IplImage* pImg = NULL;
+	if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
+		pIn->GetPointer((BYTE**)&pInputTexture);
+		if (pInputTexture == NULL)
+		{
+			return E_FAIL;
+		}
+		if (pInTexture != NULL)
+		{
+			pInTexture->Release();
+			pInTexture = NULL;
+		}
+		pInTexture = pInputTexture;
+		pInTexture->AddRef();
+	}
+	else if (IsEqualGUID(*pInMediaType->Type(), GUID_D3DMEDIATYPE) && IsEqualGUID(guidSubType, GUID_D3DXTEXTURE9_POINTER))
+	{
+		pInTexture->GetSurfaceLevel(0, &pInSurface);
+		LPDIRECT3DTEXTURE9 pInputTexture = NULL;
+		LPDIRECT3DSURFACE9 pInputSurface = NULL;
+		D3DSURFACE_DESC inputDesc;
+		pIn->GetPointer((BYTE**)&pInputTexture);
+		if (pInputTexture == NULL)
+		{
+			return E_FAIL;
+		}
+		hr = pInputTexture->GetSurfaceLevel(0, &pInputSurface);
+		pInputSurface->GetDesc(&inputDesc);
+
+		DWORD filterFlag = D3DX_FILTER_POINT;
+
+		hr = D3DXLoadSurfaceFromSurface(pInSurface, NULL, NULL, pInputSurface, NULL, NULL,
+			filterFlag, 0);
+
+		if (pInputSurface != NULL)
+		{
+			pInputSurface->Release();
+			pInputSurface = NULL;
+		}
+	}
+	else
+	{
+		pInTexture->GetSurfaceLevel(0, &pInSurface);
+		BYTE* pInData = NULL;
+		hr = pIn->GetPointer(&pInData);
+		if (FAILED(hr))
+			return hr;
+		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pInMediaType->pbFormat;
+		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		RECT rect;
+		rect.left = 0;
+		rect.right = bitHeader.biWidth;
+		rect.top = 0;
+		rect.bottom = bitHeader.biHeight;
+		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+		{
+			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_R8G8B8, bitHeader.biWidth * 3, NULL, &rect, D3DX_FILTER_POINT, NULL);
+		}
+		else if (IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) )
+		{
+			hr = D3DXLoadSurfaceFromMemory(pInSurface, NULL, NULL, pInData, D3DFMT_A8R8G8B8, bitHeader.biWidth * 4, NULL, &rect, D3DX_FILTER_POINT, NULL);
+		}
+		else
+		{
+			hr = E_FAIL;
+		}
+	}
+	if (bFlipY && !IsEqualGUID(guidSubType, GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		D3DLOCKED_RECT surRect;
+		pInSurface->LockRect(&surRect, NULL, 0);
+		pImg = cvCreateImageHeader(cvSize(surInDesc.Width, surInDesc.Height), 8, 4);
+		pImg->imageData = (char*)surRect.pBits;
+		cvFlip(pImg, NULL, 0);
+		pInSurface->UnlockRect();
+	}
+	if ( pInSurface != NULL)
+	{
+		pInSurface->Release();
+		pInSurface = NULL;
+	}
+	if (pImg != NULL)
+	{
+		cvReleaseImageHeader(&pImg);
+	}
+	return S_OK;
+}
+
+BOOL DXBlendFilter::GetInputDirty(int idx)
+{
+	if (idx < 0 || idx >= NUMINPUT)
+		return FALSE;
+	CAutoLock lck(&m_csInputDirty[idx]);
+	return m_InputDirty[idx];
+}
+BOOL DXBlendFilter::SetInputDirty(int idx, BOOL v)
+{
+	if (idx < 0 || idx >= NUMINPUT)
+		return FALSE;
+	CAutoLock lck(&m_csInputDirty[idx]);
+	m_InputDirty[idx] = v; 
+	return TRUE;
+}
+
+HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
+{
+	BOOL isDirty = FALSE;
+	CAutoLock lck0(&m_csInTextureList[0]);
+	CAutoLock lck1(&m_csInTextureList[1]);
+	CAutoLock lck2(&m_csInTextureList[2]);
+	CAutoLock lck3(&m_csInTextureList[3]);
+	/*for (int i =0; i < NUMINPUT; i++)
+	{
+		if (m_pInputPins[i]->IsConnected() && GetInputDirty(i))
+		{
+			isDirty = TRUE;
+			break;
+		}
+	}
+	if (isDirty == FALSE)
+	{	
+		//return S_FALSE;
+	}*/
+
+
+	//WCHAR str[MAX_PATH] = {0};
+	//swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer ---->\n");
+	//OutputDebugStringW(str);
+
+	HRESULT hr = S_OK;
+	{
+		CCritSec* pD3DCS = NULL;
+		QueryD3DDeviceCS(NULL, pD3DCS);
+		if (pD3DCS == NULL)
+			return S_FALSE;
+		CAutoLock lck(pD3DCS);
+
+		hr = SetRenderTarget();
+		if (FAILED(hr))
+			return S_FALSE;
+		m_pD3DDisplay->SetTexture(m_pInTextureList[0]);
+		((DXBlendDisplay*)m_pD3DDisplay)->Render();
+		m_pD3DDisplay->SetTexture(NULL);
+		hr = ResetRenderTarget();
+	}
+
+	CMediaType mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
+	if (IsEqualGUID(*mt.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+	{
+		hr = CopyRenderTarget2OutputData(pSamp, &mt);	
+	}
+	else
+	{
+		hr = CopyRenderTarget2OutputTexture();	
+		if (FAILED(hr))
+			return S_FALSE;
+		hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
+	}
+	/*for (int i =0; i < NUMINPUT; i++)
+	{
+		SetInputDirty(i, FALSE);
+	}
+	swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer <----\n");
+	OutputDebugStringW(str);
+	*/
+	m_FillBufferEndSignal.Set();
 	return S_OK;
 }

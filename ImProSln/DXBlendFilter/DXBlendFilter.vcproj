@@ -97,7 +97,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="regsvr32.exe $(OutDir)\$(ProjectName).dll"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
