@@ -36,25 +36,25 @@ char    *vconf = "";
 
 CCritSec g_State;
 
-//double LeftTopLong = 119.506450;
-//double LeftTopLat = 25.103415;
-//double LeftDownLong = 119.337809;
-//double LeftDownLat = 21.968503;
-//double RightDownLong = 122.715500;
-//double RightDownLat = 22.068132;
-//double RightTopLong = 0;
-//double RightTopLat = 0;
+double LeftTopLong = -74.013908;
+double LeftTopLat = 40.711236;
+double LeftDownLong = -74.016356;
+double LeftDownLat = 40.704047;
+double RightDownLong = -74.006875;
+double RightDownLat = 40.704129;
+double RightTopLong = -74.005278;
+double RightTopLat = 40.711096;
 
 
 // Zoomout to 101
-double LeftTopLong = 121.55607268966645;
-double LeftTopLat = 25.041212573911324;
-double LeftDownLong = 121.55607268966645;
-double LeftDownLat = 25.025659005961995;
-double RightTopLong = 121.57323882736176;
-double RightTopLat = 25.041212573911324;
-double RightDownLong = 121.57323882736176;
-double RightDownLat = 25.025659005961995;
+//double LeftTopLong = 121.55607268966645;
+//double LeftTopLat = 25.041212573911324;
+//double LeftDownLong = 121.55607268966645;
+//double LeftDownLat = 25.025659005961995;
+//double RightTopLong = 121.57323882736176;
+//double RightTopLat = 25.041212573911324;
+//double RightDownLong = 121.57323882736176;
+//double RightDownLat = 25.025659005961995;
 
 double longitude = 0;
 double latitude = 0;
@@ -197,6 +197,7 @@ namespace googleearth {
 
 
 
+
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
 
@@ -214,7 +215,7 @@ namespace googleearth {
 			//
 			
 			//full screen mode
-			setFullScreen();			
+			//setFullScreen();			
 
 			g_formPtr = this;
 			
@@ -663,7 +664,7 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);
+				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);
 				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
 				
 				boundaryDirty = false;
@@ -708,11 +709,9 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 			 }
 		 }
 
-private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs^  e) {
-				webBrowser1->Document->InvokeScript("remove");		
-		 }
 
-private: System::Void button2_Click_1(System::Object^  sender, System::EventArgs^  e) {
+private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
+
 			array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
@@ -724,7 +723,8 @@ private: System::Void button2_Click_1(System::Object^  sender, System::EventArgs
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
+			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+
 		 }
 };
 }
