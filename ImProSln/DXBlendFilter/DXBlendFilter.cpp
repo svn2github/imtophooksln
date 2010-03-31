@@ -726,7 +726,7 @@ BOOL DXBlendFilter::SetInputDirty(int idx, BOOL v)
 
 HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
-	/*BOOL isDirty = FALSE;
+	BOOL isDirty = FALSE;
 	for (int i =0; i < NUMINPUT; i++)
 	{
 		if (m_pInputPins[i]->IsConnected() && GetInputDirty(i))
@@ -735,10 +735,10 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			break;
 		}
 	}
-	if (isDirty == FALSE)
+	if (!isDirty)
 	{	
 		return S_FALSE;
-	}*/
+	}
 	CAutoLock lck0(&m_csInTextureList[0]);
 	CAutoLock lck1(&m_csInTextureList[1]);
 	CAutoLock lck2(&m_csInTextureList[2]);
