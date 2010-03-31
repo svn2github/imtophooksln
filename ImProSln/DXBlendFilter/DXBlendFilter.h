@@ -8,7 +8,7 @@
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
 #include "MSPersist.h"
-
+#include "cv.h"
 #define NUMINPUT 4
 
 class DXBlendFilter :
@@ -47,12 +47,15 @@ public:
 	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
 	//D3DTransformBase
 	virtual HRESULT CreateTextures(UINT w, UINT h);
-	virtual HRESULT LoadWeightMap(int idx, WCHAR* path);
-	//implement IDXBlendFilterProperty
 
+	//implement IDXBlendFilterProperty
+	virtual HRESULT LoadWeightMap(int idx, WCHAR* path);
+	virtual HRESULT GetWeightMapPath(int idx, WCHAR* path);
+	virtual HRESULT GetCloneWeightMap(int idx, IplImage*& pImg);
 	
 protected:
 	CCritSec m_csInTextureList[NUMINPUT];
+	CCritSec m_csWeightMaps[NUMINPUT];
 	LPDIRECT3DTEXTURE9 m_pInTextureList[NUMINPUT];
 	LPDIRECT3DTEXTURE9 m_pWeightMaps[NUMINPUT];
 	LPDIRECT3DTEXTURE9 m_pTmpRenderTarget[2];

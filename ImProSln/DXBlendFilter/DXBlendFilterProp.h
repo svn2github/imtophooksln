@@ -28,8 +28,8 @@ protected:
 	IDXBlendFilter *m_pFilter;
 	bool GetSetting();
 	bool ApplySetting();
-	
 	BOOL OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg = FALSE);
+	BOOL UpdateWeightMap(int idx);
 public:
 	// Dialog Data
 	enum {IDD = IDD_DXBlendProp};
@@ -59,4 +59,10 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnload2();
 	afx_msg void OnBnClickedbtnload3();
 	afx_msg void OnBnClickedbtnload4();
+	CStatic m_picWMap2;
+	CStatic m_picWMap3;
+	CStatic m_picWMap4;
+
+	HBITMAP m_bmpWMap[4];
+	afx_msg void OnPaint();
 };

@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "DXBlendFilterProp.h"
-
+#include "DXBlendFilter.h"
+#include "cv.h"
+#include "highgui.h"
 IMPLEMENT_DYNAMIC(DXBlendFilterProp, CMFCBasePropertyPage)
 
 
@@ -15,6 +17,9 @@ void DXBlendFilterProp::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edWMap2, m_edWMap2);
 	DDX_Control(pDX, IDC_edWMap3, m_edWMap3);
 	DDX_Control(pDX, IDC_edWMap4, m_edWMap4);
+	DDX_Control(pDX, IDC_picWMap2, m_picWMap2);
+	DDX_Control(pDX, IDC_picWMap3, m_picWMap3);
+	DDX_Control(pDX, IDC_picWMap4, m_picWMap4);
 }
 
 
@@ -28,6 +33,7 @@ BEGIN_MESSAGE_MAP(DXBlendFilterProp, CMFCBasePropertyPage)
 	ON_BN_CLICKED(IDC_btnLoad2, &DXBlendFilterProp::OnBnClickedbtnload2)
 	ON_BN_CLICKED(IDC_btnLoad3, &DXBlendFilterProp::OnBnClickedbtnload3)
 	ON_BN_CLICKED(IDC_btnLoad4, &DXBlendFilterProp::OnBnClickedbtnload4)
+	ON_WM_PAINT()
 END_MESSAGE_MAP()
 
 
@@ -38,7 +44,11 @@ DXBlendFilterProp::DXBlendFilterProp(IUnknown *pUnk) :
 CMFCBasePropertyPage(NAME("DXBlendFilterProp"), pUnk),
 m_pFilter(0)
 {
-
+	for (int i =0; i < NUMINPUT; i++)
+	{
+		m_bmpWMap[i] = 0;
+	}
+	
 }
 
 DXBlendFilterProp::~DXBlendFilterProp()
@@ -48,6 +58,7 @@ DXBlendFilterProp::~DXBlendFilterProp()
 		m_pFilter->Release();
 		m_pFilter = NULL;
 	}
+	cvDestroyAllWindows();
 }
 
 //override CBasePropertyPage Method
@@ -79,7 +90,6 @@ HRESULT DXBlendFilterProp::OnActivate(void)
 	{
 		this->EnableWindow(TRUE);
 	}
-
 	GetSetting();
 	return S_OK;
 }
@@ -91,6 +101,12 @@ bool DXBlendFilterProp::GetSetting()
 		return false;
 	}
 	WCHAR str[MAX_PATH] = {0};
+	CEdit* tmpArray[] = {&m_edWMap1 ,&m_edWMap2 ,&m_edWMap3, &m_edWMap4};
+	for (int i =0; i < NUMINPUT; i++)
+	{
+		m_pFilter->GetWeightMapPath(i, str);
+		tmpArray[i]->SetWindowText(str);
+	}
 	return true;
 }
 
@@ -241,20 +257,117 @@ void DXBlendFilterProp::OnBnClickedbtnbrowse4()
 
 void DXBlendFilterProp::OnBnClickedbtnload1()
 {
-	// TODO: Add your control notification handler code here
+	if (m_pFilter == NULL)
+		return ;
+	CString path;
+	m_edWMap1.GetWindowText(path);
+	m_pFilter->LoadWeightMap(0, (WCHAR*)(LPCWSTR)path);
+	UpdateWeightMap(0);
 }
 
 void DXBlendFilterProp::OnBnClickedbtnload2()
 {
-	// TODO: Add your control notification handler code here
+	if (m_pFilter == NULL)
+		return ;
+	CString path;
+	m_edWMap2.GetWindowText(path);
+	m_pFilter->LoadWeightMap(1, (WCHAR*)(LPCWSTR)path);
+	UpdateWeightMap(1);
 }
 
 void DXBlendFilterProp::OnBnClickedbtnload3()
 {
-	// TODO: Add your control notification handler code here
+	if (m_pFilter == NULL)
+		return ;
+	CString path;
+	m_edWMap3.GetWindowText(path);
+	m_pFilter->LoadWeightMap(2, (WCHAR*)(LPCWSTR)path);
+	UpdateWeightMap(2);
 }
 
 void DXBlendFilterProp::OnBnClickedbtnload4()
 {
-	// TODO: Add your control notification handler code here
+	if (m_pFilter == NULL)
+		return ;
+	CString path;
+	m_edWMap4.GetWindowText(path);
+	m_pFilter->LoadWeightMap(3, (WCHAR*)(LPCWSTR)path);
+	UpdateWeightMap(3);
+}
+
+
+BOOL DXBlendFilterProp::UpdateWeightMap(int idx)
+{
+	if (idx <0 || idx > NUMINPUT)
+	{
+		return FALSE;
+	}
+	if (m_pFilter == NULL)
+	{
+		return TRUE;
+	}
+	RECT rect;
+	CDC* pDC = NULL;
+	switch (idx)
+	{
+	case 0:
+		pDC = m_picWMap1.GetDC();
+		m_picWMap1.GetClientRect(&rect);
+		break;
+	case 1:
+		pDC = m_picWMap2.GetDC();
+		m_picWMap2.GetClientRect(&rect);
+		break;
+	case 2:
+		pDC = m_picWMap3.GetDC();
+		m_picWMap3.GetClientRect(&rect);
+		break;
+	case 3:
+		pDC = m_picWMap4.GetDC();
+		m_picWMap4.GetClientRect(&rect);
+		break;
+	default:
+		return FALSE;
+	}
+	IplImage* pImg = NULL;
+	m_pFilter->GetCloneWeightMap(idx, pImg);
+	if (pImg == NULL)
+	{
+		ReleaseDC(pDC);
+		pDC = NULL;
+		return FALSE;
+	}
+	int winW = rect.right - rect.left;
+	int winH = rect.bottom - rect.top;
+
+	for (int y =0; y < winH; y++ )
+	{
+		for (int x = 0; x < winW; x++ )
+		{
+			int imgX = x * pImg->width / (float)winW;
+			int imgY = y * pImg->width / (float)winH;
+			int r = pImg->imageData[imgY*pImg->widthStep + imgX*4];
+			int g = pImg->imageData[imgY*pImg->widthStep + imgX*4+1];
+			int b = pImg->imageData[imgY*pImg->widthStep + imgX*4+2];
+			COLORREF color = RGB(r, g, b);
+			pDC->SetPixel(x, y, color);
+		}
+	}
+	if (pImg != NULL)
+	{
+		cvReleaseImage(&pImg);
+		pImg = NULL;
+	}
+	if (pDC != NULL	)
+	{
+		ReleaseDC(pDC);
+		pDC = NULL;
+	}
+	return TRUE;
+}
+void DXBlendFilterProp::OnPaint()
+{
+	CPaintDC dc(this); // device context for painting
+	for (int i =0; i< NUMINPUT; i++)
+		UpdateWeightMap(i);
 }

@@ -21,6 +21,7 @@ DXBlendFilter::DXBlendFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	memset(m_pWeightMaps, 0, sizeof(m_pWeightMaps));
 	memset(m_pTmpRenderTarget, 0, sizeof(m_pTmpRenderTarget));
 	memset(m_WeightMapPath, 0, sizeof(m_WeightMapPath));
+	
 }
 DXBlendFilter::~DXBlendFilter()
 {
@@ -257,7 +258,7 @@ HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			_tcsncat(szPath, str, pszFile - str);
 			for (int i =0; i < NUMINPUT; i++)
 			{
-				swprintf_s(str, MAX_PATH, L"%s\\%s", szPath, g_mapDefaultPath[i]);
+				swprintf_s(str, MAX_PATH, L"%s%s", szPath, g_mapDefaultPath[i]);
 				LoadWeightMap(i, str);
 			}
 		}
@@ -476,10 +477,49 @@ MS3DDisplay* DXBlendFilter::Create3DDisplay(IDirect3DDevice9* pDevice, int rtWid
 }
 HRESULT DXBlendFilter::SaveToFile(WCHAR* path)
 {
+
+	CAutoLock lck0(&m_csWeightMaps[0]);
+	CAutoLock lck1(&m_csWeightMaps[1]);
+	CAutoLock lck2(&m_csWeightMaps[2]);
+	CAutoLock lck3(&m_csWeightMaps[3]);
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"w");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	for(int i =0; i < NUMINPUT; i++)
+	{
+		fwprintf_s(filestream, L"%s \n", m_WeightMapPath[i]);
+	}
+	fclose(filestream);
 	return S_OK;
 }
 HRESULT DXBlendFilter::LoadFromFile(WCHAR* path)
 {
+
+	CAutoLock lck0(&m_csWeightMaps[0]);
+	CAutoLock lck1(&m_csWeightMaps[1]);
+	CAutoLock lck2(&m_csWeightMaps[2]);
+	CAutoLock lck3(&m_csWeightMaps[3]);
+	FILE* filestream = NULL;
+	_wfopen_s(&filestream, path, L"r");
+	if (filestream == NULL)
+	{
+		return false;
+	}
+	WCHAR mapPath[MAX_PATH] = {0};
+	for(int i =0; i < NUMINPUT; i++)
+	{
+		fgetws(mapPath, MAX_PATH, filestream);
+		WCHAR* tmp = wcsrchr(mapPath, '\n' );
+		if (tmp != NULL)
+			*tmp = '\0';
+		LoadWeightMap(i, mapPath);
+	}
+	
+	
+	fclose(filestream);
 	return S_OK;
 }
 
@@ -558,6 +598,7 @@ HRESULT DXBlendFilter::LoadWeightMap(int idx, WCHAR* path)
 	{
 		return E_FAIL;
 	}
+	CAutoLock lck(&m_csWeightMaps[idx]);
 	if (m_pWeightMaps[idx] != NULL)
 	{
 		m_pWeightMaps[idx]->Release();
@@ -565,15 +606,90 @@ HRESULT DXBlendFilter::LoadWeightMap(int idx, WCHAR* path)
 	}
 	HRESULT hr = S_OK;
 	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
-	hr = D3DXCreateTextureFromFile(pDevice, path, &m_pWeightMaps[idx]);
+	hr = D3DXCreateTextureFromFileEx(
+		pDevice, path, 0, 0, 1,	0, D3DFMT_FROM_FILE, D3DPOOL_MANAGED, D3DX_FILTER_LINEAR,
+		 D3DX_FILTER_LINEAR, 0, 0,	0, &m_pWeightMaps[idx]);
+
 	if (SUCCEEDED(hr))
 	{
 		wcscpy_s(m_WeightMapPath[idx], path);
 		return S_OK;
 	}
+	else
+	{
+		swprintf_s(m_WeightMapPath[idx], MAX_PATH, L"\0");
+		return E_FAIL;
+	}
 	return E_FAIL;
 }
 
+HRESULT DXBlendFilter::GetWeightMapPath(int idx, WCHAR* path)
+{
+	if (idx < 0 || idx >= NUMINPUT || path == NULL)
+	{
+		return E_FAIL;
+	}
+	wcscpy_s(path, MAX_PATH, m_WeightMapPath[idx]);
+	return S_OK;
+}
+HRESULT DXBlendFilter::GetCloneWeightMap(int idx, IplImage*& pImg)
+{
+	if (idx < 0 || idx >= NUMINPUT )
+	{
+		return E_FAIL;
+	}
+	if (pImg != NULL)
+	{
+		cvReleaseImage(&pImg);
+		pImg = NULL;
+	}
+	if (m_pD3DDisplay == NULL || m_pWeightMaps[idx] == NULL)
+		return E_FAIL;
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+
+	if (pDevice == NULL)
+		return NULL;
+	CCritSec* pD3DCS = NULL;
+	QueryD3DDeviceCS(NULL, pD3DCS);
+	if (pD3DCS == NULL)
+	{
+		return NULL;
+	}
+	CAutoLock lck0(pD3DCS);
+	CAutoLock lck(&m_csWeightMaps[idx]);
+	HRESULT hr = S_OK;
+	D3DSURFACE_DESC desc;
+	m_pWeightMaps[idx]->GetLevelDesc(0, &desc);
+
+	IplImage *d3dImg = NULL;
+
+	IDirect3DSurface9* pWeightSurface = NULL;
+
+	hr = m_pWeightMaps[idx]->GetSurfaceLevel(0, &pWeightSurface);
+
+	D3DLOCKED_RECT rect;
+	hr = pWeightSurface->LockRect(&rect, NULL, D3DLOCK_READONLY);
+	pImg = cvCreateImage(cvSize(desc.Width, desc.Height), 8, 4);
+	d3dImg = cvCreateImageHeader(cvSize(desc.Width, desc.Height), 8, 4);
+
+	d3dImg->imageData = (char*)rect.pBits;
+	cvCopyImage(d3dImg, pImg);
+	
+	pWeightSurface->UnlockRect();
+	if (d3dImg != NULL)
+	{
+		cvReleaseImageHeader(&d3dImg);
+		d3dImg = NULL;
+	}
+
+	if (pWeightSurface != NULL)
+	{
+		pWeightSurface->Release();
+		pWeightSurface = NULL;
+	}
+
+	return S_OK;
+}
 HRESULT DXBlendFilter::CreateInTexture(int idx, UINT w, UINT h)
 {
 	if (idx < 0 || idx >= NUMINPUT || m_pD3DDisplay == NULL)
@@ -743,8 +859,11 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	CAutoLock lck1(&m_csInTextureList[1]);
 	CAutoLock lck2(&m_csInTextureList[2]);
 	CAutoLock lck3(&m_csInTextureList[3]);
-
-
+	
+	CAutoLock lck4(&m_csWeightMaps[0]);
+	CAutoLock lck5(&m_csWeightMaps[1]);
+	CAutoLock lck6(&m_csWeightMaps[2]);
+	CAutoLock lck7(&m_csWeightMaps[3]);
 	HRESULT hr = S_OK;
 	{
 

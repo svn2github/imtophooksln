@@ -1,4 +1,5 @@
 #pragma once
+#include "cv.h"
 // {BEE0CA6B-0635-4487-AA1F-CF6DD16A9DBE}
 DEFINE_GUID(IID_IDXBlendFilter, 
 			0xbee0ca6b, 0x635, 0x4487, 0xaa, 0x1f, 0xcf, 0x6d, 0xd1, 0x6a, 0x9d, 0xbe);
@@ -14,5 +15,7 @@ MIDL_INTERFACE("BEE0CA6B-0635-4487-AA1F-CF6DD16A9DBE")
 IDXBlendFilter: public IUnknown
 {
 public:
-	
+	virtual HRESULT LoadWeightMap(int idx, WCHAR* path) = 0;
+	virtual HRESULT GetWeightMapPath(int idx, WCHAR* path) = 0;
+	virtual HRESULT GetCloneWeightMap(int idx, IplImage*& pImg) = 0;
 };
