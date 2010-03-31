@@ -376,6 +376,7 @@ protected:
 	virtual HRESULT OnActivateApp();
 
 private:
+	vector<IDirect3DSurface9*> m_pBackupBackBuffer;
 	bool m_bDeviceFromOthers;
 	int m_texW, m_texH; //Used for reCreate Texture when device lost.
 	HWND m_hDisplayWnd;
@@ -392,11 +393,15 @@ public:
 	HRESULT ShowDisplayWnd(BOOL bShow);
 	virtual BOOL Run();
 	virtual BOOL Stop();
+
+	virtual BOOL SetRenderTarget(LPDIRECT3DTEXTURE9 pRenderTarget);
+	virtual BOOL ResetRenderTarget();
 	virtual BOOL Render();
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
 	virtual BOOL HitTest(D3DXVECTOR3& vPos, D3DXVECTOR3& vDir);
 	virtual bool IsDeviceFromOther();
+
 
 
 	HWND GetDisplayWindow() { return m_hDisplayWnd;}

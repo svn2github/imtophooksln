@@ -72,7 +72,7 @@ protected:
 	virtual MS3DDisplay* Create3DDisplay(IDirect3D9* pD3D, int rtWidth, int rtHeight);
 	virtual MS3DDisplay* Create3DDisplay(IDirect3DDevice9* pDevice, int rtWidth, int rtHeight);
 private:
-	CAMEvent m_FillBufferEndSignal;
+	CAMEvent m_FillBufferEndSignal[NUMINPUT];
 	CAMEvent m_ReceiveEndSignal[NUMINPUT];
 	CCritSec m_csInputDirty[NUMINPUT];
 	BOOL m_InputDirty[NUMINPUT];

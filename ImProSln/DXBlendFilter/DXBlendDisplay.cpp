@@ -127,7 +127,7 @@ BOOL DXBlendDisplay::Render(LPDIRECT3DTEXTURE9 pSrc1, LPDIRECT3DTEXTURE9 pSrc2,
 	if( SUCCEEDED( m_pDevice->BeginScene() ) )
 	{
 		hr = pEffect->SetTexture("g_SrcTexture", pSrc1);
-		hr = pEffect->SetTexture("g_DestTexture", pSrc1);
+		hr = pEffect->SetTexture("g_DestTexture", pSrc2);
 		hr = pEffect->SetTexture("g_WeightMap", pWeight1);
 		hr = pEffect->SetTechnique("technique0");
 

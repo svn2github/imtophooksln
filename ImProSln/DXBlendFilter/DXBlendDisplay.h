@@ -5,9 +5,9 @@ class DXBlendDisplay :
 	public MS3DDisplay
 {	
 private:
-	//variables for fps computing
-public:
 
+public:
+	
 public:
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL Render();

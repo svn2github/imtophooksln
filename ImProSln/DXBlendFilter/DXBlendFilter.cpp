@@ -106,7 +106,7 @@ HRESULT DXBlendFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	}
 	if (GetInputDirty(idx))
 	{
-		m_FillBufferEndSignal.Wait(1000);
+		m_FillBufferEndSignal[idx].Wait(1000);
 	}
 	//WCHAR str[MAX_PATH] = {0};
 
@@ -244,9 +244,45 @@ HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			w = bitHeader.biWidth; h = bitHeader.biHeight;
 			initD3D(bitHeader.biWidth, bitHeader.biHeight);
 		}
+		if (m_pD3DDisplay != NULL)
+		{
+			WCHAR str[MAX_PATH] = {0};
+			HMODULE module = GetModule();
+			GetModuleFileName(module, str, MAX_PATH);
+			// Gets filename
+			WCHAR* pszFile = wcsrchr(str, '\\');
+			pszFile++;    // Moves on from \
+			// Get path
+			WCHAR szPath[MAX_PATH] = L"";
+			_tcsncat(szPath, str, pszFile - str);
+			for (int i =0; i < NUMINPUT; i++)
+			{
+				swprintf_s(str, MAX_PATH, L"%s\\%s", szPath, g_mapDefaultPath[i]);
+				LoadWeightMap(i, str);
+			}
+		}
 	}
 	if (direction == PINDIR_INPUT)
 	{
+		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
+		if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DXTEXTURE9_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			w = desc->Width; h = desc->Height;
+		}
+		else if (IsEqualGUID(*inputMT.Type(), GUID_D3DMEDIATYPE) && 
+			IsEqualGUID(*inputMT.Subtype(), GUID_D3DSHARE_RTTEXTURE_POINTER))
+		{
+			D3DSURFACE_DESC* desc = (D3DSURFACE_DESC*)inputMT.pbFormat;
+			w = desc->Width; h = desc->Height;
+		}
+		else
+		{
+			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
+			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+			w = bitHeader.biWidth; h = bitHeader.biHeight;
+		}
 		if (m_pD3DDisplay == NULL)
 		{
 			return E_FAIL;
@@ -690,7 +726,7 @@ BOOL DXBlendFilter::SetInputDirty(int idx, BOOL v)
 
 HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
-	BOOL isDirty = FALSE;
+	/*BOOL isDirty = FALSE;
 	for (int i =0; i < NUMINPUT; i++)
 	{
 		if (m_pInputPins[i]->IsConnected() && GetInputDirty(i))
@@ -702,31 +738,44 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	if (isDirty == FALSE)
 	{	
 		return S_FALSE;
-	}
+	}*/
 	CAutoLock lck0(&m_csInTextureList[0]);
 	CAutoLock lck1(&m_csInTextureList[1]);
 	CAutoLock lck2(&m_csInTextureList[2]);
 	CAutoLock lck3(&m_csInTextureList[3]);
 
-	//WCHAR str[MAX_PATH] = {0};
-	//swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer ---->\n");
-	//OutputDebugStringW(str);
 
 	HRESULT hr = S_OK;
 	{
+
 		CCritSec* pD3DCS = NULL;
 		QueryD3DDeviceCS(NULL, pD3DCS);
 		if (pD3DCS == NULL)
 			return S_FALSE;
 		CAutoLock lck(pD3DCS);
-
-		hr = SetRenderTarget();
-		if (FAILED(hr))
+		IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+		if (pDevice == NULL)
 			return S_FALSE;
-		m_pD3DDisplay->SetTexture(m_pInTextureList[0]);
-		((DXBlendDisplay*)m_pD3DDisplay)->Render();
-		m_pD3DDisplay->SetTexture(NULL);
-		hr = ResetRenderTarget();
+
+		m_pD3DDisplay->SetRenderTarget(m_pTmpRenderTarget[0]);
+		pDevice->Clear( 0, NULL, D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER, 
+			D3DCOLOR_XRGB(0,0,0), 1.0f, 0 );
+		m_pD3DDisplay->ResetRenderTarget();
+		WCHAR str[MAX_PATH] = {0};
+		int step = 0;
+		for (int i =0; i < NUMINPUT; i++)
+		{	
+			if (!m_pInputPins[i]->IsConnected() || m_pWeightMaps[i] == NULL || m_pInTextureList[i] == NULL)
+				continue;
+			step++;
+			m_pD3DDisplay->SetRenderTarget(m_pTmpRenderTarget[step%2]);
+			((DXBlendDisplay*)m_pD3DDisplay)->Render(m_pInTextureList[i], m_pTmpRenderTarget[(step+1)%2], m_pWeightMaps[i]);
+			m_pD3DDisplay->ResetRenderTarget();	
+
+		}
+		hr = SetRenderTarget();
+		m_pD3DDisplay->Render(m_pTmpRenderTarget[step%2]);
+		hr = ResetRenderTarget();		
 	}
 
 	CMediaType mt = ((CMuxTransformStream*)pPin)->CurrentMediaType();
@@ -745,9 +794,9 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	{
 		SetInputDirty(i, FALSE);
 	}
-	//swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer <----\n");
-	//OutputDebugStringW(str);
-	
-	m_FillBufferEndSignal.Set();
+	for (int i =0; i < NUMINPUT; i++)
+	{
+		m_FillBufferEndSignal[i].Set();
+	}
 	return S_OK;
 }

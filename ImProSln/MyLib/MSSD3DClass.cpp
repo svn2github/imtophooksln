@@ -626,6 +626,15 @@ MS3DDisplay::~MS3DDisplay()
 	{
 		m_pAllInstances.erase(thisIter);
 	}
+	for (int i =0; i< m_pBackupBackBuffer.size(); i++)
+	{
+		if (m_pBackupBackBuffer[i] != NULL)
+		{
+			m_pBackupBackBuffer[i]->Release();
+			m_pBackupBackBuffer[i] = NULL;
+		}
+	}
+	m_pBackupBackBuffer.clear();
 }
 
 BOOL MS3DDisplay::Run()
@@ -819,7 +828,56 @@ BOOL MS3DDisplay::CreateTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 	
 	return TRUE;
 }
+BOOL MS3DDisplay::SetRenderTarget(LPDIRECT3DTEXTURE9 pRenderTarget)
+{
+	if (pRenderTarget == NULL)
+		return E_FAIL;
+	
+	HRESULT hr = S_OK;
+	
+	LPDIRECT3DSURFACE9 pRTSurface = NULL;
+	LPDIRECT3DSURFACE9 pBackupBuffer = NULL;
+	D3DSURFACE_DESC desc;
+	hr = pRenderTarget->GetSurfaceLevel(0, &pRTSurface);
+	pRTSurface->GetDesc(&desc);
+	if (!(desc.Usage & D3DUSAGE_RENDERTARGET) )
+	{
+		pRTSurface->Release();
+		pRTSurface = NULL;
+		return E_FAIL;
+	}
+	hr = m_pDevice->GetRenderTarget(0, &pBackupBuffer);
+	hr = m_pDevice->SetRenderTarget(0, pRTSurface);
+	m_pBackupBackBuffer.push_back(pBackupBuffer);
+	pBackupBuffer->AddRef();
 
+	if (pRTSurface != NULL)
+	{
+		pRTSurface->Release();
+		pRTSurface = NULL;
+	}
+	if (pBackupBuffer != NULL)
+	{
+		pBackupBuffer->Release();
+		pBackupBuffer = NULL;
+	}
+	return TRUE;
+}
+BOOL MS3DDisplay::ResetRenderTarget()
+{
+	if (m_pBackupBackBuffer.size() <= 0)
+		return E_FAIL;
+
+	HRESULT hr = S_OK;
+	LPDIRECT3DSURFACE9 pBackupBuffer = m_pBackupBackBuffer[m_pBackupBackBuffer.size()-1];
+	m_pBackupBackBuffer.pop_back();
+
+	m_pDevice->SetRenderTarget(0, pBackupBuffer);
+
+	pBackupBuffer->Release();
+	pBackupBuffer = NULL;
+	return TRUE;
+}
 BOOL MS3DDisplay::Render()
 {
 	CAutoLock lck(&m_csResetDevice);
