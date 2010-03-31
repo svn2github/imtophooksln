@@ -45,10 +45,18 @@ public:
 	//from D3DBaseFilter
 	virtual HRESULT QueryD3DDevice(IDXBasePin* pPin, IDirect3DDevice9*& outDevice);
 	virtual HRESULT QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs);
+	//D3DTransformBase
+	virtual HRESULT CreateTextures(UINT w, UINT h);
+	virtual HRESULT LoadWeightMap(int idx, WCHAR* path);
 	//implement IDXBlendFilterProperty
+
+	
 protected:
 	CCritSec m_csInTextureList[NUMINPUT];
 	LPDIRECT3DTEXTURE9 m_pInTextureList[NUMINPUT];
+	LPDIRECT3DTEXTURE9 m_pWeightMaps[NUMINPUT];
+	LPDIRECT3DTEXTURE9 m_pTmpRenderTarget[2];
+	WCHAR m_WeightMapPath[NUMINPUT][MAX_PATH];
 	
 protected:
 

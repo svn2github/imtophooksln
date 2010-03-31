@@ -4,6 +4,12 @@
 #include "DXBlendFilterApp.h"
 #include "cv.h"
 #include "MyMediaSample.h"
+
+const WCHAR g_mapDefaultPath[NUMINPUT][MAX_PATH] = 
+{ L"..\\fx\\BlendMap0.png",L"..\\fx\\BlendMap1.png", L"..\\fx\\BlendMap2.png", 
+L"..\\fx\\BlendMap3.png"};
+
+
 DXBlendFilter::DXBlendFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : CMuxTransformFilter(NAME("DXBlend Filter"), 0, CLSID_DXBlendFilter)
 { 
@@ -12,7 +18,9 @@ DXBlendFilter::DXBlendFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 		m_InputDirty[i] = FALSE;
 	}
 	memset(m_pInTextureList, 0, sizeof(m_pInTextureList));
-	
+	memset(m_pWeightMaps, 0, sizeof(m_pWeightMaps));
+	memset(m_pTmpRenderTarget, 0, sizeof(m_pTmpRenderTarget));
+	memset(m_WeightMapPath, 0, sizeof(m_WeightMapPath));
 }
 DXBlendFilter::~DXBlendFilter()
 {
@@ -22,6 +30,22 @@ DXBlendFilter::~DXBlendFilter()
 		{
 			m_pInTextureList[i]->Release();
 			m_pInTextureList[i] = NULL;
+		}
+	}
+	for (int i =0; i < NUMINPUT; i++)
+	{
+		if (m_pWeightMaps[i] != NULL)
+		{
+			m_pWeightMaps[i]->Release();
+			m_pWeightMaps[i] = NULL;
+		}
+	}
+	for (int i = 0; i <2; i++)
+	{
+		if (m_pTmpRenderTarget[i] != NULL)
+		{
+			m_pTmpRenderTarget[i]->Release();
+			m_pTmpRenderTarget[i] = NULL;
 		}
 	}
 }
@@ -82,7 +106,7 @@ HRESULT DXBlendFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	}
 	if (GetInputDirty(idx))
 	{
-		//m_FillBufferEndSignal.Wait(1000);
+		m_FillBufferEndSignal.Wait(1000);
 	}
 	//WCHAR str[MAX_PATH] = {0};
 
@@ -93,11 +117,12 @@ HRESULT DXBlendFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 		CAutoLock lck0(&m_csInTextureList[idx]);
 		//swprintf_s(str, MAX_PATH, L"@@@@@ Receive %d ---->\n", idx);
 		//OutputDebugStringW(str);
-		hr = CopyInputImage2InputTexture(idx, pSample, &mt);
 		if (SUCCEEDED(hr))
 		{
 			SetInputDirty(idx, TRUE);
 		}
+		hr = CopyInputImage2InputTexture(idx, pSample, &mt);
+	
 		//swprintf_s(str, MAX_PATH, L"@@@@@ Receive %d <----\n", idx);
 		//OutputDebugStringW(str);
 	}
@@ -471,6 +496,47 @@ HRESULT DXBlendFilter::QueryD3DDeviceCS(IDXBasePin* pPin, CCritSec*& cs)
 	}
 	return S_OK;
 }
+HRESULT DXBlendFilter::CreateTextures(UINT w, UINT h)
+{
+	if (m_pD3DDisplay == NULL)
+		return E_FAIL;
+	for (int i =0; i <2; i++)
+	{
+		if (m_pTmpRenderTarget[i] != NULL)
+		{
+			m_pTmpRenderTarget[i]->Release();
+			m_pTmpRenderTarget[i] = NULL;
+		}
+	}
+	HRESULT hr = S_OK;
+	for (int i =0; i< 2; i++)
+	{
+		hr=	D3DXCreateTexture(m_pD3DDisplay->GetD3DDevice(), w, h, 
+			0,  D3DUSAGE_RENDERTARGET, D3DFMT_X8R8G8B8, D3DPOOL_DEFAULT , &(m_pTmpRenderTarget[i]));
+	}
+	return __super::CreateTextures(w, h);
+}
+HRESULT DXBlendFilter::LoadWeightMap(int idx, WCHAR* path)
+{
+	if (idx < 0 || idx >= NUMINPUT || m_pD3DDisplay == NULL)
+	{
+		return E_FAIL;
+	}
+	if (m_pWeightMaps[idx] != NULL)
+	{
+		m_pWeightMaps[idx]->Release();
+		m_pWeightMaps[idx] = NULL;
+	}
+	HRESULT hr = S_OK;
+	IDirect3DDevice9* pDevice = m_pD3DDisplay->GetD3DDevice();
+	hr = D3DXCreateTextureFromFile(pDevice, path, &m_pWeightMaps[idx]);
+	if (SUCCEEDED(hr))
+	{
+		wcscpy_s(m_WeightMapPath[idx], path);
+		return S_OK;
+	}
+	return E_FAIL;
+}
 
 HRESULT DXBlendFilter::CreateInTexture(int idx, UINT w, UINT h)
 {
@@ -625,11 +691,7 @@ BOOL DXBlendFilter::SetInputDirty(int idx, BOOL v)
 HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 {
 	BOOL isDirty = FALSE;
-	CAutoLock lck0(&m_csInTextureList[0]);
-	CAutoLock lck1(&m_csInTextureList[1]);
-	CAutoLock lck2(&m_csInTextureList[2]);
-	CAutoLock lck3(&m_csInTextureList[3]);
-	/*for (int i =0; i < NUMINPUT; i++)
+	for (int i =0; i < NUMINPUT; i++)
 	{
 		if (m_pInputPins[i]->IsConnected() && GetInputDirty(i))
 		{
@@ -639,9 +701,12 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 	}
 	if (isDirty == FALSE)
 	{	
-		//return S_FALSE;
-	}*/
-
+		return S_FALSE;
+	}
+	CAutoLock lck0(&m_csInTextureList[0]);
+	CAutoLock lck1(&m_csInTextureList[1]);
+	CAutoLock lck2(&m_csInTextureList[2]);
+	CAutoLock lck3(&m_csInTextureList[3]);
 
 	//WCHAR str[MAX_PATH] = {0};
 	//swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer ---->\n");
@@ -676,13 +741,13 @@ HRESULT DXBlendFilter::FillBuffer(IMediaSample *pSamp, IPin* pPin)
 			return S_FALSE;
 		hr = CopyOutputTexture2OutputData(pSamp, &mt, true);
 	}
-	/*for (int i =0; i < NUMINPUT; i++)
+	for (int i =0; i < NUMINPUT; i++)
 	{
 		SetInputDirty(i, FALSE);
 	}
-	swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer <----\n");
-	OutputDebugStringW(str);
-	*/
+	//swprintf_s(str, MAX_PATH, L"@@@@@ FillBuffer <----\n");
+	//OutputDebugStringW(str);
+	
 	m_FillBufferEndSignal.Set();
 	return S_OK;
 }

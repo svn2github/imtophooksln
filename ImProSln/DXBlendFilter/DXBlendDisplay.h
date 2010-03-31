@@ -11,8 +11,10 @@ public:
 public:
 	virtual ID3DXEffect* GetEffect();
 	virtual BOOL Render();
-	virtual BOOL Render(IDirect3DBaseTexture9* pTexture);
+	virtual BOOL Render(LPDIRECT3DTEXTURE9 pTexture);
 	virtual BOOL Render(IDirect3DBaseTexture9* pTexture, ID3DXEffect* pEffect);
+	virtual BOOL Render(LPDIRECT3DTEXTURE9 pSrc1, LPDIRECT3DTEXTURE9 pSrc2, 
+		LPDIRECT3DTEXTURE9 pWeight1); // weight2 is 1.
 protected:
 	
 public:
