@@ -371,24 +371,24 @@ namespace googleearth {
 
 			// 15,csGE,flashGE,11,p1x,p1y,..
 			//array<String>^ data = strMessage->Split(',');
-			strMessage = strMessage->Trim('\0');
+			//strMessage = strMessage->Trim('\0');
 			array<String^>^data = strMessage->Split(',');
 
 			
-			if(data!=nullptr){			
+			if(data!=nullptr && data->Length==12){			
 				
 				// && cmds->Length == 12
 				
 				String^ cmd = data[3];
 
-				if(cmd == "assignID"){
+				/*if(cmd == "assignID"){
 					tabletName = data[4];
 					sendData("13," + tabletName); // rename
 				}
 				else if(cmd == "flashGE-login"){
 					sendData("15,flashGE,"+tabletName+",geLogin");				
 				}
-				else if(cmd == "setBoundary"){
+				else*/ if(cmd == "setBoundary"){
 
 					try{
 						double leftTopLat = System::Double::Parse(data[4]);
@@ -648,7 +648,7 @@ namespace googleearth {
 				parameterModel[1] = GEData.getIntersect_point().x;
 				
 				//webBrowser1->Document->InvokeScript("setModelLoc",parameterModel);
-				webBrowser1->Document->InvokeScript("setIconLoc",parameterModel);
+				//webBrowser1->Document->InvokeScript("setIconLoc",parameterModel);
 			 
 			 }
 			 

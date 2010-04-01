@@ -18,6 +18,7 @@ protected:
 	//overwrite CCameraDS function
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
+
 public:
 	ARTagCameraDS(void);
 	virtual ~ARTagCameraDS(void);

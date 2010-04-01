@@ -52,8 +52,21 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_txtROIThreshold, m_txtROIThreshold);
 	DDX_Control(pDX, IDC_EDPath, m_edSavePath);
 	DDX_Control(pDX, IDC_btnStartAutoCapture, m_btnStartAutoCapture);
-	DDX_Control(pDX, IDC_cbCam, m_cbCam);
+	DDX_Control(pDX, IDC_cbCam, m_cbCam1);
 	DDX_Control(pDX, IDC_btnSaveCurShot, m_btnSaveCurShot);
+	DDX_Control(pDX, IDC_cbCam2, m_cbCam2);
+	DDX_Control(pDX, IDC_cbCam3, m_cbCam3);
+	DDX_Control(pDX, IDC_cbCam4, m_cbCam4);
+	DDX_Control(pDX, IDC_btnCamProp2, m_btnCamProp2);
+	DDX_Control(pDX, IDC_btnCamProp3, m_btnCamProp3);
+	DDX_Control(pDX, IDC_btnCamProp4, m_btnCamProp4);
+	DDX_Control(pDX, IDC_btnCamPinProp2, m_btnCamPinProp2);
+	DDX_Control(pDX, IDC_btnCamPinProp3, m_btnCamPinProp3);
+	DDX_Control(pDX, IDC_btnCamPinProp4, m_btnCamPinProp4);
+	DDX_Control(pDX, IDC_btnCamWarp2, m_btnCamWarp2);
+	DDX_Control(pDX, IDC_btnCamWarp3, m_btnCamWarp3);
+	DDX_Control(pDX, IDC_btnCamWarp4, m_btnCamWarp4);
+	DDX_Control(pDX, IDC_btnDXBlendProp, m_btnDXBlendProp);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -88,6 +101,14 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_WM_TIMER()
 
 	ON_BN_CLICKED(IDC_btnSaveCurShot, &CARLayoutCaptureAppDlg::OnBnClickedbtnsavecurshot)
+	ON_CBN_SELENDCANCEL(IDC_cbCam1, &CARLayoutCaptureAppDlg::OnCbnSelendcancelcbcam1)
+	ON_CBN_SELCHANGE(IDC_cbCam2, &CARLayoutCaptureAppDlg::OnCbnSelchangecbcam2)
+	ON_BN_CLICKED(IDC_btnCamProp2, &CARLayoutCaptureAppDlg::OnBnClickedbtncamprop2)
+	ON_BN_CLICKED(IDC_btnCamPinProp2, &CARLayoutCaptureAppDlg::OnBnClickedbtncampinprop2)
+	ON_BN_CLICKED(IDC_btnCamWarp2, &CARLayoutCaptureAppDlg::OnBnClickedbtncamwarp2)
+	ON_CBN_SELCHANGE(IDC_cbCam3, &CARLayoutCaptureAppDlg::OnCbnSelchangecbcam3)
+	ON_CBN_SELCHANGE(IDC_cbCam4, &CARLayoutCaptureAppDlg::OnCbnSelchangecbcam4)
+	ON_BN_CLICKED(IDC_btnDXBlendProp, &CARLayoutCaptureAppDlg::OnBnClickedbtndxblendprop)
 END_MESSAGE_MAP()
 
 
@@ -127,15 +148,22 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	{
 		WCHAR sName[MAX_PATH] = {0};
 		CCameraDS::CameraName(i, sName, MAX_PATH);
-		m_cbCam.AddString(sName);
+		m_cbCam1.AddString(sName);
+		m_cbCam2.AddString(sName);
+		m_cbCam3.AddString(sName);
+		m_cbCam4.AddString(sName);
 		CString camName = sName;
 		m_CamDevice[camName] = i;
 
 	}
+
 	if (camCount > 0)
 	{
-		m_cbCam.SetCurSel(0);
+		m_cbCam1.SetCurSel(0);
 	}
+	m_cbCam2.SetCurSel(-1);
+	m_cbCam3.SetCurSel(-1);
+	m_cbCam4.SetCurSel(-1);
 	m_slrROIThreshold.SetRangeMax(30, TRUE);
 	m_slrROIThreshold.SetRangeMin(0, TRUE);
 	m_slrROIThreshold.SetPos(5);
@@ -195,7 +223,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 	CString cbStr;
 	int nCamID = -1;
 	
-	m_cbCam.GetLBText(m_cbCam.GetCurSel(), cbStr);
+	m_cbCam1.GetLBText(m_cbCam1.GetCurSel(), cbStr);
 	nCamID = m_CamDevice[cbStr];
 
 	m_hWndCaptureWnd = m_camView.GetSafeHwnd();
@@ -203,7 +231,11 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 	ret = m_pDSCam->OpenCamera(nCamID, true);
 	ret = m_pDSCam->SetVideoWindow(m_hWndCaptureWnd);
 
-	m_cbCam.EnableWindow(FALSE);
+	m_cbCam1.EnableWindow(FALSE);
+	m_cbCam2.EnableWindow(TRUE);
+	//m_cbCam3.EnableWindow(TRUE);
+	//m_cbCam4.EnableWindow(TRUE);
+
 	m_btnOpenCam.EnableWindow(FALSE);
 	m_btnCloseCam.EnableWindow(TRUE);
 
@@ -216,6 +248,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnopencamera()
 	m_btnARProp.EnableWindow(TRUE);
 	m_btnARWarpProp.EnableWindow(TRUE);
 	m_btnDXRenderProp.EnableWindow(TRUE);
+	m_btnDXBlendProp.EnableWindow(TRUE);
 	m_btnCamProp.EnableWindow(TRUE);
 	m_btnCamWarpProp.EnableWindow(TRUE);
 	m_btnCamPinProp.EnableWindow(TRUE);
@@ -284,7 +317,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 		delete m_pDSCam;
 		m_pDSCam = NULL;
 	}
-	m_cbCam.EnableWindow(TRUE);
+	m_cbCam1.EnableWindow(TRUE);
 	m_btnOpenCam.EnableWindow(TRUE);
 	m_btnCloseCam.EnableWindow(FALSE);
 
@@ -297,6 +330,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 	m_btnARProp.EnableWindow(FALSE);
 	m_btnARWarpProp.EnableWindow(FALSE);
 	m_btnDXRenderProp.EnableWindow(FALSE);
+	m_btnDXBlendProp.EnableWindow(FALSE);
 	m_btnCamProp.EnableWindow(FALSE);
 	m_btnCamWarpProp.EnableWindow(FALSE);
 	m_btnCamPinProp.EnableWindow(FALSE);
@@ -312,6 +346,26 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 
 	m_btnStartAutoCapture.EnableWindow(FALSE);
 	m_btnSaveCurShot.EnableWindow(FALSE);
+
+
+	m_cbCam2.EnableWindow(FALSE);
+	m_cbCam3.EnableWindow(FALSE);
+	m_cbCam4.EnableWindow(FALSE);
+	m_cbCam2.SetCurSel(-1);
+	m_cbCam3.SetCurSel(-1);
+	m_cbCam4.SetCurSel(-1);
+
+	m_btnCamPinProp2.EnableWindow(FALSE);
+	m_btnCamProp2.EnableWindow(FALSE);
+	m_btnCamWarp2.EnableWindow(FALSE);
+
+	m_btnCamPinProp3.EnableWindow(FALSE);
+	m_btnCamProp3.EnableWindow(FALSE);
+	m_btnCamWarp3.EnableWindow(FALSE);
+
+	m_btnCamPinProp4.EnableWindow(FALSE);
+	m_btnCamProp4.EnableWindow(FALSE);
+	m_btnCamWarp4.EnableWindow(FALSE);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnplay()
@@ -387,21 +441,21 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtncamprop()
 {
 	if (m_pDSCam == NULL)
 		return;
-	m_pDSCam->ShowCamProp();
+	m_pDSCam->ShowCamProp(0);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtncampinprop()
 {
 	if (m_pDSCam == NULL)
 		return;
-	m_pDSCam->ShowCamPinProp();
+	m_pDSCam->ShowCamPinProp(0);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtncamwarp()
 {
 	if (m_pDSCam == NULL)
 		return;
-	m_pDSCam->ShowCamWarpProp();
+	m_pDSCam->ShowCamWarpProp(0);
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnlasttag()
@@ -843,6 +897,7 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnstartautocapture()
 	m_btnARProp.EnableWindow(FALSE);
 	m_btnARWarpProp.EnableWindow(FALSE);
 	m_btnDXRenderProp.EnableWindow(FALSE);
+	m_btnDXBlendProp.EnableWindow(FALSE);
 	m_btnCamProp.EnableWindow(FALSE);
 	m_btnCamWarpProp.EnableWindow(FALSE);
 	m_btnCamPinProp.EnableWindow(FALSE);
@@ -967,4 +1022,102 @@ void CARLayoutCaptureAppDlg::OnTimer(UINT_PTR nIDEvent)
 void CARLayoutCaptureAppDlg::OnBnClickedbtnsavecurshot()
 {
 	CaptureCurrentShot();
+}
+
+void CARLayoutCaptureAppDlg::OnCbnSelendcancelcbcam1()
+{
+	// TODO: Add your control notification handler code here
+}
+
+void CARLayoutCaptureAppDlg::OnCbnSelchangecbcam2()
+{
+	if (m_pDSCam == NULL)
+		return;
+	CString cbStr;
+	int nCamID = -1;
+	HRESULT hr = S_OK;
+	m_cbCam2.GetLBText(m_cbCam2.GetCurSel(), cbStr);
+	nCamID = m_CamDevice[cbStr];
+
+	hr = m_pDSCam->RemoveCamera(1);
+	hr = m_pDSCam->AddCamera(nCamID, true);
+	if (SUCCEEDED(hr))
+	{
+		m_btnCamPinProp2.EnableWindow(TRUE);
+		m_btnCamProp2.EnableWindow(TRUE);
+		m_btnCamWarp2.EnableWindow(TRUE);
+		m_cbCam2.EnableWindow(FALSE);
+		m_cbCam3.EnableWindow(TRUE);
+	}
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncamprop2()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamProp(1);
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncampinprop2()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamPinProp(1);
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtncamwarp2()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamWarpProp(1);
+}
+
+void CARLayoutCaptureAppDlg::OnCbnSelchangecbcam3()
+{
+	if (m_pDSCam == NULL)
+		return;
+	CString cbStr;
+	int nCamID = -1;
+	HRESULT hr = S_OK;
+	m_cbCam3.GetLBText(m_cbCam3.GetCurSel(), cbStr);
+	nCamID = m_CamDevice[cbStr];
+
+	hr = m_pDSCam->RemoveCamera(2);
+	hr = m_pDSCam->AddCamera(nCamID, true);
+	if (SUCCEEDED(hr))
+	{
+		m_btnCamPinProp3.EnableWindow(TRUE);
+		m_btnCamProp3.EnableWindow(TRUE);
+		m_btnCamWarp3.EnableWindow(TRUE);
+		m_cbCam3.EnableWindow(FALSE);
+		m_cbCam4.EnableWindow(TRUE);
+	}
+}
+
+void CARLayoutCaptureAppDlg::OnCbnSelchangecbcam4()
+{
+	if (m_pDSCam == NULL)
+		return;
+	CString cbStr;
+	int nCamID = -1;
+	HRESULT hr = S_OK;
+	m_cbCam4.GetLBText(m_cbCam4.GetCurSel(), cbStr);
+	nCamID = m_CamDevice[cbStr];
+
+	hr = m_pDSCam->RemoveCamera(3);
+	hr = m_pDSCam->AddCamera(nCamID, true);
+	if (SUCCEEDED(hr))
+	{
+		m_btnCamPinProp4.EnableWindow(TRUE);
+		m_btnCamProp4.EnableWindow(TRUE);
+		m_btnCamWarp4.EnableWindow(TRUE);
+		m_cbCam4.EnableWindow(FALSE);
+	}
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtndxblendprop()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowDXBlendProp();
 }

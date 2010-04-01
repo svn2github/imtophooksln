@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(SolutionDir)/HomoWarpFilter;$(SolutionDir)/DXRender;$(SolutionDir)/ARLayoutFilter/MyTestFilter;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/DXBlendFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

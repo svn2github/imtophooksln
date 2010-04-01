@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/MyLib/leadtool/Include/&quot;;&quot;$(SolutionDir)/HookDrawingFilter&quot;;&quot;$(SolutionDir)/ARTagFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/DXBlendFilter/&quot;;&quot;$(SolutionDir)/MyLib/leadtool/Include/&quot;;&quot;$(SolutionDir)/HookDrawingFilter&quot;;&quot;$(SolutionDir)/ARTagFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL; DSBASECLASS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -90,7 +90,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll $(SolutionDir)\ImGoogleEarthSln\Release&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll $(SolutionDir)\ImGoogleEarthSln\Debug"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll $(SolutionDir)\ImGoogleEarthSln\Release&#x0D;&#x0A;copy $(OutDir)\$(ProjectName).dll $(SolutionDir)\ImGoogleEarthSln\Debug&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

@@ -16,7 +16,7 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// 中文 (台灣) resources
+// Chinese (Taiwan) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
 #ifdef _WIN32
@@ -71,12 +71,12 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "res\\ARLayoutCaptureApp.ico"
-#endif    // 中文 (台灣) resources
+#endif    // Chinese (Taiwan) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// 英文 (美國) resources
+// English (U.S.) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -89,25 +89,25 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Dialog
 //
 
-IDD_ARLAYOUTCAPTUREAPP_DIALOG DIALOGEX 0, 0, 340, 273
+IDD_ARLAYOUTCAPTUREAPP_DIALOG DIALOGEX 0, 0, 494, 293
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "ARLayoutCaptureApp"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "",IDC_CamView,"Static",SS_BLACKFRAME,7,7,207,157
-    PUSHBUTTON      "Open Cam",IDC_btnOpenCamera,246,30,87,14
-    PUSHBUTTON      "Destory Cam",IDC_btnDestoryCamera,246,47,87,14,WS_DISABLED
-    PUSHBUTTON      "Play",IDC_btnPlay,246,70,87,14,WS_DISABLED
-    PUSHBUTTON      "Pause",IDC_btnPasue,246,86,87,14,WS_DISABLED
-    PUSHBUTTON      "Stop",IDC_btnStop,246,102,87,14,WS_DISABLED
-    PUSHBUTTON      "Save Graph",IDC_btnSaveGraph,246,127,87,14,WS_DISABLED
-    PUSHBUTTON      "AR Prop",IDC_btnARProp,246,150,87,14,WS_DISABLED
-    PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,246,167,87,14,WS_DISABLED
-    PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,246,185,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Prop",IDC_btnCamProp,246,207,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp",IDC_btnCamWarp,246,245,87,14,WS_DISABLED
-    PUSHBUTTON      "Cam Pin Prop",IDC_btnCamPinProp,246,226,87,14,WS_DISABLED
+    PUSHBUTTON      "Open Cam",IDC_btnOpenCamera,252,30,235,14
+    PUSHBUTTON      "Destory Cam",IDC_btnDestoryCamera,252,47,235,14,WS_DISABLED
+    PUSHBUTTON      "Play",IDC_btnPlay,252,70,235,14,WS_DISABLED
+    PUSHBUTTON      "Pause",IDC_btnPasue,252,86,235,14,WS_DISABLED
+    PUSHBUTTON      "Stop",IDC_btnStop,252,102,235,14,WS_DISABLED
+    PUSHBUTTON      "Save Graph",IDC_btnSaveGraph,252,127,235,14,WS_DISABLED
+    PUSHBUTTON      "AR Prop",IDC_btnARProp,252,150,235,14,WS_DISABLED
+    PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,252,167,235,14,WS_DISABLED
+    PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,252,185,235,14,WS_DISABLED
+    PUSHBUTTON      "Cam Prop1",IDC_btnCamProp1,432,225,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 1",IDC_btnCamWarp1,432,262,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop1",IDC_btnCamPinProp1,432,244,55,14,WS_DISABLED
     PUSHBUTTON      "<",IDC_btnLastTag,72,166,25,14,WS_DISABLED
     PUSHBUTTON      ">",IDC_btnNextTag,129,166,25,14,WS_DISABLED
     CTEXT           "______",IDC_txtCurTag,100,168,25,10
@@ -125,8 +125,21 @@ BEGIN
     PUSHBUTTON      "...",IDC_btnBrowse,213,226,17,12
     LTEXT           "Save Path:",IDC_STATIC,7,227,35,10
     PUSHBUTTON      "Start Auto Capture",IDC_btnStartAutoCapture,151,244,78,14,WS_DISABLED
-    COMBOBOX        IDC_cbCam,246,7,87,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_cbCam1,432,7,55,12,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Capture Current Shot",IDC_btnSaveCurShot,59,244,82,14,WS_DISABLED
+    COMBOBOX        IDC_cbCam2,374,7,49,12,CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_cbCam3,313,7,51,12,CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_cbCam4,252,7,54,12,CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Cam Prop2",IDC_btnCamProp2,374,225,51,14,WS_DISABLED
+    PUSHBUTTON      "Cam Prop3",IDC_btnCamProp3,313,224,52,14,WS_DISABLED
+    PUSHBUTTON      "Cam Prop4",IDC_btnCamProp4,252,224,51,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop2",IDC_btnCamPinProp2,374,243,52,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop3",IDC_btnCamPinProp3,313,243,52,14,WS_DISABLED
+    PUSHBUTTON      "Cam Pin Prop4",IDC_btnCamPinProp4,252,243,52,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 2",IDC_btnCamWarp2,374,262,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 3",IDC_btnCamWarp3,313,262,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 4",IDC_btnCamWarp4,252,262,55,14,WS_DISABLED
+    PUSHBUTTON      "DX Blend Prop",IDC_btnDXBlendProp,252,206,235,14,WS_DISABLED
 END
 
 
@@ -180,17 +193,24 @@ BEGIN
     IDD_ARLAYOUTCAPTUREAPP_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 333
+        RIGHTMARGIN, 487
         VERTGUIDE, 141
-        VERTGUIDE, 246
+        VERTGUIDE, 252
+        VERTGUIDE, 313
+        VERTGUIDE, 374
+        VERTGUIDE, 432
         TOPMARGIN, 7
-        BOTTOMMARGIN, 266
+        BOTTOMMARGIN, 286
         HORZGUIDE, 199
+        HORZGUIDE, 206
+        HORZGUIDE, 225
+        HORZGUIDE, 244
+        HORZGUIDE, 262
     END
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // 英文 (美國) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

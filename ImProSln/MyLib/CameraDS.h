@@ -54,9 +54,10 @@ protected:
 
 
 private:
-	bool BindFilter(int nCamIDX, IBaseFilter **pFilter);
 	void SetCrossBar();
+
 protected:
+	bool BindFilter(int nCamIDX, IBaseFilter **pFilter);
 	virtual HRESULT ConfigFilters();
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
