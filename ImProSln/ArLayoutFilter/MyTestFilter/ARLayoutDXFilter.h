@@ -78,7 +78,7 @@ public:
 	virtual bool SaveConfigToFile(WCHAR* filename);
 	virtual bool DecideLayout(fRECT* camRects, UINT numCamRect,
 		fRECT* fingerRects, UINT numFingerRects, bool& bLayoutChanged, float fingerExtend = 0.07);
-	virtual bool initARMarkers(UINT numLevel = 2, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 80);
+	virtual bool initARMarkers(UINT numLevel = 3, UINT intMarkerBits = 8, UINT intBorderBits = 2, float intWidthBits = 40);
 
 	virtual int GetNumMarker();
 	virtual bool SetMarkerVisible(int idx, bool bVisible);

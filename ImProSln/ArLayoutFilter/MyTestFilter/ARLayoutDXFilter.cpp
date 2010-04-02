@@ -799,7 +799,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 		
 		}
 	}
-	/*
+	
 	if (numCamRect > 0 && camRects != NULL)
 	{
 		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
@@ -818,7 +818,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			{
 				continue;
 			}
-			float idealArea = max((float)(m_minMarkerWidth*m_minMarkerWidth*0.95), (float)(camViewWidth/3 * camViewHeight/3));
+			float idealArea = max((float)(m_minMarkerWidth*m_minMarkerWidth*0.95), (float)(camViewWidth/4 * camViewHeight/4));
 			for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 			{
 				int idx = undecideIdx.at(iterIdx);
@@ -860,7 +860,7 @@ bool ARLayoutDXFilter::DecideLayout(fRECT* camRects, UINT numCamRect, fRECT* fin
 			
 		}
 	}
-	*/
+	
 	for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 	{
 		int idx = undecideIdx.at(iterIdx);

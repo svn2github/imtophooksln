@@ -152,10 +152,10 @@ HRESULT AR2WarpController::Receive(IMediaSample *pSample, const IPin* pReceivePi
 				SendLowResMaskVertices();
 			}
 			
-			if (m_pOutputPins[NUMCAM]->IsConnected())
-			{
-				SendARLayoutStartegyData();
-			}
+			//if (m_pOutputPins[NUMCAM]->IsConnected())
+			//{
+				SendARLayoutStartegyData(true);
+			//}
 			SendBoundingBox2OSCSender();
 		}
 	}

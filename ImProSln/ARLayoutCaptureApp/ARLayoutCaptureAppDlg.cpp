@@ -148,6 +148,7 @@ BOOL CARLayoutCaptureAppDlg::OnInitDialog()
 	{
 		WCHAR sName[MAX_PATH] = {0};
 		CCameraDS::CameraName(i, sName, MAX_PATH);
+		swprintf_s(sName, MAX_PATH, L"%s%d", sName, i);
 		m_cbCam1.AddString(sName);
 		m_cbCam2.AddString(sName);
 		m_cbCam3.AddString(sName);

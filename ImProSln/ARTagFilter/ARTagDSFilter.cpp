@@ -1500,8 +1500,8 @@ bool ARTagDSFilter::initARSetting(int width, int height, const CMediaType* input
 	int numMarker = 0;
 	float markerBits = 8;
 	float borderBits = 2;
-	float WidthBits = 80;
-	int numLevel = 2;
+	float WidthBits = 40;
+	int numLevel = 3;
 	for (int level = 1; level <= numLevel; level++)
 	{
 		float markerWidth = markerBits/WidthBits/level;
