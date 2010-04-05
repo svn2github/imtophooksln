@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;..\Detours\include"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;;..\ARToolKitPlus_2.1.1\include;..\Detours\include"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
+				AdditionalDependencies="strmbasd.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;..\MyLib\bin"
 				ModuleDefinitionFile=".\SplitterFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

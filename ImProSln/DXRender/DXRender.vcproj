@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv;"
+				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui200.lib cv200.lib cxcore200.lib MSD3DLib.lib MSPersist.lib  commonLib.lib"
+				AdditionalDependencies="strmbasd.lib  winmm.lib d3dx9.lib d3d9.lib CMFCBasePropertyPage.lib highgui210.lib cv210.lib cxcore210.lib MSD3DLib.lib MSPersist.lib  commonLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=".\DXRender.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

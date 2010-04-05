@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MSD3DLIB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib strmbasd.lib  winmm.lib highgui200.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib strmbasd.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;..\MyLib\bin"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

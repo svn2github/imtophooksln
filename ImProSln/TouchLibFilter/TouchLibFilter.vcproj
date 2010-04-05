@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\oscpack\;.\Touchlib\VideoWrapper\include;.\Touchlib\opencv1.0\otherlibs\cvcam\include;.\Touchlib\VideoWrapper;.\Touchlib\include;.\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv;..\ARToolKitPlus_2.1.1\include;.\Touchlib\tinyxml"
+				AdditionalIncludeDirectories=".\oscpack\;.\Touchlib\VideoWrapper\include;.\Touchlib\opencv1.0\otherlibs\cvcam\include;.\Touchlib\VideoWrapper;.\Touchlib\include;.\;../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.1\include\opencv;..\ARToolKitPlus_2.1.1\include;.\Touchlib\tinyxml"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
