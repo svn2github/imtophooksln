@@ -1,0 +1,6 @@
+; GSD3DLib.def : Declares the module parameters for the DLL.
+
+LIBRARY      "GSD3DLib"
+
+EXPORTS
+    ; Explicit exports can go here
