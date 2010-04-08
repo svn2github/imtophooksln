@@ -24,6 +24,20 @@ public:
 	bool isVisible;
 };
 
+class BGCandidateImgPool{
+public:
+	BGCandidateImgPool();
+	~BGCandidateImgPool();
+
+	IplImage* BGimg;
+	bool isBlendImg;
+	int layoutType ;
+	int layoutTotalTag ;
+	vector <bool> layoutVisibleTable ;
+	void setToPool(IplImage* background, bool isBlend);
+};
+
+
 class BGCandidate{
 public:
 	BGCandidate();
@@ -35,11 +49,12 @@ public:
 	void setToUnused(int index);
 	void init(int imgH , int imgW);
 
-
 	vector <int> unusedImg;
 	vector <int> usedImg;
-	IplImage* imgPool[imgMAX];
+	BGCandidateImgPool bgImgPool[imgMAX];
+
 };
+
 
 class BackGroundMapping{
 
@@ -77,13 +92,16 @@ public:
 	IplImage*foregroundImg;
 	IplImage* bgMask ;
 	IplImage* whiteBG ;
+	IplImage* blendBG ;
 
 	vector<IplImage*> historyBG ;
 	vector<BGTag*> BGTran ;
 
 	int tagTranNum ;
+	bool isBlend ;
 
 	BGCandidate candidate ;
+	
 
 	IplConvKernel* kernelElement;
 

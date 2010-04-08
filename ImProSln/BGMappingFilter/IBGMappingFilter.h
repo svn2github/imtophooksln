@@ -12,8 +12,8 @@ public:
 	virtual int getBGThreshold();
 	virtual HRESULT setSubValue(int wValue) ;
 	virtual int getSubValue();
-	virtual HRESULT setBlackValue(int bValue) ;
-	virtual int getBlackValue();
+	virtual HRESULT setErodeValue(int eValue) ;
+	virtual int getErodeValue();
 
 	virtual HRESULT setCamFlip(bool value) ;
 	virtual bool getCamFlip();

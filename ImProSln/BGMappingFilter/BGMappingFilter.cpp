@@ -148,7 +148,7 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		// the Transform() function can return S_FALSE to indicate that the
 		// sample should not be delivered; we only deliver the sample if it's
 		// really S_OK (same as NOERROR, of course.)
-		if (hr == NOERROR) {
+		if (hr == NOERROR ) {
 			hr = GetConnectedOutputPin()->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
@@ -645,14 +645,14 @@ HRESULT BGMappingFilter::setBGThreshold(int BGthres){
 	return S_OK;
 }
 
-int BGMappingFilter::getBlackValue(){
+int BGMappingFilter::getErodeValue(){
 	if(BG->erodeValue == NULL)
 		return 0 ;
 	return BG->erodeValue;
 }
 
-HRESULT BGMappingFilter::setBlackValue(int bValue){
-	BG->erodeValue = bValue;
+HRESULT BGMappingFilter::setErodeValue(int erodeValue){
+	BG->erodeValue = erodeValue;
 	return S_OK;
 }
 

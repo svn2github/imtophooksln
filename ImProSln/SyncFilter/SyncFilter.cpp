@@ -155,7 +155,7 @@ HRESULT SyncFilter::ReceiveLayoutImg(IMediaSample *pSample, const IPin* pReceive
 
 	// If no output to deliver to then no point sending us data
 	ASSERT (m_pOutputPins.size() != NULL);
-	HRESULT hr;
+	HRESULT hr = S_FALSE;
 	// Set up the output sample
 	MSR_START(m_idTransform);
 

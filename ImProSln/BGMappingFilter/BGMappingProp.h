@@ -42,16 +42,14 @@ public:
 	HRESULT updateSliderTxt();
 	HWND m_threshold;
 	HWND m_txt;
-	HWND m_blackValue;
+	HWND m_erodeValue;
 	HWND m_Btxt;
-	HWND m_whiteValue;
+	HWND m_subValue;
 	HWND m_Wtxt;
 
 	CButton* m_checkCamFlip;
 	CButton* m_checkLayoutFlip;
 	CButton* m_checkOutputFlip;
-
-
 
 
 
