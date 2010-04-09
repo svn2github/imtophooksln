@@ -1,5 +1,7 @@
 #pragma once
 #include "GSD3DBaseClass.h"
+#include <map>
+using namespace std;
 
 class GSD3DLIB_API GSMeshBase : public IGSMeshBase, public GSDXBase
 {
@@ -13,12 +15,14 @@ public:
 	};
 protected:
 	FLOAT m_color[4];
-	ID3D11InputLayout* m_pVertexLayout;
+	
 	ID3D11Buffer* m_pVertexBuffer;
 	ID3D11Buffer* m_pIndexBuffer;
+	map<IGSEffectBase*, ID3D11InputLayout*> m_pVertexLayout;
 protected:
 	GSMeshBase();
-
+	virtual HRESULT ClearVertexLayout();
+	virtual HRESULT GenerateVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout);
 public:
 	virtual HRESULT InitGeometry(){return E_NOTIMPL;};
 
@@ -29,10 +33,9 @@ public:
 	virtual ID3D11Buffer* GetIndexBuffer();
 	virtual UINT GetVertexNumber();
 	virtual UINT GetVertexStride();
-
-	virtual HRESULT GetVertex(UINT idx, void* pVertex);
-	virtual HRESULT SetVertex(UINT idx, void* pVertex);
-	virtual HRESULT GetVertexLayout(ID3D11InputLayout*& pLayout);
+	virtual HRESULT GetVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout);
+	
+	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology();
 };
 
 class GSD3DLIB_API GS3DPlane : public GSMeshBase, public GS3DObj
@@ -42,6 +45,6 @@ private:
 public:
 	GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 	virtual ~GS3DPlane();
-	virtual HRESULT Render();
+
 
 };

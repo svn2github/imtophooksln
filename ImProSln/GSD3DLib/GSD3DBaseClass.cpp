@@ -158,37 +158,44 @@ HRESULT GSTextureBase::SetTexture(ID3D11Texture2D* pTexture)
 	return S_OK;
 }
 
-D3D11_PRIMITIVE_TOPOLOGY GSRenderBase::GetPrimitiveTopology()
-{
-	return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
-}
-ID3D11InputLayout* GSRenderBase::GetVertexLayout(IGSMeshBase* pMesh, IGSEffectBase* pEffect)
-{
-	return NULL;
-}
+
 HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, IGSEffectBase* pEffect, ID3D11DeviceContext* pDeviceContext)
 {
 	if (pMesh == NULL || pEffect == NULL || pDeviceContext == NULL )
 	{
 		return E_FAIL;
 	}
+	
 	ID3D11Buffer* pVertexBuffer = pMesh->GetVertexBuffer();
 	ID3D11Buffer* pIndexBuffer = pMesh->GetIndexBuffer();
+
 	if (pVertexBuffer == NULL || pIndexBuffer == NULL)
 		return E_FAIL;
+
+	ID3D11PixelShader* pPSShader = pEffect->GetPSShader();
+	ID3D11VertexShader* pVSShader = pEffect->GetVSShader();
+	
+	if (pPSShader == NULL || pVSShader == NULL)
+	{
+		return E_FAIL;
+	}
+
 	D3D11_BUFFER_DESC indexDesc;
 	pIndexBuffer->GetDesc(&indexDesc);
 	UINT indexCount = indexDesc.ByteWidth / sizeof(UINT);
 	HRESULT hr = S_OK;
 	UINT stride = pMesh->GetVertexStride();
 	UINT offset = 0;
+	ID3D11InputLayout* pLayout = NULL;
+	pMesh->GetVertexLayout(pEffect, pLayout);
 
-	//hr = pDeviceContext->IASetInputLayout(CUSTOMVERTEX::layout);
-	pDeviceContext->IASetPrimitiveTopology(GetPrimitiveTopology());
+	pDeviceContext->VSSetShader( pVSShader, NULL, 0 );
+	pDeviceContext->PSSetShader( pPSShader, NULL, 0 );
+
+	pDeviceContext->IASetInputLayout(pLayout);
+	pDeviceContext->IASetPrimitiveTopology(pMesh->GetPrimitiveTopology());
 	pDeviceContext->IASetVertexBuffers( 0, 1, &pVertexBuffer, &stride, &offset );
 	pDeviceContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	pDeviceContext->DrawIndexed( indexCount, 0, 0);
-
-	
 	return S_OK;
 }

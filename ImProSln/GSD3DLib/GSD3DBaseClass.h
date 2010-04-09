@@ -69,9 +69,6 @@ public:
 
 class GSD3DLIB_API GSRenderBase
 {	
-protected:
-	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology();
-	virtual ID3D11InputLayout* GetVertexLayout(IGSMeshBase* pMesh, IGSEffectBase* pEffect);
 public:
 	virtual HRESULT RenderMesh(IGSMeshBase* pMesh, IGSEffectBase* pEffect, ID3D11DeviceContext* pDeviceContext);
 	

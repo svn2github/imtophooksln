@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "GSMesh.h"
 #include <DXUT.h>
+#include <algorithm>
 
 D3D10_INPUT_ELEMENT_DESC GSMeshBase::CUSTOMVERTEX::layout[] = {
 	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
@@ -13,7 +14,7 @@ GSMeshBase::GSMeshBase()
 	m_pDevice = NULL;
 	m_pVertexBuffer = NULL;
 	m_pIndexBuffer = NULL;
-	m_pVertexLayout = NULL;
+	
 	for (int i =0; i < 4; i ++)
 	{
 		m_color[i] = 1.0;
@@ -23,7 +24,7 @@ GSMeshBase::GSMeshBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : G
 {
 	m_pVertexBuffer = NULL;
 	m_pIndexBuffer = NULL;
-	m_pVertexLayout = NULL;
+	
 	for (int i =0; i < 4; i ++)
 	{
 		m_color[i] = 1.0;
@@ -34,7 +35,8 @@ GSMeshBase::~GSMeshBase()
 {
 	SAFE_RELEASE(m_pVertexBuffer);
 	SAFE_RELEASE(m_pIndexBuffer);
-	SAFE_RELEASE(m_pVertexLayout);
+	ClearVertexLayout();
+
 }
 
 
@@ -63,145 +65,111 @@ UINT GSMeshBase::GetVertexStride()
 }
 
 
-/*
-HRESULT GSMeshBase::Render()
+HRESULT GSMeshBase::GetVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout)
 {
-	
-	if (m_pDeviceContext == NULL || m_pVertexBuffer == NULL || m_pIndexBuffer == NULL)
+	if (pEffect == NULL)
 		return E_FAIL;
-	D3D11_BUFFER_DESC indexDesc;
-	m_pIndexBuffer->GetDesc(&indexDesc);
-	UINT indexCount = indexDesc.ByteWidth / sizeof(UINT);
-	HRESULT hr = S_OK;
-	UINT stride = sizeof(CUSTOMVERTEX);
-	UINT offset = 0;
-
-	//hr = m_pDeviceContext->IASetInputLayout(CUSTOMVERTEX::layout);
-	m_pDeviceContext->IASetPrimitiveTopology(GetPrimitiveTopology());
-	m_pDeviceContext->IASetVertexBuffers( 0, 1, &m_pVertexBuffer, &stride, &offset );
-	m_pDeviceContext->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	m_pDeviceContext->DrawIndexed( indexCount, 0, 0);
-	
+	if (m_pVertexLayout.find(pEffect) == m_pVertexLayout.end())
+	{
+		ID3D11InputLayout* pNewLayout = NULL;
+		this->GenerateVertexLayout(pEffect, pNewLayout);
+		if (pNewLayout == NULL)
+		{
+			return E_FAIL;
+		}
+		m_pVertexLayout[pEffect] = pNewLayout;
+	}
+	pLayout = m_pVertexLayout[pEffect];
 	return S_OK;
 }
-*/
-HRESULT GSMeshBase::GetVertex(UINT idx, void* pVertex)
+HRESULT GSMeshBase::ClearVertexLayout()
 {
-	ID3D11Buffer* pVertexBuffer = GetVertexBuffer();
-	if (pVertexBuffer == NULL || m_pDeviceContext == NULL || pVertex == NULL)
-		return E_FAIL;
-	if (idx >= this->GetVertexNumber())
-		return E_FAIL;
-
-	CUSTOMVERTEX* pData = NULL;
-	D3D11_MAPPED_SUBRESOURCE* pSubResource = NULL;
-	m_pDeviceContext->Map(pVertexBuffer, 0, D3D11_MAP_READ, D3D11_MAP_FLAG_DO_NOT_WAIT, pSubResource);
-	pData = (CUSTOMVERTEX*)pSubResource->pData;
-	
-	*(CUSTOMVERTEX*)pVertex = pData[idx];
-	m_pDeviceContext->Unmap(pVertexBuffer, 0);
+	for (map<IGSEffectBase*, ID3D11InputLayout*>::iterator iter = m_pVertexLayout.begin(); iter != m_pVertexLayout.end(); iter++)
+	{
+		SAFE_RELEASE(iter->second);
+	}
+	m_pVertexLayout.clear();
 	return S_OK;
 }
 
-HRESULT GSMeshBase::SetVertex(UINT idx, void* pVertex)
-{
-	ID3D11Buffer* pVertexBuffer = GetVertexBuffer();
-	if (pVertexBuffer == NULL || m_pDeviceContext == NULL || pVertex == NULL)
-		return E_FAIL;
-	if (idx >= this->GetVertexNumber())
-		return E_FAIL;
-	D3D11_MAPPED_SUBRESOURCE* pSubResource = NULL;
-	m_pDeviceContext->Map(pVertexBuffer, 0, D3D11_MAP_WRITE, D3D11_MAP_FLAG_DO_NOT_WAIT, pSubResource);
-
-	CUSTOMVERTEX* pData = NULL;
-	pData = (CUSTOMVERTEX*)pSubResource->pData;
-	pData[idx] = *(CUSTOMVERTEX*)pVertex;
-	m_pDeviceContext->Unmap(pVertexBuffer, 0);
-	return S_OK;
-}
-
-HRESULT GSMeshBase::GetVertexLayout(ID3D11InputLayout*& pLayout)
+HRESULT GSMeshBase::GenerateVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout)
 {
 	SAFE_RELEASE(pLayout);
+	HRESULT hr = S_OK;
+	if (m_pDevice == NULL)
+		return E_FAIL;
+	ID3DBlob* pVSBuf = pEffect->GetVSShaderBuffer();
+	if (pVSBuf == NULL)
+		return E_FAIL;
+		
+	hr = m_pDevice->CreateInputLayout( (const D3D11_INPUT_ELEMENT_DESC*)CUSTOMVERTEX::layout, sizeof(CUSTOMVERTEX::layout)/sizeof(CUSTOMVERTEX), pVSBuf->GetBufferPointer(), 
+		pVSBuf->GetBufferSize(), &pLayout);
+	
+	return hr;
+}
 
-	if (m_pVertexLayout == NULL)
-	{
-		if (m_pDevice == NULL)
-			return E_FAIL;
-
-		//hr = m_pDevice->CreateInputLayout( CUSTOMVERTEX::layout, sizeof(CUSTOMVERTEX::layout)/sizeof(CUSTOMVERTEX), PassDesc.pIAInputSignature,
-		//	PassDesc.IAInputSignatureSize, &g_pVertexLayout );
-	}
-
-	return S_OK;
+D3D11_PRIMITIVE_TOPOLOGY GSMeshBase::GetPrimitiveTopology()
+{
+	return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
 GS3DPlane::GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext) : GSMeshBase(pDevice, pDeviceContext)
 {
 	InitGeometry();
 }
+
 GS3DPlane::~GS3DPlane()
 {
 
 }
+
 HRESULT GS3DPlane::InitGeometry()
 {
 	HRESULT hr;
-	/*if (m_pMesh != NULL)
+	if (m_pDevice == NULL)
 	{
-		m_pMesh->Release();
-		m_pMesh = NULL;
+		return E_FAIL;
 	}
-	hr = D3DXCreateMeshFVF(4,4, D3DXMESH_32BIT | D3DXMESH_VB_MANAGED | D3DXMESH_IB_MANAGED, 
-		D3DFVF_XYZ|D3DFVF_NORMAL|D3DFVF_TEX1, m_pDevice, &m_pMesh);
-	if (FAILED(hr))
+	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pIndexBuffer);
+	
+	CUSTOMVERTEX vertices[] = 
 	{
-		OutputDebugStringW(L"@@@@ InitGeometry D3DXCreateMeshFVF Failed in GS3DPlane!!\n");
-		return FALSE;
-	}
-	IDirect3DVertexBuffer9* pVertexBuffer = NULL;
-	m_pMesh->GetVertexBuffer(&pVertexBuffer);
-	CUSTOMVERTEX* pVertices = NULL;
+		// {Position, Normal, tu, tv}
+		{D3DXVECTOR3(-1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 0.0}, 
+		{D3DXVECTOR3(-1,-1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 1.0},
+		{D3DXVECTOR3( 1,-1, 0), D3DXVECTOR3(0, 0, -1), 1.0, 1.0},
+		{D3DXVECTOR3( 1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 1.0},
+	};
 
-	if( FAILED( pVertexBuffer->Lock( 0, 0, (void**)&pVertices, 0 ) ) )
-		return FALSE;
-	pVertices[0].position = D3DXVECTOR3(-1, 1, 0);
-	pVertices[1].position = D3DXVECTOR3(-1, -1, 0);
-	pVertices[2].position = D3DXVECTOR3(1, -1, 0);
-	pVertices[3].position = D3DXVECTOR3(1, 1, 0);
+	D3D11_BUFFER_DESC bd;
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof(vertices);
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	bd.MiscFlags = 0;
+	D3D11_SUBRESOURCE_DATA InitData;
+	InitData.pSysMem = vertices;
+	
+	hr = m_pDevice->CreateBuffer( &bd, &InitData, &m_pVertexBuffer);
+	if( FAILED( hr ) )
+		return hr;
 
-
-	pVertices[0].normal = D3DXVECTOR3(0, 0, -1);
-	pVertices[1].normal = D3DXVECTOR3(0, 0, -1);
-	pVertices[2].normal = D3DXVECTOR3(0, 0, -1);
-	pVertices[3].normal = D3DXVECTOR3(0, 0, -1);
-
-
-	pVertices[0].tu = 0;	pVertices[0].tv = 0;
-	pVertices[1].tu = 0;    pVertices[1].tv = 1;
-	pVertices[2].tu = 1;	pVertices[2].tv = 1;
-	pVertices[3].tu = 1;    pVertices[3].tv = 0;
-
-	pVertexBuffer->Unlock();
-
-	IDirect3DIndexBuffer9* pIndexBuffer = NULL;
-	m_pMesh->GetIndexBuffer(&pIndexBuffer);
-
-	UINT* pIndex = NULL;
-	if (FAILED(pIndexBuffer->Lock(0, 0, (void**)&pIndex, 0)))
-		return FALSE;
-
-	pIndex[0] = 0;	pIndex[1] = 1;  pIndex[2] = 3;
-	pIndex[3] = 3;  pIndex[4] = 1;  pIndex[5] = 2;
-
-	pIndexBuffer->Unlock();*/
-	return S_OK;
-
-}
-
-HRESULT GS3DPlane::Render()
-{
-	HRESULT hr;
+	DWORD indices[] =
+	{
+		0,1,2,
+		3,1,2
+	};
+	bd.Usage = D3D11_USAGE_DEFAULT;
+	bd.ByteWidth = sizeof( indices );
+	bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bd.CPUAccessFlags = 0;
+	bd.MiscFlags = 0;
+	InitData.pSysMem = indices;
+	hr = m_pDevice->CreateBuffer( &bd, &InitData, &m_pIndexBuffer );
+	if( FAILED( hr ) )
+		return hr;
 	
 	return S_OK;
+
 }
