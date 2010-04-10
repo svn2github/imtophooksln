@@ -70,3 +70,12 @@ public:
 	virtual D3DXMATRIX GetProjMatrix() = 0;
 
 };
+
+class GSD3DLIB_API IGSWnd
+{
+public:
+	virtual HRESULT ShowWnd(BOOL bShow) = 0;
+	virtual HWND GetHwnd() = 0;
+	virtual HRESULT Create(LPCWSTR szTitle, UINT wndWidth, UINT wndHeight) = 0;
+
+};

@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			UseOfMFC="1"
+			UseOfMFC="0"
 			CharacterSet="1"
 			>
 			<Tool
@@ -70,7 +70,7 @@
 				AdditionalDependencies="d3dx9d.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib d3d11.lib D3DX11EffectsD.lib d3dcompiler.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)/Effects11/bin"
-				ModuleDefinitionFile=".\GSD3DLib.def"
+				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -188,19 +188,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\dllmain.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GSCamera.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\GSD3DBaseClass.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GSD3DLib.def"
-				>
-			</File>
-			<File
-				RelativePath=".\GSD3DLibApp.cpp"
 				>
 			</File>
 			<File
@@ -254,10 +250,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GSD3DLibApp.h"
-				>
-			</File>
-			<File
 				RelativePath=".\GSEffect.h"
 				>
 			</File>
@@ -266,11 +258,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\IGSD3DBaseClass.h"
+				RelativePath=".\GSWnd.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Resource.h"
+				RelativePath=".\GSWnd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\IGSD3DBaseClass.h"
 				>
 			</File>
 			<File

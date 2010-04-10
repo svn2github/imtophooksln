@@ -5,7 +5,7 @@
 #include "GSCamera.h"
 #include "GSD3DDisplay.h"
 
-class GSD3DLIB_API GS3DDisplay : public IRenderBase, public GSDXBase, public GSTextureBase
+class GSD3DLIB_API GS3DDisplay : public IGSRenderBase, public GSDXBase, public GSTextureBase
 {
 protected:
 	GS3DPlane* m_pDisplayPlane;

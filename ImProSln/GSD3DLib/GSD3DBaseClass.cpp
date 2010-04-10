@@ -173,8 +173,6 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 		return E_FAIL;
 
 	ID3DX11Effect* pEffect = pGSEffect->GetEffect();
-	
-	
 	if (pEffect == NULL)
 	{
 		return E_FAIL;
@@ -185,11 +183,8 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	if (pTechnique == NULL)
 		return E_FAIL;
 	pTechnique->GetDesc(&tDesc);
-	
-	
+
 	D3D11_BUFFER_DESC indexDesc;
-	
-	
 	
 	pIndexBuffer->GetDesc(&indexDesc);
 	UINT indexCount = indexDesc.ByteWidth / sizeof(UINT);
@@ -199,11 +194,12 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	ID3D11InputLayout* pLayout = NULL;
 	pMesh->GetVertexLayout(pGSEffect->GetEffectBuffer(), pLayout);
 
-
 	pDeviceContext->IASetInputLayout(pLayout);
 	pDeviceContext->IASetPrimitiveTopology(pMesh->GetPrimitiveTopology());
 	pDeviceContext->IASetVertexBuffers( 0, 1, &pVertexBuffer, &stride, &offset );
 	pDeviceContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	SetEffectVariables(pGSEffect);
 
 	for (int iPass = 0; iPass < tDesc.Passes; iPass++)
 	{

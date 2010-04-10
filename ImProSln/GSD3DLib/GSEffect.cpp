@@ -2,6 +2,7 @@
 #include "GSEffect.h"
 #include <DXUT.h>
 
+extern HMODULE GetModule();
 
 GSEffectBase::GSEffectBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : GSDXBase(pDevice, pContext)
 {
@@ -29,23 +30,22 @@ HRESULT GSEffectBase::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 		GetCurrentDirectoryW(MAX_PATH, curDir);
 		swprintf_s(path, MAX_PATH, L"%s%s", curDir, szFileName);
 		if (GetFileAttributes( path ) == 0xFFFFFFFF)
-		{
+		{	
 			WCHAR modulePath[MAX_PATH] = {0};
-			HMODULE module = GetModuleHandle();
+			HMODULE module = GetModule();
 			GetModuleFileName(module, modulePath, MAX_PATH);
 			// Gets filename
 			WCHAR* pszFile = wcsrchr(modulePath, '\\');
 			pszFile++;    // Moves on from \
 			// Get path
 			WCHAR szPath[MAX_PATH] = L"";
-			_tcsncat(szPath, modulePath, pszFile - modulePath);
+			wcsncat(szPath, modulePath, pszFile - modulePath);
 			swprintf_s(path, MAX_PATH, L"%s%s", szPath, szFileName);
 			if (GetFileAttributes( path ) == 0xFFFFFFFF)
 			{
 				//can't find file
 				return E_FAIL;
-			}
-			
+			}	
 		}
 	}
 

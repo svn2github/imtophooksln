@@ -11,7 +11,6 @@ protected:
 	ID3DX11Effect* m_pEffect;
 	
 protected:
-	virtual HMODULE GetModuleHandle() = 0;
 	HRESULT _CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut );
 	HRESULT _LoadEffectFromFile(LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect);
 public:
@@ -19,5 +18,6 @@ public:
 	~GSEffectBase();
 	virtual ID3DX11Effect* GetEffect();
 	virtual ID3DBlob* GetEffectBuffer();
+
 };
 
