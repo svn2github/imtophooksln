@@ -65,26 +65,26 @@ UINT GSMeshBase::GetVertexStride()
 }
 
 
-HRESULT GSMeshBase::GetVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout)
+HRESULT GSMeshBase::GetVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout)
 {
-	if (pEffect == NULL)
+	if ( pShaderBuffer == NULL)
 		return E_FAIL;
-	if (m_pVertexLayout.find(pEffect) == m_pVertexLayout.end())
+	if (m_pVertexLayout.find(pShaderBuffer) == m_pVertexLayout.end())
 	{
 		ID3D11InputLayout* pNewLayout = NULL;
-		this->GenerateVertexLayout(pEffect, pNewLayout);
+		this->GenerateVertexLayout(pShaderBuffer, pNewLayout);
 		if (pNewLayout == NULL)
 		{
 			return E_FAIL;
 		}
-		m_pVertexLayout[pEffect] = pNewLayout;
+		m_pVertexLayout[pShaderBuffer] = pNewLayout;
 	}
-	pLayout = m_pVertexLayout[pEffect];
+	pLayout = m_pVertexLayout[pShaderBuffer];
 	return S_OK;
 }
 HRESULT GSMeshBase::ClearVertexLayout()
 {
-	for (map<IGSEffectBase*, ID3D11InputLayout*>::iterator iter = m_pVertexLayout.begin(); iter != m_pVertexLayout.end(); iter++)
+	for (map<ID3DBlob*, ID3D11InputLayout*>::iterator iter = m_pVertexLayout.begin(); iter != m_pVertexLayout.end(); iter++)
 	{
 		SAFE_RELEASE(iter->second);
 	}
@@ -92,18 +92,14 @@ HRESULT GSMeshBase::ClearVertexLayout()
 	return S_OK;
 }
 
-HRESULT GSMeshBase::GenerateVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout)
+HRESULT GSMeshBase::GenerateVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout)
 {
+	if (m_pDevice == NULL || pShaderBuffer == NULL)
+		return E_FAIL;
 	SAFE_RELEASE(pLayout);
-	HRESULT hr = S_OK;
-	if (m_pDevice == NULL)
-		return E_FAIL;
-	ID3DBlob* pVSBuf = pEffect->GetVSShaderBuffer();
-	if (pVSBuf == NULL)
-		return E_FAIL;
-		
-	hr = m_pDevice->CreateInputLayout( (const D3D11_INPUT_ELEMENT_DESC*)CUSTOMVERTEX::layout, sizeof(CUSTOMVERTEX::layout)/sizeof(CUSTOMVERTEX), pVSBuf->GetBufferPointer(), 
-		pVSBuf->GetBufferSize(), &pLayout);
+	HRESULT hr = S_OK;	
+	hr = m_pDevice->CreateInputLayout( (const D3D11_INPUT_ELEMENT_DESC*)CUSTOMVERTEX::layout, sizeof(CUSTOMVERTEX::layout)/sizeof(CUSTOMVERTEX), pShaderBuffer->GetBufferPointer(), 
+		pShaderBuffer->GetBufferSize(), &pLayout);
 	
 	return hr;
 }

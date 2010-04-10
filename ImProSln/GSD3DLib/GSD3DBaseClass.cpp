@@ -159,9 +159,9 @@ HRESULT GSTextureBase::SetTexture(ID3D11Texture2D* pTexture)
 }
 
 
-HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, IGSEffectBase* pEffect, ID3D11DeviceContext* pDeviceContext)
+HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech)
 {
-	if (pMesh == NULL || pEffect == NULL || pDeviceContext == NULL )
+	if (pMesh == NULL || pGSEffect == NULL || pDeviceContext == NULL )
 	{
 		return E_FAIL;
 	}
@@ -172,30 +172,45 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, IGSEffectBase* pEffect, ID3
 	if (pVertexBuffer == NULL || pIndexBuffer == NULL)
 		return E_FAIL;
 
-	ID3D11PixelShader* pPSShader = pEffect->GetPSShader();
-	ID3D11VertexShader* pVSShader = pEffect->GetVSShader();
+	ID3DX11Effect* pEffect = pGSEffect->GetEffect();
 	
-	if (pPSShader == NULL || pVSShader == NULL)
+	
+	if (pEffect == NULL)
 	{
 		return E_FAIL;
 	}
-
+	D3DX11_TECHNIQUE_DESC tDesc;
+	ID3DX11EffectPass* pPass = NULL;
+	ID3DX11EffectTechnique* pTechnique = pEffect->GetTechniqueByIndex(0);
+	if (pTechnique == NULL)
+		return E_FAIL;
+	pTechnique->GetDesc(&tDesc);
+	
+	
 	D3D11_BUFFER_DESC indexDesc;
+	
+	
+	
 	pIndexBuffer->GetDesc(&indexDesc);
 	UINT indexCount = indexDesc.ByteWidth / sizeof(UINT);
 	HRESULT hr = S_OK;
 	UINT stride = pMesh->GetVertexStride();
 	UINT offset = 0;
 	ID3D11InputLayout* pLayout = NULL;
-	pMesh->GetVertexLayout(pEffect, pLayout);
+	pMesh->GetVertexLayout(pGSEffect->GetEffectBuffer(), pLayout);
 
-	pDeviceContext->VSSetShader( pVSShader, NULL, 0 );
-	pDeviceContext->PSSetShader( pPSShader, NULL, 0 );
 
 	pDeviceContext->IASetInputLayout(pLayout);
 	pDeviceContext->IASetPrimitiveTopology(pMesh->GetPrimitiveTopology());
 	pDeviceContext->IASetVertexBuffers( 0, 1, &pVertexBuffer, &stride, &offset );
 	pDeviceContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	pDeviceContext->DrawIndexed( indexCount, 0, 0);
+
+	for (int iPass = 0; iPass < tDesc.Passes; iPass++)
+	{
+		pPass = pTechnique->GetPassByIndex(iPass);
+		pPass->Apply(0, pDeviceContext);
+		pDeviceContext->DrawIndexed( indexCount, 0, 0);
+	}
+	
 	return S_OK;
 }

@@ -3,17 +3,17 @@
 #include <DXUT.h>
 
 
-GSBasicEffect::GSBasicEffect(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : GSDXBase(pDevice, pContext)
+GSEffectBase::GSEffectBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : GSDXBase(pDevice, pContext)
 {
-	m_pPSShader = NULL;
-	m_pVSShader = NULL;
+	m_pEffect = NULL;
+	m_pEffectBuffer = NULL;
 }
-GSBasicEffect::~GSBasicEffect()
+GSEffectBase::~GSEffectBase()
 {
-	SAFE_RELEASE(m_pPSShader);
-	SAFE_RELEASE(m_pVSShader);
+	SAFE_RELEASE(m_pEffect);
+	SAFE_RELEASE(m_pEffectBuffer);
 }
-HRESULT GSBasicEffect::CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
+HRESULT GSEffectBase::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
 {
 	if (szFileName == NULL || szEntryPoint == NULL || szShaderModel == NULL || ppBlobOut == NULL)
 	{
@@ -30,10 +30,8 @@ HRESULT GSBasicEffect::CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 		swprintf_s(path, MAX_PATH, L"%s%s", curDir, szFileName);
 		if (GetFileAttributes( path ) == 0xFFFFFFFF)
 		{
-			return E_FAIL;
-			/*
 			WCHAR modulePath[MAX_PATH] = {0};
-			HMODULE module = GetModule();
+			HMODULE module = GetModuleHandle();
 			GetModuleFileName(module, modulePath, MAX_PATH);
 			// Gets filename
 			WCHAR* pszFile = wcsrchr(modulePath, '\\');
@@ -47,7 +45,7 @@ HRESULT GSBasicEffect::CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 				//can't find file
 				return E_FAIL;
 			}
-			*/
+			
 		}
 	}
 
@@ -75,120 +73,35 @@ HRESULT GSBasicEffect::CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 	return S_OK;
 
 }
-HRESULT GSBasicEffect::LoadPixelShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, ID3D11PixelShader*& pPSShader)
+HRESULT GSEffectBase::_LoadEffectFromFile(LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect)
 {
 	if (m_pDevice == NULL)
 		return E_FAIL;
-	D3D_FEATURE_LEVEL fLevel = m_pDevice->GetFeatureLevel();
-	char szShaderModel[MAX_PATH] = {0};
+	SAFE_RELEASE(m_pEffectBuffer);
+	SAFE_RELEASE(m_pEffect);
 	
-	switch(fLevel)
-	{
-	case D3D_FEATURE_LEVEL_11_0:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "ps_5_0");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_10_1:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "ps_4_1");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_10_0:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "ps_4_0");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_9_3:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "ps_4_0_level_9_3");
-			
-			break;
-		}
-	case D3D_FEATURE_LEVEL_9_2: // Shader model 2 fits feature level 9_1
-	case D3D_FEATURE_LEVEL_9_1:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "ps_4_0_level_9_1");
-			break;
-		}
-	default:
-		return E_FAIL;
-	}
-	SAFE_RELEASE(m_pPSShaderBuffer);
-	CompileShaderFromFile(szFileName, szEntryPoint, szShaderModel, &m_pPSShaderBuffer);
-	if (m_pPSShaderBuffer == NULL)
+	HRESULT hr = S_OK;
+	char szShaderModel[MAX_PATH] = "fx_5_0";
+		
+	_CompileShaderFromFile(szFileName, NULL, szShaderModel, &pEffectBuffer);
+	if (pEffectBuffer == NULL)
 	{
 		return E_FAIL;
 	}
-	SAFE_RELEASE(m_pPSShader);
-	return m_pDevice->CreateVertexShader( m_pPSShaderBuffer->GetBufferPointer(),
-		m_pPSShaderBuffer->GetBufferSize(), NULL, &m_pVSShader ) ;
-}
-HRESULT GSBasicEffect::LoadVertexShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, ID3D11PixelShader*& pVSShader)
-{
-	if (m_pDevice == NULL)
-		return E_FAIL;
-	D3D_FEATURE_LEVEL fLevel = m_pDevice->GetFeatureLevel();
-	char szShaderModel[MAX_PATH] = {0};
+	
+	hr = D3DX11CreateEffectFromMemory( pEffectBuffer->GetBufferPointer(),
+		pEffectBuffer->GetBufferSize(), NULL, m_pDevice, &pEffect ) ;
+	if (FAILED(hr))
+		return hr;
 
-	switch(fLevel)
-	{
-	case D3D_FEATURE_LEVEL_11_0:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "vs_5_0");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_10_1:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "vs_4_1");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_10_0:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "vs_4_0");
-			break;
-		}
-	case D3D_FEATURE_LEVEL_9_3:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "vs_4_0_level_9_3");
-
-			break;
-		}
-	case D3D_FEATURE_LEVEL_9_2: // Shader model 2 fits feature level 9_1
-	case D3D_FEATURE_LEVEL_9_1:
-		{
-			sprintf_s(szShaderModel, MAX_PATH, "vs_4_0_level_9_1");
-			break;
-		}
-	default:
-		return E_FAIL;
-	}
-	SAFE_RELEASE(m_pVSShaderBuffer);
-	CompileShaderFromFile(szFileName, szEntryPoint, szShaderModel, &m_pVSShaderBuffer);
-	if (m_pVSShaderBuffer == NULL)
-	{
-		return E_FAIL;
-	}
-	SAFE_RELEASE(m_pVSShader);
-	return m_pDevice->CreateVertexShader( m_pVSShaderBuffer->GetBufferPointer(),
-		m_pVSShaderBuffer->GetBufferSize(), NULL, &m_pVSShader ) ;
-}
-ID3DBlob* GSBasicEffect::GetVSShaderBuffer()
-{
-	return m_pVSShaderBuffer;
-}
-ID3DBlob* GSBasicEffect::GetPSShaderBuffer()
-{
-	return m_pPSShaderBuffer;
+	return hr;
 }
 
-
-ID3D11PixelShader* GSBasicEffect::GetPSShader()
+ID3DX11Effect* GSEffectBase::GetEffect()
 {
-	return m_pPSShader;
+	return m_pEffect;
 }
-
-ID3D11VertexShader* GSBasicEffect::GetVSShader()
+ID3DBlob* GSEffectBase::GetEffectBuffer()
 {
-	return m_pVSShader;
+	return m_pEffectBuffer;
 }

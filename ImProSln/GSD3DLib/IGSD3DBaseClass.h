@@ -3,6 +3,7 @@
 #include <D3DX11.h>
 #include <D3DX10math.h>
 #include <D3Dcompiler.h>
+#include "d3dx11effect.h"
 class IGSMeshBase;
 class IGSEffectBase;
 
@@ -42,7 +43,7 @@ public:
 	virtual UINT GetVertexNumber() = 0;
 	virtual UINT GetPrimitiveNumber() = 0;
 	virtual UINT GetVertexStride() = 0;
-	virtual HRESULT GetVertexLayout(IGSEffectBase* pEffect, ID3D11InputLayout*& pLayout) = 0;
+	virtual HRESULT GetVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout) = 0;
 	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() = 0;
 };
 
@@ -50,10 +51,8 @@ public:
 class GSD3DLIB_API IGSEffectBase
 {
 public:
-	virtual ID3D11PixelShader* GetPSShader() = 0;
-	virtual ID3D11VertexShader* GetVSShader() = 0;
-	virtual ID3DBlob* GetVSShaderBuffer() = 0;
-	virtual ID3DBlob* GetPSShaderBuffer() = 0;
+	virtual ID3DBlob* GetEffectBuffer() = 0;
+	virtual ID3DX11Effect* GetEffect() = 0;
 	
 };
 

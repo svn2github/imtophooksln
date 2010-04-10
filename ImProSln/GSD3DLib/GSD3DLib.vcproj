@@ -67,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9d.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib d3d11.lib D3DX11EffectsD.lib"
+				AdditionalDependencies="d3dx9d.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib d3d11.lib D3DX11EffectsD.lib d3dcompiler.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProjectDir)/Effects11/bin"
 				ModuleDefinitionFile=".\GSD3DLib.def"

@@ -70,6 +70,6 @@ public:
 class GSD3DLIB_API GSRenderBase
 {	
 public:
-	virtual HRESULT RenderMesh(IGSMeshBase* pMesh, IGSEffectBase* pEffect, ID3D11DeviceContext* pDeviceContext);
+	virtual HRESULT RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech = 0);
 	
 };
