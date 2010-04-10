@@ -200,6 +200,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GSD3DDisplay.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GSEffect.cpp"
 				>
 			</File>
@@ -251,6 +255,10 @@
 			</File>
 			<File
 				RelativePath=".\GSEffect.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GSMacro.h"
 				>
 			</File>
 			<File

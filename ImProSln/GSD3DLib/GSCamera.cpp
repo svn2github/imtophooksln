@@ -2,14 +2,11 @@
 #include "GSD3DBaseClass.h"
 #include "GSCamera.h"
 
-GSCamera::GSCamera() : GSDXBase()
+GSCamera::GSCamera() 
 {
 	init();
 }
-GSCamera::GSCamera(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext) : GSDXBase(pDevice, pDeviceContext)
-{
-	init();
-}
+
 GSCamera::~GSCamera()
 {
 

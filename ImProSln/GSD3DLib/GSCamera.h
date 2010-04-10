@@ -1,7 +1,7 @@
 #pragma once
 #include "GSD3DBaseClass.h"
 
-class GSD3DLIB_API GSCamera : public GSDXBase, public IGSCamera, public GSRefCount
+class GSD3DLIB_API GSCamera : public IGSCamera, public GSRefCount
 {
 public:
 	enum ProjType
@@ -38,7 +38,6 @@ protected:
 
 public:
 	GSCamera();
-	GSCamera(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
 	virtual ~GSCamera();
 	virtual HRESULT SetEyePos(D3DXVECTOR3& vEyePt);
 	virtual HRESULT SetLookAt(D3DXVECTOR3& vLookPt);

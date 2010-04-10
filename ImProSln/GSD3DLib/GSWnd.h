@@ -15,7 +15,7 @@ public:
 	~GSWnd();
 	virtual HRESULT ShowWnd(BOOL bShow);
 	virtual HWND GetHwnd();
-	virtual HRESULT Create(LPCWSTR szTitle, UINT wndWidth, UINT wndHeight);
+	virtual HRESULT CreateWnd(UINT wndWidth, UINT wndHeight);
 
 	static LRESULT CALLBACK GSWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 };

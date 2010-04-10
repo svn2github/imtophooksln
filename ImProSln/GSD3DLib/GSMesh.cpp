@@ -20,7 +20,7 @@ GSMeshBase::GSMeshBase()
 		m_color[i] = 1.0;
 	}
 }
-GSMeshBase::GSMeshBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : GSDXBase(pDevice, pContext)
+GSMeshBase::GSMeshBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain) : GSDXBase(pDevice, pContext, pSwapChain)
 {
 	m_pVertexBuffer = NULL;
 	m_pIndexBuffer = NULL;
@@ -109,7 +109,7 @@ D3D11_PRIMITIVE_TOPOLOGY GSMeshBase::GetPrimitiveTopology()
 	return D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 }
 
-GS3DPlane::GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext) : GSMeshBase(pDevice, pDeviceContext)
+GS3DPlane::GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, IDXGISwapChain* pSwapChain) : GSMeshBase(pDevice, pDeviceContext, pSwapChain)
 {
 	InitGeometry();
 }

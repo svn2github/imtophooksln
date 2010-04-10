@@ -4,7 +4,7 @@
 
 extern HMODULE GetModule();
 
-GSEffectBase::GSEffectBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext) : GSDXBase(pDevice, pContext)
+GSEffectBase::GSEffectBase() 
 {
 	m_pEffect = NULL;
 	m_pEffectBuffer = NULL;
@@ -73,9 +73,9 @@ HRESULT GSEffectBase::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 	return S_OK;
 
 }
-HRESULT GSEffectBase::_LoadEffectFromFile(LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect)
+HRESULT GSEffectBase::_LoadEffectFromFile(ID3D11Device* pDevice, LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect)
 {
-	if (m_pDevice == NULL)
+	if (pDevice == NULL)
 		return E_FAIL;
 	SAFE_RELEASE(m_pEffectBuffer);
 	SAFE_RELEASE(m_pEffect);
@@ -90,7 +90,7 @@ HRESULT GSEffectBase::_LoadEffectFromFile(LPCWSTR szFileName, ID3DBlob*& pEffect
 	}
 	
 	hr = D3DX11CreateEffectFromMemory( pEffectBuffer->GetBufferPointer(),
-		pEffectBuffer->GetBufferSize(), NULL, m_pDevice, &pEffect ) ;
+		pEffectBuffer->GetBufferSize(), NULL, pDevice, &pEffect ) ;
 	if (FAILED(hr))
 		return hr;
 

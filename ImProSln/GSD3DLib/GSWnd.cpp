@@ -82,7 +82,7 @@ HWND GSWnd::GetHwnd()
 	return m_hWnd;
 }
 
-HRESULT GSWnd::Create(LPCWSTR szTitle, UINT wndWidth, UINT wndHeight)
+HRESULT GSWnd::CreateWnd(UINT wndWidth, UINT wndHeight)
 {
 	HRESULT hr = S_OK;
 	if (m_hWnd != 0)

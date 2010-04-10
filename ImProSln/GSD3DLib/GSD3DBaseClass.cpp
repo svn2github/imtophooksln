@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "GSMacro.h"
 #include "GSD3DBaseClass.h"
 #include <DXUT.h>
 #include <math.h>
@@ -33,17 +34,17 @@ GSDXBase::GSDXBase()
 {
 	m_pDevice = NULL;
 	m_pDeviceContext = NULL;
-
+	m_pSwapChain = NULL;
 }
-GSDXBase::GSDXBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+GSDXBase::GSDXBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain)
 {
 	m_pDevice = pDevice;
-	if (m_pDevice != NULL)
-		m_pDevice->AddRef();
 	m_pDeviceContext = pContext;
-	if (m_pDeviceContext != NULL)
-		m_pDeviceContext->AddRef();
+	m_pSwapChain = pSwapChain;
 
+	SAFE_ADDREF(m_pDevice);
+	SAFE_ADDREF(m_pDeviceContext);
+	SAFE_ADDREF(m_pSwapChain);
 }
 GSDXBase::~GSDXBase()
 {
@@ -57,6 +58,65 @@ ID3D11Device* GSDXBase::GetD3DDevice()
 ID3D11DeviceContext* GSDXBase::GetDeviceContext()
 {
 	return m_pDeviceContext;
+}
+
+HRESULT GSDXBase::CreateD3DDevice(HWND hwnd, UINT bufW, UINT bufH)
+{
+	SAFE_RELEASE(m_pDevice);
+	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pSwapChain);
+
+	if (hwnd == NULL || bufW <= 0 || bufH <= 0)
+		return E_FAIL;
+
+	HRESULT hr = S_OK;
+	DXGI_SWAP_CHAIN_DESC sd;
+	ZeroMemory( &sd, sizeof( sd ) );
+	sd.BufferCount = 1;
+	sd.BufferDesc.Width = bufW;
+	sd.BufferDesc.Height = bufH;
+	sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	sd.BufferDesc.RefreshRate.Numerator = 60;
+	sd.BufferDesc.RefreshRate.Denominator = 1;
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sd.OutputWindow = hwnd;
+	sd.SampleDesc.Count = 1;
+	sd.SampleDesc.Quality = 0;
+	sd.Windowed = TRUE;
+
+	D3D_FEATURE_LEVEL  FeatureLevelsRequested[] = 
+	{
+		D3D_FEATURE_LEVEL_11_0,
+		D3D_FEATURE_LEVEL_10_1,
+		D3D_FEATURE_LEVEL_10_0,
+		D3D_FEATURE_LEVEL_9_3,
+		D3D_FEATURE_LEVEL_9_2,
+		D3D_FEATURE_LEVEL_9_1,
+	};
+	UINT               numLevelsRequested = 6;
+	D3D_FEATURE_LEVEL  FeatureLevelsSupported;
+	UINT createDeviceFlags = 0;
+
+#ifdef _DEBUG
+	createDeviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+	if( FAILED (hr = D3D11CreateDeviceAndSwapChain( NULL, 
+		D3D_DRIVER_TYPE_HARDWARE, 
+		NULL, 
+		createDeviceFlags,
+		FeatureLevelsRequested, 
+		numLevelsRequested, 
+		D3D11_SDK_VERSION, 
+		&sd, 
+		&m_pSwapChain, 
+		&m_pDevice, 
+		&FeatureLevelsSupported,
+		&m_pDeviceContext )))
+	{
+		return hr;
+	}
+	return S_OK;
 }
 
 GS3DObj::GS3DObj()
@@ -134,31 +194,60 @@ D3DXVECTOR3 GS3DObj::GetPosition()
 	return ret;
 }
 //////////Texture Base////////////
-GSTextureBase::GSTextureBase()
+GSTexture2D::GSTexture2D()
 {
 	m_pTexture = NULL;
 }
-GSTextureBase::~GSTextureBase()
+GSTexture2D::~GSTexture2D()
 {
 	SAFE_RELEASE(m_pTexture);
 	
 }
-ID3D11Texture2D* GSTextureBase::GetTexture()
+ID3D11Texture2D* GSTexture2D::GetTexture()
 {
 	return m_pTexture;
 }
-HRESULT GSTextureBase::SetTexture(ID3D11Texture2D* pTexture)
+HRESULT GSTexture2D::SetTexture(ID3D11Texture2D* pTexture)
 {
 	SAFE_RELEASE(m_pTexture);
 	m_pTexture = pTexture;
-	if (pTexture != NULL)
-	{
-		pTexture->AddRef();
-	}
+	SAFE_ADDREF(pTexture);
 	return S_OK;
 }
+HRESULT GSTexture2D::Create(ID3D11Device* pDevice, UINT texW, UINT texH, UINT MipLevels, D3D11_USAGE Usage, 
+					   DXGI_FORMAT format, UINT BindFlags, UINT CPUAccessFlags , UINT MiscFlags)
 
+{
+	if (pDevice == NULL)
+		return E_FAIL;
+	SAFE_RELEASE(m_pTexture);
 
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width = texW;
+	desc.Height = texH;
+	desc.MipLevels = desc.ArraySize = MipLevels;
+	desc.Format = format;
+	desc.SampleDesc.Count = 1;
+	desc.Usage = Usage;
+	desc.BindFlags = BindFlags;
+	desc.CPUAccessFlags = CPUAccessFlags;
+
+	ID3D11Texture2D *pTexture = NULL;
+	pDevice->CreateTexture2D( &desc, NULL, &m_pTexture );
+	return S_OK;
+}
+GSRenderBase::GSRenderBase()
+{
+	
+}
+GSRenderBase::~GSRenderBase()
+{
+	for (int i =0; i < m_pBackupRenderTarget.size(); i++)
+	{
+		SAFE_RELEASE(m_pBackupRenderTarget.at(i));
+	}
+	m_pBackupRenderTarget.clear();
+}
 HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech)
 {
 	if (pMesh == NULL || pGSEffect == NULL || pDeviceContext == NULL )
@@ -208,5 +297,35 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 		pDeviceContext->DrawIndexed( indexCount, 0, 0);
 	}
 	
+	return S_OK;
+}
+
+HRESULT GSRenderBase::SetRenderTarget(ID3D11DeviceContext* pDeviceContext, ID3D11RenderTargetView* pRenderTarget)
+{
+	if (pDeviceContext == NULL || pRenderTarget == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	ID3D11RenderTargetView* pBackup = NULL;
+	pDeviceContext->OMGetRenderTargets(1, &pBackup, NULL);
+	
+	m_pBackupRenderTarget.push_back(pBackup);
+	SAFE_ADDREF(pBackup);
+	pDeviceContext->OMSetRenderTargets(1, &pRenderTarget, NULL);
+	
+	SAFE_RELEASE(pBackup);
+	return S_OK;
+}
+HRESULT GSRenderBase::ResetRenderTarget(ID3D11DeviceContext* pDeviceContext)
+{
+	if (pDeviceContext == NULL)
+		return E_FAIL;
+	if (m_pBackupRenderTarget.size() <= 0)
+		return E_FAIL;
+
+	ID3D11RenderTargetView* pBackupRenderTarget = m_pBackupRenderTarget[ m_pBackupRenderTarget.size()-1];
+	m_pBackupRenderTarget.pop_back();
+	
+	pDeviceContext->OMSetRenderTargets(1, &pBackupRenderTarget, NULL);
+	SAFE_RELEASE(pBackupRenderTarget);
 	return S_OK;
 }

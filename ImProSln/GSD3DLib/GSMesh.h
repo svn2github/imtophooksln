@@ -27,7 +27,7 @@ public:
 	virtual HRESULT InitGeometry(){return E_NOTIMPL;};
 
 public:
-	GSMeshBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	GSMeshBase(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain);
 	virtual ~GSMeshBase();
 	virtual ID3D11Buffer* GetVertexBuffer();
 	virtual ID3D11Buffer* GetIndexBuffer();
@@ -38,12 +38,12 @@ public:
 	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology();
 };
 
-class GSD3DLIB_API GS3DPlane : public GSMeshBase, public GS3DObj
+class GSD3DLIB_API GS3DPlane : public GSMeshBase, public GS3DObj, public GSRefCount
 {
 private:
 	virtual HRESULT InitGeometry();
 public:
-	GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+	GS3DPlane(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain);
 	virtual ~GS3DPlane();
 
 
