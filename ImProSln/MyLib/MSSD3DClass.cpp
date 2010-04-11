@@ -781,11 +781,12 @@ BOOL MS3DDisplay::InitDevice(IDirect3DDevice9* pDevice, UINT rtWidth, UINT rtHei
 	m_pCamera = new MSCamera(m_pDevice);
 	IDirect3DSwapChain9* pSwapChain = NULL;
 	pDevice->GetSwapChain(0, &pSwapChain);
-	pSwapChain->GetPresentParameters(&m_d3dpp);
-	m_hDisplayWnd = m_d3dpp.hDeviceWindow; 
 	if (pSwapChain == NULL)
 		return FALSE;
-	
+
+	pSwapChain->GetPresentParameters(&m_d3dpp);
+	m_hDisplayWnd = m_d3dpp.hDeviceWindow; 
+
 	pSwapChain->Release();
 	pSwapChain = NULL;
 	return TRUE;

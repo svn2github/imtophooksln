@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 using namespace std;
-class GSD3DLIB_API GSEffect : public IGSEffectBase, public GSDXBase
+class GSD3DLIB_API GSEffect : public IGSEffectBase, public GSDXBase, public GSRefCount
 {
 protected:
 	ID3DBlob* m_pEffectBuffer;

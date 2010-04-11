@@ -300,6 +300,14 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="fx"
+			>
+			<File
+				RelativePath="..\fx\GSBasicEffect.fx"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"
 			>
