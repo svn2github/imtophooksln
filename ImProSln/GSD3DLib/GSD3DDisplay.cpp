@@ -23,13 +23,7 @@ GS3DDisplay::~GS3DDisplay()
 	SAFE_RELEASE(m_pCamera);
 	SAFE_RELEASE(m_pEffect);
 }
-HRESULT GS3DDisplay::_GetEffectFileName(WCHAR* szFileName, UINT szSize)
-{
-	if (szFileName == NULL || szSize <= 0)
-		return E_FAIL;
-	swprintf_s(szFileName, szSize, L"..\\fx\\GSBasicEffect.fx");
-	return S_OK;
-}
+
 HRESULT GS3DDisplay::InitDevice(UINT bufW, UINT bufH)
 {
 	//Create GSWnd
@@ -37,11 +31,7 @@ HRESULT GS3DDisplay::InitDevice(UINT bufW, UINT bufH)
 	hr = GSWnd::CreateWnd(bufW, bufH);
 	//Create D3DDevice
 	hr = GSDXBase::CreateD3DDevice(GetHwnd(), bufW, bufH);
-	//Create Effect
-	WCHAR fxPath[MAX_PATH] = {0};
-	hr = _GetEffectFileName(fxPath, MAX_PATH);
-	m_pEffect = new GSEffect(m_pDevice, m_pDeviceContext, m_pSwapChain);
-	hr = m_pEffect->LoadFromFile(fxPath);
+
 	//Create Camera
 	m_pCamera = new GSCamera();
 	//Create D3DPlane
@@ -50,17 +40,11 @@ HRESULT GS3DDisplay::InitDevice(UINT bufW, UINT bufH)
 }
 HRESULT GS3DDisplay::InitDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, IDXGISwapChain* pSwapChain)
 {
-	
 	HRESULT hr = S_OK;
 	//Get GSWnd
 	DXGI_SWAP_CHAIN_DESC scDesc;
 	m_pSwapChain->GetDesc(&scDesc);
 	m_hWnd = scDesc.OutputWindow;
-	//Create Effect
-	WCHAR fxPath[MAX_PATH] = {0};
-	hr = _GetEffectFileName(fxPath, MAX_PATH);
-	m_pEffect = new GSEffect(m_pDevice, m_pDeviceContext, m_pSwapChain);
-	hr = m_pEffect->LoadFromFile(fxPath);
 	//Create Camera
 	m_pCamera = new GSCamera();
 	//Create D3DPlane
@@ -70,13 +54,26 @@ HRESULT GS3DDisplay::InitDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDev
 }
 HRESULT GS3DDisplay::Render()
 {
-	return S_OK;
+	if (m_pDeviceContext == NULL || m_pEffect == NULL || m_pDisplayPlane == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	hr = RenderMesh(m_pDisplayPlane, m_pDeviceContext, m_pEffect);
+	return hr;
 }
 BOOL GS3DDisplay::IsDeviceFromOther()
 {
 	return m_bDeviceFromOthers;
 }
-HRESULT GS3DDisplay::SetEffectVariables(IGSEffectBase* pGSEffect)
+
+HRESULT GS3DDisplay::LoadEffectFromFile(WCHAR* szFileName, UINT szSize)
 {
-	return S_OK;
+	if (m_pDevice == NULL || m_pDeviceContext == NULL || m_pSwapChain == NULL)
+		return E_FAIL;
+	SAFE_RELEASE(m_pEffect);
+	HRESULT hr = S_OK;
+	
+	m_pEffect = new GSEffect(m_pDevice, m_pDeviceContext, m_pSwapChain);
+	hr = m_pEffect->LoadFromFile(szFileName);
+	
+	return hr;
 }

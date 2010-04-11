@@ -81,14 +81,18 @@ public:
 
 class GSD3DLIB_API GSRenderBase : public IGSRenderBase
 {	
+public:
+	typedef HRESULT (__stdcall *CBEffectSetting)(ID3DX11Effect* pEffect, void* self);
 protected:
 	vector<ID3D11RenderTargetView*> m_pBackupRenderTarget;
-protected:
-	virtual HRESULT SetEffectVariables(IGSEffectBase* pGSEffect) = 0;
+	CBEffectSetting m_pCBEffectSetting;
+	void* m_pCBParam;
 public:
 	GSRenderBase();
 	~GSRenderBase();
 	virtual HRESULT RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech = 0);
 	virtual HRESULT SetRenderTarget(ID3D11DeviceContext* pDeviceContext, ID3D11RenderTargetView* pRenderTarget);
 	virtual HRESULT ResetRenderTarget(ID3D11DeviceContext* pDeviceContext);
+	virtual HRESULT SetCBEffectSetting(CBEffectSetting pfunc, void* self);
+	virtual HRESULT ClearCBEffectSetting();
 };

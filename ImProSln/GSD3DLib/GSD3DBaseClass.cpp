@@ -296,7 +296,8 @@ HRESULT GSTexture2D::GetShaderResourceView(ID3D11ShaderResourceView*& pShaderRes
 
 GSRenderBase::GSRenderBase()
 {
-	
+	m_pCBEffectSetting = NULL;
+	m_pCBParam = NULL;
 }
 GSRenderBase::~GSRenderBase()
 {
@@ -305,10 +306,12 @@ GSRenderBase::~GSRenderBase()
 		SAFE_RELEASE(m_pBackupRenderTarget.at(i));
 	}
 	m_pBackupRenderTarget.clear();
+	m_pCBEffectSetting = NULL;
+	m_pCBParam = NULL;
 }
 HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech)
 {
-	if (pMesh == NULL || pGSEffect == NULL || pDeviceContext == NULL )
+	if (pMesh == NULL || pGSEffect == NULL || pDeviceContext == NULL || m_pCBEffectSetting == NULL)
 	{
 		return E_FAIL;
 	}
@@ -346,7 +349,7 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	pDeviceContext->IASetVertexBuffers( 0, 1, &pVertexBuffer, &stride, &offset );
 	pDeviceContext->IASetIndexBuffer(pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
-	SetEffectVariables(pGSEffect);
+	m_pCBEffectSetting(pEffect, m_pCBParam);
 
 	for (int iPass = 0; iPass < tDesc.Passes; iPass++)
 	{
@@ -385,5 +388,18 @@ HRESULT GSRenderBase::ResetRenderTarget(ID3D11DeviceContext* pDeviceContext)
 	
 	pDeviceContext->OMSetRenderTargets(1, &pBackupRenderTarget, NULL);
 	SAFE_RELEASE(pBackupRenderTarget);
+	return S_OK;
+}
+
+HRESULT GSRenderBase::SetCBEffectSetting(CBEffectSetting pfunc, void* self)
+{
+	m_pCBEffectSetting = pfunc;
+	m_pCBParam = self;
+	return S_OK;
+}
+HRESULT GSRenderBase::ClearCBEffectSetting()
+{
+	m_pCBEffectSetting = NULL;
+	m_pCBParam = NULL;
 	return S_OK;
 }
