@@ -11,7 +11,7 @@ public:
 		D3DXVECTOR3 position; // The position
 		D3DXVECTOR3 normal;
 		FLOAT       tu, tv;   // The texture coordinates
-		static D3D10_INPUT_ELEMENT_DESC layout[];
+		static D3D11_INPUT_ELEMENT_DESC layout[];
 	};
 protected:
 	FLOAT m_color[4];

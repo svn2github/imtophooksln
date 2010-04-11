@@ -55,7 +55,7 @@ class GSD3DLIB_API IGSEffectBase
 public:
 	virtual ID3DBlob* GetEffectBuffer() = 0;
 	virtual ID3DX11Effect* GetEffect() = 0;
-	
+	virtual HRESULT LoadFromFile(LPCWSTR szFileName) = 0; 
 };
 
 

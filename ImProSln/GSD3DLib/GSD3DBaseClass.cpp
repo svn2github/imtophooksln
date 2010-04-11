@@ -194,14 +194,17 @@ D3DXVECTOR3 GS3DObj::GetPosition()
 	return ret;
 }
 //////////Texture Base////////////
-GSTexture2D::GSTexture2D()
+GSTexture2D::GSTexture2D(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain) : GSDXBase(pDevice, pContext, pSwapChain)
 {
 	m_pTexture = NULL;
+	m_pRenderTargetView = NULL;
+	m_pShaderResourceView = NULL;
 }
 GSTexture2D::~GSTexture2D()
 {
 	SAFE_RELEASE(m_pTexture);
-	
+	SAFE_RELEASE(m_pRenderTargetView);
+	SAFE_RELEASE(m_pShaderResourceView);
 }
 ID3D11Texture2D* GSTexture2D::GetTexture()
 {
@@ -214,11 +217,11 @@ HRESULT GSTexture2D::SetTexture(ID3D11Texture2D* pTexture)
 	SAFE_ADDREF(pTexture);
 	return S_OK;
 }
-HRESULT GSTexture2D::Create(ID3D11Device* pDevice, UINT texW, UINT texH, UINT MipLevels, D3D11_USAGE Usage, 
+HRESULT GSTexture2D::Create(UINT texW, UINT texH, UINT MipLevels, D3D11_USAGE Usage, 
 					   DXGI_FORMAT format, UINT BindFlags, UINT CPUAccessFlags , UINT MiscFlags)
 
 {
-	if (pDevice == NULL)
+	if (m_pDevice == NULL)
 		return E_FAIL;
 	SAFE_RELEASE(m_pTexture);
 
@@ -233,9 +236,64 @@ HRESULT GSTexture2D::Create(ID3D11Device* pDevice, UINT texW, UINT texH, UINT Mi
 	desc.CPUAccessFlags = CPUAccessFlags;
 
 	ID3D11Texture2D *pTexture = NULL;
-	pDevice->CreateTexture2D( &desc, NULL, &m_pTexture );
+	m_pDevice->CreateTexture2D( &desc, NULL, &m_pTexture );
 	return S_OK;
 }
+HRESULT GSTexture2D::CreateRenderTargetView()
+{
+	if (m_pDevice == NULL || m_pTexture == NULL)
+	{
+		return E_FAIL;
+	}
+	SAFE_RELEASE(m_pRenderTargetView);
+	HRESULT hr = S_OK;
+	hr = m_pDevice->CreateRenderTargetView(m_pTexture, NULL, &m_pRenderTargetView );
+	return hr;
+}
+HRESULT GSTexture2D::CreateShaderResourceView()
+{
+	if (m_pDevice == NULL || m_pTexture == NULL)
+	{
+		return E_FAIL;
+	}
+	SAFE_RELEASE(m_pShaderResourceView);
+	HRESULT hr = S_OK;
+	hr = m_pDevice->CreateShaderResourceView(m_pTexture, NULL, &m_pShaderResourceView );
+	return hr;
+}
+HRESULT GSTexture2D::GetRenderTargetView(ID3D11RenderTargetView*& pRenderTargetView)
+{
+	if (m_pTexture == NULL)
+		return E_FAIL;
+	SAFE_RELEASE(pRenderTargetView);
+	if (m_pRenderTargetView == NULL)
+	{
+		if (FAILED(CreateRenderTargetView()))
+		{
+			return E_FAIL;
+		}
+	}
+	pRenderTargetView = m_pRenderTargetView;
+	return S_OK;
+
+}
+HRESULT GSTexture2D::GetShaderResourceView(ID3D11ShaderResourceView*& pShaderResourceView)
+{
+	if (m_pTexture == NULL)
+		return E_FAIL;
+	SAFE_RELEASE(pShaderResourceView);
+	if (m_pShaderResourceView == NULL)
+	{
+		if (FAILED(CreateShaderResourceView()))
+		{
+			return E_FAIL;
+		}
+	}
+	pShaderResourceView = m_pShaderResourceView;
+	return S_OK;
+}
+
+
 GSRenderBase::GSRenderBase()
 {
 	

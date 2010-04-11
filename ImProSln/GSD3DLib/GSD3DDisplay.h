@@ -7,7 +7,7 @@
 #include "GSEffect.h"
 #include "GSD3DDisplay.h"
 
-class GSD3DLIB_API GS3DDisplay : public IGSD3DDisplay, public GSWnd, public GSRenderBase, public GSEffectBase, public GSDXBase
+class GSD3DLIB_API GS3DDisplay : public IGSD3DDisplay, public GSWnd, public GSRenderBase, public GSDXBase
 {
 protected:
 	BOOL m_bDeviceFromOthers;

@@ -4,17 +4,17 @@
 
 extern HMODULE GetModule();
 
-GSEffectBase::GSEffectBase() 
+GSEffect::GSEffect(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain) : GSDXBase(pDevice, pContext, pSwapChain)
 {
 	m_pEffect = NULL;
 	m_pEffectBuffer = NULL;
 }
-GSEffectBase::~GSEffectBase()
+GSEffect::~GSEffect()
 {
 	SAFE_RELEASE(m_pEffect);
 	SAFE_RELEASE(m_pEffectBuffer);
 }
-HRESULT GSEffectBase::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
+HRESULT GSEffect::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
 {
 	if (szFileName == NULL || szEntryPoint == NULL || szShaderModel == NULL || ppBlobOut == NULL)
 	{
@@ -73,7 +73,7 @@ HRESULT GSEffectBase::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryP
 	return S_OK;
 
 }
-HRESULT GSEffectBase::_LoadEffectFromFile(ID3D11Device* pDevice, LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect)
+HRESULT GSEffect::_LoadEffectFromFile(ID3D11Device* pDevice, LPCWSTR szFileName, ID3DBlob*& pEffectBuffer, ID3DX11Effect*& pEffect)
 {
 	if (pDevice == NULL)
 		return E_FAIL;
@@ -97,11 +97,19 @@ HRESULT GSEffectBase::_LoadEffectFromFile(ID3D11Device* pDevice, LPCWSTR szFileN
 	return hr;
 }
 
-ID3DX11Effect* GSEffectBase::GetEffect()
+ID3DX11Effect* GSEffect::GetEffect()
 {
 	return m_pEffect;
 }
-ID3DBlob* GSEffectBase::GetEffectBuffer()
+ID3DBlob* GSEffect::GetEffectBuffer()
 {
 	return m_pEffectBuffer;
+}
+HRESULT GSEffect::LoadFromFile(LPCWSTR szFileName)
+{
+	if (m_pDevice == NULL)
+		return E_FAIL;
+	SAFE_RELEASE(m_pEffect);
+	SAFE_RELEASE(m_pEffectBuffer);
+	return _LoadEffectFromFile(m_pDevice, szFileName, m_pEffectBuffer, m_pEffect);
 }

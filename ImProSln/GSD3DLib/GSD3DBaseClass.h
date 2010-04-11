@@ -9,6 +9,7 @@
 
 using namespace std;
 
+
 class GSD3DLIB_API GSRefCount : public IGSRefCount
 {
 protected:
@@ -56,18 +57,25 @@ public:
 
 
 
-class GSD3DLIB_API GSTexture2D
+class GSD3DLIB_API GSTexture2D : public GSDXBase
 {
+private:
+	HRESULT CreateRenderTargetView();
+	HRESULT CreateShaderResourceView();
 protected:
 	ID3D11Texture2D* m_pTexture;
+	ID3D11RenderTargetView* m_pRenderTargetView;
+	ID3D11ShaderResourceView* m_pShaderResourceView;
 public:
-	GSTexture2D();
+	GSTexture2D(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain);
 	~GSTexture2D();
 	virtual ID3D11Texture2D* GetTexture();
 	virtual HRESULT SetTexture(ID3D11Texture2D* pTexture);
-	virtual HRESULT Create(ID3D11Device* pDevice, UINT texW, UINT texH, UINT MipLevels = 1, D3D11_USAGE Usage = D3D11_USAGE_DYNAMIC, 
+	virtual HRESULT Create(UINT texW, UINT texH, UINT MipLevels = 1, D3D11_USAGE Usage = D3D11_USAGE_DYNAMIC, 
 		DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UNORM, UINT BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 
-		UINT CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ, UINT MiscFlags = /*D3D11_RESOURCE_MISC_SHARED |*/ D3D11_RESOURCE_MISC_GDI_COMPATIBLE );
+		UINT CPUAccessFlags = D3D11_CPU_ACCESS_WRITE, UINT MiscFlags = 0);
+	virtual HRESULT GetRenderTargetView(ID3D11RenderTargetView*& pRenderTargetView);
+	virtual HRESULT GetShaderResourceView(ID3D11ShaderResourceView*& pShaderResourceView);
 };
 
 
