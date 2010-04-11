@@ -315,7 +315,14 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	{
 		return E_FAIL;
 	}
-	
+	HRESULT hr = S_OK;
+	float ClearColor[4] = { 0.25f, 0.25f, 0.25f, 0.55f };
+	ID3D11RenderTargetView* pRTView = NULL;
+	ID3D11DepthStencilView* pDSView = NULL;
+	pDeviceContext->OMGetRenderTargets(1, &pRTView, &pDSView);
+	pDeviceContext->ClearRenderTargetView( pRTView, ClearColor );
+	pDeviceContext->ClearDepthStencilView( pDSView, D3D11_CLEAR_DEPTH, 1.0, 0 );
+
 	ID3D11Buffer* pVertexBuffer = pMesh->GetVertexBuffer();
 	ID3D11Buffer* pIndexBuffer = pMesh->GetIndexBuffer();
 
@@ -338,7 +345,7 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	
 	pIndexBuffer->GetDesc(&indexDesc);
 	UINT indexCount = indexDesc.ByteWidth / sizeof(UINT);
-	HRESULT hr = S_OK;
+
 	UINT stride = pMesh->GetVertexStride();
 	UINT offset = 0;
 	ID3D11InputLayout* pLayout = NULL;
