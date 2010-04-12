@@ -208,6 +208,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GSDXShareFilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GSEffect.cpp"
 				>
 			</File>
@@ -263,6 +267,10 @@
 			</File>
 			<File
 				RelativePath=".\GSDXFilterBase.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GSDXShareFilter.h"
 				>
 			</File>
 			<File

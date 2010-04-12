@@ -77,3 +77,8 @@ HRESULT GS3DDisplay::LoadEffectFromFile(LPCWSTR szFileName, UINT szSize)
 	
 	return hr;
 }
+
+IGSCamera* GS3DDisplay::GetCamera()
+{
+	return m_pCamera;
+}

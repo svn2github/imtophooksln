@@ -84,6 +84,7 @@ public:
 class GSD3DLIB_API IGSD3DDisplay
 {
 public:
+	virtual IGSCamera* GetCamera() = 0;
 	virtual BOOL IsDeviceFromOther() = 0;
 	virtual HRESULT Render() = 0;
 };

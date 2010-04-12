@@ -69,9 +69,35 @@ GSRenderBase::CBEffectSetting GSDXFilterBase::GetCBEffectSetting()
 
 HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 {
-	if (pEffect == NULL || self == NULL)
+	if (pEffect == NULL || self == NULL )
 		return E_FAIL;
+
 	GSDXFilterBase* pSelf = (GSDXFilterBase*)self;
+	if (pSelf->m_pD3DDisplay == NULL)
+		return E_FAIL;
+
+	IGSCamera* pCamera = pSelf->m_pD3DDisplay->GetCamera();
+	if (pCamera == NULL)
+		return E_FAIL;
+	
+	ID3DX11EffectVariable* worldViewProj = pEffect->GetVariableByName("WorldViewProj")->AsMatrix();
+	ID3DX11EffectVariable* sampleType = pEffect->GetVariableByName("g_sampleType")->AsScalar();
+	ID3DX11EffectVariable* bFlipY = pEffect->GetVariableByName("g_bFlipY")->AsScalar();
+	
+	if (!worldViewProj->IsValid() || !sampleType->IsValid() || !bFlipY->IsValid())
+		return E_FAIL;
+	
+	BOOL _bFlipY = false;
+	int _sampleType = 1;
+	D3DXMATRIX matView = pCamera->GetViewMatrix();
+	D3DXMATRIX matProj = pCamera->GetProjMatrix();
+	D3DXMATRIX matWorld;
+	D3DXMatrixIdentity(&matWorld);
+	D3DXMATRIX matWorldViewProj = matWorld * matView * matProj;
+	worldViewProj->SetRawValue((void*)&matWorldViewProj, 0, sizeof(matWorldViewProj));
+	sampleType->SetRawValue((void*)&sampleType, 0, sizeof(_sampleType));
+	bFlipY->SetRawValue((void*)&_bFlipY, 0, sizeof(_bFlipY));
+
 	return S_OK;
 }
 

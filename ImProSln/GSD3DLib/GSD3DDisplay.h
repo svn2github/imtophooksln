@@ -27,5 +27,6 @@ public:
 	//from IDSD3DDisplay
 	virtual HRESULT Render();
 	virtual BOOL IsDeviceFromOther();
+	virtual IGSCamera* GetCamera();
 	
 };
