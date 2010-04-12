@@ -197,7 +197,6 @@ HRESULT BGMappingFilter::ReceiveBackground(IMediaSample *pSample, const IPin* pR
 	cvResize(backgroundtmp,backgroundIplImg);
 
 	setIsReceiveBG(true);
-	//BG->setBackground(backgroundIplImg);
 	cvReleaseImageHeader(&backgroundtmp);
 
 	return S_OK;
@@ -241,7 +240,9 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
 		CAutoLock lck(&m_csBGSetting);
+		OutputDebugStringW(L"@@@@ ReceiveCameraImg ---->");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
+		OutputDebugStringW(L"@@@@ ReceiveCameraImg <----");
 
 	}
 	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
@@ -250,7 +251,9 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 
 		CMediaType mt = ((CMuxTransformInputPin*)pReceivePin)->CurrentMediaType();
 		if(mt.subtype == GUID_ARLayoutConfigData){
+			OutputDebugStringW(L"@@@@ ReceiveARLayout ---->");
 			hr = ReceiveARLayout(pSample, pReceivePin);
+			OutputDebugStringW(L"@@@@ ReceiveARLayout <----");
 		}
 		else {
 			hr = ReceiveBackground(pSample, pReceivePin);

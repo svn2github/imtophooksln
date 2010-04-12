@@ -61,7 +61,13 @@ BGCandidate ::~BGCandidate(){
 void BGCandidate::init(int imgH, int imgW){
 	for(int i = 0 ; i <imgMAX ; i ++){
 		unusedImg.push_back(i);
+		LayoutTypeCounter tmp ;
+		tmp.imgIndex = i;
+		tmp.layoutCount = 0;
+		tmp.layoutTypeIndex = i;
+		layoutTypeIndex.push_back(tmp);
 	}
+
 	for(int i = 0 ;i < imgMAX ; i ++){
 		bgImgPool[i].BGimg = cvCreateImage(cvSize(imgW,imgH),IPL_DEPTH_8U,1);
 	}
@@ -90,6 +96,11 @@ int BGCandidate::getUsedImgCount(){
 IplImage* BGCandidate::getUsedImg(int index){
 	return bgImgPool[usedImg[index]].BGimg;
 //return imgPool[usedImg[index]];
+}
+
+int BGCandidate ::getUsedImgID(int index){
+	return usedImg[index];
+
 }
 
 void BGCandidate::setToUnused(int index){
@@ -241,10 +252,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	int realBGindex  = 0;
 	int minValue = 1e10 ;
 	int candSubValue = subValue - 10 ;
-	if(candSubValue > 0){
-		candSubValue = -candSubValue;
-	}
-
+	
 	cvCvtColor( srcImg, camImg, CV_RGB2GRAY);
 	if(camFlip == true){
 		cvFlip(camImg);
@@ -260,7 +268,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			cvShowImage(frame,tmpImg);
 		}
 	    cvAbsDiff(camImg,tmpImg,tmpImg);
-		cvErode(tmpImg,tmpImg,NULL,erodeValue);
+		cvErode(tmpImg,tmpImg,NULL,erodeValue+1);
 		
 		if(camImg->width == bgMask->width){  
 			cvAnd(tmpImg,bgMask,tmpImg);
@@ -283,6 +291,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			
 		cvShowImage("BG" , tmpImg);
 		cvShowImage("src", camImg);				
+		
 		if(minValue > 300000 && SVAE_IMG == true){
 			char saveName[MAX_PATH] ;
 			sprintf(saveName,"debugImg\\%d_src.jpg",saveIndex);
@@ -423,6 +432,15 @@ void BackGroundMapping::setTranBG(){
 	for(int i = 0 ; i < tagTranNum ; i ++){
 		bool tmpVisible = BGTran[i]->isVisible ;
 		candidate.bgImgPool[index].layoutVisibleTable.push_back(tmpVisible);
+	}
+
+
+	for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
+		for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
+			if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
+				break ;
+			}
+		}
 	}
 
 

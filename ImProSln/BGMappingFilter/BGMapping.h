@@ -32,11 +32,19 @@ public:
 	IplImage* BGimg;
 	bool isBlendImg;
 	int layoutType ;
+	int layoutTypeCount ;
 	int layoutTotalTag ;
 	vector <bool> layoutVisibleTable ;
 	void setToPool(IplImage* background, bool isBlend);
 };
 
+
+class LayoutTypeCounter{
+public:
+	int imgIndex ;
+	int layoutTypeIndex ;
+	int layoutCount ;
+};
 
 class BGCandidate{
 public:
@@ -46,6 +54,7 @@ public:
 	IplImage* getUsedImg(int index);
 	int getUsedImgCount() ;
 	int getUnusedImgIndex();
+	int getUsedImgID(int index);
 	void setToUnused(int index);
 	void init(int imgH , int imgW);
 
@@ -53,6 +62,7 @@ public:
 	vector <int> usedImg;
 	BGCandidateImgPool bgImgPool[imgMAX];
 
+	vector <LayoutTypeCounter> layoutTypeIndex;
 };
 
 
