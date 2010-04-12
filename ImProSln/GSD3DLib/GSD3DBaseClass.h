@@ -1,6 +1,7 @@
 #pragma once
 #include "GSD3DLib.h"
 #include "IGSD3DBaseClass.h"
+#include "streams.h"
 #include <vector>
 #include <assert.h>
 #include <D3D11.h>
@@ -8,6 +9,15 @@
 #include <D3DX10math.h>
 
 using namespace std;
+
+class GSD3DLIB_API GSCritSecBase 
+{
+protected:
+	CCritSec m_CritSec;
+public:
+	CCritSec* GetCritSec() { return &m_CritSec; };
+};
+
 
 
 class GSD3DLIB_API GSRefCount : public IGSRefCount
@@ -33,6 +43,7 @@ public:
 	virtual ~GSDXBase();
 	virtual ID3D11Device* GetD3DDevice();
 	virtual ID3D11DeviceContext* GetDeviceContext();
+	virtual IDXGISwapChain* GetSwapChain();
 	virtual HRESULT CreateD3DDevice(HWND hwnd, UINT bufW, UINT bufH);
 };
 
@@ -57,7 +68,7 @@ public:
 
 
 
-class GSD3DLIB_API GSTexture2D : public GSDXBase
+class GSD3DLIB_API GSTexture2D : public GSDXBase, public GSCritSecBase, public GSRefCount
 {
 private:
 	HRESULT CreateRenderTargetView();
@@ -95,4 +106,5 @@ public:
 	virtual HRESULT ResetRenderTarget(ID3D11DeviceContext* pDeviceContext);
 	virtual HRESULT SetCBEffectSetting(CBEffectSetting pfunc, void* self);
 	virtual HRESULT ClearCBEffectSetting();
+
 };

@@ -59,7 +59,10 @@ ID3D11DeviceContext* GSDXBase::GetDeviceContext()
 {
 	return m_pDeviceContext;
 }
-
+IDXGISwapChain* GSDXBase::GetSwapChain()
+{
+	return m_pSwapChain;
+}
 HRESULT GSDXBase::CreateD3DDevice(HWND hwnd, UINT bufW, UINT bufH)
 {
 	SAFE_RELEASE(m_pDevice);

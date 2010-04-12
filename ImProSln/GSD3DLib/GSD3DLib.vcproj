@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\Effects11\Inc&quot;;&quot;$(ProjectDir)\DXUTLib\DXUT\Optional&quot;;&quot;$(ProjectDir)\DXUTLib\DXUT\Core&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\Effects11\Inc&quot;;&quot;$(ProjectDir)\DXUTLib\DXUT\Optional&quot;;&quot;$(ProjectDir)\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)\DSLib\BaseClasses&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;GSD3DLIB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -67,9 +67,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9d.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib d3d11.lib D3DX11EffectsD.lib d3dcompiler.lib"
+				AdditionalDependencies="strmbasd.lib d3dx9d.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comctl32.lib d3d11.lib D3DX11EffectsD.lib d3dcompiler.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(ProjectDir)/Effects11/bin"
+				AdditionalLibraryDirectories="&quot;$(ProjectDir)/Effects11/bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;"
 				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -204,6 +204,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\GSDXFilterBase.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\GSEffect.cpp"
 				>
 			</File>
@@ -251,6 +255,14 @@
 			</File>
 			<File
 				RelativePath=".\GSD3DLib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GSD3DMediaType.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GSDXFilterBase.h"
 				>
 			</File>
 			<File

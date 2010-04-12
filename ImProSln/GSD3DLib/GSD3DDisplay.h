@@ -7,7 +7,7 @@
 #include "GSEffect.h"
 #include "GSD3DDisplay.h"
 
-class GSD3DLIB_API GS3DDisplay : public IGSD3DDisplay, public GSWnd, public GSRenderBase, public GSDXBase
+class GSD3DLIB_API GS3DDisplay : public IGSD3DDisplay, public GSWnd, public GSRenderBase, public GSDXBase, public GSCritSecBase, public GSRefCount
 {
 protected:
 	BOOL m_bDeviceFromOthers;
@@ -23,7 +23,7 @@ public:
 	GS3DDisplay(UINT bufW, UINT bufH);
 	GS3DDisplay(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, IDXGISwapChain* pSwapChain);
 	virtual ~GS3DDisplay();
-	virtual HRESULT LoadEffectFromFile(WCHAR* szFileName, UINT szSize);
+	virtual HRESULT LoadEffectFromFile(LPCWSTR szFileName, UINT szSize);
 	//from IDSD3DDisplay
 	virtual HRESULT Render();
 	virtual BOOL IsDeviceFromOther();

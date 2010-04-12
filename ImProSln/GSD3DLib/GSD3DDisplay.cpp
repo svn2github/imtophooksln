@@ -65,7 +65,7 @@ BOOL GS3DDisplay::IsDeviceFromOther()
 	return m_bDeviceFromOthers;
 }
 
-HRESULT GS3DDisplay::LoadEffectFromFile(WCHAR* szFileName, UINT szSize)
+HRESULT GS3DDisplay::LoadEffectFromFile(LPCWSTR szFileName, UINT szSize)
 {
 	if (m_pDevice == NULL || m_pDeviceContext == NULL || m_pSwapChain == NULL)
 		return E_FAIL;

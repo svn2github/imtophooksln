@@ -18,8 +18,8 @@ public:
 class GSD3DLIB_API IGSRenderBase
 {	
 public:
-	virtual HRESULT SetRenderTarget(ID3D11RenderTargetView* pRenderTarget) = 0;
-	virtual HRESULT ResetRenderTarget() = 0;
+	virtual HRESULT SetRenderTarget(ID3D11DeviceContext* pDeviceContext, ID3D11RenderTargetView* pRenderTarget) = 0;
+	virtual HRESULT ResetRenderTarget(ID3D11DeviceContext* pDeviceContext) = 0;
 	virtual HRESULT RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDeviceContext, IGSEffectBase* pGSEffect, UINT idxTech = 0) = 0;
 };
 
