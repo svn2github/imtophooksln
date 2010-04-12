@@ -265,7 +265,7 @@ public:
 	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin) { return E_UNEXPECTED;};
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
-		__inout ALLOCATOR_PROPERTIES *pprop) { return E_UNEXPECTED;};
+		__inout ALLOCATOR_PROPERTIES *pprop);
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
 	// Source Filter Method
 	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };

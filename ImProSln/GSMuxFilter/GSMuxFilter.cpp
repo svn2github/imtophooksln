@@ -473,8 +473,58 @@ HRESULT GSMuxFilter::InitializeOutputSample(IMediaSample *pSample, const IPin* p
 	}
 	return S_OK;
 }
-
-
+HRESULT GSMuxFilter::DecideBufferSize(IMemAllocator * pAlloc, const IPin* pOutPin,
+								 __inout ALLOCATOR_PROPERTIES *pProp)
+{
+	if (pAlloc == NULL || pOutPin == NULL || pProp == NULL)
+	{
+		return E_FAIL;
+	}
+	HRESULT hr = S_OK;
+	CMediaType* mt = NULL;
+	for (int i = 0; i < m_pOutputPins.size();i++)
+	{
+		if (pOutPin == m_pOutputPins[i] && mt == NULL)
+		{
+			mt = new CMediaType();
+			*mt = ((GSMuxOutputPin*)pOutPin)->CurrentMediaType();
+			break;
+		}
+	}
+	if (mt == NULL)
+	{
+		for (int i = 0; i < m_pStreamPins.size();i++)
+		{
+			if (pOutPin == m_pStreamPins[i] && mt == NULL)
+			{
+				mt = new CMediaType();
+				*mt = ((GSMuxStream*)pOutPin)->CurrentMediaType();
+				break;
+			}
+		}
+	}
+	if (mt == NULL)
+	{
+		return E_FAIL;
+	}
+	pProp->cBuffers = 1;
+	pProp->cbBuffer = mt->GetSampleSize();
+	if (pProp->cbAlign == 0)
+	{
+		pProp->cbAlign = 1;
+	}
+	ALLOCATOR_PROPERTIES Actual;
+	hr = pAlloc->SetProperties(pProp,&Actual);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	ASSERT( Actual.cBuffers == 1 );
+	if (pProp->cBuffers > Actual.cBuffers ||
+		pProp->cbBuffer > Actual.cbBuffer) {
+			return E_FAIL;
+	}
+	return S_OK;
+}
 GSMuxInputPin::GSMuxInputPin(
 									   __in_opt LPCTSTR pObjectName,
 									   __inout GSMuxFilter *pTransformFilter,
