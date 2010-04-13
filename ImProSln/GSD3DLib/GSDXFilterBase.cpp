@@ -73,7 +73,7 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 		return E_FAIL;
 
 	GSDXFilterBase* pSelf = (GSDXFilterBase*)self;
-	if (pSelf->m_pD3DDisplay == NULL)
+	if (pSelf->m_pD3DDisplay == NULL || pSelf->m_pInTextureList.size() <= 0)
 		return E_FAIL;
 
 	IGSCamera* pCamera = pSelf->m_pD3DDisplay->GetCamera();
@@ -83,12 +83,19 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 	ID3DX11EffectVariable* worldViewProj = pEffect->GetVariableByName("WorldViewProj")->AsMatrix();
 	ID3DX11EffectVariable* sampleType = pEffect->GetVariableByName("g_sampleType")->AsScalar();
 	ID3DX11EffectVariable* bFlipY = pEffect->GetVariableByName("g_bFlipY")->AsScalar();
-	
-	if (!worldViewProj->IsValid() || !sampleType->IsValid() || !bFlipY->IsValid())
+	ID3DX11EffectShaderResourceVariable * pTextureResource = pEffect->GetVariableByName("g_Texture")->AsShaderResource();
+
+	if (!worldViewProj->IsValid() || !sampleType->IsValid() || !bFlipY->IsValid() || pTextureResource->IsValid())
 		return E_FAIL;
 	
+	ID3D11ShaderResourceView* pInTex = NULL;
+	pSelf->m_pInTextureList[0]->GetShaderResourceView(pInTex);
+	if (pInTex == NULL)
+		return E_FAIL;
+
 	BOOL _bFlipY = false;
 	int _sampleType = 1;
+
 	D3DXMATRIX matView = pCamera->GetViewMatrix();
 	D3DXMATRIX matProj = pCamera->GetProjMatrix();
 	D3DXMATRIX matWorld;
@@ -97,6 +104,7 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 	worldViewProj->SetRawValue((void*)&matWorldViewProj, 0, sizeof(matWorldViewProj));
 	sampleType->SetRawValue((void*)&sampleType, 0, sizeof(_sampleType));
 	bFlipY->SetRawValue((void*)&_bFlipY, 0, sizeof(_bFlipY));
+	pTextureResource->SetResource(pInTex);
 
 	return S_OK;
 }
