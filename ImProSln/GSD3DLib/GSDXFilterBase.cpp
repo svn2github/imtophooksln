@@ -58,6 +58,7 @@ HRESULT GSDXFilterBase::initD3D(LPCWSTR szEffectPath, UINT szSize, UINT bufW, UI
 	
 	hr = m_pD3DDisplay->LoadEffectFromFile(szEffectPath, szSize);
 	hr = CreateTextures(bufW, bufH, nInTex, nOutTex, nRT);
+	hr = m_pD3DDisplay->SetCBEffectSetting(GetCBEffectSetting(), (void*)this);
 
 	return S_OK;	
 }
@@ -85,7 +86,7 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 	ID3DX11EffectVariable* bFlipY = pEffect->GetVariableByName("g_bFlipY")->AsScalar();
 	ID3DX11EffectShaderResourceVariable * pTextureResource = pEffect->GetVariableByName("g_Texture")->AsShaderResource();
 
-	if (!worldViewProj->IsValid() || !sampleType->IsValid() || !bFlipY->IsValid() || pTextureResource->IsValid())
+	if (!worldViewProj->IsValid() || !sampleType->IsValid() || !bFlipY->IsValid() || !pTextureResource->IsValid())
 		return E_FAIL;
 	
 	ID3D11ShaderResourceView* pInTex = NULL;
@@ -134,7 +135,7 @@ HRESULT GSDXFilterBase::CopyGSTexture2Sample(GSTexture2D* pGSTexture, IMediaSamp
 	}
 	else if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video) )
 	{
-		if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB32))
+		if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB32) || IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_ARGB32))
 		{
 			BYTE* pSampleBuf = NULL;
 			pSample->GetPointer(&pSampleBuf);
@@ -216,7 +217,7 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 	}
 	else if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video) )
 	{
-		if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB32))
+		if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_RGB32) || IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_ARGB32))
 		{
 			BYTE* pSampleBuf = NULL;
 			pSample->GetPointer(&pSampleBuf);
@@ -226,12 +227,13 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 			D3D11_MAPPED_SUBRESOURCE mappedResource = {0};
 			if (pTexture == NULL || pDeviceContext == NULL)
 				return E_FAIL;
-			hr = pDeviceContext->Map(pTexture, 0, D3D11_MAP_READ, 0, &mappedResource);
+			D3D11_TEXTURE2D_DESC desc;
+			pTexture->GetDesc(&desc);
+
+			hr = pDeviceContext->Map(pTexture, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			if (FAILED(hr))
-			{
 				return E_FAIL;
-			}
-			memcpy(mappedResource.pData, (void*)pSampleBuf, pSample->GetSize());
+			memcpy(mappedResource.pData, (void*)pSampleBuf, pMediaType->GetSampleSize());
 			pDeviceContext->Unmap(pTexture, 0);
 			return S_OK;
 		}
@@ -312,10 +314,11 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nIn; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DYNAMIC, DXGI_FORMAT_R8G8B8A8_UNORM, 
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DYNAMIC, DXGI_FORMAT_R8G8B8A8_UINT, 
 			D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE, 0);
 		if (FAILED(hr))
 		{
+			break;
 			return E_FAIL;
 		}
 		m_pInTextureList.push_back(pTex);
@@ -324,10 +327,11 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nOut; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_STAGING, DXGI_FORMAT_R8G8B8A8_UNORM, 
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_STAGING, DXGI_FORMAT_R8G8B8A8_UINT, 
 			0, D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ, 0);
 		if (FAILED(hr))
 		{
+			break;
 			return E_FAIL;
 		}
 		m_pOutTextureList.push_back(pTex);
@@ -336,10 +340,11 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nOut; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UNORM, 
-			D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, D3D11_RESOURCE_MISC_SHARED);
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UINT, 
+			D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0, D3D11_RESOURCE_MISC_SHARED);
 		if (FAILED(hr))
 		{
+			break;
 			return E_FAIL;
 		}
 		m_pRenderTargetList.push_back(pTex);

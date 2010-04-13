@@ -27,6 +27,7 @@ public:
 	HRESULT Active();
 	HRESULT Inactive();
 
+	CMediaType& CurrentMediaType(){ return m_mt;};
 	// Add rendering behaviour to interface functions
 
 	STDMETHODIMP QueryId(__deref_out LPWSTR *Id);

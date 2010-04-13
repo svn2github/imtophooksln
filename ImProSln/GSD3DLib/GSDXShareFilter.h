@@ -5,6 +5,7 @@
 #include "combase.h"
 #include <D3D11.h>
 #include <D3DX11.h>
+#include "GSD3DLib.h"
 // {7093A7B9-D31D-49b6-A43B-5D8300910390}
 DEFINE_GUID(IID_IGSDXSharePin, 
 			0x7093a7b9, 0xd31d, 0x49b6, 0xa4, 0x3b, 0x5d, 0x83, 0x0, 0x91, 0x3, 0x90);
@@ -36,7 +37,7 @@ public:
 };
 
 class GSDXSharePin;
-class GSDXShareFilter : public IGSDXShareFilter
+class GSD3DLIB_API GSDXShareFilter : public IGSDXShareFilter
 {
 public:
 	/////have to be overwrite by child class////////
@@ -45,7 +46,7 @@ public:
 		ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) {return E_NOTIMPL; };
 };
 
-class GSDXSharePin : public IGSDXSharePin
+class GSD3DLIB_API GSDXSharePin : public IGSDXSharePin
 {
 protected:
 	IGSDXSharePin* m_pConnectedPin;
@@ -60,7 +61,7 @@ public:
 	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs) = 0;
 };
 
-class GSDXShareOutputPin : public GSDXSharePin
+class GSD3DLIB_API GSDXShareOutputPin : public GSDXSharePin
 {
 public:
 	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter){return E_NOTIMPL;};
@@ -68,7 +69,7 @@ public:
 	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
 };
 
-class GSDXShareInputPin : public GSDXSharePin
+class GSD3DLIB_API GSDXShareInputPin : public GSDXSharePin
 {
 public:
 	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter) {return E_NOTIMPL;};

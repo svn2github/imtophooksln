@@ -22,6 +22,20 @@ GS3DDisplay::~GS3DDisplay()
 	SAFE_RELEASE(m_pDisplayPlane);
 	SAFE_RELEASE(m_pCamera);
 	SAFE_RELEASE(m_pEffect);
+	if (m_hWnd != 0)
+	{
+		if (!m_bDeviceFromOthers)
+		{
+			::DestroyWindow(m_hWnd);
+			m_hWnd = 0;
+		}
+		else
+		{
+			::ShowWindow(m_hWnd, FALSE);
+			m_hWnd = 0;
+		}
+	}
+
 }
 
 HRESULT GS3DDisplay::InitDevice(UINT bufW, UINT bufH)
@@ -29,6 +43,7 @@ HRESULT GS3DDisplay::InitDevice(UINT bufW, UINT bufH)
 	//Create GSWnd
 	HRESULT hr = S_OK;
 	hr = GSWnd::CreateWnd(bufW, bufH);
+	ShowWindow(GetHwnd(), FALSE);
 	//Create D3DDevice
 	hr = GSDXBase::CreateD3DDevice(GetHwnd(), bufW, bufH);
 

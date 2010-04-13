@@ -26,13 +26,17 @@ protected:
 	int m_nRef;
 public:
 	GSRefCount();
-	~GSRefCount();
+	virtual ~GSRefCount();
 	STDMETHOD_(ULONG, AddRef)();
 	STDMETHOD_(ULONG, Release)();
 };
 
 class GSD3DLIB_API GSDXBase
 {
+private:
+	HRESULT initViewPort();
+	HRESULT initRenderTargetState(ID3D11RenderTargetView*& pRTView);
+	HRESULT initDepthStencilState(ID3D11DepthStencilView*& pDSView);
 protected:
 	ID3D11Device*            m_pDevice;
 	ID3D11DeviceContext*     m_pDeviceContext;
@@ -79,7 +83,7 @@ protected:
 	ID3D11ShaderResourceView* m_pShaderResourceView;
 public:
 	GSTexture2D(ID3D11Device* pDevice, ID3D11DeviceContext* pContext, IDXGISwapChain* pSwapChain);
-	~GSTexture2D();
+	virtual ~GSTexture2D();
 	virtual ID3D11Texture2D* GetTexture();
 	virtual HRESULT SetTexture(ID3D11Texture2D* pTexture);
 	virtual HRESULT Create(UINT texW, UINT texH, UINT MipLevels = 1, D3D11_USAGE Usage = D3D11_USAGE_DYNAMIC, 

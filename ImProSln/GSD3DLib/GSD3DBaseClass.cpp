@@ -50,6 +50,7 @@ GSDXBase::~GSDXBase()
 {
 	SAFE_RELEASE(m_pDevice);
 	SAFE_RELEASE(m_pDeviceContext);
+	SAFE_RELEASE(m_pSwapChain);
 }
 ID3D11Device* GSDXBase::GetD3DDevice()
 {
@@ -119,9 +120,137 @@ HRESULT GSDXBase::CreateD3DDevice(HWND hwnd, UINT bufW, UINT bufH)
 	{
 		return hr;
 	}
+	ID3D11RenderTargetView* pRTView = NULL;
+	ID3D11DepthStencilView* pDSView = NULL;
+	initRenderTargetState(pRTView);
+	initDepthStencilState(pDSView);
+	initViewPort();
+	m_pDeviceContext->OMSetRenderTargets(1, &pRTView, pDSView);
+	SAFE_RELEASE(pRTView);
+	SAFE_RELEASE(pDSView);
 	return S_OK;
 }
+HRESULT GSDXBase::initViewPort()
+{
+	if (m_pDevice == NULL || m_pSwapChain == NULL || m_pDeviceContext == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	ID3D11Texture2D* pBuffer = NULL;
+	hr = m_pSwapChain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), ( LPVOID* )&pBuffer );
+	if( FAILED( hr ) )
+		return hr;
+	D3D11_TEXTURE2D_DESC desc;
+	pBuffer->GetDesc(&desc);
 
+	D3D11_VIEWPORT vp;
+	vp.Width = desc.Width;
+	vp.Height = desc.Height;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	m_pDeviceContext->RSSetViewports( 1, &vp );
+
+	SAFE_RELEASE(pBuffer);
+	return S_OK;
+}
+HRESULT GSDXBase::initRenderTargetState(ID3D11RenderTargetView*& pOutRTView)
+{
+	if (m_pDevice == NULL || m_pSwapChain == NULL || m_pDeviceContext == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	ID3D11Texture2D* pBuffer = NULL;
+	hr = m_pSwapChain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), ( LPVOID* )&pBuffer );
+	if( FAILED( hr ) )
+		return hr;
+	ID3D11RenderTargetView* pRTView = NULL;
+	hr = m_pDevice->CreateRenderTargetView( pBuffer, NULL, &pRTView );
+
+	SAFE_RELEASE(pBuffer);
+	if( FAILED( hr ) )
+		return hr;
+	pOutRTView = pRTView; 
+	return S_OK;
+}
+HRESULT GSDXBase::initDepthStencilState(ID3D11DepthStencilView*& pDSView)
+{
+	if (m_pDevice == NULL || m_pSwapChain == NULL || m_pDeviceContext == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	ID3D11Texture2D* pBuffer = NULL;
+	hr = m_pSwapChain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), ( LPVOID* )&pBuffer );
+	if( FAILED( hr ) )
+		return hr;
+	D3D11_TEXTURE2D_DESC desc;
+	pBuffer->GetDesc(&desc);
+	SAFE_RELEASE(pBuffer);
+
+	ID3D11Texture2D* pDepthStencil = NULL;
+	D3D11_TEXTURE2D_DESC descDepth;
+	descDepth.Width = desc.Width;
+	descDepth.Height = desc.Height;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	descDepth.CPUAccessFlags = 0;
+	descDepth.MiscFlags = 0;
+	hr = m_pDevice->CreateTexture2D( &descDepth, NULL, &pDepthStencil );
+	if (FAILED(hr))
+		return E_FAIL;
+	
+	D3D11_DEPTH_STENCIL_DESC dsDesc;
+	// Depth test parameters
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	// Stencil test parameters
+	dsDesc.StencilEnable = true;
+	dsDesc.StencilReadMask = 0xFF;
+	dsDesc.StencilWriteMask = 0xFF;
+
+	// Stencil operations if pixel is front-facing
+	dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Stencil operations if pixel is back-facing
+	dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	dsDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	// Create depth stencil state
+	ID3D11DepthStencilState * pDSState = NULL;
+	hr = m_pDevice->CreateDepthStencilState(&dsDesc, &pDSState);
+	if (FAILED(hr))
+		return E_FAIL;
+	// Bind depth stencil state
+	m_pDeviceContext->OMSetDepthStencilState(pDSState, 1);
+	SAFE_RELEASE(pDSState);
+
+	/*D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+	descDSV.Format = DXGI_FORMAT_D32_FLOAT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
+	*/
+	// Create the depth stencil view
+	ID3D11DepthStencilView* pDSV = NULL;
+	hr = m_pDevice->CreateDepthStencilView( pDepthStencil, // Depth stencil texture
+		NULL, // Depth stencil desc
+		&pDSV );  // [out] Depth stencil view
+	if (FAILED(hr))
+		return E_FAIL;
+   
+	SAFE_RELEASE(pDepthStencil);
+	pDSView = pDSV;
+	return S_OK;
+}
 GS3DObj::GS3DObj()
 {
 	D3DXCreateMatrixStack(0, &m_pMatrixStack);
@@ -227,20 +356,22 @@ HRESULT GSTexture2D::Create(UINT texW, UINT texH, UINT MipLevels, D3D11_USAGE Us
 	if (m_pDevice == NULL)
 		return E_FAIL;
 	SAFE_RELEASE(m_pTexture);
-
-	D3D11_TEXTURE2D_DESC desc;
+	HRESULT hr = S_OK;
+	CD3D11_TEXTURE2D_DESC desc;
 	desc.Width = texW;
 	desc.Height = texH;
 	desc.MipLevels = desc.ArraySize = MipLevels;
 	desc.Format = format;
 	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
 	desc.Usage = Usage;
 	desc.BindFlags = BindFlags;
 	desc.CPUAccessFlags = CPUAccessFlags;
+	desc.MiscFlags = MiscFlags;
 
 	ID3D11Texture2D *pTexture = NULL;
-	m_pDevice->CreateTexture2D( &desc, NULL, &m_pTexture );
-	return S_OK;
+	hr = m_pDevice->CreateTexture2D( &desc, NULL, &m_pTexture );
+	return hr;
 }
 HRESULT GSTexture2D::CreateRenderTargetView()
 {
@@ -325,7 +456,8 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	pDeviceContext->OMGetRenderTargets(1, &pRTView, &pDSView);
 	pDeviceContext->ClearRenderTargetView( pRTView, ClearColor );
 	pDeviceContext->ClearDepthStencilView( pDSView, D3D11_CLEAR_DEPTH, 1.0, 0 );
-
+	SAFE_RELEASE(pRTView);
+	SAFE_RELEASE(pDSView);
 	ID3D11Buffer* pVertexBuffer = pMesh->GetVertexBuffer();
 	ID3D11Buffer* pIndexBuffer = pMesh->GetIndexBuffer();
 
@@ -352,7 +484,7 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	UINT stride = pMesh->GetVertexStride();
 	UINT offset = 0;
 	ID3D11InputLayout* pLayout = NULL;
-	pMesh->GetVertexLayout(pGSEffect->GetEffectBuffer(), pLayout);
+	pMesh->GetVertexLayout(pEffect, pLayout);
 
 	pDeviceContext->IASetInputLayout(pLayout);
 	pDeviceContext->IASetPrimitiveTopology(pMesh->GetPrimitiveTopology());

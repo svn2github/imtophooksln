@@ -16,7 +16,7 @@ GSEffect::~GSEffect()
 }
 HRESULT GSEffect::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint, LPCSTR szShaderModel, ID3DBlob** ppBlobOut )
 {
-	if (szFileName == NULL || szEntryPoint == NULL || szShaderModel == NULL || ppBlobOut == NULL)
+	if (szFileName == NULL || szShaderModel == NULL || ppBlobOut == NULL)
 	{
 		return E_FAIL;
 	}
@@ -49,7 +49,7 @@ HRESULT GSEffect::_CompileShaderFromFile(LPCWSTR szFileName, LPCSTR szEntryPoint
 		}
 	}
 
-	DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
+	DWORD dwShaderFlags = 0;
 #if defined( DEBUG ) || defined( _DEBUG )
 	// Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
 	// Setting this flag improves the shader debugging experience, but still allows 

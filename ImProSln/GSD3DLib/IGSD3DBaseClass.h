@@ -44,7 +44,7 @@ public:
 	virtual ID3D11Buffer* GetIndexBuffer() = 0;
 	virtual UINT GetVertexNumber() = 0;
 	virtual UINT GetVertexStride() = 0;
-	virtual HRESULT GetVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout) = 0;
+	virtual HRESULT GetVertexLayout(ID3DX11Effect* pEffect, ID3D11InputLayout*& pLayout) = 0;
 	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology() = 0;
 };
 

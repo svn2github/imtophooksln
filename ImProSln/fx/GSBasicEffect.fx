@@ -1,8 +1,9 @@
 
 struct AppData {
     float3 Position	: POSITION;
-    float4 UV		: TEXCOORD0;
-    float4 Normal	: NORMAL;
+	float3 Normal	: NORMAL;
+    float2 UV		: TEXCOORD0;
+    
 };
 
 struct VSOUT {
@@ -14,24 +15,24 @@ int g_sampleType = 0;
 bool g_bFlipY = false;
 float4x4 WorldViewProj : WorldViewProjection;
 
-texture g_Texture : DIFFUSE <
+Texture2D g_Texture : DIFFUSE <
     string ResourceName = "default_color.dds";
     string UIName =  "Diffuse Texture";
     string ResourceType = "2D";
 >;
 
-sampler2D g_LinearSampler = sampler_state {
-    Texture = <g_Texture>;
-    FILTER = MIN_MAG_MIP_LINEAR;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};  
+SamplerState g_LinearSampler
+{
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};
 
-sampler2D g_PointSampler = sampler_state {
-    Texture = <g_Texture>;
-    FILTER = MIN_MAG_MIP_POINT;
-    AddressU = Wrap;
-    AddressV = Wrap;
+
+SamplerState g_PointSampler = sampler_state {
+    Filter = MIN_MAG_MIP_POINT;
+    AddressU = Clamp;
+    AddressV = Clamp;
 };  
 
 VSOUT mainVS(AppData appIn ) {
@@ -41,7 +42,7 @@ VSOUT mainVS(AppData appIn ) {
 	return ret;
 }
 
-float4 mainPS(VSOUT vin) : COLOR {
+float4 mainPS(VSOUT vin) : SV_Target {
 	float2 uv = vin.UV;
 	if (g_bFlipY)
 	{
@@ -49,11 +50,11 @@ float4 mainPS(VSOUT vin) : COLOR {
 	}
 	if (g_sampleType == 0)
 	{
-		return tex2D(g_PointSampler, uv);
+		return g_Texture.Sample(g_PointSampler, uv);
 	}
 	else
 	{
-		return tex2D(g_LinearSampler, uv);
+		return g_Texture.Sample(g_LinearSampler, uv);
 	}
 }
 

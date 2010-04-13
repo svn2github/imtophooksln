@@ -18,11 +18,11 @@ protected:
 	
 	ID3D11Buffer* m_pVertexBuffer;
 	ID3D11Buffer* m_pIndexBuffer;
-	map<ID3DBlob*, ID3D11InputLayout*> m_pVertexLayout;
+	map<ID3DX11Effect*, ID3D11InputLayout*> m_pVertexLayout;
 protected:
 	GSMeshBase();
 	virtual HRESULT ClearVertexLayout();
-	virtual HRESULT GenerateVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout);
+	virtual HRESULT GenerateVertexLayout(ID3DX11Effect* pEffect, ID3D11InputLayout*& pLayout);
 public:
 	virtual HRESULT InitGeometry(){return E_NOTIMPL;};
 
@@ -33,7 +33,7 @@ public:
 	virtual ID3D11Buffer* GetIndexBuffer();
 	virtual UINT GetVertexNumber();
 	virtual UINT GetVertexStride();
-	virtual HRESULT GetVertexLayout(ID3DBlob* pShaderBuffer, ID3D11InputLayout*& pLayout);
+	virtual HRESULT GetVertexLayout(ID3DX11Effect* pEffect, ID3D11InputLayout*& pLayout);
 	
 	virtual D3D11_PRIMITIVE_TOPOLOGY GetPrimitiveTopology();
 };
