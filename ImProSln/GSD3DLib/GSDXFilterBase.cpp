@@ -314,7 +314,7 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nIn; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DYNAMIC, DXGI_FORMAT_R8G8B8A8_UINT, 
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DYNAMIC, DXGI_FORMAT_B8G8R8A8_UNORM, 
 			D3D11_BIND_SHADER_RESOURCE, D3D11_CPU_ACCESS_WRITE, 0);
 		if (FAILED(hr))
 		{
@@ -327,7 +327,7 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nOut; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_STAGING, DXGI_FORMAT_R8G8B8A8_UINT, 
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_STAGING, DXGI_FORMAT_B8G8R8A8_UNORM, 
 			0, D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ, 0);
 		if (FAILED(hr))
 		{
@@ -340,7 +340,7 @@ HRESULT GSDXFilterBase::CreateTextures(UINT bufW, UINT bufH, UINT nIn, UINT nRT,
 	for (int i =0; i < nOut; i++)
 	{
 		GSTexture2D* pTex = new GSTexture2D(pDevice, pDeviceContext, pSwapChain);
-		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DEFAULT, DXGI_FORMAT_R8G8B8A8_UINT, 
+		hr = pTex->Create(bufW, bufH, 1, D3D11_USAGE_DEFAULT, DXGI_FORMAT_B8G8R8A8_UNORM, 
 			D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0, D3D11_RESOURCE_MISC_SHARED);
 		if (FAILED(hr))
 		{

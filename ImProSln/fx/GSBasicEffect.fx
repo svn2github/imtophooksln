@@ -7,7 +7,7 @@ struct AppData {
 };
 
 struct VSOUT {
-    float4 HPosition	: POSITION;
+    float4 HPosition	: SV_POSITION;
     float2 UV		: TEXCOORD0;
 };
 

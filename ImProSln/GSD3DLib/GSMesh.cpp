@@ -149,7 +149,7 @@ HRESULT GS3DPlane::InitGeometry()
 		{D3DXVECTOR3(-1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 0.0}, 
 		{D3DXVECTOR3(-1,-1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 1.0},
 		{D3DXVECTOR3( 1,-1, 0), D3DXVECTOR3(0, 0, -1), 1.0, 1.0},
-		{D3DXVECTOR3( 1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 1.0},
+		{D3DXVECTOR3( 1, 1, 0), D3DXVECTOR3(0, 0, -1), 1.0, 0.0},
 	};
 
 	D3D11_BUFFER_DESC bd;
@@ -168,7 +168,7 @@ HRESULT GS3DPlane::InitGeometry()
 	DWORD indices[] =
 	{
 		0,1,2,
-		3,1,2
+		0,2,3
 	};
 	bd.Usage = D3D11_USAGE_DEFAULT;
 	bd.ByteWidth = sizeof( indices );

@@ -69,10 +69,11 @@ HRESULT GS3DDisplay::InitDevice(ID3D11Device* pDevice, ID3D11DeviceContext* pDev
 }
 HRESULT GS3DDisplay::Render()
 {
-	if (m_pDeviceContext == NULL || m_pEffect == NULL || m_pDisplayPlane == NULL)
+	if (m_pDeviceContext == NULL || m_pEffect == NULL || m_pDisplayPlane == NULL || m_pSwapChain == NULL)
 		return E_FAIL;
 	HRESULT hr = S_OK;
 	hr = RenderMesh(m_pDisplayPlane, m_pDeviceContext, m_pEffect);
+	m_pSwapChain->Present( 0, 0);
 	return hr;
 }
 BOOL GS3DDisplay::IsDeviceFromOther()
