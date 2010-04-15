@@ -4,12 +4,12 @@
 #include <initguid.h>
 #include "combase.h"
 #include <vector>
-#include "GSDXShareFilter.h"
+#include "GSPinDesc.h"
 
 using namespace std;
 class GSMuxFilter;
 
-class GSMuxInputPin : public CBaseInputPin, public GSDXShareInputPin
+class GSMuxInputPin : public CBaseInputPin
 {
 	friend class GSMuxFilter;
 public:
@@ -78,10 +78,9 @@ public:
 	// Media type
 public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter);
 	virtual HRESULT GetConnectedPin(IPin*& pPin);
 };
-class GSMuxOutputPin : public CBaseOutputPin, public GSDXShareOutputPin
+class GSMuxOutputPin : public CBaseOutputPin
 {
 	friend class GSMuxFilter;
 public:
@@ -146,12 +145,11 @@ public:
 public:
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
 	virtual IMemAllocator* Allocator() {return m_pAllocator;};
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter);
 	virtual HRESULT GetConnectedPin(IPin*& pPin);
 
 };
 
-class GSMuxStream : public CAMThread, public CBaseOutputPin, public GSDXShareOutputPin
+class GSMuxStream : public CAMThread, public CBaseOutputPin
 
 {
 	friend class GSMuxFilter;
@@ -218,7 +216,6 @@ public:
 	virtual STDMETHODIMP Notify(IBaseFilter * pSender, Quality q);
 	virtual CMediaType& CurrentMediaType() { return m_mt; };
 
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter);
 	virtual HRESULT GetConnectedPin(IPin*& pPin);
 protected:
 	Command GetRequest(void) { return (Command) CAMThread::GetRequest(); }
@@ -243,7 +240,7 @@ protected:
 	}
 };
 
-class GSMuxFilter : public CBaseFilter, public GSDXShareFilter
+class GSMuxFilter : public CBaseFilter
 {
 public:
 	virtual int GetPinCount();
@@ -258,6 +255,7 @@ public:
 	GSMuxFilter(__in_opt LPCSTR , __inout_opt LPUNKNOWN, REFCLSID clsid);
 #endif
 	virtual ~GSMuxFilter();
+
 	// These must be supplied in a derived class 
 	// Transform Filter Method
 	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin) { return E_UNEXPECTED; };
@@ -268,6 +266,7 @@ public:
 		__inout ALLOCATOR_PROPERTIES *pprop);
 	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
 	// Source Filter Method
+
 	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };
 	virtual float GetFrameRateLimit(IPin* pPin) { return 10000.0;}
 	// =================================================================
@@ -355,6 +354,11 @@ private:
 protected:
 	virtual HRESULT CreatePins() = 0;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
+	// functions for implement TransformFilter methods
+	vector<GSFILTER_PIN_DESC> m_pInputPinDesc;
+	vector<GSFILTER_PIN_DESC> m_pOutputPinDesc;
+	vector<GSFILTER_PIN_DESC> m_pStreamPinDesc;
 
+public:
+	// functions for implement TransformFilter methods
 };
-

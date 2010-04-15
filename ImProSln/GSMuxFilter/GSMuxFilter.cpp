@@ -557,15 +557,7 @@ GSMuxInputPin::~GSMuxInputPin()
 
 HRESULT GSMuxInputPin::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
 {
-	if (riid == IID_IGSDXSharePin) 
-	{
-		return GetInterface(static_cast<IGSDXSharePin*>(this), ppv);
-	}
-	else
-	{
-		// Call the parent class.
-		return __super::NonDelegatingQueryInterface(riid, ppv);
-	}
+	return __super::NonDelegatingQueryInterface(riid, ppv);
 }
 HRESULT
 GSMuxInputPin::CheckConnect(IPin *pPin)
@@ -586,7 +578,7 @@ GSMuxInputPin::BreakConnect()
 	//  Can't disconnect unless stopped
 	ASSERT(IsStopped());
 	m_pTransformFilter->BreakConnect(PINDIR_INPUT, this);
-	SetConnectedPin(NULL);
+	//SetConnectedPin(NULL);
 	return CBaseInputPin::BreakConnect();
 }
 
@@ -597,17 +589,8 @@ HRESULT
 GSMuxInputPin::CompleteConnect(IPin *pReceivePin)
 {
 	HRESULT hr = S_OK;
-	IGSDXSharePin* pDXPin = NULL;
-	hr = pReceivePin->QueryInterface(IID_IGSDXSharePin, (void**)&pDXPin);
-	if (pDXPin != NULL)
-	{
-		SetConnectedPin(pDXPin);
-		pDXPin->Release();
-		pDXPin = NULL;
-	}
 	hr = m_pTransformFilter->CompleteConnect(PINDIR_INPUT, this, pReceivePin);
 	if (FAILED(hr)) {
-		SetConnectedPin(NULL);
 		return hr;
 	}
 	return CBaseInputPin::CompleteConnect(pReceivePin);
@@ -762,11 +745,7 @@ GSMuxInputPin::NewSegment(
 	CBasePin::NewSegment(tStart, tStop, dRate);
 	return m_pTransformFilter->NewSegment(tStart, tStop, dRate);
 }
-HRESULT GSMuxInputPin::GetD3DFilter(IGSDXShareFilter*& pFilter)
-{
-	pFilter = m_pTransformFilter;
-	return S_OK;
-}
+
 HRESULT GSMuxInputPin::GetConnectedPin(IPin*& pPin)
 {
 	pPin = m_Connected;
@@ -842,10 +821,6 @@ GSMuxOutputPin::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
 		}
 		return m_pPosition->QueryInterface(riid, ppv);
 	} 
-	else if (riid == IID_IGSDXSharePin)
-	{
-		return GetInterface(static_cast<IGSDXSharePin*>(this), ppv);
-	}
 	else 
 	{
 		return __super::NonDelegatingQueryInterface(riid, ppv);
@@ -881,7 +856,7 @@ GSMuxOutputPin::BreakConnect()
 	//  Can't disconnect unless stopped
 	ASSERT(IsStopped());
 	m_pTransformFilter->BreakConnect(PINDIR_OUTPUT, this);
-	SetConnectedPin(NULL);
+	//SetConnectedPin(NULL);
 	return CBaseOutputPin::BreakConnect();
 }
 
@@ -892,17 +867,9 @@ HRESULT
 GSMuxOutputPin::CompleteConnect(IPin *pReceivePin)
 {
 	HRESULT hr = S_OK;
-	IGSDXSharePin* pDXPin = NULL;
-	hr = pReceivePin->QueryInterface(IID_IGSDXSharePin, (void**)&pDXPin);
-	if (pDXPin != NULL)
-	{
-		SetConnectedPin(pDXPin);
-		pDXPin->Release();
-		pDXPin = NULL;
-	}
+	
 	hr = m_pTransformFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
 	if (FAILED(hr)) {
-		SetConnectedPin(NULL);
 		return hr;
 	}
 	return CBaseOutputPin::CompleteConnect(pReceivePin);
@@ -1007,11 +974,7 @@ GSMuxOutputPin::Notify(IBaseFilter * pSender, Quality q)
 	}
 	return errorHr;
 } // Notify
-HRESULT GSMuxOutputPin::GetD3DFilter(IGSDXShareFilter*& pFilter)
-{
-	pFilter = m_pTransformFilter;
-	return S_OK;
-}
+
 HRESULT GSMuxOutputPin::GetConnectedPin(IPin*& pPin)
 {
 	pPin = m_Connected;
@@ -1051,14 +1014,7 @@ GSMuxStream::~GSMuxStream(void) {
 // override to expose IMediaPosition
 HRESULT GSMuxStream::NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv)
 {
-	if (riid == IID_IGSDXSharePin)
-	{
-		return GetInterface(static_cast<IGSDXSharePin*>(this), ppv);
-	}
-	else 
-	{
-		return __super::NonDelegatingQueryInterface(riid, ppv);
-	}
+	return __super::NonDelegatingQueryInterface(riid, ppv);	
 }
 
 STDMETHODIMP GSMuxStream::Notify(IBaseFilter * pSender, Quality q)
@@ -1100,7 +1056,7 @@ HRESULT GSMuxStream::BreakConnect()
 	if (FAILED(hr)) {
 		return hr;
 	}
-	SetConnectedPin(NULL);
+	
 	return __super::BreakConnect();
 }
 HRESULT GSMuxStream::CompleteConnect(IPin *pReceivePin)
@@ -1110,17 +1066,10 @@ HRESULT GSMuxStream::CompleteConnect(IPin *pReceivePin)
 		return S_FALSE;
 	}
 	HRESULT hr = S_OK;
-	IGSDXSharePin* pDXPin = NULL;
-	hr = pReceivePin->QueryInterface(IID_IGSDXSharePin, (void**)&pDXPin);
-	if (pDXPin != NULL)
-	{
-		SetConnectedPin(pDXPin);
-		pDXPin->Release();
-		pDXPin = NULL;
-	}
+	
 	hr = m_pFilter->CompleteConnect(PINDIR_OUTPUT, this, pReceivePin);
 	if (FAILED(hr)) {
-		SetConnectedPin(NULL);
+		
 		return hr;
 	}
 	return __super::CompleteConnect(pReceivePin);
@@ -1423,11 +1372,7 @@ HRESULT GSMuxStream::DoBufferProcessingLoop(void) {
 
 	return S_FALSE;
 }
-HRESULT GSMuxStream::GetD3DFilter(IGSDXShareFilter*& pFilter)
-{
-	pFilter = m_pFilter;
-	return S_OK;
-}
+
 HRESULT GSMuxStream::GetConnectedPin(IPin*& pPin)
 {
 	pPin = m_Connected;

@@ -146,7 +146,7 @@ HRESULT GS3DPlane::InitGeometry()
 	CUSTOMVERTEX vertices[] = 
 	{
 		// {Position, Normal, tu, tv}
-		{D3DXVECTOR3(-1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 0.0}, 
+		{D3DXVECTOR3(-1, 1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 0.0},
 		{D3DXVECTOR3(-1,-1, 0), D3DXVECTOR3(0, 0, -1), 0.0, 1.0},
 		{D3DXVECTOR3( 1,-1, 0), D3DXVECTOR3(0, 0, -1), 1.0, 1.0},
 		{D3DXVECTOR3( 1, 1, 0), D3DXVECTOR3(0, 0, -1), 1.0, 0.0},
