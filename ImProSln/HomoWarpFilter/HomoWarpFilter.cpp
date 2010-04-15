@@ -837,12 +837,7 @@ IplImage* HomoWarpFilter::GetInIplmage()
 
 	return cvImg;
 }
-CCritSec* HomoWarpFilter::GetD3DCS()
-{
-	CCritSec* cs = NULL;
-	this->QueryD3DDeviceCS(NULL, cs);
-	return cs;
-}
+
 HRESULT HomoWarpFilter::SaveToFile(WCHAR* path)
 {
 	if (this->SaveConfigToFile(path))

@@ -60,7 +60,7 @@ public:
 	virtual bool SaveConfigToFile(WCHAR* path);
 	virtual bool LoadConfigFromFile(WCHAR* path);
 	virtual IplImage* GetInIplmage();
-	virtual CCritSec* GetD3DCS();
+	
 protected:
 	
 	bool m_bFlipY;
