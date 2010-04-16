@@ -258,16 +258,16 @@ public:
 
 	// These must be supplied in a derived class 
 	// Transform Filter Method
-	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin) { return E_UNEXPECTED; };
-	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin) { return E_UNEXPECTED;};
-	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin) { return E_UNEXPECTED;};
+	virtual HRESULT Receive(IMediaSample *pSample, const IPin* pReceivePin);
+	virtual HRESULT CheckInputType(const CMediaType* mtIn, const IPin* pPin);
+	virtual HRESULT CheckOutputType(const CMediaType* mtOut, const IPin* pPin);
 	virtual HRESULT DecideBufferSize(
 		IMemAllocator * pAllocator, const IPin* pOutPin,
 		__inout ALLOCATOR_PROPERTIES *pprop);
-	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType) { return E_UNEXPECTED;};
+	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType);
 	// Source Filter Method
 
-	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin) { return E_UNEXPECTED; };
+	virtual HRESULT FillBuffer(IMediaSample *pSamp, IPin* pPin);
 	virtual float GetFrameRateLimit(IPin* pPin) { return 10000.0;}
 	// =================================================================
 	// ----- Optional Override Methods           -----------------------
@@ -351,14 +351,19 @@ protected:
 private:
 	virtual BOOL IsAnyInputPinConnect();
 	virtual BOOL IsAnyOutPinConnect();
+	
 protected:
 	virtual HRESULT CreatePins() = 0;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
 	// functions for implement TransformFilter methods
-	vector<GSFILTER_PIN_DESC> m_pInputPinDesc;
-	vector<GSFILTER_PIN_DESC> m_pOutputPinDesc;
-	vector<GSFILTER_PIN_DESC> m_pStreamPinDesc;
-
+	vector<GSFILTER_INPUTPIN_DESC> m_pInputPinDesc;
+	vector<GSFILTER_OUTPUTPIN_DESC> m_pOutputPinDesc;
+	vector<GSFILTER_STREAMPIN_DESC> m_pStreamPinDesc;
+	virtual HRESULT _GetPinIdx(const IPin* pPin, UINT& idx, GSPIN_TYPE& pinType);
+	virtual HRESULT _ClearPins();
+	virtual HRESULT _CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, 
+		GSFILTER_OUTPUTPIN_DESC* outDesc, UINT szOut, GSFILTER_STREAMPIN_DESC* streamDesc, UINT szStream );
+	
 public:
 	// functions for implement TransformFilter methods
 };
