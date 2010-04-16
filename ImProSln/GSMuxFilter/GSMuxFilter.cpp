@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GSMuxFilter.h"
+#include "GSMacro.h"
 
 GSMuxFilter::GSMuxFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk, REFCLSID  clsid) :
 CBaseFilter(pName, pUnk, &m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE), 
@@ -693,6 +694,79 @@ HRESULT GSMuxFilter::_GetPinIdx(const IPin* pPin, UINT& idx, GSPIN_TYPE& pinType
 	}
 	return E_FAIL;
 }
+HRESULT GSMuxFilter::PreReceive_InitSample(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample)
+{
+	if (self == NULL || pSample == NULL || pReceivePin == NULL)
+	{
+		return E_FAIL;
+	}
+	GSMuxFilter* pSelf = (GSMuxFilter*)self;
+	HRESULT hr = S_OK;
+	UINT pinIdx = 0;
+	GSPIN_TYPE pinType = GSINPUT_PIN;
+	hr = pSelf->_GetPinIdx(pReceivePin, pinIdx, pinType);
+	if (FAILED(hr) || pinType != GSINPUT_PIN)
+		return E_FAIL;
+	if (pinIdx >= pSelf->m_pInputPinDesc.size())
+		return E_FAIL;
+	GSFILTER_INPUTPIN_DESC pinDesc = pSelf->m_pInputPinDesc[pinIdx];
+	if (pinDesc.nMatchIdx >= pSelf->m_pOutputPins.size())
+		return E_FAIL;
+
+	
+	AM_SAMPLE2_PROPERTIES * const pProps = ((GSMuxInputPin*)pReceivePin)->SampleProps();
+	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
+		return S_OK;
+	}
+	ASSERT(pSample);
+	IMediaSample* pInitOutSample = NULL;
+	// If no output to deliver to then no point sending us data
+	IPin* pConnectPin = pSelf->m_pOutputPins[pinDesc.nMatchIdx];
+	if (pConnectPin == NULL)
+		return E_FAIL;
+	hr = pSelf->InitializeOutputSample(pSample, pReceivePin, pConnectPin, &pInitOutSample);
+	if (FAILED(hr)) {
+		return hr;
+	}
+	SAFE_RELEASE(pOutSample);
+	pOutSample = pInitOutSample;
+	return S_OK;
+}
+HRESULT GSMuxFilter::PostReceive_DeliverSample(void* self, IMediaSample *pOutSample, const IPin* pOutputPin, HRESULT preHr)
+{
+	if (self == NULL || pOutSample == NULL || pOutputPin == NULL)
+	{
+		return E_FAIL;
+	}
+	GSMuxFilter* pSelf = (GSMuxFilter*)self;
+	HRESULT hr = S_OK;
+
+	if (FAILED(preHr)) {
+		DbgLog((LOG_TRACE,1,TEXT("Error from transform")));
+	} 
+	else
+	{
+		if (preHr == NOERROR) {
+			hr = ((GSMuxOutputPin*)pOutputPin)->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+			pSelf->m_bSampleSkipped = FALSE;	// last thing no longer dropped
+		}
+		else
+		{
+			if (S_FALSE == preHr)
+			{
+				SAFE_RELEASE(pOutSample);
+				pSelf->m_bSampleSkipped = TRUE;
+				if (!pSelf->m_bQualityChanged) {
+					pSelf->NotifyEvent(EC_QUALITY_CHANGE,0,0);
+					pSelf->m_bQualityChanged = TRUE;
+				}
+				return NOERROR;
+			}
+		}
+	}
+	return hr;
+}
+
 HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin) 
 { 
 	if (pSample == NULL || pReceivePin == NULL)
@@ -713,6 +787,9 @@ HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	{
 		hr = pinDesc.pFunc.pFuncPreReceive(this, pSample, pReceivePin, pOutSample);
 	}
+	if (FAILED(hr)) {
+		return hr;
+	}
 	if (pinDesc.pFunc.pFuncTransform != NULL)
 	{
 		hr = pinDesc.pFunc.pFuncTransform(this, pSample, pOutSample);
@@ -721,8 +798,11 @@ HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	{
 		if (pinDesc.nMatchIdx >= m_pOutputPins.size())
 			return E_FAIL;
-		hr = pinDesc.pFunc.pFuncPostReceive(this, pOutSample, m_pOutputPins[pinDesc.nMatchIdx]);
+		HRESULT hr2 = S_OK;
+		hr2 = pinDesc.pFunc.pFuncPostReceive(this, pOutSample, m_pOutputPins[pinDesc.nMatchIdx], hr);
 	}
+
+	SAFE_RELEASE(pOutSample);
 	return hr; 
 }
 HRESULT GSMuxFilter::CheckInputType(const CMediaType* mtIn, const IPin* pPin) 

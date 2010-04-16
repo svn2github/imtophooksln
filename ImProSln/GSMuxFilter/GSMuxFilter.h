@@ -364,6 +364,9 @@ protected:
 	virtual HRESULT _CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, 
 		GSFILTER_OUTPUTPIN_DESC* outDesc, UINT szOut, GSFILTER_STREAMPIN_DESC* streamDesc, UINT szStream );
 	
+	static HRESULT __stdcall PreReceive_InitSample(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
+	static HRESULT __stdcall PostReceive_DeliverSample(void* self, IMediaSample *pOutSample, const IPin* pOutputPin, HRESULT preHr);
+	
 public:
 	// functions for implement TransformFilter methods
 };

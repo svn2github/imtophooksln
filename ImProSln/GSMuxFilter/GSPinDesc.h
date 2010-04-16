@@ -71,7 +71,7 @@ struct GSFILTER_INPUTPIN_FUNCS
 {
 	typedef HRESULT (__stdcall *PreReceiveFuncPtr)(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
 	typedef HRESULT (__stdcall *TransformFuncPtr)(void* self, IMediaSample *pInSample, IMediaSample *pOutSample);
-	typedef HRESULT (__stdcall *PostReceiveFuncPtr)(void* self, IMediaSample *pOutSample, const IPin* pOutputPin);
+	typedef HRESULT (__stdcall *PostReceiveFuncPtr)(void* self, IMediaSample *pOutSample, const IPin* pOutputPin, HRESULT preHr);
 	typedef HRESULT (__stdcall *CompleteConnectFuncPtr)(void* self, PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
 	typedef HRESULT (__stdcall *BreakConnectFuncPtr)(void* self, PIN_DIRECTION dir, const IPin* pPin);
 	
