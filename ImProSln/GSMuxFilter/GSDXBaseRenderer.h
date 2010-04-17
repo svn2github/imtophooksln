@@ -3,6 +3,7 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
+#include "GSDXFilterBase.h"
 #include "GSDXShareFilter.h"
 class GSDXBaseRenderer;
 class GSDXRendererInputPin;
@@ -45,7 +46,7 @@ public:
 	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter);
 };
 
-class GSDXBaseRenderer : public CBaseFilter, public GSDXShareFilter
+class GSDXBaseRenderer : public CBaseFilter, public GSDXShareFilter, public GSDXFilterBase
 {
 protected:
 
@@ -209,4 +210,9 @@ public:
 
 	// Helper
 	void WaitForReceiveToComplete();
+
+	//from GSDXShareFilter
+	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs);
+	virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
+		ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
 };

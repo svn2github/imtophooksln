@@ -280,25 +280,3 @@ HRESULT GSDXRenderer::SetWindowRect(RECT rect)
 
 	return S_OK;
 }
-
-HRESULT GSDXRenderer::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
-{
-	if (m_pD3DDisplay == NULL)
-		return S_FALSE;
-	if (m_pD3DDisplay->IsDeviceFromOther())
-	{
-		IGSDXSharePin* pDXInPin = NULL;
-		m_pInputPin->QueryInterface(IID_IGSDXSharePin, (void**)&pDXInPin);
-		if (pDXInPin == NULL)
-			return S_FALSE;
-		pDXInPin->QueryD3DDeviceCS(cs);
-		pDXInPin->Release();
-		pDXInPin = NULL;
-		return S_OK;
-	}
-	else
-	{
-		cs = m_pD3DDisplay->GetCritSec();
-		return S_OK;
-	}
-}

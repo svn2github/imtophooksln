@@ -8,8 +8,7 @@
 #include "GSDXBaseRenderer.h"
 
 class GSDXRenderer :
-    public IGSDXRenderer, public GSDXBaseRenderer,
-	public GSDXFilterBase
+    public IGSDXRenderer, public GSDXBaseRenderer
 {
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
@@ -26,10 +25,8 @@ public:
 	virtual HRESULT DoRenderSample(IMediaSample *pMediaSample);
 	virtual HRESULT CheckMediaType(const CMediaType *);
 	virtual void OnReceiveFirstSample(IMediaSample *pMediaSample);
-
 	virtual BOOL IsReadyCloseWindow();
-	//from GSDXShareFilter
-	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs);
+
 public:
 	GSDXRenderer(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~GSDXRenderer();

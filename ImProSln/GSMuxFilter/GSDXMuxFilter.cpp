@@ -593,3 +593,52 @@ HRESULT GSDXMuxFilter::GetEffectFilePath(WCHAR* szPath, UINT szSize)
 	swprintf_s(szPath, szSize, L"../fx/GSBasicEffect.fx");
 	return S_OK;
 }
+
+HRESULT GSDXMuxFilter::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
+{
+	if (m_pD3DDisplay == NULL)
+		return E_FAIL;
+	if (m_pD3DDisplay->IsDeviceFromOther())
+	{
+		for(int i = 0; i < m_pInputPins.size(); i++)
+		{
+			CMediaType mt = m_pInputPins[i]->CurrentMediaType();
+			if (IsEqualGUID(*mt.Type(), GSMEDIATYPE_GSDX11_SHAREDEVICE_MEDIATYPE))
+			{
+				IGSDXSharePin* pDXInPin = NULL;
+				m_pInputPins[i]->QueryInterface(IID_IGSDXSharePin, (void**)&pDXInPin);
+				if (pDXInPin == NULL)
+					continue;
+				pDXInPin->QueryD3DDeviceCS(cs);
+				SAFE_RELEASE(pDXInPin);
+				return S_OK;
+			}
+		}
+		return E_FAIL;
+	}
+	else
+	{
+		cs = m_pD3DDisplay->GetCritSec();
+		return S_OK;
+	}
+}
+HRESULT GSDXMuxFilter::QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
+										 ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain)
+{
+	if (m_pD3DDisplay == NULL)
+		return S_FALSE;
+	ID3D11Device* pDevice = NULL;
+	ID3D11DeviceContext* pDeviceContext = NULL;
+	IDXGISwapChain* pSwapChain = NULL;
+	pDevice = m_pD3DDisplay->GetD3DDevice();
+	pDeviceContext = m_pD3DDisplay->GetDeviceContext();
+	pSwapChain = m_pD3DDisplay->GetSwapChain();
+	if (pDevice == NULL || pDeviceContext == NULL || pSwapChain == NULL)
+		return E_FAIL;
+	outDevice = pDevice;
+	outDeviceContext = pDeviceContext;
+	outSwapChain = pSwapChain;
+	SAFE_ADDREF(outDevice);
+	SAFE_ADDREF(outDeviceContext);
+	SAFE_ADDREF(outSwapChain);
+}
