@@ -95,7 +95,15 @@ public:
 	virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
 		ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
 
-	//implement GSMuxFilter functions
-
+	//overwrite GSMuxFilter functions
+	virtual HRESULT GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType);
+	
+protected: //default Response Functions
+	static HRESULT __stdcall CompleteConnect_InitD3D(void* self, PIN_DIRECTION direction, const IPin* pMyPin, const IPin* pOtherPin);
+	static HRESULT __stdcall Transform_D3DRender(void* self, IMediaSample *pInSample, CMediaType* pInMT, 
+		IMediaSample *pOutSample, CMediaType* pOutMT);
+	static HRESULT __stdcall BreakConnect_ReleaseD3D(void* self, PIN_DIRECTION dir, const IPin* pPin);
+	// Response Functions needs
+	virtual HRESULT GetEffectFilePath(WCHAR* szPath, UINT szSize);
 };
 

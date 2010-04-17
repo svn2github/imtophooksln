@@ -709,10 +709,10 @@ HRESULT GSMuxFilter::PreReceive_InitSample(void* self, IMediaSample *pSample, co
 		return E_FAIL;
 	if (pinIdx >= pSelf->m_pInputPinDesc.size())
 		return E_FAIL;
+
 	GSFILTER_INPUTPIN_DESC pinDesc = pSelf->m_pInputPinDesc[pinIdx];
 	if (pinDesc.nMatchIdx >= pSelf->m_pOutputPins.size())
 		return E_FAIL;
-
 	
 	AM_SAMPLE2_PROPERTIES * const pProps = ((GSMuxInputPin*)pReceivePin)->SampleProps();
 	if (pProps->dwStreamId != AM_STREAM_MEDIA) {
@@ -775,6 +775,7 @@ HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	UINT pinIdx = 0;
 	GSPIN_TYPE pinType = GSINPUT_PIN;
 	hr = _GetPinIdx(pReceivePin, pinIdx, pinType);
+
 	if (FAILED(hr))
 		return E_FAIL;
 	if (pinType != GSINPUT_PIN)
@@ -792,7 +793,12 @@ HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 	}
 	if (pinDesc.pFunc.pFuncTransform != NULL)
 	{
-		hr = pinDesc.pFunc.pFuncTransform(this, pSample, pOutSample);
+		if (pinDesc.nMatchIdx >= m_pOutputPins.size())
+			return E_FAIL;
+		CMediaType inMT = m_pInputPins[pinIdx]->CurrentMediaType();
+		CMediaType outMT = m_pOutputPins[pinDesc.nMatchIdx]->CurrentMediaType();
+
+		hr = pinDesc.pFunc.pFuncTransform(this, pSample, &inMT, pOutSample, &outMT);
 	}
 	if (pinDesc.pFunc.pFuncPostReceive != NULL)
 	{

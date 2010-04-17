@@ -367,6 +367,5 @@ protected:
 	static HRESULT __stdcall PreReceive_InitSample(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
 	static HRESULT __stdcall PostReceive_DeliverSample(void* self, IMediaSample *pOutSample, const IPin* pOutputPin, HRESULT preHr);
 	
-public:
-	// functions for implement TransformFilter methods
+
 };

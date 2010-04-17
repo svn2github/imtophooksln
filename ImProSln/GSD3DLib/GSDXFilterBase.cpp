@@ -267,19 +267,30 @@ HRESULT GSDXFilterBase::DoTransform(IMediaSample *pInSample, IMediaSample *pOutS
 	HRESULT hr = S_OK;
 	if (m_pInTextureList.size() < 1 || m_pRenderTargetList.size() < 1 || m_pOutTextureList.size() < 1 || m_pD3DDisplay == NULL)
 		return E_FAIL;
-	hr = CopySample2GSTexture(m_pInTextureList[0], pInSample, pInType);
+	return DoTransformEx(pInSample, pOutSample, pInType, pOutType, m_pInTextureList[0], m_pRenderTargetList[0], m_pOutTextureList[0]);
+}
+HRESULT GSDXFilterBase::DoTransformEx(IMediaSample *pInSample, IMediaSample *pOutSample, const CMediaType* pInType, const CMediaType* pOutType,
+									GSTexture2D* pGSInTexture, GSTexture2D* pGSRTTexture, GSTexture2D* pGSOutTexture)
+{
+	HRESULT hr = S_OK;
+	if (pGSInTexture == NULL || pGSRTTexture == NULL || pGSOutTexture == NULL || m_pD3DDisplay == NULL 
+		|| pInSample == NULL || pOutSample == NULL || pInType == NULL || pOutType == NULL)
+	{
+		return E_FAIL;
+	}
+	hr = CopySample2GSTexture(pGSInTexture, pInSample, pInType);
 
 	if (FAILED(hr))
 		return E_FAIL;
 	{
 		CAutoLock lck0(m_pD3DDisplay->GetCritSec());
-		CAutoLock lck1(m_pInTextureList[0]->GetCritSec());
-		CAutoLock lck2(m_pRenderTargetList[0]->GetCritSec());
-		
+		CAutoLock lck1(pGSInTexture->GetCritSec());
+		CAutoLock lck2(pGSRTTexture->GetCritSec());
+
 		ID3D11RenderTargetView* pRTView = NULL;
 		ID3D11DeviceContext* pDeviceContext = NULL;
 		pDeviceContext = m_pD3DDisplay->GetDeviceContext();
-		hr = m_pRenderTargetList[0]->GetRenderTargetView(pRTView);
+		hr = pGSRTTexture->GetRenderTargetView(pRTView);
 
 		if (pRTView == NULL || pDeviceContext == NULL)
 			return E_FAIL;
@@ -289,13 +300,13 @@ HRESULT GSDXFilterBase::DoTransform(IMediaSample *pInSample, IMediaSample *pOutS
 		hr = m_pD3DDisplay->ResetRenderTarget(pDeviceContext);	
 	}
 
-	hr = CopyGSTexture2Sample(m_pRenderTargetList[0], pOutSample, pOutType );
+	hr = CopyGSTexture2Sample(pGSRTTexture, pOutSample, pOutType );
 	if (FAILED(hr))
 	{
-		hr = CopyGSTexture(m_pRenderTargetList[0], m_pOutTextureList[0]);
+		hr = CopyGSTexture(pGSRTTexture, pGSOutTexture);
 		if (FAILED(hr))
 			return E_FAIL;
-		hr = CopySample2GSTexture(m_pOutTextureList[0], pOutSample, pOutType);
+		hr = CopySample2GSTexture(pGSOutTexture, pOutSample, pOutType);
 		if (FAILED(hr))
 			return E_FAIL;
 	}

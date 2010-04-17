@@ -21,6 +21,8 @@ protected:
 	virtual HRESULT ReleaseAllTextures();
 	///May will be overwritten by inherited class 
 	virtual HRESULT DoTransform(IMediaSample *pInSample, IMediaSample *pOutSample, const CMediaType* pInType, const CMediaType* pOutType);
+	virtual HRESULT DoTransformEx(IMediaSample *pInSample, IMediaSample *pOutSample, const CMediaType* pInType, const CMediaType* pOutType,
+		GSTexture2D* pGSInTexture, GSTexture2D* pGSRTTexture, GSTexture2D* pGSOutTexture);
 	virtual HRESULT CreateTextures(UINT bufW, UINT bufH, UINT nIn = 1, UINT nRT = 1, UINT nOut =1);
 	virtual GS3DDisplay* Create3DDisplay(UINT bufW, UINT bufH);
 	virtual GS3DDisplay* Create3DDisplay(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, IDXGISwapChain* pSwapChain);
