@@ -675,4 +675,5 @@ HRESULT GSDXMuxFilter::QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDev
 	SAFE_ADDREF(outDevice);
 	SAFE_ADDREF(outDeviceContext);
 	SAFE_ADDREF(outSwapChain);
+	return S_OK;
 }
