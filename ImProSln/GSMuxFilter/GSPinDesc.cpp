@@ -203,7 +203,13 @@ GSOUTPIN_ACCEPT_MEDIATYPE_GROUP& GSOUTPIN_ACCEPT_MEDIATYPE_GROUP::operator = (co
 GSFILTER_PIN_DESC::GSFILTER_PIN_DESC()
 {
 	swprintf_s(pinName,MAX_PATH, L"");
-	
+	pinType = GSINPUT_PIN;
+}
+
+GSFILTER_PIN_DESC::GSFILTER_PIN_DESC(LPCWSTR _pinName, GSPIN_TYPE _pinType) 
+: pinType(_pinType)
+{
+	wcscpy_s(pinName, MAX_PATH, _pinName);
 }
 GSFILTER_PIN_DESC& GSFILTER_PIN_DESC::operator = (const GSFILTER_PIN_DESC &rhs)
 {
@@ -218,7 +224,7 @@ GSFILTER_INPUTPIN_DESC::GSFILTER_INPUTPIN_DESC() : GSFILTER_PIN_DESC(), nMatchId
 
 }
 GSFILTER_INPUTPIN_DESC::GSFILTER_INPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_INPUTPIN_FUNCS _pFunc) 
-: GSFILTER_PIN_DESC(_pinName, _pinType, _acceptTypes), nMatchIdx(_nMatchIdx), pFunc(_pFunc)
+: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
 {
 	
 }
@@ -238,8 +244,8 @@ GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC() : GSFILTER_PIN_DESC(), nMatch
 {
 
 }
-GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_OUTPUTPIN_FUNCS _pFunc) 
-: GSFILTER_PIN_DESC(_pinName, _pinType, _acceptTypes), nMatchIdx(_nMatchIdx), pFunc(_pFunc)
+GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_OUTPUTPIN_FUNCS _pFunc) 
+: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
 {
 
 }
@@ -259,8 +265,8 @@ GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC() : GSFILTER_PIN_DESC(), nMatch
 {
 	
 }
-GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_STREAMPIN_FUNCS _pFunc) 
-: GSFILTER_PIN_DESC(_pinName, _pinType, _acceptTypes), nMatchIdx(_nMatchIdx), pFunc(_pFunc)
+GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_STREAMPIN_FUNCS _pFunc) 
+: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
 {
 
 }

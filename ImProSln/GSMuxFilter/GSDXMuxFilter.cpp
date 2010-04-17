@@ -63,6 +63,18 @@ HRESULT GSDXMuxInputPin::BreakConnect()
 		SetConnectedPin(NULL);
 	return hr; 
 }
+HRESULT GSDXMuxInputPin::GetD3DFilter(IGSDXShareFilter*& pFilter)
+{
+	if (m_pTransformFilter == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	IGSDXShareFilter* pOutFilter = NULL;
+	hr = m_pTransformFilter->QueryInterface(IID_IGSDXShareFilter, (void**)&pOutFilter);
+	if (FAILED(hr))
+		return hr;
+	pFilter = pOutFilter;
+	return S_OK;
+}
 GSDXMuxOutputPin::GSDXMuxOutputPin(
 		__in_opt LPCTSTR pObjectName,
 		__inout GSMuxFilter *pTransformFilter,
@@ -126,7 +138,18 @@ HRESULT GSDXMuxOutputPin::BreakConnect()
 		SetConnectedPin(NULL);
 	return hr; 
 }
-
+HRESULT GSDXMuxOutputPin::GetD3DFilter(IGSDXShareFilter*& pFilter)
+{
+	if (m_pTransformFilter == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	IGSDXShareFilter* pOutFilter = NULL;
+	hr = m_pTransformFilter->QueryInterface(IID_IGSDXShareFilter, (void**)&pOutFilter);
+	if (FAILED(hr))
+		return hr;
+	pFilter = pOutFilter;
+	return S_OK;
+}
 GSDXMuxStream::GSDXMuxStream(__in_opt LPCTSTR pObjectName,
 		__inout GSMuxFilter *pms,
 		__inout HRESULT *phr,
@@ -187,7 +210,18 @@ HRESULT GSDXMuxStream::BreakConnect()
 		SetConnectedPin(NULL);
 	return hr; 
 }
-
+HRESULT GSDXMuxStream::GetD3DFilter(IGSDXShareFilter*& pFilter)
+{
+	if (m_pFilter == NULL)
+		return E_FAIL;
+	HRESULT hr = S_OK;
+	IGSDXShareFilter* pOutFilter = NULL;
+	hr = m_pFilter->QueryInterface(IID_IGSDXShareFilter, (void**)&pOutFilter);
+	if (FAILED(hr))
+		return hr;
+	pFilter = pOutFilter;
+	return S_OK;
+}
 
 GSDXMuxFilter::GSDXMuxFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk, REFCLSID  clsid) : GSMuxFilter(pName, pUnk, clsid)
 {
