@@ -8,7 +8,7 @@
 #include "GSDXShareFilter.h"
 class GSDXMuxInputPin : public GSMuxInputPin, public GSDXShareInputPin
 {
-	friend class GSMuxFilter;
+	friend class GSDXMuxFilter;
 public:
 
 	GSDXMuxInputPin(
@@ -26,6 +26,7 @@ public:
 	virtual ~GSDXMuxInputPin();
 	// overwrite GSMuxInputPin
 	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
+	DECLARE_IUNKNOWN;
 	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 	virtual HRESULT BreakConnect();
 	//from GSDXShareInputPin
@@ -50,6 +51,7 @@ public:
 	virtual ~GSDXMuxOutputPin();
 	// overwrite GSMuxOutputPin
 	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
+	DECLARE_IUNKNOWN;
 	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 	virtual HRESULT BreakConnect();
 	//from GSDXShareOutputPin
@@ -59,7 +61,7 @@ public:
 class GSDXMuxStream : public GSMuxStream, public GSDXShareOutputPin
 
 {
-	friend class GSMuxFilter;
+	friend class GSDXMuxFilter;
 public:
 
 	GSDXMuxStream(__in_opt LPCTSTR pObjectName,
@@ -75,6 +77,7 @@ public:
 	virtual ~GSDXMuxStream(void);  // virtual destructor ensures derived class destructors are called too.
 	// overwrite GSMuxStream
 	virtual STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, __deref_out void **ppv);
+	DECLARE_IUNKNOWN;
 	virtual HRESULT CompleteConnect(IPin *pReceivePin);
 	virtual HRESULT BreakConnect();
 	//from GSDXShareOutputPin
@@ -105,5 +108,7 @@ protected: //default Response Functions
 	static HRESULT __stdcall BreakConnect_ReleaseD3D(void* self, PIN_DIRECTION dir, const IPin* pPin);
 	// Response Functions needs
 	virtual HRESULT GetEffectFilePath(WCHAR* szPath, UINT szSize);
+	virtual HRESULT _CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, 
+		GSFILTER_OUTPUTPIN_DESC* outDesc, UINT szOut, GSFILTER_STREAMPIN_DESC* streamDesc, UINT szStream );
 };
 

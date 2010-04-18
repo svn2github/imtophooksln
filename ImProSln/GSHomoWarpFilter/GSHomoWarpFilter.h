@@ -17,8 +17,7 @@ public:
 	//for COM interface 
 	STDMETHODIMP NonDelegatingQueryInterface(REFIID iid, void **ppv);
 	DECLARE_IUNKNOWN;
-	//from GSDXMuxFilter Interface
-	virtual HRESULT CreatePins();
+
 	
 	//implement IGSHomoWarpFilter
 	virtual HRESULT SetWarpVertex(float LTx, float LTy, float LBx, float LBy, 
@@ -40,7 +39,8 @@ protected:
 	D3DXMATRIX m_matTTS;
 	D3DXMATRIX m_InvmatTTS;
 	D3DXMATRIX ComputeTTS(const D3DXVECTOR2& v1, const D3DXVECTOR2& v2, const D3DXVECTOR2& v3, const D3DXVECTOR2& v4);
-
+	//from GSDXMuxFilter Interface
+	virtual HRESULT CreatePins();
 public:
 	GSHomoWarpFilter(IUnknown * pOuter, HRESULT *phr, BOOL ModifiesData);
 	virtual ~GSHomoWarpFilter();

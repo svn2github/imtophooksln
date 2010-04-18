@@ -6,7 +6,7 @@ GSMuxFilter::GSMuxFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk, REF
 CBaseFilter(pName, pUnk, &m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE), 
 m_bSampleSkipped(FALSE)
 {
-	
+	m_bAlreadyInit = FALSE;
 }
 #ifdef UNICODE
 GSMuxFilter::GSMuxFilter(__in_opt LPCSTR pName,
@@ -15,7 +15,7 @@ GSMuxFilter::GSMuxFilter(__in_opt LPCSTR pName,
 CBaseFilter(pName,pUnk,&m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE),
 m_bSampleSkipped(FALSE)
 {
-
+	m_bAlreadyInit = FALSE;
 #ifdef PERF
 	RegisterPerfId();
 #endif //  PERF
@@ -42,14 +42,39 @@ GSMuxFilter::~GSMuxFilter()
 		m_pStreamPins[i] = NULL;
 	}
 	m_pStreamPins.clear();
+
+	for (int i =0; i < m_pInputPinDesc.size(); i++)
+	{
+		SAFE_DELETE(m_pInputPinDesc[i]);
+	}
+	m_pInputPinDesc.clear();
+	
+	for (int i =0; i < m_pOutputPinDesc.size(); i++)
+	{
+		SAFE_DELETE(m_pOutputPinDesc[i]);
+	}
+	m_pOutputPinDesc.clear();
+
+	for (int i =0; i < m_pStreamPinDesc.size(); i++)
+	{
+		SAFE_DELETE(m_pStreamPinDesc[i]);
+	}
+	m_pStreamPinDesc.clear();
+}
+
+HRESULT GSMuxFilter::InitFilter()
+{
+	HRESULT hr = S_OK;
+	hr = CreatePins();
+	m_bAlreadyInit = TRUE;
+	return hr;
 }
 
 int GSMuxFilter::GetPinCount()
 {
-	HRESULT hr = CreatePins();
-	if (FAILED(hr))
+	if (!m_bAlreadyInit)
 	{
-		return 0;
+		InitFilter();
 	}
 	int count = 0;
 	for (int i =0; i <  m_pInputPins.size(); i++)
@@ -81,7 +106,11 @@ STDMETHODIMP GSMuxFilter::Notify(IBaseFilter * pSender, Quality q, IPin* pPin)
 }
 CBasePin* GSMuxFilter::GetPin(int n)
 {
-	HRESULT hr = CreatePins();
+	HRESULT hr = S_OK;
+	if (!m_bAlreadyInit)
+	{
+		hr = InitFilter();
+	}
 	if (FAILED(hr))
 	{
 		return NULL;
@@ -126,7 +155,10 @@ HRESULT GSMuxFilter::FindPin(LPCWSTR Id, __deref_out IPin **ppPin)
 	CheckPointer(ppPin,E_POINTER);
 	ValidateReadWritePtr(ppPin,sizeof(IPin *));
 	HRESULT hr = NOERROR;
-	hr = CreatePins();
+	if (!m_bAlreadyInit)
+	{
+		hr = InitFilter();
+	}
 	for (int i =0; i < m_pInputPins.size(); i++)
 	{
 		if (wcscmp(m_pInputPins[i]->m_pName, Id) == 0)
@@ -393,30 +425,30 @@ HRESULT GSMuxFilter::BreakConnect(PIN_DIRECTION dir, const IPin* pPin)
 	{
 		if (pinIdx >= m_pInputPinDesc.size())
 			return E_FAIL;
-		GSFILTER_INPUTPIN_DESC pinDesc = m_pInputPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncBreakConnect != NULL)
+		GSFILTER_INPUTPIN_DESC* pinDesc = m_pInputPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncBreakConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncBreakConnect(this, dir, pPin);
+			hr = pinDesc->pFunc.pFuncBreakConnect(this, dir, pPin);
 		}
 	}
 	else if (pinType == GSOUTPUT_PIN)
 	{
 		if (pinIdx >= m_pOutputPinDesc.size())
 			return E_FAIL;
-		GSFILTER_OUTPUTPIN_DESC pinDesc = m_pOutputPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncBreakConnect != NULL)
+		GSFILTER_OUTPUTPIN_DESC* pinDesc = m_pOutputPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncBreakConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncBreakConnect(this, dir, pPin);
+			hr = pinDesc->pFunc.pFuncBreakConnect(this, dir, pPin);
 		}
 	}
 	else if (pinType == GSSTREAM_PIN)
 	{
 		if (pinIdx >= m_pStreamPinDesc.size())
 			return E_FAIL;
-		GSFILTER_STREAMPIN_DESC pinDesc = m_pStreamPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncBreakConnect != NULL)
+		GSFILTER_STREAMPIN_DESC* pinDesc = m_pStreamPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncBreakConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncBreakConnect(this, dir, pPin);
+			hr = pinDesc->pFunc.pFuncBreakConnect(this, dir, pPin);
 		}
 	}
 	else
@@ -445,30 +477,30 @@ HRESULT GSMuxFilter::CompleteConnect(PIN_DIRECTION dir, const IPin* pMyPin, cons
 	{
 		if (pinIdx >= m_pInputPinDesc.size())
 			return E_FAIL;
-		GSFILTER_INPUTPIN_DESC pinDesc = m_pInputPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncCompleteConnect != NULL)
+		GSFILTER_INPUTPIN_DESC* pinDesc = m_pInputPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncCompleteConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
+			hr = pinDesc->pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
 		}
 	}
 	else if (pinType == GSOUTPUT_PIN)
 	{
 		if (pinIdx >= m_pOutputPinDesc.size())
 			return E_FAIL;
-		GSFILTER_OUTPUTPIN_DESC pinDesc = m_pOutputPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncCompleteConnect != NULL)
+		GSFILTER_OUTPUTPIN_DESC* pinDesc = m_pOutputPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncCompleteConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
+			hr = pinDesc->pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
 		}
 	}
 	else if (pinType == GSSTREAM_PIN)
 	{
 		if (pinIdx >= m_pStreamPinDesc.size())
 			return E_FAIL;
-		GSFILTER_STREAMPIN_DESC pinDesc = m_pStreamPinDesc[pinIdx];
-		if (pinDesc.pFunc.pFuncCompleteConnect != NULL)
+		GSFILTER_STREAMPIN_DESC* pinDesc = m_pStreamPinDesc[pinIdx];
+		if (pinDesc->pFunc.pFuncCompleteConnect != NULL)
 		{
-			hr = pinDesc.pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
+			hr = pinDesc->pFunc.pFuncCompleteConnect(this, dir, pMyPin, pOtherPin);
 		}
 	}
 	else
@@ -645,19 +677,25 @@ HRESULT GSMuxFilter::_CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn,
 	{
 		GSMuxInputPin* pInputPin = new GSMuxInputPin(NAME("GSMuxInputPin"), this, &hr, inDesc[i].pinName);
 		m_pInputPins.push_back(pInputPin);
-		m_pInputPinDesc.push_back(inDesc[i]);
+		GSFILTER_INPUTPIN_DESC* pInputPinDesc = new GSFILTER_INPUTPIN_DESC();
+		*pInputPinDesc = inDesc[i];
+		m_pInputPinDesc.push_back(pInputPinDesc);
 	}
 	for (int i =0; i < szOut; i++)
 	{
 		GSMuxOutputPin* pOutputPin = new GSMuxOutputPin(NAME("GSMuxOutputPin"), this, &hr, outDesc[i].pinName);
 		m_pOutputPins.push_back(pOutputPin);
-		m_pOutputPinDesc.push_back(outDesc[i]);
+		GSFILTER_OUTPUTPIN_DESC* pOutputPinDesc = new GSFILTER_OUTPUTPIN_DESC();
+		*pOutputPinDesc = outDesc[i];
+		m_pOutputPinDesc.push_back(pOutputPinDesc);
 	}
 	for (int i =0; i < szStream; i++)
 	{
 		GSMuxStream* pStreamPin = new GSMuxStream(NAME("GSMuxStream"), this, &hr, streamDesc[i].pinName);
 		m_pStreamPins.push_back(pStreamPin);
-		m_pStreamPinDesc.push_back(streamDesc[i]);
+		GSFILTER_STREAMPIN_DESC* pStreamPinDesc = new GSFILTER_STREAMPIN_DESC();
+		*pStreamPinDesc = streamDesc[i];
+		m_pStreamPinDesc.push_back(pStreamPinDesc);
 	}
 	return S_OK;
 }
@@ -710,8 +748,8 @@ HRESULT GSMuxFilter::PreReceive_InitSample(void* self, IMediaSample *pSample, co
 	if (pinIdx >= pSelf->m_pInputPinDesc.size())
 		return E_FAIL;
 
-	GSFILTER_INPUTPIN_DESC pinDesc = pSelf->m_pInputPinDesc[pinIdx];
-	if (pinDesc.nMatchIdx >= pSelf->m_pOutputPins.size())
+	GSFILTER_INPUTPIN_DESC* pinDesc = pSelf->m_pInputPinDesc[pinIdx];
+	if (pinDesc->nMatchIdx >= pSelf->m_pOutputPins.size())
 		return E_FAIL;
 	
 	AM_SAMPLE2_PROPERTIES * const pProps = ((GSMuxInputPin*)pReceivePin)->SampleProps();
@@ -721,7 +759,7 @@ HRESULT GSMuxFilter::PreReceive_InitSample(void* self, IMediaSample *pSample, co
 	ASSERT(pSample);
 	IMediaSample* pInitOutSample = NULL;
 	// If no output to deliver to then no point sending us data
-	IPin* pConnectPin = pSelf->m_pOutputPins[pinDesc.nMatchIdx];
+	IPin* pConnectPin = pSelf->m_pOutputPins[pinDesc->nMatchIdx];
 	if (pConnectPin == NULL)
 		return E_FAIL;
 	hr = pSelf->InitializeOutputSample(pSample, pReceivePin, pConnectPin, &pInitOutSample);
@@ -782,30 +820,30 @@ HRESULT GSMuxFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 		return E_FAIL;
 	if (pinIdx >= m_pInputPinDesc.size())
 		return E_FAIL;
-	GSFILTER_INPUTPIN_DESC pinDesc = m_pInputPinDesc[pinIdx];
+	GSFILTER_INPUTPIN_DESC* pinDesc = m_pInputPinDesc[pinIdx];
 	IMediaSample* pOutSample = NULL;
-	if (pinDesc.pFunc.pFuncPreReceive != NULL)
+	if (pinDesc->pFunc.pFuncPreReceive != NULL)
 	{
-		hr = pinDesc.pFunc.pFuncPreReceive(this, pSample, pReceivePin, pOutSample);
+		hr = pinDesc->pFunc.pFuncPreReceive(this, pSample, pReceivePin, pOutSample);
 	}
 	if (FAILED(hr)) {
 		return hr;
 	}
-	if (pinDesc.pFunc.pFuncTransform != NULL)
+	if (pinDesc->pFunc.pFuncTransform != NULL)
 	{
-		if (pinDesc.nMatchIdx >= m_pOutputPins.size())
+		if (pinDesc->nMatchIdx >= m_pOutputPins.size())
 			return E_FAIL;
 		CMediaType inMT = m_pInputPins[pinIdx]->CurrentMediaType();
-		CMediaType outMT = m_pOutputPins[pinDesc.nMatchIdx]->CurrentMediaType();
+		CMediaType outMT = m_pOutputPins[pinDesc->nMatchIdx]->CurrentMediaType();
 
-		hr = pinDesc.pFunc.pFuncTransform(this, pSample, &inMT, pOutSample, &outMT);
+		hr = pinDesc->pFunc.pFuncTransform(this, pSample, &inMT, pOutSample, &outMT);
 	}
-	if (pinDesc.pFunc.pFuncPostReceive != NULL)
+	if (pinDesc->pFunc.pFuncPostReceive != NULL)
 	{
-		if (pinDesc.nMatchIdx >= m_pOutputPins.size())
+		if (pinDesc->nMatchIdx >= m_pOutputPins.size())
 			return E_FAIL;
 		HRESULT hr2 = S_OK;
-		hr2 = pinDesc.pFunc.pFuncPostReceive(this, pOutSample, m_pOutputPins[pinDesc.nMatchIdx], hr);
+		hr2 = pinDesc->pFunc.pFuncPostReceive(this, pOutSample, m_pOutputPins[pinDesc->nMatchIdx], hr);
 	}
 
 	SAFE_RELEASE(pOutSample);
@@ -823,22 +861,22 @@ HRESULT GSMuxFilter::CheckInputType(const CMediaType* mtIn, const IPin* pPin)
 		return E_FAIL;
 	if (pinIdx >= m_pInputPinDesc.size())
 		return E_FAIL;
-	for (int i =0; i < m_pInputPinDesc[pinIdx].acceptTypes.nAcceptType; i++)
+	for (int i =0; i < m_pInputPinDesc[pinIdx]->acceptTypes.nAcceptType; i++)
 	{
-		GSPIN_ACCEPT_MEDIATYPE allowMT = m_pInputPinDesc[pinIdx].acceptTypes.pAcceptTypes[i];
-		if (allowMT.pMainType != NULL && !IsEqualGUID(*allowMT.pMainType, *mtIn->Type()))
+		GSPIN_ACCEPT_MEDIATYPE* allowMT = &m_pInputPinDesc[pinIdx]->acceptTypes.pAcceptTypes[i];
+		if (allowMT->pMainType != NULL && !IsEqualGUID(*allowMT->pMainType, *mtIn->Type()))
 		{
 			continue;
 		}
-		if (allowMT.pSubType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtIn->Subtype()))
+		if (allowMT->pSubType != NULL && !IsEqualGUID(*allowMT->pSubType, *mtIn->Subtype()))
 		{
 			continue;
 		}
-		if (allowMT.pFormatType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtIn->FormatType()))
+		if (allowMT->pFormatType != NULL && !IsEqualGUID(*allowMT->pFormatType, *mtIn->FormatType()))
 		{
 			continue;
 		}
-		if (allowMT.bCompression != mtIn->bTemporalCompression)
+		if (allowMT->bCompression != mtIn->bTemporalCompression)
 		{
 			continue;
 		}
@@ -861,22 +899,22 @@ HRESULT GSMuxFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 	{
 		if (pinIdx >= m_pOutputPinDesc.size())
 			return E_FAIL;
-		for (int i =0; i < m_pOutputPinDesc[pinIdx].acceptTypes.nAcceptType; i++)
+		for (int i =0; i < m_pOutputPinDesc[pinIdx]->acceptTypes.nAcceptType; i++)
 		{
-			GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pOutputPinDesc[pinIdx].acceptTypes.pAcceptTypes[i];
-			if (allowMT.pMainType != NULL && !IsEqualGUID(*allowMT.pMainType, *mtOut->Type()))
+			GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pOutputPinDesc[pinIdx]->acceptTypes.pAcceptTypes[i];
+			if (allowMT->pMainType != NULL && !IsEqualGUID(*allowMT->pMainType, *mtOut->Type()))
 			{
 				continue;
 			}
-			if (allowMT.pSubType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtOut->Subtype()))
+			if (allowMT->pSubType != NULL && !IsEqualGUID(*allowMT->pSubType, *mtOut->Subtype()))
 			{
 				continue;
 			}
-			if (allowMT.pFormatType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtOut->FormatType()))
+			if (allowMT->pFormatType != NULL && !IsEqualGUID(*allowMT->pFormatType, *mtOut->FormatType()))
 			{
 				continue;
 			}
-			if (allowMT.bCompression != mtOut->bTemporalCompression)
+			if (allowMT->bCompression != mtOut->bTemporalCompression)
 			{
 				continue;
 			}
@@ -887,22 +925,22 @@ HRESULT GSMuxFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 	{
 		if (pinIdx >= m_pStreamPinDesc.size())
 			return E_FAIL;
-		for (int i =0; i < m_pStreamPinDesc[pinIdx].acceptTypes.nAcceptType; i++)
+		for (int i =0; i < m_pStreamPinDesc[pinIdx]->acceptTypes.nAcceptType; i++)
 		{
-			GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pStreamPinDesc[pinIdx].acceptTypes.pAcceptTypes[i];
-			if (allowMT.pMainType != NULL && !IsEqualGUID(*allowMT.pMainType, *mtOut->Type()))
+			GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pStreamPinDesc[pinIdx]->acceptTypes.pAcceptTypes[i];
+			if (allowMT->pMainType != NULL && !IsEqualGUID(*allowMT->pMainType, *mtOut->Type()))
 			{
 				continue;
 			}
-			if (allowMT.pSubType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtOut->Subtype()))
+			if (allowMT->pSubType != NULL && !IsEqualGUID(*allowMT->pSubType, *mtOut->Subtype()))
 			{
 				continue;
 			}
-			if (allowMT.pFormatType != NULL && !IsEqualGUID(*allowMT.pSubType, *mtOut->FormatType()))
+			if (allowMT->pFormatType != NULL && !IsEqualGUID(*allowMT->pFormatType, *mtOut->FormatType()))
 			{
 				continue;
 			}
-			if (allowMT.bCompression != mtOut->bTemporalCompression)
+			if (allowMT->bCompression != mtOut->bTemporalCompression)
 			{
 				continue;
 			}
@@ -928,33 +966,33 @@ HRESULT GSMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CM
 		if (pinIdx >= m_pOutputPinDesc.size())
 			return E_FAIL;
 		
-		UINT nAllowMTs = m_pOutputPinDesc[pinIdx].acceptTypes.nAcceptType;
+		UINT nAllowMTs = m_pOutputPinDesc[pinIdx]->acceptTypes.nAcceptType;
 		if (iPosition >= nAllowMTs)
 			return VFW_S_NO_MORE_ITEMS;
 		CMediaType mt;
-		GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pOutputPinDesc[pinIdx].acceptTypes.pAcceptTypes[iPosition];
+		GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pOutputPinDesc[pinIdx]->acceptTypes.pAcceptTypes[iPosition];
 
-		if (allowMT.pMainType != NULL)
+		if (allowMT->pMainType != NULL)
 		{
-			mt.SetType(allowMT.pMainType);
+			mt.SetType(allowMT->pMainType);
 		}
-		if (allowMT.pSubType != NULL)
+		if (allowMT->pSubType != NULL)
 		{
-			mt.SetSubtype(allowMT.pSubType);
+			mt.SetSubtype(allowMT->pSubType);
 		}
-		mt.SetTemporalCompression(allowMT.bCompression);
+		mt.SetTemporalCompression(allowMT->bCompression);
 		UINT bufW = 0, bufH = 0;
-		if (allowMT.refFlag == GSREF_ACCEPT_MEDIATYPE)
+		if (allowMT->refFlag == GSREF_ACCEPT_MEDIATYPE)
 		{
-			bufW = allowMT.bufW;
-			bufH = allowMT.bufH;
-			mt.SetSampleSize(allowMT.nSampleSize);
+			bufW = allowMT->bufW;
+			bufH = allowMT->bufH;
+			mt.SetSampleSize(allowMT->nSampleSize);
 		}
-		else if (allowMT.refFlag == GSREF_INPUT_PIN)
+		else if (allowMT->refFlag == GSREF_INPUT_PIN)
 		{
-			UINT nMatchIdx = m_pOutputPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pOutputPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pInputPins.size() )
-				return E_INVALIDARG;
+				return S_FALSE;
 
 			CMediaType inputMT = m_pInputPins[nMatchIdx]->CurrentMediaType();
 			if (IsEqualGUID(*inputMT.FormatType(), FORMAT_VideoInfo))
@@ -962,26 +1000,26 @@ HRESULT GSMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CM
 				VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)inputMT.Format();
 				bufW = pvi->bmiHeader.biWidth;
 				bufH = pvi->bmiHeader.biHeight;
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
 				mt.SetSampleSize(bufW*bufH*4);
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		else
 		{
-			return E_INVALIDARG;
+			return S_FALSE;
 		}
-		if (allowMT.pFormatType != NULL)
+		if (allowMT->pFormatType != NULL)
 		{
-			if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo))
+			if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo))
 			{
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetFormatType(allowMT.pFormatType);
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
+				mt.SetFormatType(allowMT->pFormatType);
 				VIDEOINFOHEADER pvi;
 				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
 				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
@@ -1001,33 +1039,33 @@ HRESULT GSMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CM
 		if (pinIdx >= m_pStreamPinDesc.size())
 			return E_FAIL;
 
-		UINT nAllowMTs = m_pStreamPinDesc[pinIdx].acceptTypes.nAcceptType;
+		UINT nAllowMTs = m_pStreamPinDesc[pinIdx]->acceptTypes.nAcceptType;
 		if (iPosition >= nAllowMTs)
 			return VFW_S_NO_MORE_ITEMS;
 		CMediaType mt;
-		GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pStreamPinDesc[pinIdx].acceptTypes.pAcceptTypes[iPosition];
+		GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pStreamPinDesc[pinIdx]->acceptTypes.pAcceptTypes[iPosition];
 
-		if (allowMT.pMainType != NULL)
+		if (allowMT->pMainType != NULL)
 		{
-			mt.SetType(allowMT.pMainType);
+			mt.SetType(allowMT->pMainType);
 		}
-		if (allowMT.pSubType != NULL)
+		if (allowMT->pSubType != NULL)
 		{
-			mt.SetSubtype(allowMT.pSubType);
+			mt.SetSubtype(allowMT->pSubType);
 		}
-		mt.SetTemporalCompression(allowMT.bCompression);
+		mt.SetTemporalCompression(allowMT->bCompression);
 		UINT bufW = 0, bufH = 0;
-		if (allowMT.refFlag == GSREF_ACCEPT_MEDIATYPE)
+		if (allowMT->refFlag == GSREF_ACCEPT_MEDIATYPE)
 		{
-			bufW = allowMT.bufW;
-			bufH = allowMT.bufH;
-			mt.SetSampleSize(allowMT.nSampleSize);
+			bufW = allowMT->bufW;
+			bufH = allowMT->bufH;
+			mt.SetSampleSize(allowMT->nSampleSize);
 		}
-		else if (allowMT.refFlag == GSREF_INPUT_PIN)
+		else if (allowMT->refFlag == GSREF_INPUT_PIN)
 		{
-			UINT nMatchIdx = m_pStreamPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pStreamPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pInputPins.size() )
-				return E_INVALIDARG;
+				return S_FALSE;
 
 			CMediaType inputMT = m_pInputPins[nMatchIdx]->CurrentMediaType();
 			if (IsEqualGUID(*inputMT.FormatType(), FORMAT_VideoInfo))
@@ -1035,26 +1073,26 @@ HRESULT GSMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CM
 				VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)inputMT.Format();
 				bufW = pvi->bmiHeader.biWidth;
 				bufH = pvi->bmiHeader.biHeight;
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
 				mt.SetSampleSize(bufW*bufH*4);
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		else
 		{
-			return E_INVALIDARG;
+			return S_FALSE;
 		}
-		if (allowMT.pFormatType != NULL)
+		if (allowMT->pFormatType != NULL)
 		{
-			if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo))
+			if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo))
 			{
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetFormatType(allowMT.pFormatType);
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
+				mt.SetFormatType(allowMT->pFormatType);
 				VIDEOINFOHEADER pvi;
 				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
 				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
@@ -1069,7 +1107,7 @@ HRESULT GSMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CM
 		*pMediaType = mt;
 		return S_OK;
 	}
-	return E_INVALIDARG;
+	return VFW_S_NO_MORE_ITEMS;;
 };
 HRESULT GSMuxFilter::FillBuffer(IMediaSample *pSample, IPin* pPin) 
 { 
@@ -1088,10 +1126,10 @@ HRESULT GSMuxFilter::FillBuffer(IMediaSample *pSample, IPin* pPin)
 		return E_FAIL;
 	if (pinIdx >= m_pStreamPinDesc.size())
 		return E_FAIL;
-	GSFILTER_STREAMPIN_DESC pinDesc = m_pStreamPinDesc[pinIdx];
-	if (pinDesc.pFunc.pFuncFillBuffer != NULL)
+	GSFILTER_STREAMPIN_DESC* pinDesc = m_pStreamPinDesc[pinIdx];
+	if (pinDesc->pFunc.pFuncFillBuffer != NULL)
 	{
-		hr = pinDesc.pFunc.pFuncFillBuffer(this, pSample, pPin);
+		hr = pinDesc->pFunc.pFuncFillBuffer(this, pSample, pPin);
 	}
 	return hr; 
 };

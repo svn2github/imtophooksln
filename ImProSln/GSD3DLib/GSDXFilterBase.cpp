@@ -179,6 +179,7 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 			SAFE_RELEASE(pGSTexture);
 			pGSTexture = pInSampleTex;
 			SAFE_ADDREF(pGSTexture);
+			return S_OK;
 		}
 	}
 	else if ( IsEqualGUID(*pMediaType->Type(), GSMEDIATYPE_GSDX11_MEDIATYPE))
@@ -250,7 +251,7 @@ HRESULT GSDXFilterBase::CopyGSTexture(GSTexture2D* pSrc, GSTexture2D* pDest)
 	CAutoLock lck2(pDest->GetCritSec());
 
 	ID3D11Texture2D* pSrcTex = pSrc->GetTexture();
-	ID3D11Texture2D* pDestTex = pSrc->GetTexture();
+	ID3D11Texture2D* pDestTex = pDest->GetTexture();
 	
 	if (pSrcTex == NULL || pDestTex == NULL)
 		return E_FAIL;
@@ -299,14 +300,16 @@ HRESULT GSDXFilterBase::DoTransformEx(IMediaSample *pInSample, IMediaSample *pOu
 		hr = m_pD3DDisplay->Render();
 		hr = m_pD3DDisplay->ResetRenderTarget(pDeviceContext);	
 	}
-
-	hr = CopyGSTexture2Sample(pGSRTTexture, pOutSample, pOutType );
-	if (FAILED(hr))
+	if (IsEqualGUID(*pOutType->Subtype(), GSMEDIASUBTYPE_GSTEX2D_POINTER))
+	{
+		hr = CopyGSTexture2Sample(pGSRTTexture, pOutSample, pOutType );
+	}
+	else
 	{
 		hr = CopyGSTexture(pGSRTTexture, pGSOutTexture);
 		if (FAILED(hr))
 			return E_FAIL;
-		hr = CopySample2GSTexture(pGSOutTexture, pOutSample, pOutType);
+		hr = CopyGSTexture2Sample(pGSOutTexture, pOutSample, pOutType);
 		if (FAILED(hr))
 			return E_FAIL;
 	}

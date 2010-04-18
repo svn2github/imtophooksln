@@ -69,13 +69,13 @@ GSOUTPIN_ACCEPT_MEDIATYPE::GSOUTPIN_ACCEPT_MEDIATYPE() : GSPIN_ACCEPT_MEDIATYPE(
 	
 }
 GSOUTPIN_ACCEPT_MEDIATYPE::GSOUTPIN_ACCEPT_MEDIATYPE(GUID mainType, GUID subType, BOOL bCompress,GSPIN_MEDIASAMPLE_REF _refFlag, ULONG _nSampleSize, UINT _bufW, UINT _bufH)
-: GSPIN_ACCEPT_MEDIATYPE(mainType, subType, bCompress), refFlag(refFlag), nSampleSize(_nSampleSize), bufW(_bufW), bufH(_bufH)
+: GSPIN_ACCEPT_MEDIATYPE(mainType, subType, bCompress), refFlag(_refFlag), nSampleSize(_nSampleSize), bufW(_bufW), bufH(_bufH)
 {
 
 }
 
-GSOUTPIN_ACCEPT_MEDIATYPE::GSOUTPIN_ACCEPT_MEDIATYPE(GUID mainType, GUID subType, GUID formatType, BOOL bCompress, GSPIN_MEDIASAMPLE_REF _regFlag, ULONG _nSampleSize, UINT _bufW, UINT _bufH)
-: GSPIN_ACCEPT_MEDIATYPE(mainType, subType, formatType, bCompress), refFlag(refFlag), nSampleSize(_nSampleSize), bufW(_bufW), bufH(_bufH)
+GSOUTPIN_ACCEPT_MEDIATYPE::GSOUTPIN_ACCEPT_MEDIATYPE(GUID mainType, GUID subType, GUID formatType, BOOL bCompress, GSPIN_MEDIASAMPLE_REF _refFlag, ULONG _nSampleSize, UINT _bufW, UINT _bufH)
+: GSPIN_ACCEPT_MEDIATYPE(mainType, subType, formatType, bCompress), refFlag(_refFlag), nSampleSize(_nSampleSize), bufW(_bufW), bufH(_bufH)
 {
 
 }
@@ -138,7 +138,11 @@ GSPIN_ACCEPT_MEDIATYPE_GROUP::GSPIN_ACCEPT_MEDIATYPE_GROUP(GSPIN_ACCEPT_MEDIATYP
 
 GSPIN_ACCEPT_MEDIATYPE_GROUP::~GSPIN_ACCEPT_MEDIATYPE_GROUP()
 {
-	SAFE_DELETE_ARRAY(pAcceptTypes);
+	if (pAcceptTypes != NULL)
+	{
+		delete[] pAcceptTypes;
+		pAcceptTypes = NULL;
+	}
 }
 
 GSPIN_ACCEPT_MEDIATYPE_GROUP& GSPIN_ACCEPT_MEDIATYPE_GROUP::operator = (const GSPIN_ACCEPT_MEDIATYPE_GROUP &rhs)
@@ -223,10 +227,11 @@ GSFILTER_INPUTPIN_DESC::GSFILTER_INPUTPIN_DESC() : GSFILTER_PIN_DESC(), nMatchId
 {
 
 }
-GSFILTER_INPUTPIN_DESC::GSFILTER_INPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_INPUTPIN_FUNCS _pFunc) 
-: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
+GSFILTER_INPUTPIN_DESC::GSFILTER_INPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, const GSPIN_ACCEPT_MEDIATYPE_GROUP& _acceptTypes, const GSFILTER_INPUTPIN_FUNCS& _pFunc) 
+: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx)
 {
-	
+	pFunc = _pFunc;
+	acceptTypes = _acceptTypes;
 }
 
 GSFILTER_INPUTPIN_DESC& GSFILTER_INPUTPIN_DESC::operator = (const GSFILTER_INPUTPIN_DESC &rhs)
@@ -244,10 +249,11 @@ GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC() : GSFILTER_PIN_DESC(), nMatch
 {
 
 }
-GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_OUTPUTPIN_FUNCS _pFunc) 
-: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
+GSFILTER_OUTPUTPIN_DESC::GSFILTER_OUTPUTPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, const GSOUTPIN_ACCEPT_MEDIATYPE_GROUP& _acceptTypes, const GSFILTER_OUTPUTPIN_FUNCS& _pFunc) 
+: GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx)
 {
-
+	pFunc = _pFunc;
+	acceptTypes = _acceptTypes;
 }
 
 GSFILTER_OUTPUTPIN_DESC& GSFILTER_OUTPUTPIN_DESC::operator = (const GSFILTER_OUTPUTPIN_DESC &rhs)
@@ -265,7 +271,7 @@ GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC() : GSFILTER_PIN_DESC(), nMatch
 {
 	
 }
-GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP _acceptTypes, GSFILTER_STREAMPIN_FUNCS _pFunc) 
+GSFILTER_STREAMPIN_DESC::GSFILTER_STREAMPIN_DESC(LPCWSTR _pinName, UINT _nMatchIdx, GSPIN_TYPE _pinType, const GSOUTPIN_ACCEPT_MEDIATYPE_GROUP& _acceptTypes, const GSFILTER_STREAMPIN_FUNCS& _pFunc) 
 : GSFILTER_PIN_DESC(_pinName, _pinType), nMatchIdx(_nMatchIdx), pFunc(_pFunc), acceptTypes(_acceptTypes)
 {
 

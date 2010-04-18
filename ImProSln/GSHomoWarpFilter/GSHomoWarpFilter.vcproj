@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)GSMuxFilter&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)OpenCV2.1\include\opencv&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)GSMuxFilter&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib  d3d9.lib d3dx9.lib  d3dx11.lib dxerr.lib dxguid.lib D3DX11EffectsD.lib d3dcompiler.lib "
+				AdditionalDependencies="strmbasd.lib  winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib  d3d9.lib d3dx9.lib  d3dx11.lib dxerr.lib dxguid.lib D3DX11EffectsD.lib d3dcompiler.lib GSGlobalFunc.lib   cv210.lib cxcore210.lib highgui210.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)$(ConfigurationName)&quot;;../DSLib/lib;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/bin&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)$(ConfigurationName)&quot;;../DSLib/lib;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/bin&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;"
 				ModuleDefinitionFile=".\GSHomoWarpFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

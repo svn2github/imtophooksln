@@ -3,7 +3,8 @@
 #include "GSDXRendererApp.h"
 #include "GSDXShareFilter.h"
 #include "GSD3DMediaType.h"
-#include "DXUT.h"
+#include "GSMacro.h"
+#include "GSGlobalFunc.h"
 GSDXRenderer::GSDXRenderer(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : GSDXBaseRenderer(CLSID_GSDXRenderer, NAME("GSDXRenderer"), pOuter, phr)
 {
@@ -98,7 +99,7 @@ HRESULT GSDXRenderer::CompleteConnect(IPin *pReceivePin)
 				ID3D11DeviceContext* pDeviceContext = NULL;
 				IDXGISwapChain* pSwapChain = NULL;
 				m_pInputPin->QueryD3DDevice(pDevice, pDeviceContext, pSwapChain);
-				if (pDevice == NULL || pDeviceContext || pSwapChain == NULL)
+				if (pDevice == NULL || pDeviceContext == NULL || pSwapChain == NULL)
 					return S_FALSE;
 				
 				initD3D(effectPath, MAX_PATH, desc->Width, desc->Height, 1, 1, 1, pDevice, pDeviceContext, pSwapChain);
@@ -149,8 +150,10 @@ HRESULT GSDXRenderer::DoRenderSample(IMediaSample *pMediaSample)
 {
 	if (m_pInTextureList.size() <= 0 || m_pD3DDisplay == NULL)
 		return E_FAIL;
+	HRESULT hr = S_OK;
 	CMediaType mt = m_pInputPin->CurrentMediaType();
-	CopySample2GSTexture(m_pInTextureList[0], pMediaSample, &mt);
+	hr = CopySample2GSTexture(m_pInTextureList[0], pMediaSample, &mt);
+	
 	{
 		CCritSec* pD3DCS = NULL;
 		QueryD3DDeviceCS(NULL, pD3DCS);

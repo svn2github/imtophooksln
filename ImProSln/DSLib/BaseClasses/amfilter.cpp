@@ -1375,10 +1375,13 @@ CEnumMediaTypes::Next(ULONG cMediaTypes,          // place this many types...
         CMediaType cmt;
 
         HRESULT hr = m_pPin->GetMediaType(m_Position++, &cmt);
-        if (S_OK != hr) {
+        if (FAILED(hr)){
             break;
         }
-
+		else if (hr == S_FALSE)
+		{
+			continue;
+		}
         /* We now have a CMediaType object that contains the next media type
            but when we assign it to the array position we CANNOT just assign
            the AM_MEDIA_TYPE structure because as soon as the object goes out of

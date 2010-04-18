@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)GSD3DLib\Effects11\Inc&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)GSD3DLib\Effects11\Inc&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

@@ -15,6 +15,9 @@ GS3DDisplay::GS3DDisplay(UINT bufW, UINT bufH)
 GS3DDisplay::GS3DDisplay(ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext, IDXGISwapChain* pSwapChain) : GSDXBase(pDevice, pDeviceContext, pSwapChain)
 {
 	m_bDeviceFromOthers = TRUE;
+	m_pDisplayPlane = NULL;
+	m_pCamera = NULL;
+	m_pEffect = NULL;
 	InitDevice(pDevice, pDeviceContext, pSwapChain);
 }
 GS3DDisplay::~GS3DDisplay()

@@ -454,6 +454,8 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 	ID3D11RenderTargetView* pRTView = NULL;
 	ID3D11DepthStencilView* pDSView = NULL;
 	pDeviceContext->OMGetRenderTargets(1, &pRTView, &pDSView);
+	if (pRTView == NULL || pDSView == NULL)
+		return E_FAIL;
 	pDeviceContext->ClearRenderTargetView( pRTView, ClearColor );
 	pDeviceContext->ClearDepthStencilView( pDSView, D3D11_CLEAR_DEPTH, 1.0, 0 );
 	SAFE_RELEASE(pRTView);
@@ -509,13 +511,15 @@ HRESULT GSRenderBase::SetRenderTarget(ID3D11DeviceContext* pDeviceContext, ID3D1
 		return E_FAIL;
 	HRESULT hr = S_OK;
 	ID3D11RenderTargetView* pBackup = NULL;
-	pDeviceContext->OMGetRenderTargets(1, &pBackup, NULL);
+	ID3D11DepthStencilView* pDepthView = NULL;
+	pDeviceContext->OMGetRenderTargets(1, &pBackup, &pDepthView);
 	
 	m_pBackupRenderTarget.push_back(pBackup);
 	SAFE_ADDREF(pBackup);
-	pDeviceContext->OMSetRenderTargets(1, &pRenderTarget, NULL);
+	pDeviceContext->OMSetRenderTargets(1, &pRenderTarget, pDepthView);
 	
 	SAFE_RELEASE(pBackup);
+	SAFE_RELEASE(pDepthView);
 	return S_OK;
 }
 HRESULT GSRenderBase::ResetRenderTarget(ID3D11DeviceContext* pDeviceContext)
@@ -524,12 +528,16 @@ HRESULT GSRenderBase::ResetRenderTarget(ID3D11DeviceContext* pDeviceContext)
 		return E_FAIL;
 	if (m_pBackupRenderTarget.size() <= 0)
 		return E_FAIL;
-
+	ID3D11RenderTargetView* pCurrRT = NULL;
+	ID3D11DepthStencilView* pCurrDepth = NULL;
+	pDeviceContext->OMGetRenderTargets(1, &pCurrRT, &pCurrDepth);
 	ID3D11RenderTargetView* pBackupRenderTarget = m_pBackupRenderTarget[ m_pBackupRenderTarget.size()-1];
 	m_pBackupRenderTarget.pop_back();
 	
-	pDeviceContext->OMSetRenderTargets(1, &pBackupRenderTarget, NULL);
+	pDeviceContext->OMSetRenderTargets(1, &pBackupRenderTarget, pCurrDepth);
 	SAFE_RELEASE(pBackupRenderTarget);
+	SAFE_RELEASE(pCurrRT);
+	SAFE_RELEASE(pCurrDepth);
 	return S_OK;
 }
 

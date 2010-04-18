@@ -2,6 +2,8 @@
 #include "GSDXMuxFilter.h"
 #include "GSD3DMediaType.h"
 #include "GSMacro.h"
+#include "GSGlobalFunc.h"
+using namespace GS_GLOBAL_FUNC;
 
 GSDXMuxInputPin::GSDXMuxInputPin(
 		__in_opt LPCTSTR pObjectName,
@@ -253,7 +255,37 @@ HRESULT GSDXMuxFilter::NonDelegatingQueryInterface(REFIID riid, __deref_out void
 		return __super::NonDelegatingQueryInterface(riid, ppv);
 	}
 }
-
+HRESULT GSDXMuxFilter::_CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, 
+							GSFILTER_OUTPUTPIN_DESC* outDesc, UINT szOut, GSFILTER_STREAMPIN_DESC* streamDesc, UINT szStream )
+{
+	_ClearPins();
+	HRESULT hr = S_OK;
+	for (int i =0; i < szIn; i++)
+	{
+		GSMuxInputPin* pInputPin = new GSDXMuxInputPin(NAME("GSMuxInputPin"), this, &hr, inDesc[i].pinName);
+		m_pInputPins.push_back(pInputPin);
+		GSFILTER_INPUTPIN_DESC* pInputPinDesc = new GSFILTER_INPUTPIN_DESC();
+		*pInputPinDesc = inDesc[i];
+		m_pInputPinDesc.push_back(pInputPinDesc);
+	}
+	for (int i =0; i < szOut; i++)
+	{
+		GSMuxOutputPin* pOutputPin = new GSDXMuxOutputPin(NAME("GSMuxOutputPin"), this, &hr, outDesc[i].pinName);
+		m_pOutputPins.push_back(pOutputPin);
+		GSFILTER_OUTPUTPIN_DESC* pOutputPinDesc = new GSFILTER_OUTPUTPIN_DESC();
+		*pOutputPinDesc = outDesc[i];
+		m_pOutputPinDesc.push_back(pOutputPinDesc);
+	}
+	for (int i =0; i < szStream; i++)
+	{
+		GSMuxStream* pStreamPin = new GSDXMuxStream(NAME("GSMuxStream"), this, &hr, streamDesc[i].pinName);
+		m_pStreamPins.push_back(pStreamPin);
+		GSFILTER_STREAMPIN_DESC* pStreamPinDesc = new GSFILTER_STREAMPIN_DESC();
+		*pStreamPinDesc = streamDesc[i];
+		m_pStreamPinDesc.push_back(pStreamPinDesc);
+	}
+	return S_OK;
+}
 
 HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout CMediaType *pMediaType)
 {
@@ -272,33 +304,33 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 		if (pinIdx >= m_pOutputPinDesc.size())
 			return E_FAIL;
 
-		UINT nAllowMTs = m_pOutputPinDesc[pinIdx].acceptTypes.nAcceptType;
+		UINT nAllowMTs = m_pOutputPinDesc[pinIdx]->acceptTypes.nAcceptType;
 		if (iPosition >= nAllowMTs)
 			return VFW_S_NO_MORE_ITEMS;
 		CMediaType mt;
-		GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pOutputPinDesc[pinIdx].acceptTypes.pAcceptTypes[iPosition];
+		GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pOutputPinDesc[pinIdx]->acceptTypes.pAcceptTypes[iPosition];
 
-		if (allowMT.pMainType != NULL)
+		if (allowMT->pMainType != NULL)
 		{
-			mt.SetType(allowMT.pMainType);
+			mt.SetType(allowMT->pMainType);
 		}
-		if (allowMT.pSubType != NULL)
+		if (allowMT->pSubType != NULL)
 		{
-			mt.SetSubtype(allowMT.pSubType);
+			mt.SetSubtype(allowMT->pSubType);
 		}
-		mt.SetTemporalCompression(allowMT.bCompression);
+		mt.SetTemporalCompression(allowMT->bCompression);
 		UINT bufW = 0, bufH = 0;
-		if (allowMT.refFlag == GSREF_ACCEPT_MEDIATYPE)
+		if (allowMT->refFlag == GSREF_ACCEPT_MEDIATYPE)
 		{
-			bufW = allowMT.bufW;
-			bufH = allowMT.bufH;
-			mt.SetSampleSize(allowMT.nSampleSize);
+			bufW = allowMT->bufW;
+			bufH = allowMT->bufH;
+			mt.SetSampleSize(allowMT->nSampleSize);
 		}
-		else if (allowMT.refFlag == GSREF_INPUT_PIN)
+		else if (allowMT->refFlag == GSREF_INPUT_PIN)
 		{
-			UINT nMatchIdx = m_pOutputPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pOutputPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pInputPins.size() )
-				return E_INVALIDARG;
+				return S_FALSE;
 
 			CMediaType inputMT = m_pInputPins[nMatchIdx]->CurrentMediaType();
 			if (IsEqualGUID(*inputMT.FormatType(), FORMAT_VideoInfo))
@@ -306,52 +338,62 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 				VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)inputMT.Format();
 				bufW = pvi->bmiHeader.biWidth;
 				bufH = pvi->bmiHeader.biHeight;
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetSampleSize(bufW*bufH*4);
+				if (IsEqualGUID(*allowMT->pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
+				{
+					mt.SetSampleSize(sizeof(GSTexture2D*));
+				}
+				else if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo) && 
+					(IsEqualGUID(*allowMT->pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32)))
+				{
+					mt.SetSampleSize(bufW*bufH*4);
+				}
+				else
+				{
+					return S_FALSE;
+				}
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
-		else if (allowMT.refFlag == GSREF_RENDERTARGET)
+		else if (allowMT->refFlag == GSREF_RENDERTARGET)
 		{
-			UINT nMatchIdx = m_pOutputPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pOutputPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pRenderTargetList.size() || m_pRenderTargetList[nMatchIdx] == NULL)
-				return E_INVALIDARG;
+				return S_FALSE;
 			ID3D11Texture2D* pTex = m_pRenderTargetList[nMatchIdx]->GetTexture();
 			if (pTex == NULL)
-				return E_INVALIDARG;
+				return S_FALSE;
 			D3D11_TEXTURE2D_DESC texDesc;
 			pTex->GetDesc(&texDesc);
 			bufW = texDesc.Width;
 			bufH = texDesc.Height;
-			if (IsEqualGUID(*allowMT.pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
+			if (IsEqualGUID(*allowMT->pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
 			{
 				mt.SetSampleSize(sizeof(GSTexture2D*));
 			}
-			else if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo) && 
-				(IsEqualGUID(*allowMT.pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32)))
+			else if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo) && 
+				(IsEqualGUID(*allowMT->pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32)))
 			{
 				mt.SetSampleSize(bufW*bufH*4);
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		else
 		{
-			return E_INVALIDARG;
+			return S_FALSE;
 		}
-		if (allowMT.pFormatType != NULL)
+		if (allowMT->pFormatType != NULL)
 		{
-			if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo))
+			if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo))
 			{
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetFormatType(allowMT.pFormatType);
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
+				mt.SetFormatType(allowMT->pFormatType);
 				VIDEOINFOHEADER pvi;
 				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
 				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
@@ -362,25 +404,25 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 				SetRectEmpty(&(pvi.rcTarget));
 				mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
 			}
-			else if (IsEqualGUID(*allowMT.pFormatType, GSFORMAT_DX11TEX2D_DESC))
+			else if (IsEqualGUID(*allowMT->pFormatType, GSFORMAT_DX11TEX2D_DESC))
 			{
-				if (allowMT.refFlag != GSREF_RENDERTARGET)
-					return E_INVALIDARG;
-				UINT nMatchIdx = m_pOutputPinDesc[pinIdx].nMatchIdx;
+				if (allowMT->refFlag != GSREF_RENDERTARGET)
+					return S_FALSE;
+				UINT nMatchIdx = m_pOutputPinDesc[pinIdx]->nMatchIdx;
 				if (nMatchIdx >= m_pRenderTargetList.size() || m_pRenderTargetList[nMatchIdx] == NULL)
-					return E_INVALIDARG;
+					return S_FALSE;
 				mt.SetFormatType(&GSFORMAT_DX11TEX2D_DESC);
 
 				ID3D11Texture2D* pTex = m_pRenderTargetList[nMatchIdx]->GetTexture();
 				if (pTex == NULL)
-					return E_INVALIDARG;
+					return S_FALSE;
 				D3D11_TEXTURE2D_DESC texDesc;
 				pTex->GetDesc(&texDesc);
 				mt.SetFormat((BYTE*)&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		*pMediaType = mt;
@@ -391,33 +433,33 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 		if (pinIdx >= m_pStreamPinDesc.size())
 			return E_FAIL;
 
-		UINT nAllowMTs = m_pStreamPinDesc[pinIdx].acceptTypes.nAcceptType;
+		UINT nAllowMTs = m_pStreamPinDesc[pinIdx]->acceptTypes.nAcceptType;
 		if (iPosition >= nAllowMTs)
 			return VFW_S_NO_MORE_ITEMS;
 		CMediaType mt;
-		GSOUTPIN_ACCEPT_MEDIATYPE allowMT = m_pStreamPinDesc[pinIdx].acceptTypes.pAcceptTypes[iPosition];
+		GSOUTPIN_ACCEPT_MEDIATYPE* allowMT = &m_pStreamPinDesc[pinIdx]->acceptTypes.pAcceptTypes[iPosition];
 
-		if (allowMT.pMainType != NULL)
+		if (allowMT->pMainType != NULL)
 		{
-			mt.SetType(allowMT.pMainType);
+			mt.SetType(allowMT->pMainType);
 		}
-		if (allowMT.pSubType != NULL)
+		if (allowMT->pSubType != NULL)
 		{
-			mt.SetSubtype(allowMT.pSubType);
+			mt.SetSubtype(allowMT->pSubType);
 		}
-		mt.SetTemporalCompression(allowMT.bCompression);
+		mt.SetTemporalCompression(allowMT->bCompression);
 		UINT bufW = 0, bufH = 0;
-		if (allowMT.refFlag == GSREF_ACCEPT_MEDIATYPE)
+		if (allowMT->refFlag == GSREF_ACCEPT_MEDIATYPE)
 		{
-			bufW = allowMT.bufW;
-			bufH = allowMT.bufH;
-			mt.SetSampleSize(allowMT.nSampleSize);
+			bufW = allowMT->bufW;
+			bufH = allowMT->bufH;
+			mt.SetSampleSize(allowMT->nSampleSize);
 		}
-		else if (allowMT.refFlag == GSREF_INPUT_PIN)
+		else if (allowMT->refFlag == GSREF_INPUT_PIN)
 		{
-			UINT nMatchIdx = m_pStreamPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pStreamPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pInputPins.size() )
-				return E_INVALIDARG;
+				return S_FALSE;
 
 			CMediaType inputMT = m_pInputPins[nMatchIdx]->CurrentMediaType();
 			if (IsEqualGUID(*inputMT.FormatType(), FORMAT_VideoInfo))
@@ -425,52 +467,62 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 				VIDEOINFOHEADER* pvi = (VIDEOINFOHEADER*)inputMT.Format();
 				bufW = pvi->bmiHeader.biWidth;
 				bufH = pvi->bmiHeader.biHeight;
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetSampleSize(bufW*bufH*4);
+				if (IsEqualGUID(*allowMT->pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
+				{
+					mt.SetSampleSize(sizeof(GSTexture2D*));
+				}
+				else if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo) && 
+					(IsEqualGUID(*allowMT->pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32)))
+				{
+					mt.SetSampleSize(bufW*bufH*4);
+				}
+				else
+				{
+					return S_FALSE;
+				}
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
-		else if (allowMT.refFlag == GSREF_RENDERTARGET)
+		else if (allowMT->refFlag == GSREF_RENDERTARGET)
 		{
-			UINT nMatchIdx = m_pStreamPinDesc[pinIdx].nMatchIdx;
+			UINT nMatchIdx = m_pStreamPinDesc[pinIdx]->nMatchIdx;
 			if (nMatchIdx >= m_pRenderTargetList.size() || m_pRenderTargetList[nMatchIdx] == NULL)
-				return E_INVALIDARG;
+				return S_FALSE;
 			ID3D11Texture2D* pTex = m_pRenderTargetList[nMatchIdx]->GetTexture();
 			if (pTex == NULL)
-				return E_INVALIDARG;
+				return S_FALSE;
 			D3D11_TEXTURE2D_DESC texDesc;
 			pTex->GetDesc(&texDesc);
 			bufW = texDesc.Width;
 			bufH = texDesc.Height;
-			if (IsEqualGUID(*allowMT.pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
+			if (IsEqualGUID(*allowMT->pSubType, GSMEDIASUBTYPE_GSTEX2D_POINTER))
 			{
 				mt.SetSampleSize(sizeof(GSTexture2D*));
 			}
-			else if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo) && 
-				(IsEqualGUID(*allowMT.pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32)))
+			else if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo) && 
+				(IsEqualGUID(*allowMT->pSubType,  MEDIASUBTYPE_RGB32) || IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32)))
 			{
 				mt.SetSampleSize(bufW*bufH*4);
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		else
 		{
-			return E_INVALIDARG;
+			return S_FALSE;
 		}
-		if (allowMT.pFormatType != NULL)
+		if (allowMT->pFormatType != NULL)
 		{
-			if (IsEqualGUID(*allowMT.pFormatType, FORMAT_VideoInfo))
+			if (IsEqualGUID(*allowMT->pFormatType, FORMAT_VideoInfo))
 			{
-				if (!IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT.pSubType, MEDIASUBTYPE_ARGB32))
-					return E_INVALIDARG;
-				mt.SetFormatType(allowMT.pFormatType);
+				if (!IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_RGB32) && !IsEqualGUID(*allowMT->pSubType, MEDIASUBTYPE_ARGB32))
+					return S_FALSE;
+				mt.SetFormatType(allowMT->pFormatType);
 				VIDEOINFOHEADER pvi;
 				memset((void*)&pvi, 0, sizeof(VIDEOINFOHEADER));
 				pvi.bmiHeader.biSizeImage = 0; //for uncompressed image
@@ -481,25 +533,25 @@ HRESULT GSDXMuxFilter::GetMediaType(int iPosition, const IPin* pOutPin, __inout 
 				SetRectEmpty(&(pvi.rcTarget));
 				mt.SetFormat((BYTE*)&pvi, sizeof(VIDEOINFOHEADER));
 			}
-			else if (IsEqualGUID(*allowMT.pFormatType, GSFORMAT_DX11TEX2D_DESC))
+			else if (IsEqualGUID(*allowMT->pFormatType, GSFORMAT_DX11TEX2D_DESC))
 			{
-				if (allowMT.refFlag != GSREF_RENDERTARGET)
-					return E_INVALIDARG;
-				UINT nMatchIdx = m_pStreamPinDesc[pinIdx].nMatchIdx;
+				if (allowMT->refFlag != GSREF_RENDERTARGET)
+					return S_FALSE;
+				UINT nMatchIdx = m_pStreamPinDesc[pinIdx]->nMatchIdx;
 				if (nMatchIdx >= m_pRenderTargetList.size() || m_pRenderTargetList[nMatchIdx] == NULL)
-					return E_INVALIDARG;
+					return S_FALSE;
 				mt.SetFormatType(&GSFORMAT_DX11TEX2D_DESC);
 
 				ID3D11Texture2D* pTex = m_pRenderTargetList[nMatchIdx]->GetTexture();
 				if (pTex == NULL)
-					return E_INVALIDARG;
+					return S_FALSE;
 				D3D11_TEXTURE2D_DESC texDesc;
 				pTex->GetDesc(&texDesc);
 				mt.SetFormat((BYTE*)&texDesc, sizeof(D3D11_TEXTURE2D_DESC));
 			}
 			else
 			{
-				return E_INVALIDARG;
+				return S_FALSE;
 			}
 		}
 		*pMediaType = mt;

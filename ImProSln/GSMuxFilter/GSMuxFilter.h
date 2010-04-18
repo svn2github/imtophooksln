@@ -351,14 +351,16 @@ protected:
 private:
 	virtual BOOL IsAnyInputPinConnect();
 	virtual BOOL IsAnyOutPinConnect();
-	
+private:
+	BOOL m_bAlreadyInit;
 protected:
+	virtual HRESULT InitFilter();
 	virtual HRESULT CreatePins() = 0;
 	virtual CCritSec* GetReceiveCS(IPin* pPin);
 	// functions for implement TransformFilter methods
-	vector<GSFILTER_INPUTPIN_DESC> m_pInputPinDesc;
-	vector<GSFILTER_OUTPUTPIN_DESC> m_pOutputPinDesc;
-	vector<GSFILTER_STREAMPIN_DESC> m_pStreamPinDesc;
+	vector<GSFILTER_INPUTPIN_DESC*> m_pInputPinDesc;
+	vector<GSFILTER_OUTPUTPIN_DESC*> m_pOutputPinDesc;
+	vector<GSFILTER_STREAMPIN_DESC*> m_pStreamPinDesc;
 	virtual HRESULT _GetPinIdx(const IPin* pPin, UINT& idx, GSPIN_TYPE& pinType);
 	virtual HRESULT _ClearPins();
 	virtual HRESULT _CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, 

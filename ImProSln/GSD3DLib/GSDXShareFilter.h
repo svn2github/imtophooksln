@@ -41,9 +41,9 @@ class GSD3DLIB_API GSDXShareFilter : public IGSDXShareFilter
 {
 public:
 	/////have to be overwrite by child class////////
-	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs) = 0;
-	virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
-		ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) = 0;
+	//virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs) = 0;
+	//virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
+	//	ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) = 0;
 };
 
 class GSD3DLIB_API GSDXSharePin : public IGSDXSharePin
@@ -56,15 +56,12 @@ public:
 	~GSDXSharePin();
 	virtual HRESULT SetConnectedPin(IGSDXSharePin* pPin);
 	virtual HRESULT GetConnectedPin(IGSDXSharePin*& pPin);
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter) = 0;
-	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) = 0;
-	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs) = 0;
+	
 };
 
 class GSD3DLIB_API GSDXShareOutputPin : public GSDXSharePin
 {
 public:
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter) = 0;
 	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
 	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
 };
@@ -72,7 +69,6 @@ public:
 class GSD3DLIB_API GSDXShareInputPin : public GSDXSharePin
 {
 public:
-	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter) = 0;
 	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
 	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
 };

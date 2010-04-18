@@ -9,9 +9,9 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="regsvr32.exe "
+				Command="$(SolutionDir)\tool\Graphedit.exe"
 				WorkingDirectory=""
-				CommandArguments="$(TargetPath)"
+				CommandArguments=""
 				Attach="false"
 				DebuggerType="3"
 				Remote="1"
