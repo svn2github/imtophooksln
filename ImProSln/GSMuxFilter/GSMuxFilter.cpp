@@ -632,13 +632,16 @@ HRESULT GSMuxFilter::DecideBufferSize(IMemAllocator * pAlloc, const IPin* pOutPi
 	ALLOCATOR_PROPERTIES Actual;
 	hr = pAlloc->SetProperties(pProp,&Actual);
 	if (FAILED(hr)) {
+		SAFE_DELETE(mt);
 		return hr;
 	}
 	ASSERT( Actual.cBuffers == 1 );
 	if (pProp->cBuffers > Actual.cBuffers ||
 		pProp->cbBuffer > Actual.cbBuffer) {
+			SAFE_DELETE(mt);
 			return E_FAIL;
 	}
+	SAFE_DELETE(mt);
 	return S_OK;
 }
 HRESULT GSMuxFilter::_ClearPins()
