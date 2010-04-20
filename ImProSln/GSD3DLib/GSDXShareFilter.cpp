@@ -45,7 +45,7 @@ HRESULT GSDXShareInputPin::QueryD3DDevice(ID3D11Device*& outDevice, ID3D11Device
 	return hr;
 }
 
-HRESULT GSDXShareInputPin::QueryD3DDeviceCS(CCritSec*& cs)
+HRESULT GSDXShareInputPin::QueryD3DDeviceCS(GSCritSec*& cs)
 {
 	HRESULT hr = S_OK;
 	IGSDXSharePin* connectedPin = NULL;
@@ -59,17 +59,23 @@ HRESULT GSDXShareInputPin::QueryD3DDeviceCS(CCritSec*& cs)
 
 HRESULT GSDXShareOutputPin::QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain)
 {
+	HRESULT hr = S_OK;
 	IGSDXShareFilter* pFilter = NULL;
 	GetD3DFilter(pFilter);
 	if (pFilter == NULL)
 		return S_FALSE;
-	return pFilter->QueryD3DDevice(this, outDevice, outDeviceContext, outSwapChain);
+	hr = pFilter->QueryD3DDevice(this, outDevice, outDeviceContext, outSwapChain);
+	SAFE_RELEASE(pFilter);
+	return hr;
 }
-HRESULT GSDXShareOutputPin::QueryD3DDeviceCS(CCritSec*& cs)
+HRESULT GSDXShareOutputPin::QueryD3DDeviceCS(GSCritSec*& cs)
 {
+	HRESULT hr = S_OK;
 	IGSDXShareFilter* pFilter = NULL;
 	GetD3DFilter(pFilter);
 	if (pFilter == NULL)
 		return S_FALSE;
-	return pFilter->QueryD3DDeviceCS(this, cs);
+	hr = pFilter->QueryD3DDeviceCS(this, cs);
+	SAFE_RELEASE(pFilter);
+	return hr;
 }

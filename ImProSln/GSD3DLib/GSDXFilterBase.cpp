@@ -3,6 +3,7 @@
 #include "DXUT.h"
 #include "GSD3DMediaType.h"
 #include "GSMacro.h"
+#include "GSGlobalFunc.h"
 GSDXFilterBase::GSDXFilterBase()
 {
 	m_pD3DDisplay = NULL;
@@ -116,7 +117,7 @@ HRESULT GSDXFilterBase::CopyGSTexture2Sample(GSTexture2D* pGSTexture, IMediaSamp
 		return E_FAIL;
 
 	HRESULT hr = S_OK;
-	CAutoLock lck(pGSTexture->GetCritSec());
+	GSAutoLock lck(pGSTexture->GetGSCritSec());
 
 	if (IsEqualGUID(*pMediaType->Type(), GSMEDIATYPE_GSDX11_SHAREDEVICE_MEDIATYPE) || IsEqualGUID(*pMediaType->Type(), GSMEDIATYPE_GSDX11_MEDIATYPE))
 	{	
@@ -164,7 +165,7 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 		return E_FAIL;
 
 	HRESULT hr = S_OK;
-	CAutoLock lck(pGSTexture->GetCritSec());
+	GSAutoLock lck(pGSTexture->GetGSCritSec());
 	if (IsEqualGUID(*pMediaType->Type(), GSMEDIATYPE_GSDX11_SHAREDEVICE_MEDIATYPE))
 	{
 		if (IsEqualGUID(*pMediaType->Subtype(), GSMEDIASUBTYPE_GSTEX2D_POINTER))
@@ -194,11 +195,15 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 			{
 				return E_FAIL;
 			}
-			ID3D11Texture2D* pTexture = pGSTexture->GetTexture();
-			if (pTexture == NULL)
+			GSAutoLock lck2(pInSampleTex->GetGSCritSec());
+			
+			ID3D11Texture2D* pSampleTexture = pInSampleTex->GetTexture();
+			if (pSampleTexture == NULL)
+			{
 				return E_FAIL;
+			}
 			D3D11_TEXTURE2D_DESC texDesc;
-			pTexture->GetDesc(&texDesc);
+			pSampleTexture->GetDesc(&texDesc);
 			if (texDesc.MiscFlags & D3D11_RESOURCE_MISC_SHARED) 
 			{
 				SAFE_RELEASE(pGSTexture);
@@ -207,11 +212,13 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 			}
 			else
 			{
-				ID3D11Texture2D* pInSampleDXTex = pInSampleTex->GetTexture();
+				ID3D11Texture2D* pGSDXTexture = pGSTexture->GetTexture();
 				ID3D11DeviceContext* pDeviceContext = pInSampleTex->GetDeviceContext();
-				if (pInSampleDXTex == NULL || pDeviceContext == NULL)
+				if (pGSDXTexture == NULL || pDeviceContext == NULL)
+				{
 					return E_FAIL;
-				pDeviceContext->CopyResource(pTexture, pInSampleDXTex);
+				}
+				pDeviceContext->CopyResource(pGSDXTexture, pSampleTexture);			
 			}
 			return S_OK;
 		}
@@ -239,6 +246,7 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 			return S_OK;
 		}
 	}
+	
 	return E_FAIL;
 }
 
@@ -247,8 +255,8 @@ HRESULT GSDXFilterBase::CopyGSTexture(GSTexture2D* pSrc, GSTexture2D* pDest)
 	if (pSrc == NULL || pDest == NULL )
 		return E_FAIL;
 	
-	CAutoLock lck1(pSrc->GetCritSec());
-	CAutoLock lck2(pDest->GetCritSec());
+	GSAutoLock lck1(pSrc->GetGSCritSec());
+	GSAutoLock lck2(pDest->GetGSCritSec());
 
 	ID3D11Texture2D* pSrcTex = pSrc->GetTexture();
 	ID3D11Texture2D* pDestTex = pDest->GetTexture();
@@ -284,9 +292,9 @@ HRESULT GSDXFilterBase::DoTransformEx(IMediaSample *pInSample, IMediaSample *pOu
 	if (FAILED(hr))
 		return E_FAIL;
 	{
-		CAutoLock lck0(m_pD3DDisplay->GetCritSec());
-		CAutoLock lck1(pGSInTexture->GetCritSec());
-		CAutoLock lck2(pGSRTTexture->GetCritSec());
+		GSAutoLock lck0(m_pD3DDisplay->GetGSCritSec());
+		GSAutoLock lck1(pGSInTexture->GetGSCritSec());
+		GSAutoLock lck2(pGSRTTexture->GetGSCritSec());
 
 		ID3D11RenderTargetView* pRTView = NULL;
 		ID3D11DeviceContext* pDeviceContext = NULL;
@@ -294,11 +302,13 @@ HRESULT GSDXFilterBase::DoTransformEx(IMediaSample *pInSample, IMediaSample *pOu
 		hr = pGSRTTexture->GetRenderTargetView(pRTView);
 
 		if (pRTView == NULL || pDeviceContext == NULL)
+		{
 			return E_FAIL;
-
+		}
 		hr = m_pD3DDisplay->SetRenderTarget(pDeviceContext, pRTView);
 		hr = m_pD3DDisplay->Render();
 		hr = m_pD3DDisplay->ResetRenderTarget(pDeviceContext);	
+
 	}
 	if (IsEqualGUID(*pOutType->Subtype(), GSMEDIASUBTYPE_GSTEX2D_POINTER))
 	{

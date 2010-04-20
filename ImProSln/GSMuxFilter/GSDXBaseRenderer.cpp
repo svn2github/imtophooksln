@@ -1562,7 +1562,7 @@ void GSDXBaseRenderer::OnRenderEnd(IMediaSample *pMediaSample)
 #endif
 } // OnRenderEnd
 
-HRESULT GSDXBaseRenderer::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
+HRESULT GSDXBaseRenderer::QueryD3DDeviceCS(IGSDXSharePin* pPin, GSCritSec*& cs)
 {
 	if (m_pD3DDisplay == NULL)
 		return E_FAIL;
@@ -1583,7 +1583,7 @@ HRESULT GSDXBaseRenderer::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
 	}
 	else
 	{
-		cs = m_pD3DDisplay->GetCritSec();
+		cs = m_pD3DDisplay->GetGSCritSec();
 		return S_OK;
 	}
 }

@@ -6,6 +6,7 @@
 #include <D3D11.h>
 #include <D3DX11.h>
 #include "GSD3DLib.h"
+#include "GSD3DBaseClass.h"
 // {7093A7B9-D31D-49b6-A43B-5D8300910390}
 DEFINE_GUID(IID_IGSDXSharePin, 
 			0x7093a7b9, 0xd31d, 0x49b6, 0xa4, 0x3b, 0x5d, 0x83, 0x0, 0x91, 0x3, 0x90);
@@ -25,14 +26,14 @@ public:
 	virtual HRESULT GetD3DFilter(IGSDXShareFilter*& pFilter) = 0;
 	virtual HRESULT GetConnectedPin(IGSDXSharePin*& pPin) = 0;
 	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) = 0;
-	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs) = 0;
+	virtual HRESULT QueryD3DDeviceCS(GSCritSec*& cs) = 0;
 };
 
 MIDL_INTERFACE("581540A6-1FC5-4690-9F9A-9663BBFA8D94")
 IGSDXShareFilter : public IUnknown
 {
 public:
-	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs) = 0;
+	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, GSCritSec*& cs) = 0;
 	virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain) = 0;
 };
 
@@ -63,12 +64,12 @@ class GSD3DLIB_API GSDXShareOutputPin : public GSDXSharePin
 {
 public:
 	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
-	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
+	virtual HRESULT QueryD3DDeviceCS(GSCritSec*& cs);
 };
 
 class GSD3DLIB_API GSDXShareInputPin : public GSDXSharePin
 {
 public:
 	virtual HRESULT QueryD3DDevice(ID3D11Device*& outDevice, ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
-	virtual HRESULT QueryD3DDeviceCS(CCritSec*& cs);
+	virtual HRESULT QueryD3DDeviceCS(GSCritSec*& cs);
 };

@@ -7,13 +7,6 @@
 class IGSMeshBase;
 class IGSEffectBase;
 
-class IGSRefCount
-{
-public:
-	STDMETHOD_(ULONG, AddRef)() = 0;
-	STDMETHOD_(ULONG, Release)() = 0;
-};
-
 
 class GSD3DLIB_API IGSRenderBase
 {	

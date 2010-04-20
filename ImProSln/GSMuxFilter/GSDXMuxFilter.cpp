@@ -659,6 +659,11 @@ HRESULT GSDXMuxFilter::Transform_D3DRender(void* self, IMediaSample *pInSample, 
 	}
 	GSDXMuxFilter* pSelf = (GSDXMuxFilter*)self;
 	HRESULT hr = S_OK;
+	GSCritSec* pCS = NULL;
+	pSelf->QueryD3DDeviceCS(NULL, pCS);
+	if (pCS == NULL)
+		return E_FAIL;
+	GSAutoLock lck(pCS);
 	hr = pSelf->DoTransform(pInSample, pOutSample, inMT, outMT);
 	return hr;
 }
@@ -680,7 +685,7 @@ HRESULT GSDXMuxFilter::GetEffectFilePath(WCHAR* szPath, UINT szSize)
 	return S_OK;
 }
 
-HRESULT GSDXMuxFilter::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
+HRESULT GSDXMuxFilter::QueryD3DDeviceCS(IGSDXSharePin* pPin, GSCritSec*& cs)
 {
 	if (m_pD3DDisplay == NULL)
 		return E_FAIL;
@@ -704,7 +709,7 @@ HRESULT GSDXMuxFilter::QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs)
 	}
 	else
 	{
-		cs = m_pD3DDisplay->GetCritSec();
+		cs = m_pD3DDisplay->GetGSCritSec();
 		return S_OK;
 	}
 }

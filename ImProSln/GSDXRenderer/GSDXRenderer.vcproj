@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)GSMuxFilter&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)GSMuxFilter&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;;&quot;$(SolutionDir)GSCommonLib&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib winmm.lib GSD3DLib.lib GSGlobalFunc.lib d3d11.lib d3dx11.lib cv210.lib cxcore210.lib highgui210.lib"
+				AdditionalDependencies="strmbasd.lib winmm.lib GSD3DLib.lib GSGlobalFunc.lib d3d11.lib d3dx11.lib cv210.lib cxcore210.lib highgui210.lib GSCommonLib.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)$(ConfigurationName)&quot;;../DSLib/lib"
 				ModuleDefinitionFile=".\GSDXRenderer.def"

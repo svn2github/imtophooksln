@@ -7,29 +7,9 @@
 #include <D3D11.h>
 #include <D3DX11.h>
 #include <D3DX10math.h>
-
+#include "GSCommonLib.h"
 using namespace std;
 
-class GSD3DLIB_API GSCritSecBase 
-{
-protected:
-	CCritSec m_CritSec;
-public:
-	CCritSec* GetCritSec() { return &m_CritSec; };
-};
-
-
-
-class GSD3DLIB_API GSRefCount : public IGSRefCount
-{
-protected:
-	int m_nRef;
-public:
-	GSRefCount();
-	virtual ~GSRefCount();
-	STDMETHOD_(ULONG, AddRef)();
-	STDMETHOD_(ULONG, Release)();
-};
 
 class GSD3DLIB_API GSDXBase
 {

@@ -212,7 +212,7 @@ public:
 	void WaitForReceiveToComplete();
 
 	//from GSDXShareFilter
-	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, CCritSec*& cs);
+	virtual HRESULT QueryD3DDeviceCS(IGSDXSharePin* pPin, GSCritSec*& cs);
 	virtual HRESULT QueryD3DDevice(IGSDXSharePin* pPin, ID3D11Device*& outDevice,
 		ID3D11DeviceContext*& outDeviceContext, IDXGISwapChain*& outSwapChain);
 };

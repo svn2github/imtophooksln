@@ -2,10 +2,10 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="GSHomoWarpFilter"
-	ProjectGUID="{12FC4514-495A-4D6B-8236-293786B21144}"
-	RootNamespace="GSHomoWarpFilter"
-	Keyword="MFCDLLProj"
+	Name="GSCommonLib"
+	ProjectGUID="{A5F7D9CE-84C2-4894-8701-9D6873A77693}"
+	RootNamespace="GSCommonLib"
+	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -20,8 +20,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="1"
+			ConfigurationType="4"
 			CharacterSet="1"
 			>
 			<Tool
@@ -38,14 +37,12 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="_DEBUG"
-				MkTypLibCompatible="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)GSMuxFilter&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)GSD3DLib&quot;;&quot;$(SolutionDir)DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;;&quot;$(SolutionDir)GSCommonLib&quot;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)DSLib\BaseClasses&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -58,29 +55,15 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib  winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib  d3d9.lib d3dx9.lib  d3dx11.lib dxerr.lib dxguid.lib D3DX11EffectsD.lib d3dcompiler.lib GSGlobalFunc.lib   cv210.lib cxcore210.lib highgui210.lib GSCommonLib.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)$(ConfigurationName)&quot;;../DSLib/lib;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)GSD3DLib/Effects11/bin&quot;;&quot;$(SolutionDir)GSGlobalFunc&quot;"
-				ModuleDefinitionFile=".\GSHomoWarpFilter.def"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -92,19 +75,14 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="1"
+			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -122,15 +100,13 @@
 			/>
 			<Tool
 				Name="VCMIDLTool"
-				PreprocessorDefinitions="NDEBUG"
-				MkTypLibCompatible="false"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
-				RuntimeLibrary="0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -141,28 +117,15 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"
-				AdditionalIncludeDirectories="$(IntDir)"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
-				LinkIncremental="1"
-				ModuleDefinitionFile=".\GSHomoWarpFilter.def"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				TargetMachine="1"
+				Name="VCLibrarianTool"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -172,9 +135,6 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -190,19 +150,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\GSHomoWarpFilter.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GSHomoWarpFilter.def"
-				>
-			</File>
-			<File
-				RelativePath=".\GSHomoWarpFilterApp.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\GSHomoWarpFilterReg.cpp"
+				RelativePath=".\GSCommonLib.cpp"
 				>
 			</File>
 			<File
@@ -232,23 +180,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\GSHomoWarpFilter.h"
+				RelativePath=".\GSCommonLib.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GSHomoWarpFilterApp.h"
+				RelativePath=".\GSMacro.h"
 				>
 			</File>
 			<File
-				RelativePath=".\GSHomoWarpFilterReg.h"
-				>
-			</File>
-			<File
-				RelativePath=".\IGSHomoWarpFilter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Resource.h"
+				RelativePath=".\IGSCommonLib.h"
 				>
 			</File>
 			<File
@@ -265,14 +205,6 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\GSHomoWarpFilter.rc"
-				>
-			</File>
-			<File
-				RelativePath=".\res\GSHomoWarpFilter.rc2"
-				>
-			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

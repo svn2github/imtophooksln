@@ -5,31 +5,6 @@
 #include <math.h>
 #include <algorithm>
 
-GSRefCount::GSRefCount()
-{
-	m_nRef = 1;
-}
-GSRefCount::~GSRefCount()
-{
-}
-ULONG GSRefCount::AddRef()
-{
-	return ++m_nRef;
-}
-
-ULONG GSRefCount::Release()
-{
-	if (--m_nRef > 0)
-	{
-		return m_nRef;
-	}
-	else
-	{
-		delete this;
-	}
-	return 0;
-}
-
 GSDXBase::GSDXBase()
 {
 	m_pDevice = NULL;
@@ -501,7 +476,10 @@ HRESULT GSRenderBase::RenderMesh(IGSMeshBase* pMesh, ID3D11DeviceContext* pDevic
 		pPass->Apply(0, pDeviceContext);
 		pDeviceContext->DrawIndexed( indexCount, 0, 0);
 	}
-	
+	//need to set the shader resource to NULL, or we will get a warning
+	ID3D11ShaderResourceView *const pSRV[1] = {NULL};
+	pDeviceContext->PSSetShaderResources(0, 1, pSRV);
+
 	return S_OK;
 }
 
