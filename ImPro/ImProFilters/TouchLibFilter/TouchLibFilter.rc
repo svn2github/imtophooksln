@@ -1,0 +1,209 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(950)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(950)\r\n"
+    "#include ""res\\TouchLibFilter.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_TouchLibPropPage_Title "TouchLib Prop Page"
+END
+
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "TouchLibFilter.dll"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "TouchLibFilter.dll"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_TouchLibPropPage DIALOGEX 0, 0, 248, 219
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_EDIT1,12,7,207,73,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+    PUSHBUTTON      "Clear",IDC_BTNCLEAR,169,84,50,14
+    CONTROL         "Show Finger Message",IDC_CKSHOWMSG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,84,85,10
+    CONTROL         "Show Config Windows",IDC_CKShowConfig,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,96,87,10
+    GROUPBOX        "SOC Link",IDC_STATIC,7,171,212,41,BS_LEFT
+    PUSHBUTTON      "Connect",IDC_BTNCONNECT,169,181,50,14
+    EDITTEXT        IDC_EDIT2,45,183,109,12,ES_AUTOHSCROLL
+    LTEXT           "IP:",IDC_STATIC,27,184,10,8
+    EDITTEXT        IDC_EDIT3,46,199,63,13,ES_AUTOHSCROLL
+    LTEXT           "port:",IDC_STATIC,22,200,17,12
+    PUSHBUTTON      "Clear BG",IDC_btnClearBg,111,84,50,14
+    CONTROL         "Begin Track",IDC_ckBeginTrack,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,109,50,10
+    CONTROL         "Draw Fingers",IDC_ckDrawFinger,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,120,58,10
+    CONTROL         "FlipY",IDC_CKFingerFlipY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,108,31,10
+    CONTROL         "Draw ROI",IDC_CKDrawROI,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,120,47,10
+    CONTROL         "Skip BG Remove",IDC_CKSkipBG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,132,108,67,10
+    LTEXT           "Num Frame Fix:",IDC_STATIC,12,135,51,8
+    CONTROL         "",IDC_SLRNUMFRAMEFIX,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,69,135,93,11
+    CTEXT           "__",IDC_TXTNumFrameFix,170,134,19,8
+    CONTROL         "Use Kalman Filter",IDC_ckUseKalman,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,131,120,65,10
+    CONTROL         "",IDC_slrMNoise,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,69,151,93,11
+    CTEXT           "__",IDC_txtMNoise,170,148,19,8
+    LTEXT           "Kalman MNoise:",IDC_STATIC,12,151,51,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_TouchLibPropPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 241
+        VERTGUIDE, 12
+        VERTGUIDE, 219
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 212
+        HORZGUIDE, 80
+        HORZGUIDE, 84
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(950)
+#include "res\TouchLibFilter.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

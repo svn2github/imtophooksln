@@ -1,0 +1,277 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(950)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(950)\r\n"
+    "#include ""res\\ARTagFilter.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ARTag_PROPPAGE_TITLE "ARTag - Camera Setting"
+    IDS_ARTag_GENERALPAGE_TITLE "ARTag - General Setting"
+END
+
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "ARTagFilter.dll"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "ARTagFilter.dll"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ARTag_CAMSETTING_PAGE DIALOGEX 0, 0, 235, 212
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_XSIZE,42,18,30,12,ES_AUTOHSCROLL | ES_NUMBER
+    RTEXT           "XSize:",IDC_STATIC,22,22,20,8
+    RTEXT           "YSize:",IDC_STATIC,96,22,20,8
+    EDITTEXT        IDC_YSIZE,116,18,32,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "Camera Setting:",IDC_STATIC,6,6,66,11
+    RTEXT           "dist_factor:",IDC_STATIC,4,51,38,8
+    EDITTEXT        IDC_DISTFACTOR1,42,51,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR4,154,51,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR2,80,51,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DISTFACTOR3,116,51,30,12,ES_AUTOHSCROLL
+    RTEXT           "mat:",IDC_STATIC,6,66,36,11
+    EDITTEXT        IDC_Mat00,42,66,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat01,80,66,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat02,116,65,32,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat03,154,66,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat10,42,80,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat11,80,80,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat12,115,80,32,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat13,154,80,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat30,42,109,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat31,80,109,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat32,116,109,32,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat33,154,109,26,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat20,42,94,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat21,80,94,30,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat22,116,94,32,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_Mat23,154,94,26,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Load ",IDC_BTN_Load,129,126,50,14
+    LTEXT           "World Basis Vector Scale:",IDC_STATIC,6,155,89,13
+    LTEXT           "Xaxis:",IDC_STATIC,6,172,20,10
+    LTEXT           "Yaxis:",IDC_STATIC,84,172,26,10
+    LTEXT           "Zaxis:",IDC_STATIC,154,172,20,10
+    EDITTEXT        IDC_edXaxis,32,169,25,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edYaxis,110,169,25,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_edZaxis,179,169,25,13,ES_AUTOHSCROLL
+END
+
+IDD_ARTag_GeneralSettingPage DIALOGEX 0, 0, 238, 185
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    CONTROL         "Draw Tag",IDC_CHK_DRAWTAG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,26,47,10
+    COMBOBOX        IDC_COMBO_PoseEstimator,66,10,78,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Pose Estimator:",IDC_STATIC,11,12,51,8
+    COMBOBOX        IDC_COMBO_MarkerMode,66,35,78,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Marker Mode:",IDC_STATIC,17,38,45,8
+    COMBOBOX        IDC_COMBO_UndistortMode,66,59,78,54,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "UnDistort Mode:",IDC_STATIC,9,60,53,8
+    CONTROL         "",IDC_SLIDER_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,115,154,13
+    RTEXT           "Threshold:",IDC_STATIC,23,116,39,10
+    CTEXT           "static",IDC_txtThreshold,132,129,23,10
+    CONTROL         "",IDC_SLIDER_BorderW,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,142,154,13
+    LTEXT           "Border Width:",IDC_STATIC,16,143,46,8
+    LTEXT           "Static",IDC_txtBorderW,132,157,19,8
+    CONTROL         "",IDC_SLIDER_MeasureNoise,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,66,88,154,13
+    CTEXT           "static",IDC_txtMeasureNoise,132,100,23,10
+    RTEXT           "Measure Noise:",IDC_STATIC,7,89,55,10
+    PUSHBUTTON      "Load ARConfig",IDC_BtnLoadARTag,156,9,65,14
+    CONTROL         "Draw ReProj",IDC_CKReProj,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,38,56,10
+    CONTROL         "Guess Pose",IDC_CKGuessPose,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,51,53,10
+    CONTROL         "Auto Threshold",IDC_CKAutoThreshold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,64,65,10
+    CONTROL         "Use Kalman Filter",IDC_CKUseKalman,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,156,77,71,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ARTag_CAMSETTING_PAGE, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 228
+        VERTGUIDE, 42
+        VERTGUIDE, 72
+        VERTGUIDE, 80
+        VERTGUIDE, 84
+        VERTGUIDE, 110
+        VERTGUIDE, 116
+        VERTGUIDE, 148
+        VERTGUIDE, 154
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 205
+        HORZGUIDE, 17
+        HORZGUIDE, 30
+        HORZGUIDE, 35
+        HORZGUIDE, 51
+        HORZGUIDE, 77
+        HORZGUIDE, 80
+        HORZGUIDE, 94
+        HORZGUIDE, 104
+        HORZGUIDE, 109
+        HORZGUIDE, 182
+    END
+
+    IDD_ARTag_GeneralSettingPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 231
+        VERTGUIDE, 62
+        VERTGUIDE, 66
+        VERTGUIDE, 132
+        VERTGUIDE, 141
+        VERTGUIDE, 144
+        VERTGUIDE, 156
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(950)
+#include "res\ARTagFilter.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

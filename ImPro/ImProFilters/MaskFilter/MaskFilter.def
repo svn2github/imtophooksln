@@ -1,0 +1,10 @@
+; MaskFilter.def : Declares the module parameters for the DLL.
+
+LIBRARY      "MaskFilter"
+
+EXPORTS
+            DllMain                 PRIVATE
+            DllGetClassObject       PRIVATE
+            DllCanUnloadNow         PRIVATE
+            DllRegisterServer       PRIVATE
+            DllUnregisterServer     PRIVATE

@@ -1,0 +1,7 @@
+
+
+
+LIBRARY      "DSBaseClass"
+
+EXPORTS
+            DllMain                 PRIVATE

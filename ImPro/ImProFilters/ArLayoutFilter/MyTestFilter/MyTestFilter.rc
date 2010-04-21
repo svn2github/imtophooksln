@@ -1,0 +1,231 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (Taiwan) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHT)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+#pragma code_page(950)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(950)\r\n"
+    "#include ""res\\MyTestFilter.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""     // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_ARLayoutPropPageTitle "ARLayout Prop"
+END
+
+#endif    // Chinese (Taiwan) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "TODO: <Company name>"
+            VALUE "FileDescription", "TODO: <File description>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "MyTestFilter.dll"
+            VALUE "LegalCopyright", "TODO: (c) <Company name>.  All rights reserved."
+            VALUE "OriginalFilename", "MyTestFilter.dll"
+            VALUE "ProductName", "TODO: <Product name>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ARLayoutPropPage DIALOGEX 0, 0, 237, 158
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_NumX,74,16,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NumY,74,34,40,14,ES_AUTOHSCROLL,WS_EX_ACCEPTFILES
+    DEFPUSHBUTTON   "OK",IDC_BUTTON1,175,127,36,14
+    LTEXT           "NumOfTagX",IDC_STATIC,23,18,42,12
+    LTEXT           "NumOfTagY",IDC_STATIC,24,36,39,8
+    LTEXT           "Width",IDC_STATIC,28,55,20,8
+    EDITTEXT        IDC_WIDTH,74,52,40,14,ES_AUTOHSCROLL
+END
+
+IDD_ARLayoutDXFilterPropPage DIALOGEX 0, 0, 241, 169
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_EDFilePath,14,40,180,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BTNBrowse,199,40,21,14
+    PUSHBUTTON      "Load",IDC_BTN_Load,170,59,50,14
+    PUSHBUTTON      "Save",IDC_BTN_SAVE,115,59,50,14
+    GROUPBOX        "Strategy Test",IDC_STATIC,7,74,227,88
+    LTEXT           "Cam View:",IDC_STATIC,30,104,34,8
+    EDITTEXT        IDC_EDLeft,96,93,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDRight,163,93,40,14,ES_AUTOHSCROLL
+    LTEXT           "L = ",IDC_STATIC,72,96,14,8
+    LTEXT           "R = ",IDC_STATIC,144,96,14,8
+    EDITTEXT        IDC_EDTop,96,110,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDBottom,163,110,40,14,ES_AUTOHSCROLL
+    LTEXT           "T = ",IDC_STATIC,72,113,14,8
+    LTEXT           "B = ",IDC_STATIC,143,113,14,8
+    PUSHBUTTON      "Test",IDC_BTNTest,163,132,50,14
+    GROUPBOX        "Setting ARTag Layout",IDC_STATIC,7,7,213,68
+    COMBOBOX        IDC_COMBO1,15,20,128,53,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CBFPS,184,20,36,90,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "FPS:",IDC_STATIC,163,22,18,11
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_ARLayoutPropPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 230
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 150
+    END
+
+    IDD_ARLayoutDXFilterPropPage, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 234
+        VERTGUIDE, 72
+        VERTGUIDE, 96
+        VERTGUIDE, 143
+        VERTGUIDE, 163
+        VERTGUIDE, 220
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+        HORZGUIDE, 47
+        HORZGUIDE, 52
+        HORZGUIDE, 100
+        HORZGUIDE, 117
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(950)
+#include "res\MyTestFilter.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"     // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

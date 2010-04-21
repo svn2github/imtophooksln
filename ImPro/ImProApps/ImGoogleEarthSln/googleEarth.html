@@ -1,0 +1,67 @@
+<!--
+  Copyright (c) 2009 Google inc.
+
+  You are free to copy and use this sample.
+  License can be found here: http://code.google.com/apis/ajaxsearch/faq/#license
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <title>Google Earth API Sample</title>
+    <script src="http://www.google.com/jsapi?key=ABQIAAAA1XbMiDxx_BTCY2_FkPh06RRaGTYH6UMl8mADNa0YKuWNNa8VNxQEerTAUcfkyrr6OwBovxn7TDAH5Q"></script>
+    <script type="text/javascript">
+    
+    var ge;
+
+    google.load("earth", "1");
+
+    function init() {
+      google.earth.createInstance('map3d', initCallback, failureCallback);
+    }
+
+    function initCallback(pluginInstance) {
+      ge = pluginInstance;
+      ge.getWindow().setVisibility(true);
+
+      // add a navigation control
+      ge.getNavigationControl().setVisibility(ge.VISIBILITY_NONE);
+
+      // add some layers
+        // add some layers
+        ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
+        ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
+        ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+
+      // just for debugging purposes
+      //document.getElementById('installed-plugin-version').innerHTML = ge.getPluginVersion().toString();
+    }
+
+    function failureCallback(errorCode) {
+    }
+
+    function cameraView(latitude, longitude, altitude, heading, tilt, roll) { 
+        
+        if(ge == null)
+            return;
+        
+        //省略相機移動的動畫    
+        ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
+      
+        var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+    
+        camera.set(latitude, longitude, altitude, 
+                    ge.ALTITUDE_RELATIVE_TO_GROUND,heading,tilt,roll);
+
+        
+        ge.getView().setAbstractView(camera); 
+      
+    }
+    
+    
+    </script>
+  </head>
+  <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
+    <div id="map3d" style="width: 1024px; height: 768px;"></div>
+  </body>
+</html>
