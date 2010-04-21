@@ -102,14 +102,14 @@ HRESULT GSDXRenderer::CompleteConnect(IPin *pReceivePin)
 				if (pDevice == NULL || pDeviceContext == NULL || pSwapChain == NULL)
 					return S_FALSE;
 				
-				initD3D(effectPath, MAX_PATH, desc->Width, desc->Height, 1, 1, 1, pDevice, pDeviceContext, pSwapChain);
+				initD3D(effectPath, MAX_PATH, desc->Width, desc->Height, 1, 0, 0, pDevice, pDeviceContext, pSwapChain);
 				SAFE_RELEASE(pDevice);
 				SAFE_RELEASE(pDeviceContext);
 				SAFE_RELEASE(pSwapChain);
 			}
 			else if (IsEqualGUID(*mt.Type(),  GSMEDIATYPE_GSDX11_MEDIATYPE))
 			{
-				initD3D(effectPath, MAX_PATH, desc->Width, desc->Height, 1, 1, 1);
+				initD3D(effectPath, MAX_PATH, desc->Width, desc->Height, 1, 0, 0);
 			}
 			else
 			{
@@ -120,7 +120,7 @@ HRESULT GSDXRenderer::CompleteConnect(IPin *pReceivePin)
 		{
 			VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) mt.pbFormat;
 			BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
-			initD3D(effectPath, MAX_PATH, bitHeader.biWidth, bitHeader.biHeight, 1, 1, 1);
+			initD3D(effectPath, MAX_PATH, bitHeader.biWidth, bitHeader.biHeight, 1, 0, 0);
 		} 
 
 	}
@@ -152,7 +152,6 @@ HRESULT GSDXRenderer::DoRenderSample(IMediaSample *pMediaSample)
 	HRESULT hr = S_OK;
 	CMediaType mt = m_pInputPin->CurrentMediaType();
 	hr = CopySample2GSTexture(m_pInTextureList[0], pMediaSample, &mt);
-	
 	{
 		GSCritSec* pD3DCS = NULL;
 		QueryD3DDeviceCS(NULL, pD3DCS);

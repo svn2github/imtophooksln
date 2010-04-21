@@ -73,7 +73,7 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 {
 	if (pEffect == NULL || self == NULL )
 		return E_FAIL;
-
+	HRESULT hr = S_OK;
 	GSDXFilterBase* pSelf = (GSDXFilterBase*)self;
 	if (pSelf->m_pD3DDisplay == NULL || pSelf->m_pInTextureList.size() <= 0)
 		return E_FAIL;
@@ -91,7 +91,7 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 		return E_FAIL;
 	
 	ID3D11ShaderResourceView* pInTex = NULL;
-	pSelf->m_pInTextureList[0]->GetShaderResourceView(pInTex);
+	hr = pSelf->m_pInTextureList[0]->GetShaderResourceView(pInTex);
 	if (pInTex == NULL)
 		return E_FAIL;
 
@@ -103,10 +103,10 @@ HRESULT GSDXFilterBase::OnEffectSetting(ID3DX11Effect* pEffect, void* self)
 	D3DXMATRIX matWorld;
 	D3DXMatrixIdentity(&matWorld);
 	D3DXMATRIX matWorldViewProj = matWorld * matView * matProj;
-	worldViewProj->SetRawValue((void*)&matWorldViewProj, 0, sizeof(matWorldViewProj));
-	sampleType->SetRawValue((void*)&sampleType, 0, sizeof(_sampleType));
-	bFlipY->SetRawValue((void*)&_bFlipY, 0, sizeof(_bFlipY));
-	pTextureResource->SetResource(pInTex);
+	hr = worldViewProj->SetRawValue((void*)&matWorldViewProj, 0, sizeof(matWorldViewProj));
+	hr = sampleType->SetRawValue((void*)&sampleType, 0, sizeof(_sampleType));
+	hr = bFlipY->SetRawValue((void*)&_bFlipY, 0, sizeof(_bFlipY));
+	hr = pTextureResource->SetResource(pInTex);
 
 	return S_OK;
 }
@@ -250,7 +250,7 @@ HRESULT GSDXFilterBase::CopySample2GSTexture(GSTexture2D*& pGSTexture, IMediaSam
 	return E_FAIL;
 }
 
-HRESULT GSDXFilterBase::CopyGSTexture(GSTexture2D* pSrc, GSTexture2D* pDest)
+HRESULT GSDXFilterBase::CopyGSTexture(GSTexture2D*& pSrc, GSTexture2D*& pDest)
 {
 	if (pSrc == NULL || pDest == NULL )
 		return E_FAIL;
@@ -279,7 +279,7 @@ HRESULT GSDXFilterBase::DoTransform(IMediaSample *pInSample, IMediaSample *pOutS
 	return DoTransformEx(pInSample, pOutSample, pInType, pOutType, m_pInTextureList[0], m_pRenderTargetList[0], m_pOutTextureList[0]);
 }
 HRESULT GSDXFilterBase::DoTransformEx(IMediaSample *pInSample, IMediaSample *pOutSample, const CMediaType* pInType, const CMediaType* pOutType,
-									GSTexture2D* pGSInTexture, GSTexture2D* pGSRTTexture, GSTexture2D* pGSOutTexture)
+									GSTexture2D*& pGSInTexture, GSTexture2D*& pGSRTTexture, GSTexture2D*& pGSOutTexture)
 {
 	HRESULT hr = S_OK;
 	if (pGSInTexture == NULL || pGSRTTexture == NULL || pGSOutTexture == NULL || m_pD3DDisplay == NULL 
