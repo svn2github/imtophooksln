@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MSD3DLIB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib strmbasd.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;..\MyLib\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -93,7 +93,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\MyLib;..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MSD3DLIB_EXPORTS"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -137,9 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib  winmm.lib highgui200.lib cv200.lib cxcore200.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../DSLib/lib;$(SolutionDir)\OpenCV2.0\lib;..\MyLib\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -166,6 +166,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -178,44 +179,12 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\MyLib\D3DEnv.cpp"
+				RelativePath=".\D3DEnv.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\D3DTransformFilterBase.cpp"
+				RelativePath=".\D3DTransformFilterBase.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\dllmain.cpp"
@@ -242,42 +211,10 @@
 			<File
 				RelativePath=".\MSD3DLib.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\MSSD3DClass.cpp"
+				RelativePath=".\MSSD3DClass.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
@@ -306,19 +243,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\MyLib\D3DEnv.h"
+				RelativePath=".\D3DEnv.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\D3DTransformFilterBase.h"
+				RelativePath=".\D3DTransformFilterBase.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\MSD3DLib.h"
+				RelativePath=".\MSD3DLib.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\MSSD3DClass.h"
+				RelativePath=".\MSSD3DClass.h"
 				>
 			</File>
 			<File

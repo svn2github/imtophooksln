@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "D3DTransformFilterBase.h"
 #include "cv.h"
 #include "MyMediaSample.h"

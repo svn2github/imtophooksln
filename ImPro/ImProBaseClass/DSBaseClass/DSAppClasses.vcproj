@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/DXBlendFilter/&quot;;&quot;$(SolutionDir)/MyLib/leadtool/Include/&quot;;&quot;$(SolutionDir)/HookDrawingFilter&quot;;&quot;$(SolutionDir)/ARTagFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL; DSBASECLASS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -62,9 +62,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				UseLibraryDependencyInputs="false"
-				AdditionalDependencies="strmbasd.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib"
+				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;;&quot;$(SolutionDir)\MyLib\bin&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -95,7 +95,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/MyLib/leadtool/Include/&quot;;&quot;$(SolutionDir)/HookDrawingFilter&quot;;&quot;$(SolutionDir)/ARTagFilter&quot;;&quot;$(SolutionDir)/HomoWarpFilter&quot;;&quot;$(SolutionDir)/DXRender&quot;;&quot;$(SolutionDir)/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)/DSLib/include/BaseClasses&quot;;&quot;$(SolutionDir)\MyLib&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)\OpenCV2.0\include\opencv&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;DSBASECLASS_EXPORTS"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -139,9 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbase.lib cv200.lib cxcore200.lib  highgui200.lib commonLib.lib"
+				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;;&quot;$(SolutionDir)\MyLib\bin&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -168,6 +168,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -180,64 +181,16 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\MyLib\ARLayoutCameraDS.cpp"
+				RelativePath=".\ARLayoutCameraDS.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\ARTagCameraDS.cpp"
+				RelativePath=".\ARTagCameraDS.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\CameraDS.cpp"
+				RelativePath=".\CameraDS.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\dllmain.cpp"
@@ -262,68 +215,24 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\DSBase.cpp"
+				RelativePath=".\DSBase.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\MyLib\DSBaseClass.cpp"
+				RelativePath=".\DSBaseClass.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="2"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\DSBaseClass.def"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\HookDS.cpp"
+				RelativePath=".\Exports.def"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\HookDS.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\stdafx.cpp"
@@ -352,27 +261,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\MyLib\ARLayoutCameraDS.h"
+				RelativePath=".\ARLayoutCameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\ARTagCameraDS.h"
+				RelativePath=".\ARTagCameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\CameraDS.h"
+				RelativePath=".\CameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\DSBase.h"
+				RelativePath=".\DSBase.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\DSBaseClass.h"
+				RelativePath=".\DSBaseClass.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\HookDS.h"
+				RelativePath=".\HookDS.h"
 				>
 			</File>
 			<File

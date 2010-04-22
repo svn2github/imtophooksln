@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\ARToolKitPlus_2.1.1\include"
+				AdditionalIncludeDirectories="$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -81,7 +81,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\MyLib\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -106,7 +106,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\ARToolKitPlus_2.1.1\include"
+				AdditionalIncludeDirectories="$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -125,6 +125,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -144,7 +145,7 @@
 		</Configuration>
 		<Configuration
 			Name="Debug_mdd|Win32"
-			OutputDirectory="$(SolutionDir)\MyLib\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -167,7 +168,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\ARToolKitPlus_2.1.1\include"
+				AdditionalIncludeDirectories="$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -187,7 +188,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
+				OutputFile="$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -207,7 +208,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release_mdd|Win32"
-			OutputDirectory="$(SolutionDir)\MyLib\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -232,7 +233,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\ARToolKitPlus_2.1.1\include"
+				AdditionalIncludeDirectories="$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
@@ -251,7 +252,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="$(OutDir)\$(ProjectName)_mdd.lib"
+				OutputFile="$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -279,11 +280,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\MyLib\MyARTagMediaSample.cpp"
+				RelativePath=".\MyARTagMediaSample.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\MyMediaSample.cpp"
+				RelativePath=".\MyMediaSample.cpp"
 				>
 			</File>
 		</Filter>
@@ -293,11 +294,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\MyLib\MyARTagMediaSample.h"
+				RelativePath=".\ImProGUID.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\MyMediaSample.h"
+				RelativePath=".\MyARTagMediaSample.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MyMediaSample.h"
 				>
 			</File>
 		</Filter>

@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "D3DEnv.h"
 #include <algorithm>
 extern HMODULE GetModule();

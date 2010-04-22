@@ -1,4 +1,4 @@
-
+#include "stdafx.h"
 #include "CameraDS.h"
 
 CCameraDS::CCameraDS()

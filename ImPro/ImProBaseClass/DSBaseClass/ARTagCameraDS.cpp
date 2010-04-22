@@ -1,4 +1,4 @@
-
+#include "stdafx.h"
 #include "ARTagCameraDS.h"
 #include "IARTagFilter.h"
 ARTagCameraDS::ARTagCameraDS(void) : CCameraDS()

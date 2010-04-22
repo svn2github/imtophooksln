@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "MSSD3DClass.h"
 #include <math.h>
 #include <algorithm>
