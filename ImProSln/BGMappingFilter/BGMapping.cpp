@@ -3,9 +3,9 @@
 
 
 #define BLACK_VALUE 130
+#define MAX_REF 2
 #define SHOW_WINDOW false
-#define SVAE_IMG  false 
-
+#define SVAE_IMG  false
 
 
 BGTag::BGTag(){
@@ -35,6 +35,7 @@ BGCandidateImgPool::BGCandidateImgPool(){
 	 layoutType = 0;
 	 layoutTotalTag = 0;
 	 layoutVisibleTable.clear();
+	 refCount = 0;
 
 }
 BGCandidateImgPool::~BGCandidateImgPool(){
@@ -61,11 +62,6 @@ BGCandidate ::~BGCandidate(){
 void BGCandidate::init(int imgH, int imgW){
 	for(int i = 0 ; i <imgMAX ; i ++){
 		unusedImg.push_back(i);
-		LayoutTypeCounter tmp ;
-		tmp.imgIndex = i;
-		tmp.layoutCount = 0;
-		tmp.layoutTypeIndex = i;
-		layoutTypeIndex.push_back(tmp);
 	}
 
 	for(int i = 0 ;i < imgMAX ; i ++){
@@ -95,7 +91,6 @@ int BGCandidate::getUsedImgCount(){
 
 IplImage* BGCandidate::getUsedImg(int index){
 	return bgImgPool[usedImg[index]].BGimg;
-//return imgPool[usedImg[index]];
 }
 
 int BGCandidate ::getUsedImgID(int index){
@@ -105,9 +100,19 @@ int BGCandidate ::getUsedImgID(int index){
 
 void BGCandidate::setToUnused(int index){
 
+	/*for(int i = 0 ; i < index ; i ++){
+		bgImgPool[usedImg[i]].refCount++;
+		if(bgImgPool[usedImg[i]].refCount >= MAX_REF){
+			bgImgPool[usedImg[i]].refCount = 0 ;
+			unusedImg.push_back(usedImg[0]);
+			usedImg.erase(usedImg.begin());
+			index -- ;
+		}
+	}*/
+
 	for(int i = 0 ; i < index ; i ++){
-		unusedImg.push_back(usedImg[0]);
-		usedImg.erase(usedImg.begin());
+			unusedImg.push_back(usedImg[0]);
+			usedImg.erase(usedImg.begin());
 	}
 } 
 
@@ -125,6 +130,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	tagTranNum = 0 ;
 	imgH = returnH ;
 	imgW = returnW ;
+	m_layoutIndex = 0 ;
 
 	candidate.init(imgH,imgW);
 
@@ -284,23 +290,33 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			minValue = sum.val[0];
 			realBGindex = i;			
 		}	
+
+		if(minValue > 100000 && SVAE_IMG == true){
+			char saveName[MAX_PATH] ;
+			sprintf(saveName,"debugImg\\%d_cand_%d.jpg",saveIndex,i);
+			cvSaveImage(saveName,candidate.getUsedImg(i));
+			sprintf(saveName,"debugImg\\%d_cand_%d_sub.jpg",saveIndex,i);
+			cvSaveImage(saveName,tmpImg);
+
+		}
 	}
 	
+	for(int i = 0 ; i < candidate.getUsedImgCount(); i ++){
+		if(candidate.bgImgPool[candidate.getUsedImgID(i)].layoutType == candidate.bgImgPool[candidate.getUsedImgID(realBGindex)].layoutType){
+			 realBGindex = i ;
+			 break ;
+		}
+	}
 	if(candidate.getUsedImg(realBGindex) != NULL){
 		cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
 			
 		cvShowImage("BG" , tmpImg);
 		cvShowImage("src", camImg);				
 		
-		if(minValue > 300000 && SVAE_IMG == true){
+		if(minValue > 100000 && SVAE_IMG == true){
 			char saveName[MAX_PATH] ;
 			sprintf(saveName,"debugImg\\%d_src.jpg",saveIndex);
 			cvSaveImage(saveName,camImg);
-			for(int candS = 0 ; candS < BGCandiSize ; candS++){
-				sprintf(saveName,"debugImg\\%d_cand_%d.jpg",saveIndex,candS);
-				cvSaveImage(saveName,candidate.getUsedImg(candS));
-
-			}
 		}
 		cvSub(camImg,tmpImg,camImg);
 		if(camImg->width == bgMask->width){
@@ -310,7 +326,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvWaitKey(1);
 	}
 
-	if(minValue > 300000 && SVAE_IMG == true){
+	if(minValue > 100000 && SVAE_IMG == true){
 		char saveName[MAX_PATH] ;
 		sprintf(saveName,"debugImg\\%d_BG_%d.jpg",saveIndex,realBGindex);
 		cvSaveImage(saveName,tmpImg);
@@ -428,36 +444,84 @@ void BackGroundMapping::setTranBG(){
 	cvCopy(backgroundImg,candidate.bgImgPool[index].BGimg);
 	candidate.bgImgPool[index].layoutTotalTag = tagTranNum ;
 	candidate.bgImgPool[index].isBlendImg = false ;
+	candidate.bgImgPool[index].refCount = 0 ;
+	candidate.bgImgPool[index].layoutVisibleTable.clear();
 	
 	for(int i = 0 ; i < tagTranNum ; i ++){
 		bool tmpVisible = BGTran[i]->isVisible ;
 		candidate.bgImgPool[index].layoutVisibleTable.push_back(tmpVisible);
 	}
 
+	if(candidate.getUsedImgCount() == 1){
+		candidate.bgImgPool[index].layoutType = m_layoutIndex;
+		m_layoutIndex ++ ;
+	}
 
-	for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
-		for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
-			if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
-				break ;
+	else{
+		bool layoutMatch = true ;
+		for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
+			
+			for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
+				if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
+					layoutMatch = false ;
+					break ;
+				}
+			}
+			if(layoutMatch == true ){
+				candidate.bgImgPool[index].layoutType= candidate.bgImgPool[candidate.getUsedImgID(j)].layoutType;
+				break;
 			}
 		}
+		if(layoutMatch == false){
+			candidate.bgImgPool[index].layoutType = m_layoutIndex;
+			m_layoutIndex ++ ;
+		}
+
 	}
 
 
 	// add blend Img into the bgImgPool
-	if(preIndex >= 0){
+	/*if(preIndex >= 0){
 		cvAddWeighted(candidate.bgImgPool[index].BGimg,0.5,candidate.bgImgPool[preIndex].BGimg,0.5,0,blendBG);
 		int blendIndex = candidate.getUnusedImgIndex();
 		
 		cvCopy(blendBG,candidate.bgImgPool[blendIndex].BGimg);
 		candidate.bgImgPool[blendIndex].layoutTotalTag = tagTranNum ;
 		candidate.bgImgPool[blendIndex].isBlendImg = true ;
+		candidate.bgImgPool[blendIndex].layoutVisibleTable.clear();
+
 
 		for(int i = 0 ; i < tagTranNum ; i ++){
 			bool tmpVisible = BGTran[i]->isVisible ;
 			candidate.bgImgPool[blendIndex].layoutVisibleTable.push_back(tmpVisible);
 		}
-	}
+
+		if(candidate.getUsedImgCount() == 1){
+			candidate.bgImgPool[blendIndex].layoutType = m_layoutIndex;
+			m_layoutIndex ++ ;
+		}
+
+		else{
+			bool layoutMatch = true ;
+			for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
+				for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
+					if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[blendIndex].layoutVisibleTable[tagIndex]){
+						layoutMatch = false ;
+						break ;
+					}
+				}
+				if(layoutMatch == true){
+					candidate.bgImgPool[blendIndex].layoutType = candidate.bgImgPool[candidate.getUsedImgID(j)].layoutType;
+					break;
+				}
+			}
+			if(layoutMatch == false ){
+				candidate.bgImgPool[blendIndex].layoutType = m_layoutIndex;
+				m_layoutIndex ++ ;
+			}
+		}
+	}*/
+
 }
 
 
