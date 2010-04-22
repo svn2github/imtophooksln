@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\oscpack\;..\TouchLibFilter\Touchlib\include"
+				AdditionalIncludeDirectories=".\oscpack\;&quot;$(SolutionDir)../ImProFilters/TouchLibFilter\Touchlib\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;OSCSENDER_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -88,11 +88,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
@@ -117,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".\oscpack\;..\TouchLibFilter\Touchlib\include"
+				AdditionalIncludeDirectories=".\oscpack\;&quot;$(SolutionDir)../ImProFilters/TouchLibFilter\Touchlib\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;OSCSENDER_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -164,6 +165,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;"
 			/>
 		</Configuration>
 	</Configurations>
