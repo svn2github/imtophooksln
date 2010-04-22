@@ -7,3 +7,4 @@
 #define SLIDER_SetRange(hWndTrack, iMin, iMax)  SendMessage(hWndTrack, TBM_SETRANGE, (WPARAM) TRUE, (LPARAM) MAKELONG(iMin, iMax))   
 
 
+\=========o\/'. =
