@@ -17,9 +17,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
-			ConfigurationType="2"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -44,9 +44,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;_NO_REMOTE_;LIBRPP_DLL;LIBRPP_EXPORTS"
+				PreprocessorDefinitions="WIN32;_NO_REMOTE_;_NO_LIBRPP_;LIBRPP_STATIC"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/ARToolKitPlus.pch"
 				AssemblerListingLocation=".\Debug/"
@@ -68,13 +68,11 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLinkerTool"
+				Name="VCLibrarianTool"
+				OutputFile="$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -86,16 +84,14 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
@@ -122,9 +118,9 @@
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\include"
-				PreprocessorDefinitions="WIN32;_NO_REMOTE_;LIBRPP_STATIC"
+				PreprocessorDefinitions="WIN32;_NO_REMOTE_;_NO_LIBRPP_;LIBRPP_STATIC"
 				StringPooling="true"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/ARToolKitPlus.pch"
@@ -147,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="../../lib/Win32/ARToolKitPlus.lib"
+				OutputFile="$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool

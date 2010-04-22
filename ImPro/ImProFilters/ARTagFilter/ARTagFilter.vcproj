@@ -17,8 +17,8 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug_mdd|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			Name="Debug|Win32"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -44,11 +44,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;;..\MyLib"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;_AFXDLL"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -69,9 +69,9 @@
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd_mdd.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib MSPersist.lib cv210.lib cxcore210.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib ARToolKitPlusD.lib MSD3DLib.lib commonLib_mdd.lib"
+				AdditionalDependencies="ARToolKitPlus.lib strmbase.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonLib.lib MSPersist.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
@@ -98,11 +98,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release_mdd|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -130,9 +131,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../DSLib/include/BaseClasses;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv;..\MyLib"
-				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_USE_DOUBLE_;_AFXDLL"
-				RuntimeLibrary="3"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL;_USE_DOUBLE_;"
+				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -153,9 +154,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/ENTRY:FilterDllMain&#x0D;&#x0A;"
-				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib highgui200.lib cv200.lib cxcore200.lib CMuxTransformFilter_mdd.lib CMFCBasePropertyPage_mdd.lib  ARToolKitPlusD.lib MSD3DLib.lib"
+				AdditionalDependencies="ARToolKitPlus.lib strmbase.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonLib.lib MSPersist.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)/ARToolKitPlus_2.1.1/lib/Win32&quot;;../MyLib/bin;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\bin&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=".\ARTagFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -183,6 +184,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -310,7 +312,7 @@
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
-					Name="Debug_mdd|Win32"
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -318,7 +320,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release_mdd|Win32"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
