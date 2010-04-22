@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\;../DSLib/include/BaseClasses;..\MyLib;&quot;$(SolutionDir)\OpenCV2.1\include\opencv&quot;;..\ARToolKitPlus_2.1.1\include"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonLib.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonLib.lib MSPersist.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;..\MyLib\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=".\HomoWarpFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -96,11 +96,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
