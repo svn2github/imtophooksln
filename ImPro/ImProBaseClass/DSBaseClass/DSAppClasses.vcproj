@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL; DSBASECLASS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;DSBASECLASS_EXPORTS"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
