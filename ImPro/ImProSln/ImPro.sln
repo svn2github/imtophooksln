@@ -153,6 +153,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MaskFilter", "..\ImProFilters\MaskFilter\MaskFilter.vcproj", "{74328020-24F7-4AA6-9E64-67E98559D17C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ProjectSettingFilter", "..\ImProFilters\ProjectSettingFilter\ProjectSettingFilter.vcproj", "{CDB4B69A-B3CC-4035-902D-3722671F545F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0802DB6-EA3A-4615-9B51-F5E8C3EDCA2D} = {C0802DB6-EA3A-4615-9B51-F5E8C3EDCA2D}
+		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA} = {E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SplitterFilter", "..\ImProFilters\SplitterFilter\SplitterFilter.vcproj", "{CF7FD852-4774-4068-8FFD-8A4B588EC46D}"
 EndProject

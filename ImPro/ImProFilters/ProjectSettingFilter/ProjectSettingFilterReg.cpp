@@ -3,35 +3,13 @@
 #include "ImProGUID.h"
 
 static WCHAR g_wszName[] = L"Project Setting Filter";
-const AMOVIESETUP_PIN psudProjectSettingFilterPins[] =
-{ 
-	{ L"input"            // strName
-	, FALSE               // bRendered
-	, FALSE               // bOutput
-	, FALSE               // bZero
-	, FALSE               // bMany
-	, &CLSID_NULL         // clsConnectsToFilter
-	, L""                 // strConnectsToPin
-	, 0                   // nTypes
-	, NULL                // lpTypes
-	},
-	 { L"output"           // strName
-		, FALSE               // bRendered
-		, TRUE                // bOutput
-		, FALSE               // bZero
-		, FALSE               // bMany
-		, &CLSID_NULL         // clsConnectsToFilter
-		, L""                 // strConnectsToPin
-		, 0                   // nTypes
-		, NULL                // lpTypes
-	}
-};
+const AMOVIESETUP_PIN* psudProjectSettingFilterPins = NULL;
 
 
 const REGFILTER2 sudProjectSettingFilter =
 { 	1,                // Version number.
 MERIT_DO_NOT_USE, // Merit.
-2,                // Number of pins.
+0,                // Number of pins.
 psudProjectSettingFilterPins };         // lpPin
 
 
