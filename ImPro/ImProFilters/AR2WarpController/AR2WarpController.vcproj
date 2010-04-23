@@ -18,7 +18,7 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\OSCSender\oscPack;..\TouchLibFilter\Touchlib\include;.\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.1\include\opencv"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\OSCSender\&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscPack&quot;;&quot;$(ProjectDir)..\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,9 +68,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbasd.lib winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv210.lib cxcore210.lib OSCSender.lib commonLib.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv210.lib cxcore210.lib OSCSender.lib commonLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;../DSLib/lib;..\MyLib\bin;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=".\AR2WarpController.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -96,11 +96,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\bin\"
+			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfMFC="1"
@@ -128,7 +129,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\OSCSender\oscPack;..\TouchLibFilter\Touchlib\include;.\;../DSLib/include/BaseClasses;..\MyLib;..\ARToolKitPlus_2.1.1\include;..\OpenCV2.0\include\opencv"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\OSCSender\&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscPack&quot;;&quot;$(ProjectDir)..\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -151,9 +152,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib  winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv200.lib cxcore200.lib OSCSender.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv210.lib cxcore210.lib OSCSender.lib commonLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\bin;../DSLib/lib;..\MyLib\bin;$(SolutionDir)\OpenCV2.0\lib;$(SolutionDir)\OpenCV2.0\bin; "
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=".\AR2WarpController.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -181,6 +182,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
 			/>
 		</Configuration>
 	</Configurations>

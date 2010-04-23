@@ -6,7 +6,7 @@
 #include "MyMediaSample.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "pointTrans.h"
-#include "..\OSCSender\OSCSender.h"
+#include "OSCSender.h"
 #include <vector>
 #include "BoardCastOutputPin.h"
 using namespace std;
