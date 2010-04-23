@@ -119,7 +119,7 @@
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\Detours\include;../DSLib/include/BaseClasses;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;HOOKINJECT_EXPORTS"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"

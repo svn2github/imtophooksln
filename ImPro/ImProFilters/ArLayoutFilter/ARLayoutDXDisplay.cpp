@@ -105,11 +105,11 @@ ID3DXEffect* ARLayoutDXDisplay::GetEffect()
 		WCHAR szPath[MAX_PATH] = L"";
 		_tcsncat(szPath, str, pszFile - str);
 
-		swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\ARLayout.fx", szPath);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\fx\\ARLayout.fx", szPath);
 		HRESULT hr = D3DXCreateEffectFromFileW( m_pDevice, str, NULL, NULL, dwShaderFlags, NULL, &m_pEffect, NULL );
 		if (FAILED(hr))
 		{
-			OutputDebugStringW(L"@@@@ D3DXCreateEffectFromFileW Failed in HookDrawingDisplay::GetEffect()\n");
+			OutputDebugStringW(L"@@@@ D3DXCreateEffectFromFileW Failed in ARLayoutDXDisplay::GetEffect()\n");
 			return NULL;
 		}
 	}
@@ -289,7 +289,7 @@ bool ARLayoutDXDisplay::LoadARMarkTexture()
 	for (int i =0; i < NUMMARKER; i++)
 	{
 		LPDIRECT3DTEXTURE9 pTex = NULL;
-		swprintf_s(str, MAX_PATH, L"%s\\ARToolKitPlus_AllMarkers\\marker_%03d.png", szPath, i);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\mediaFiles\\ARToolKitPlus_AllMarkers\\marker_%03d.png", szPath, i);
 		hr = D3DXCreateTextureFromFileEx(m_pDevice, str, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, 
 			D3DFMT_UNKNOWN, D3DPOOL_MANAGED, D3DX_FILTER_POINT, D3DX_DEFAULT,
 			0, NULL, NULL, &pTex);

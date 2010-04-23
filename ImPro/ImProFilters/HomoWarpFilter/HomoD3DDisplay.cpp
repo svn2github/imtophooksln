@@ -102,7 +102,7 @@ ID3DXEffect* HomoD3DDisplay::GetEffect()
 		WCHAR szPath[MAX_PATH] = L"";
 		_tcsncat(szPath, str, pszFile - str);
 
-		swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\HomoWarp.fx", szPath);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\fx\\HomoWarp.fx", szPath);
 		HRESULT hr = D3DXCreateEffectFromFileW( m_pDevice, str, NULL, NULL, dwShaderFlags, NULL, &m_pEffect, NULL );
 		if (FAILED(hr))
 		{
