@@ -144,7 +144,7 @@ ID3DXEffect* MaskFilterDisplay::GetEffect()
 		WCHAR szPath[MAX_PATH] = L"";
 		_tcsncat(szPath, str, pszFile - str);
 
-		swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\MaskFilter.fx", szPath);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\fx\\MaskFilter.fx", szPath);
 		HRESULT hr = D3DXCreateEffectFromFileW( m_pDevice, str, NULL, NULL, dwShaderFlags, NULL, &m_pEffect, NULL );
 		if (FAILED(hr))
 		{
@@ -188,7 +188,7 @@ BOOL MaskFilterDisplay::CreateMaskTexture(UINT rtWidth = 0, UINT rtHeight = 0)
 	WCHAR szPath[MAX_PATH] = L"";
 	_tcsncat(szPath, str, pszFile - str);
 
-	swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\MaskRect.png", szPath);
+	swprintf_s(str, MAX_PATH, L"%s\\..\\..\\fx\\MaskRect.png", szPath);
 
 	hr = D3DXCreateTextureFromFile(m_pDevice, str, &m_pMaskRectTexture);
 
