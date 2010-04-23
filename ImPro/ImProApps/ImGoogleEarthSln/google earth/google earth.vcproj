@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\DSLib\include\BaseClasses&quot;;&quot;$(SolutionDir)\ARToolKitPlus_2.1.1\include&quot;;..\..\ARTagFilter;..\..\OpenCV2.1\include\opencv;..\DSVL\src;..\include;..\..\MyLib"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\OSCSender\&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscPack&quot;;&quot;$(ProjectDir)..\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../ImProBaseClass/DSBaseClass&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
@@ -60,9 +60,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbasd_mdd.lib cv210.lib cxcore210.lib libARd.lib libARgsubd.lib libARvideod.lib opengl32.lib glu32.lib glut32.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib DSBaseClass.lib"
+				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib DSBaseClass.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\lib;..\DSVL\lib;&quot;$(SolutionDir)\OpenCV2.1\vs2008\lib\Release&quot;;..\..\DSLib\lib;..\..\bin"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"
