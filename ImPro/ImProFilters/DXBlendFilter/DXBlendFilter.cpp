@@ -258,7 +258,7 @@ HRESULT DXBlendFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 			_tcsncat(szPath, str, pszFile - str);
 			for (int i =0; i < NUMINPUT; i++)
 			{
-				swprintf_s(str, MAX_PATH, L"%s%s", szPath, g_mapDefaultPath[i]);
+				swprintf_s(str, MAX_PATH, L"%s..\\%s", szPath, g_mapDefaultPath[i]);
 				LoadWeightMap(i, str);
 			}
 		}
