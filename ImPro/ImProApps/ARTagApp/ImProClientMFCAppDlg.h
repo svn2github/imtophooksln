@@ -6,7 +6,7 @@
 
 #include "afxwin.h"
 #include "ARTagCameraDS.h"
-#include "TestCamera.h"
+
 // CImProClientMFCAppDlg dialog
 class CImProClientMFCAppDlg : public CDialog
 {
