@@ -96,8 +96,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -183,7 +182,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -333,7 +332,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\fx\HookDrawing.fx"
+			RelativePath="..\..\fx\HookDrawing.fx"
 			>
 		</File>
 		<File

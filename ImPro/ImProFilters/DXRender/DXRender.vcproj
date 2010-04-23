@@ -320,7 +320,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\fx\DXRenderer.fx"
+			RelativePath="..\..\fx\DXRenderer.fx"
 			>
 		</File>
 		<File

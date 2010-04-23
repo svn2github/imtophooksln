@@ -324,7 +324,7 @@
 			>
 		</File>
 		<File
-			RelativePath="..\fx\HomoWarp.fx"
+			RelativePath="..\..\fx\HomoWarp.fx"
 			>
 		</File>
 		<File

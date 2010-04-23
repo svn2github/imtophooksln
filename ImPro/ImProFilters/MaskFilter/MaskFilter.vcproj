@@ -324,7 +324,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\fx\MaskFilter.fx"
+			RelativePath="..\..\fx\MaskFilter.fx"
 			>
 		</File>
 		<File
