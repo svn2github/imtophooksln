@@ -161,7 +161,7 @@ ID3DXEffect* DXRenderDisplay::GetEffect()
 		WCHAR szPath[MAX_PATH] = L"";
 		_tcsncat(szPath, str, pszFile - str);
 
-		swprintf_s(str, MAX_PATH, L"%s\\..\\fx\\DXRenderer.fx", szPath);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\fx\\DXRenderer.fx", szPath);
 		HRESULT hr = D3DXCreateEffectFromFileW( m_pDevice, str, NULL, NULL, dwShaderFlags, NULL, &m_pEffect, NULL );
 		if (FAILED(hr))
 		{
