@@ -255,7 +255,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "google earth", "..\ImProApp
 		{E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA} = {E8A3F6FA-AE1C-4C8E-A0B6-9C8480324EAA}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GSMFCProp", "..\OtherLib\GShow\GSBaseClass\GSMFCProp\CMFCBasePropertyPage.vcproj", "{1AA827CA-B7BC-4AD9-9A21-5690ADBAE2E2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GSMFCProp", "..\OtherLib\GShow\GSBaseClass\GSMFCProp\GSMFCProp.vcproj", "{1AA827CA-B7BC-4AD9-9A21-5690ADBAE2E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
