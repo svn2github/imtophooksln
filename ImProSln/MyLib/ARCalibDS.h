@@ -10,7 +10,7 @@
 class DSBASECLASSES_API ARCalibDS :
 	public CCameraDS
 {
-protected:
+public:
 
     // ARLayout ->  Warp  ->  Render
 	// Cam -> Warp -> ARTag -> Render

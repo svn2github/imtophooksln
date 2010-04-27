@@ -18,6 +18,9 @@ DEFINE_GUID(IID_IARLayoutDXFilter,
 
 #include "MyMediaSample.h"
 
+#include "ARToolKitPlus/TrackerMultiMarker.h"
+using namespace ARToolKitPlus;
+
 MIDL_INTERFACE("06F71C44-D839-4948-B5AB-F161BF157AEB")
 
 IARLayoutDXFilter: public IUnknown
@@ -32,6 +35,9 @@ public:
 	virtual bool SetMarkerVisible(int idx, bool bVisible);
 	virtual bool SetMarkerVisibleByID(int id, bool bVisible);
 	virtual int GetMarkerID(int idx);
+	
+	virtual HRESULT GetARLayoutConfig(ARMultiEachMarkerInfoT* ARConfig);
+	virtual int GetARLayoutSize() ;
 
 	virtual BOOL SetFrameRate(float fps);
 	virtual float GetFrameRate();

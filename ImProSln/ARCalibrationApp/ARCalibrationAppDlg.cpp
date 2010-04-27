@@ -12,7 +12,19 @@
 
 // CARCalibrationAppDlg dialog
 
-
+DetectedMarker::DetectedMarker(){
+	id = 0 ;
+	for(int i = 0 ; i < 4 ; i++){
+		for(int j = 0 ; j <2 ; j ++){
+			vertex[i][j] = 0 ;
+		}
+	}
+	dir = 0 ;
+	isVisible = false ;
+}
+void DetectedMarker::setInvisible(){
+	isVisible = false ;
+}
 
 
 CARCalibrationAppDlg::CARCalibrationAppDlg(CWnd* pParent /*=NULL*/)
@@ -20,6 +32,17 @@ CARCalibrationAppDlg::CARCalibrationAppDlg(CWnd* pParent /*=NULL*/)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pCalibDS = NULL ;
+	m_layoutConfig = NULL ;
+	m_foundARMarker = NULL ;
+	m_numMarker = 0 ;
+	m_CalibTimer = 1 ;
+	m_itertimeNow = 0 ;
+
+
+	D3DXMatrixIdentity(&m_CamwarpMat);
+	D3DXMatrixIdentity(&m_ARwarpMat);
+	D3DXMatrixIdentity(&m_tmpMat);
+
 }
 
 void CARCalibrationAppDlg::DoDataExchange(CDataExchange* pDX)
@@ -69,6 +92,7 @@ BEGIN_MESSAGE_MAP(CARCalibrationAppDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_cbIterTime, &CARCalibrationAppDlg::OnCbnSelchangecbitertime)
 	ON_CBN_SELCHANGE(IDC_cbProj, &CARCalibrationAppDlg::OnCbnSelchangecbproj)
 	ON_CBN_SELCHANGE(IDC_cbCalibBasis, &CARCalibrationAppDlg::OnCbnSelchangecbcalibbasis)
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -177,6 +201,7 @@ void CARCalibrationAppDlg::OnBnClickedbtnopencam()
 
 	m_pCalibDS = new ARCalibDS();
 	ret = m_pCalibDS->OpenCamera(nCamID, true);
+
 
 	m_cbCam.EnableWindow(FALSE);
 	
@@ -367,10 +392,12 @@ void CARCalibrationAppDlg::OnBnClickedbtnstartcalib()
 	m_btnCamPinProp.EnableWindow(FALSE);
 
 	m_btnStartCalib.EnableWindow(FALSE);
+	m_btnEndCalib.EnableWindow(TRUE);
 
-	for(int i = 0 ; i < m_iterativeTime ; i ++){
+	SetTimer(m_CalibTimer, 1000, 0);
 
-	}
+	ARCalibInit();
+	
 }
 
 void CARCalibrationAppDlg::OnBnClickedbtnexit()
@@ -404,7 +431,79 @@ void CARCalibrationAppDlg::OnCbnSelchangecbproj()
 
 void CARCalibrationAppDlg::OnCbnSelchangecbcalibbasis()
 {
-	if (m_pCalibDS == NULL)
+	if (m_pCalibDS == NULL) 
 		return ;
 	int calibBasis = m_cbCalibBasis.GetCurSel();  // 0 : camera 1 : proj
+}
+
+void CARCalibrationAppDlg::ARCalibInit(){
+	
+	m_pCalibDS->m_pIARWarpFilter->GetWarpMatrix(m_ARwarpMat);
+	m_pCalibDS->m_pICamWarpFilter->GetWarpMatrix(m_CamwarpMat);
+	
+	void* argv[1] = {(void*)this};
+
+	m_numMarker = m_pCalibDS->m_pIARLayoutFilter->GetARLayoutSize() ;
+	m_layoutConfig = new ARMultiEachMarkerInfoT[m_numMarker];
+	memset((void*)m_layoutConfig, 0, sizeof(ARMultiEachMarkerInfoT)* m_numMarker);
+	
+	m_foundARMarker = new DetectedMarker[m_numMarker];
+	m_pCalibDS->m_pIARLayoutFilter->GetARLayoutConfig(m_layoutConfig);
+
+	m_pCalibDS->SetARCallback(this->ARTagCallback, 1, argv);
+
+}
+
+BOOL CARCalibrationAppDlg::ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
+{
+	/*WCHAR str[MAX_PATH];
+	swprintf_s(str, MAX_PATH, L"@@@@@ Got ARCallback!! numDetected = %d\n ", numDetected );
+	OutputDebugStringW(str);*/
+
+	for(int i = 0 ; i < numDetected ; i ++){
+		/*for(int j = 0  ; j < m_numMarker ; j++){
+		}*/
+	}
+
+	return TRUE;
+}
+
+void CARCalibrationAppDlg::Calibration(){
+
+}
+
+void CARCalibrationAppDlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if(nIDEvent == m_CalibTimer){
+		if(m_itertimeNow == m_iterativeTime){
+			KillTimer(m_CalibTimer);
+			m_cbCam.EnableWindow(FALSE);
+
+			m_btnOpenCam.EnableWindow(FALSE);
+			m_btnCloseCam.EnableWindow(TRUE);
+
+			m_btnPlay.EnableWindow(TRUE);
+			m_btnPause.EnableWindow(FALSE);
+			m_btnStop.EnableWindow(FALSE);
+
+			m_btnARProp.EnableWindow(TRUE);
+			m_btnARWarpProp.EnableWindow(TRUE);
+			m_btnCamRenderProp.EnableWindow(TRUE);
+
+			m_btnCamProp.EnableWindow(TRUE);
+			m_btnCamWarpProp.EnableWindow(TRUE);
+			m_btnCamPinProp.EnableWindow(TRUE);
+
+			m_btnARRenderProp.EnableWindow(TRUE);
+
+			m_btnSaveGraph.EnableWindow(TRUE);
+			m_btnStartCalib.EnableWindow(TRUE);
+			
+			return;
+		}
+		m_itertimeNow++ ;
+		Calibration();
+	}
+
+	CDialog::OnTimer(nIDEvent);
 }

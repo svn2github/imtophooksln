@@ -7,6 +7,21 @@
 #include <map>
 using namespace std;
 
+class DetectedMarker{
+public :
+	int id ;
+	int dir ;
+	bool isVisible ;
+	double vertex[4][2];
+
+	DetectedMarker() ;
+	void setInvisible();
+};
+
+class ConfigMarker{
+	int id ;
+	double vertex[4][2];
+};
 
 // CARCalibrationAppDlg dialog
 class CARCalibrationAppDlg : public CDialog
@@ -48,6 +63,10 @@ public:
 	afx_msg void OnBnClickedbtnsavegraph();
 	afx_msg void OnBnClickedbtnstartcalib();
 	afx_msg void OnBnClickedbtnexit();
+	afx_msg void OnCbnSelchangecbitertime();
+	afx_msg void OnCbnSelchangecbproj();
+	afx_msg void OnCbnSelchangecbcalibbasis();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	
 	CButton m_btnCamProp;
 	CButton m_btnCamWarpProp;
@@ -64,24 +83,38 @@ public:
 	CButton m_btnOpenCam;
 	CButton m_btnCloseCam;
 	CButton m_btnExit;
+	CButton m_btnEndCalib;
 	
 	CComboBox m_cbCam;
 	CComboBox m_cbProj;
 	CComboBox m_cbIterTime;
 	CComboBox m_cbCalibBasis;
 	
-	int m_iterativeTime ;
-	int m_calibBasis ;   // 0 : cam 1: proj
-	int m_projctor ; // 0 : IR 1: Color
 	
 
 protected:
 	ARCalibDS* m_pCalibDS;
 	map<CString, int> m_CamDevice;
 
+
+
 public:
-	afx_msg void OnCbnSelchangecbitertime();
-	CButton m_btnEndCalib;
-	afx_msg void OnCbnSelchangecbproj();
-	afx_msg void OnCbnSelchangecbcalibbasis();
+	int m_itertimeNow ;
+	int m_iterativeTime ;
+	int m_calibBasis ;   // 0 : cam 1: proj
+	int m_projctor ; // 0 : IR 1: Color
+	
+	D3DXMATRIX m_ARwarpMat;
+	D3DXMATRIX m_CamwarpMat;
+	D3DXMATRIX m_tmpMat;
+	ARMultiEachMarkerInfoT* m_layoutConfig;
+	DetectedMarker* m_foundARMarker ;
+	UINT m_CalibTimer;
+	int m_numMarker;
+
+	void ARCalibInit();
+	void Calibration();
+	static BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
+
+
 };
