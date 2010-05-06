@@ -226,6 +226,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\ImProBaseClass\DSBaseClass\ARLayoutCameraDS.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ARLayoutCaptureApp.h"
 				>
 			</File>
@@ -268,15 +272,7 @@
 			Name="CameraDS"
 			>
 			<File
-				RelativePath="..\MyLib\ARLayoutCameraDS.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\CameraDS.h"
-				>
-			</File>
-			<File
-				RelativePath="..\MyLib\DSBase.h"
+				RelativePath="..\..\ImProBaseClass\DSBaseClass\ARTagCameraDS.h"
 				>
 			</File>
 		</Filter>
