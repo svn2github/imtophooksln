@@ -7,12 +7,13 @@ struct AppData {
 };
 
 struct VSOUT {
-    float4 HPosition	: SV_POSITION;
+    float4 HPosition: SV_POSITION;
     float2 UV		: TEXCOORD0;
 };
 
 int g_sampleType = 0;
 bool g_bFlipY = false;
+bool g_bFlipX = false;
 float4x4 WorldViewProj : WorldViewProjection;
 
 Texture2D g_Texture : DIFFUSE <
@@ -44,18 +45,26 @@ VSOUT mainVS(AppData appIn ) {
 
 float4 mainPS(VSOUT vin) : SV_Target {
 	float2 uv = vin.UV;
+	if (g_bFlipX)
+	{
+		uv.x = 1 - uv.x;
+	}
 	if (g_bFlipY)
 	{
 		uv.y = 1 - uv.y;
 	}
+	float4 colorPt = g_Texture.Sample(g_PointSampler, uv);
+	float4 colorLn = g_Texture.Sample(g_LinearSampler, uv);
+	float4 ret = float4(0,0,0,0);
 	if (g_sampleType == 0)
 	{
-		return g_Texture.Sample(g_PointSampler, uv);
+		ret = colorPt;
 	}
 	else
 	{
-		return g_Texture.Sample(g_LinearSampler, uv);
+		ret = colorLn;
 	}
+	return ret;
 }
 
 
@@ -88,22 +97,6 @@ technique10 Main10 <
         SetRasterizerState(DisableCulling);       
 		SetDepthStencilState(DepthEnabling, 0);
 		SetBlendState(DisableBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF);
-    }
-}
-
-technique Main <
-	string Script = "Pass=p0;";
-> {
-    pass p0 <
-	string Script = "Draw=geometry;";
-    > {
-        VertexShader = compile vs_2_0 mainVS();
-		ZEnable = true;
-		ZWriteEnable = true;
-		ZFunc = LessEqual;
-		AlphaBlendEnable = false;
-		CullMode = None;
-        PixelShader = compile ps_2_a mainPS();
     }
 }
 
