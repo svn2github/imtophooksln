@@ -194,6 +194,8 @@ namespace googleearth {
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
+	private: System::Windows::Forms::Button^  button1;
+
 
 
 
@@ -259,8 +261,8 @@ namespace googleearth {
 		
 
 		private: System::Void setupBrowser(){
-			/*String^ URL = "file:///C:/googleEarth.html";*/
-			String^ URL = "file:///C:/GE.html";
+			String^ URL = "file:///C:/GE.html";           
+			//String^ URL = "file:///C:/GE464.html";
 			this->webBrowser1->Navigate(URL);
 		}
 
@@ -494,6 +496,7 @@ namespace googleearth {
 			this->components = (gcnew System::ComponentModel::Container());
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
+			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -502,7 +505,7 @@ namespace googleearth {
 			this->webBrowser1->Location = System::Drawing::Point(0, 0);
 			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
 			this->webBrowser1->Name = L"webBrowser1";
-			this->webBrowser1->Size = System::Drawing::Size(628, 334);
+			this->webBrowser1->Size = System::Drawing::Size(926, 444);
 			this->webBrowser1->TabIndex = 0;
 			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
@@ -511,11 +514,22 @@ namespace googleearth {
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
+			// button1
+			// 
+			this->button1->Location = System::Drawing::Point(815, 406);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(75, 23);
+			this->button1->TabIndex = 1;
+			this->button1->Text = L"button1";
+			this->button1->UseVisualStyleBackColor = true;
+			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click);
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(628, 334);
+			this->ClientSize = System::Drawing::Size(926, 444);
+			this->Controls->Add(this->button1);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
@@ -527,30 +541,6 @@ namespace googleearth {
 
 #pragma endregion
 	
-		private: System::Void arTimer_Tick(System::Object^  sender, System::EventArgs^  e) 
-		{
-			 //mainLoop();	
-			 
-			 // set target camera
-			 tlatitude = latitude;
-			 tlongitude = longitude;
-			 taltitude = altitude;
-			 theading = heading;
-			 ttilt = tilt;
-			 troll = roll;
-	         
-			 if(!getFstTag){
-				 clatitude = tlatitude;
-				 clongitude = tlongitude;
-				 caltitude = taltitude;
-				 cheading = theading;
-				 ctilt = ttilt;
- 				 croll = troll;
-
-				 getFstTag = true;
-			 }
-		}
-
 		private: System::Void animTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
 
 			 if(!getFstTag)		return;
@@ -640,6 +630,7 @@ namespace googleearth {
 						return ;
 					}
 				}
+
 				webBrowser1->Document->InvokeScript("cameraView",parameter);
 
 
@@ -664,7 +655,7 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);
+				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);
 				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
 				
 				boundaryDirty = false;
@@ -684,11 +675,13 @@ namespace googleearth {
 				altitude_scale = 1.0;
 		 
 		}
+
 private: System::Void OnKeyUp(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) 
 		 {
 
 
 		 }
+
 private: System::Void OnKeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
 		 }
 private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Windows::Forms::PreviewKeyDownEventArgs^  e) {
@@ -709,10 +702,9 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 			 }
 		 }
 
-
 private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
 
-			array<Object^>^ parameterB = gcnew array<Object^>(8); 
+ 			array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
 			parameterB[1] = LeftTopLat;
@@ -723,105 +715,8 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+			webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
 
 		 }
 };
 }
-
-
-bool animTimerTickFunc()
-{
-	/*
-	try
-	{
-		if(!getFstTag)
-			return false;
-
-		clatitude = tlatitude;
-		clongitude = tlongitude;
-		caltitude = taltitude;
-		cheading = theading;
-		ctilt = ttilt;
-		croll = troll;
-
-		 array<Object^>^ parameter = gcnew array<Object^>(6); 
-		 parameter[0] = clatitude;
-		 parameter[1] = clongitude;
-		 parameter[2] = caltitude;
-		 parameter[3] = cheading;
-		 parameter[4] = ctilt;
-		 parameter[5] = croll;
-		 System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
-		 browser->Document->InvokeScript("cameraView",parameter);
-		
-	}
-
-	catch (System::Exception^ e)
-	{
-		return false;
-	}
-	 */
-
-	return true;
-}
-
-
-//bool computeNeedData(float cvTrans[4][4])
-//{
-//	char        string[256];
-//	double det = 0;
-//	D3DXMATRIX d3d_camTrans, matInvYZ, matSwitchYZ;
-//	D3DXMatrixScaling(&matInvYZ, 1, -1, -1);
-//
-//	/*matSwitchYZ.m[0][0] = 0; matSwitchYZ.m[0][1] = 0; matSwitchYZ.m[0][2] = 1; matSwitchYZ.m[0][3] = 0; 
-//	matSwitchYZ.m[1][0] = 1; matSwitchYZ.m[1][1] = 0; matSwitchYZ.m[1][2] = 0; matSwitchYZ.m[1][3] = 0; 
-//	matSwitchYZ.m[2][0] = 0; matSwitchYZ.m[2][1] = 1; matSwitchYZ.m[2][2] = 0; matSwitchYZ.m[2][3] = 0; 
-//	matSwitchYZ.m[3][0] = 0; matSwitchYZ.m[3][1] = 0; matSwitchYZ.m[3][2] = 0; matSwitchYZ.m[3][3] = 1; 
-//*/
-//
-//	D3DXMatrixIdentity(&d3d_camTrans);
-//
-//	for (int row = 0; row < 4; row ++)
-//	{
-//		for (int col = 0; col < 4; col++)
-//		{
-//			d3d_camTrans.m[col][row] = cvTrans[row][col];
-//		}
-//	}
-//
-//	d3d_camTrans = d3d_camTrans * matInvYZ;
-//
-//	
-//	camera = d3d_camTrans;
-//	//from right hand to left hand
-//	
-//	//計算google earth中需要的各個參數
-//	countLoc(-camera.m[3][0], -camera.m[3][2], -camera.m[3][1]);
-//	countLookat();
-//	countLookup();
-//	countTilt();
-//	countHeading();
-//	countRoll();
-//	/*WCHAR str[MAX_PATH] = {0};
-//	
-//	OutputDebugStringW(L"@@@@@@@@@@@@\n");
-//	swprintf_s(str, MAX_PATH, L"@@@@ lookat = ( %.2f, %.2f, %.2f) \n", 
-//		lookat.x, lookat.y, lookat.z);
-//	OutputDebugStringW(str);
-//	swprintf_s(str, MAX_PATH, L"@@@@ ViewUp = ( %.2f, %.2f, %.2f) \n", 
-//		lookup.x, lookup.y, lookup.z);
-//	OutputDebugStringW(str);
-//	swprintf_s(str, MAX_PATH, L"@@@@ Tilt, Heading, Roll = ( %.2f, %.2f, %.2f) \n", 
-//		tilt, heading, roll);
-//	OutputDebugStringW(str);
-//	OutputDebugStringW(L"@@@@@@@@@@@@\n");
-//	*/
-//	longitude = google_earth_point.x;
-//	latitude = google_earth_point.z;
-//	altitude = google_earth_point.y;
-//	altitude *= 111000;  //一度 = 111000 公尺
-//	altitude *= altitude_scale;
-//
-//	return true;
-//}
