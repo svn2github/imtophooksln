@@ -50,7 +50,7 @@ public:
 	CButton* m_checkCamFlip;
 	CButton* m_checkLayoutFlip;
 	CButton* m_checkOutputFlip;
-
+	CButton* m_checkUsingMask;
 
 
 public: //inherit from CMFCBaseProperty Page

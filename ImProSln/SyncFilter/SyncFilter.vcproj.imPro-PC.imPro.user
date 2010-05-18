@@ -9,7 +9,7 @@
 			Name="Debug|Win32"
 			>
 			<DebugSettings
-				Command="C:\ImProSln\tool\GraphEdit.exe"
+				Command="C:\Users\imPro\Desktop\GraphEdit.exe"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"

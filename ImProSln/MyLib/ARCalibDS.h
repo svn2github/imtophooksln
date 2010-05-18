@@ -6,6 +6,7 @@
 #include "IDXRenderer.h"
 #include "IHomoWarpFilter.h"
 #include "IARTagFilter.h"
+#include "IProjectSettingFilter.h"
 
 class DSBASECLASSES_API ARCalibDS :
 	public CCameraDS
@@ -44,6 +45,9 @@ public:
 	CComPtr<IPin> m_pARTagInputPin;	
 	CComPtr<IPin> m_pARTagOutputPin;
 
+	CComPtr<IBaseFilter> m_pProjSetFilter;
+	CComPtr<IProjectSettingFilter> m_pIProjSetFilter ;
+
 	//overwrite CCameraDS function
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateFilters(int nCamID, bool bDisplayProperties, int nWidth, int nHeight);
@@ -61,6 +65,8 @@ public:
 	virtual HRESULT ShowCamWarpProp();
 	virtual HRESULT ShowCamProp();
 	virtual HRESULT ShowCamPinProp();
+	virtual HRESULT ShowARTagProp() ;
+	virtual HRESULT ShowProjSetProp() ;
 
 public:
 	ARCalibDS(void);

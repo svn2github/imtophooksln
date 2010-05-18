@@ -25,6 +25,10 @@
 #define IDC_btnStartCalib               1017
 #define IDC_btnExit                     1018
 #define IDC_btnEndCalib                 1019
+#define IDC_btnARTagProp                1025
+#define IDC_btnProjSetting              1026
+#define IDC_btnCalibOnce                1027
+#define IDC_BUTTON1                     1027
 
 // Next default values for new objects
 // 
@@ -32,7 +36,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1028
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

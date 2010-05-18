@@ -67,6 +67,8 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnCamWarp3, m_btnCamWarp3);
 	DDX_Control(pDX, IDC_btnCamWarp4, m_btnCamWarp4);
 	DDX_Control(pDX, IDC_btnDXBlendProp, m_btnDXBlendProp);
+	DDX_Control(pDX, IDC_btnProjectSetting, m_btnProjectSetting);
+	DDX_Control(pDX, IDC_btnBlendWarp, m_btnBlendWarp);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -109,6 +111,9 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_cbCam3, &CARLayoutCaptureAppDlg::OnCbnSelchangecbcam3)
 	ON_CBN_SELCHANGE(IDC_cbCam4, &CARLayoutCaptureAppDlg::OnCbnSelchangecbcam4)
 	ON_BN_CLICKED(IDC_btnDXBlendProp, &CARLayoutCaptureAppDlg::OnBnClickedbtndxblendprop)
+	ON_EN_CHANGE(IDC_EDPath, &CARLayoutCaptureAppDlg::OnEnChangeEdpath)
+	ON_BN_CLICKED(IDC_btnProjectSetting, &CARLayoutCaptureAppDlg::OnBnClickedbtnprojectsetting)
+	ON_BN_CLICKED(IDC_btnBlendWarp, &CARLayoutCaptureAppDlg::OnBnClickedbtnblendwarp)
 END_MESSAGE_MAP()
 
 
@@ -1121,4 +1126,30 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndxblendprop()
 	if (m_pDSCam == NULL)
 		return;
 	m_pDSCam->ShowDXBlendProp();
+}
+
+void CARLayoutCaptureAppDlg::OnEnChangeEdpath()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the CDialog::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnprojectsetting()
+{
+
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowProjSetProp();
+	
+}
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnblendwarp()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowBlendWarpProp();
 }

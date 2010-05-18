@@ -1,6 +1,5 @@
 #include "cv.h"
 #include "highgui.h"
-#include <cvaux.h>
 #include <vector>
 #include <string>
 #include <iostream>

@@ -74,13 +74,6 @@ IDR_MAINFRAME           ICON                    "res\\ARCalibrationApp.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Toolbar
-//
-
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Bitmap
 //
 
@@ -110,7 +103,6 @@ CAPTION "ARCalibrationApp"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     LTEXT           "Camera",IDC_STATIC,20,16,33,10
-    LTEXT           "Projector",IDC_STATIC,18,37,34,11
     COMBOBOX        IDC_cbCam,57,16,55,14,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_cbProj,57,37,55,13,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "OpenCam",IDC_btnOpenCam,128,17,40,15
@@ -131,8 +123,12 @@ BEGIN
     PUSHBUTTON      "Stop",IDC_btnStop,168,128,26,16,WS_DISABLED
     PUSHBUTTON      "SaveGraph",IDC_btnSaveGraph,210,86,40,16,WS_DISABLED
     PUSHBUTTON      "StartCalib",IDC_btnStartCalib,210,108,40,16,WS_DISABLED
-    PUSHBUTTON      "Exit",IDC_btnExit,213,166,25,18
+    PUSHBUTTON      "Exit",IDC_btnExit,215,175,25,18
     PUSHBUTTON      "EndCalib",IDC_btnEndCalib,210,129,39,15,WS_DISABLED
+    PUSHBUTTON      "ARTag Prop",IDC_btnARTagProp,94,130,53,14,WS_DISABLED
+    PUSHBUTTON      "ProjSetting",IDC_btnProjSetting,19,170,55,14,WS_DISABLED
+    PUSHBUTTON      "CalibOnce",IDC_btnCalibOnce,168,150,43,16
+    LTEXT           "Projector",IDC_STATIC,18,37,34,11
 END
 
 

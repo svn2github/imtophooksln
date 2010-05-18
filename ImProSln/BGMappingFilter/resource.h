@@ -15,8 +15,8 @@
 #define IDC_BUTTON1                     1007
 #define IDC_CHECK_camera                1008
 #define IDC_CHECK_Layout                1009
-#define IDC_CHECK_OutputFlip            1010
 #define IDC_CHECK_Output                1010
+#define IDC_CHECK_Mask                  1011
 
 // Next default values for new objects
 // 
@@ -24,7 +24,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1002
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1011
+#define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           1000
 #endif
 #endif

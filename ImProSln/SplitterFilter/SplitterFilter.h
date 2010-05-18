@@ -6,6 +6,7 @@
 #include "combase.h"
 #include "CMuxTransformFilter.h"
 #include "cv.h"
+#include "highgui.h"
 
 // {CF964951-80EE-45d3-8B02-9041902F91FB}
 DEFINE_GUID(CLSID_SplitterFilter, 
@@ -44,6 +45,11 @@ protected:
 	virtual bool  IsAcceptedType(const CMediaType *pMT);
 	BYTE* InData;
 	bool getData ;
+	int isSaveImg;
+	int saveCount ;
+	int imgW ;
+	int imgH ;
+	int imgChannel;
 
 private:
 	virtual HRESULT ReceiveCameraImg(IMediaSample *pSample, const IPin* pReceivePin);
@@ -53,10 +59,7 @@ public:
 	virtual ~SplitterFilter();
 private:
 
-	
 	CCritSec m_cSharedState;            // Protects our internal state
-	IplImage* backgroundIplImg;
-	IplImage* foregroundIplImg;
-	IplImage* cameraInputIplImg;
+
 
 };

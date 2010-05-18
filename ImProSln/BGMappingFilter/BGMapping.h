@@ -2,7 +2,6 @@
 #define _BGHOMO
 #include "cv.h"
 #include "highgui.h"
-#include <cvaux.h>
 #include "stdafx.h"
 #include <vector>
 #define imgMAX 30
@@ -120,6 +119,7 @@ public:
 	bool camFlip;
 	bool layoutFlip;
 	bool outputFlip;
+	bool isUsingMask ;
 
 	int layoutType ; // 0::RGB   1::MarkerInfo 
 };

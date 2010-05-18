@@ -6,6 +6,8 @@
 #include "ARLayoutCameraDS.h"
 #include "afxcmn.h"
 #include <map>
+#include <d3dx9.h>
+
 using namespace std;
 // CARLayoutCaptureAppDlg dialog
 class CARLayoutCaptureAppDlg : public CDialog
@@ -136,4 +138,9 @@ public:
 	afx_msg void OnCbnSelchangecbcam4();
 	CButton m_btnDXBlendProp;
 	afx_msg void OnBnClickedbtndxblendprop();
+	afx_msg void OnEnChangeEdpath();
+	CButton m_btnProjectSetting;
+	afx_msg void OnBnClickedbtnprojectsetting();
+	CButton m_btnBlendWarp;
+	afx_msg void OnBnClickedbtnblendwarp();
 };

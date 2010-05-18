@@ -121,7 +121,7 @@ BEGIN
     CONTROL         "",IDC_slrROIThreshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,58,207,63,10
     LTEXT           "ROI Threshold:",IDC_STATIC,7,205,50,10
     CTEXT           "___",IDC_txtROIThreshold,77,214,26,8
-    EDITTEXT        IDC_EDPath,51,226,155,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDPath,52,232,155,12,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_btnBrowse,213,226,17,12
     LTEXT           "Save Path:",IDC_STATIC,7,227,35,10
     PUSHBUTTON      "Start Auto Capture",IDC_btnStartAutoCapture,151,244,78,14,WS_DISABLED
@@ -140,6 +140,8 @@ BEGIN
     PUSHBUTTON      "Cam Warp 3",IDC_btnCamWarp3,313,262,55,14,WS_DISABLED
     PUSHBUTTON      "Cam Warp 4",IDC_btnCamWarp4,252,262,55,14,WS_DISABLED
     PUSHBUTTON      "DX Blend Prop",IDC_btnDXBlendProp,252,206,235,14,WS_DISABLED
+    PUSHBUTTON      "ProjectSetting",IDC_btnProjectSetting,152,262,76,14
+    PUSHBUTTON      "Blend Warp Prop",IDC_btnBlendWarp,60,262,81,14
 END
 
 

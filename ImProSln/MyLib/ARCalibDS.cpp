@@ -33,6 +33,12 @@ ARCalibDS::ARCalibDS(void)
 	m_pARTagInputPin = NULL;	
 	m_pARTagOutputPin = NULL;
 
+	m_pProjSetFilter = NULL ;
+	m_pIProjSetFilter = NULL ;
+
+	//m_p = NULL ;
+	m_pIProjSetFilter = NULL ;
+
 }
 
 ARCalibDS::~ARCalibDS(void)
@@ -70,6 +76,9 @@ void ARCalibDS::CloseCamera(){
 	m_pIARTagFilter = NULL;
 	m_pARTagInputPin = NULL;	
 	m_pARTagOutputPin = NULL;
+
+	m_pProjSetFilter = NULL ;
+	m_pIProjSetFilter = NULL;
 
 	__super ::CloseCamera();
 
@@ -135,6 +144,10 @@ HRESULT ARCalibDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 		IID_IBaseFilter, (LPVOID *)&m_pARTagFilter);
 	hr = m_pARTagFilter->QueryInterface(IID_IARTagDSFilter, (void**)&m_pIARTagFilter);
 
+	hr = CoCreateInstance(CLSID_ProjectSettingFilter, NULL, CLSCTX_INPROC_SERVER, 
+		IID_IBaseFilter, (LPVOID *)&m_pProjSetFilter);
+	hr = m_pProjSetFilter->QueryInterface(IID_IProjectSettingFilter, (void**)&m_pIProjSetFilter);
+
 
 	hr = m_pARLayoutFilter->FindPin(L"Layout", &m_pARLayoutOutputPin);
 	
@@ -157,6 +170,8 @@ HRESULT ARCalibDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 	hr = m_pGraph->AddFilter(m_pDXARRenderFilter, L"ARDXRender");
 	hr = m_pGraph->AddFilter(m_pCamWarpFilter, L"Cam HomoWarp");
 	hr = m_pGraph->AddFilter(m_pARTagFilter, L"ARTagFilter");
+	hr = m_pGraph->AddFilter(m_pProjSetFilter, L"ProjectSetting");
+
 
 	return S_OK;
 }
@@ -170,7 +185,6 @@ BOOL ARCalibDS::SetARCallback(IARTagFilter::CallbackFuncPtr pcallback, int argc,
 	}
 	return m_pIARTagFilter->SetCallback(pcallback, argc, argv);
 }
-
 
 HRESULT ARCalibDS::ShowDXCamRenderProp(){
 	return ShowFilterProp(m_pDXCamRenderFilter);
@@ -192,4 +206,12 @@ HRESULT ARCalibDS::ShowCamProp(){
 }
 HRESULT ARCalibDS::ShowCamPinProp(){
 	return ShowFilterProp(m_pCamOutputPin);
+}
+
+HRESULT ARCalibDS::ShowARTagProp(){
+	return ShowFilterProp(m_pARTagFilter);
+}
+
+HRESULT ARCalibDS::ShowProjSetProp(){
+	return ShowFilterProp(m_pProjSetFilter);
 }

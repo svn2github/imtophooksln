@@ -737,6 +737,15 @@ HRESULT BGMappingFilter:: setOutputFlip(bool value) {
 	BG->outputFlip = value ;
 	return S_OK;
 }
+
+HRESULT BGMappingFilter::setUsingMask(bool value) {
+	BG->isUsingMask = value ;
+	return S_OK;
+}
+bool BGMappingFilter::getUsingMask(){
+	return BG->isUsingMask;
+}
+
 bool BGMappingFilter::getOutputFlip(){
 	return BG->outputFlip;
 }
@@ -749,3 +758,4 @@ bool BGMappingFilter::getIsReceiveBG(){
 	CAutoLock loc(&m_csRecBG);
 	return isReceiveBG;
 }
+

@@ -166,6 +166,7 @@ BEGIN
     CONTROL         "CameraFlip",IDC_CHECK_camera,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,13,49,11
     CONTROL         "LayoutFlip",IDC_CHECK_Layout,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,70,14,47,8
     CONTROL         "OutputFlip",IDC_CHECK_Output,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,14,47,8
+    CONTROL         "UsingMask",IDC_CHECK_Mask,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,103,49,10
 END
 
 #endif    // English (U.S.) resources

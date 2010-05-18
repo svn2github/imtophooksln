@@ -6,6 +6,7 @@
 #include "IDXRenderer.h"
 #include "IHomoWarpFilter.h"
 #include "IDXBlendFilter.h"
+#include "IProjectSettingFilter.h"
 
 #define NUMCAM 4
 #define DXBLEND_PINNUM 4
@@ -40,6 +41,14 @@ protected:
 	CComPtr<IPin> m_pARWarpInputPin;
 	CComPtr<IPin> m_pARWarpOutputPin;
 
+	CComPtr<IBaseFilter> m_pProjSetFilter;
+	CComPtr<IProjectSettingFilter> m_pIProjSetFilter ;
+
+	CComPtr<IBaseFilter> m_pBlendWarpFilter;
+	CComPtr<IHomoWarpFilter> m_pIBlendWarpFilter;
+	CComPtr<IPin> m_pBlendWarpInputPin;
+	CComPtr<IPin> m_pBlendWarpOutputPin;
+
 
 
 	//overwrite CCameraDS function
@@ -57,6 +66,8 @@ public:
 	virtual HRESULT ShowCamWarpProp(int idx);
 	virtual HRESULT ShowCamProp(int idx);
 	virtual HRESULT ShowCamPinProp(int idx);
+	virtual HRESULT ShowProjSetProp() ;
+	virtual HRESULT ShowBlendWarpProp();
 
 	virtual int GetNumMarker();
 	virtual HRESULT SetMarkerVisible(int idx, BOOL bVisible);

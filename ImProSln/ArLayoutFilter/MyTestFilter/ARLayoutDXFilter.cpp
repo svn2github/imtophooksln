@@ -1127,9 +1127,12 @@ HRESULT ARLayoutDXFilter::GetARLayoutConfig(ARMultiEachMarkerInfoT* ARConfig){
 		ARConfig[i].width =  m_ARMarkers[i].width;
 		ARConfig[i].center[0] =  m_ARMarkers[i].center[0] ;
 		ARConfig[i].center[1] =  m_ARMarkers[i].center[1] ;
-		ARConfig[i].trans[0][0] = m_ARMarkers[i].trans[0][0] ;
-		ARConfig[i].trans[1][0] = m_ARMarkers[i].trans[1][0] ;
-		ARConfig[i].trans[2][0] = m_ARMarkers[i].trans[2][0] ;	
+		for(int j = 0 ; j < 4 ; j ++){
+			ARConfig[i].trans[j][0] = m_ARMarkers[i].trans[j][0] ;
+			ARConfig[i].trans[j][1] = m_ARMarkers[i].trans[j][1] ;
+			ARConfig[i].trans[j][2] = m_ARMarkers[i].trans[j][2] ;
+			ARConfig[i].trans[j][3] = m_ARMarkers[i].trans[j][3] ;
+		}
 	}
 	
 	return true;

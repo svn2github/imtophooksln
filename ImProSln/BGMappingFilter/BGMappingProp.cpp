@@ -34,6 +34,7 @@ m_pFilter(0)
 	m_Btxt = 0 ;
 	m_subValue = 0 ;
 	m_Wtxt = 0 ;
+	
 }
 
 CBGMappingPorpertyPage::~CBGMappingPorpertyPage()
@@ -127,6 +128,7 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
 	m_pFilter->setLayoutFlip(m_checkLayoutFlip->GetCheck());
 	m_pFilter->setOutputFlip(m_checkOutputFlip->GetCheck());
+	m_pFilter->setUsingMask(m_checkUsingMask->GetCheck());
 	
 }
 
@@ -151,6 +153,7 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	m_checkCamFlip = (CButton*)GetDlgItem(IDC_CHECK_camera);
 	m_checkLayoutFlip = (CButton*)GetDlgItem(IDC_CHECK_Layout);
 	m_checkOutputFlip = (CButton*)GetDlgItem(IDC_CHECK_Output);
+	m_checkUsingMask = (CButton*)GetDlgItem(IDC_CHECK_Mask);
 
 	::SLIDER_SetRange(m_threshold, 0, 255);
 	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
@@ -167,6 +170,8 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	m_checkCamFlip->SetCheck(m_pFilter->getCamFlip());
 	m_checkLayoutFlip->SetCheck(m_pFilter->getLayoutFlip());
 	m_checkOutputFlip->SetCheck(m_pFilter->getOutputFlip());
+	m_checkUsingMask->SetCheck(m_pFilter->getUsingMask());
+
 	return S_OK;
 }
 
@@ -196,6 +201,7 @@ void CBGMappingPorpertyPage::OnBnClickedButton1()  // save Button
 	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
 	m_pFilter->setLayoutFlip(m_checkLayoutFlip->GetCheck());
 	m_pFilter->setOutputFlip(m_checkOutputFlip->GetCheck());
+	m_pFilter->setUsingMask(m_checkUsingMask->GetCheck());
 
 	extern HMODULE GetModule();
 	WCHAR str[MAX_PATH] = {0};

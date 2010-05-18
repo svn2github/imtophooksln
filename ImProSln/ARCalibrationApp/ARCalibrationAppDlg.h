@@ -5,6 +5,7 @@
 #include "afxwin.h"
 #include "ARCalibDS.h"
 #include <map>
+#include "streams.h"
 using namespace std;
 
 class DetectedMarker{
@@ -19,6 +20,7 @@ public :
 };
 
 class ConfigMarker{
+public:
 	int id ;
 	double vertex[4][2];
 };
@@ -90,13 +92,9 @@ public:
 	CComboBox m_cbIterTime;
 	CComboBox m_cbCalibBasis;
 	
-	
-
 protected:
 	ARCalibDS* m_pCalibDS;
 	map<CString, int> m_CamDevice;
-
-
 
 public:
 	int m_itertimeNow ;
@@ -106,15 +104,37 @@ public:
 	
 	D3DXMATRIX m_ARwarpMat;
 	D3DXMATRIX m_CamwarpMat;
-	D3DXMATRIX m_tmpMat;
+	D3DXMATRIX m_newARMat;
+	D3DXMATRIX m_newCamMat;
+
 	ARMultiEachMarkerInfoT* m_layoutConfig;
-	DetectedMarker* m_foundARMarker ;
+	ConfigMarker* m_configMarker ;
+	DetectedMarker* m_detectedARMarker ;
 	UINT m_CalibTimer;
-	int m_numMarker;
+	int m_numConfigMarker;
+	int m_numDetectedMarker;
+	int m_camW ;
+	int m_camH ;
+
+	bool m_isInit ;
+
+	void ResetDetectedMarker() ;
+	void TransDetectedMarker() ;
 
 	void ARCalibInit();
 	void Calibration();
+	void getDetectSize() ;
+	bool m_startCalib ;
 	static BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
 
+	afx_msg void OnBnClickedbtnendcalib();
+	CButton m_btnARTagProp;
+	afx_msg void OnBnClickedbtnartagprop();
+	CButton m_btnProjSetting;
+	afx_msg void OnBnClickedbtnprojsetting();
+	afx_msg void OnBnClickedbtncalibonce();
+	CButton m_btnCalibOnce;
+	CCritSec m_csdetectedTag;
 
+	void saveD3DMat(D3DXMATRIX* mat, char* fileName);
 };

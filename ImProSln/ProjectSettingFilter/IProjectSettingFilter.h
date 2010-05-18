@@ -17,5 +17,8 @@ MIDL_INTERFACE("F82B96A4-08A1-4b61-91AB-13D869E80393")
 IProjectSettingFilter: public IUnknown
 {
 public:
+	virtual HRESULT SaveToFile(WCHAR* path) = 0 ;
+	virtual HRESULT LoadFromFile(WCHAR* path) = 0;
+	virtual HRESULT GetName(WCHAR* name, UINT szName) = 0;
 	
 };

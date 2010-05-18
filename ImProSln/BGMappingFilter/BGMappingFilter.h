@@ -70,6 +70,9 @@ public:
 	virtual bool getLayoutFlip();
 	virtual HRESULT setOutputFlip(bool value) ;
 	virtual bool getOutputFlip();
+	virtual HRESULT setUsingMask(bool value) ;
+	virtual bool getUsingMask();
+
 	HRESULT SendForegroundRect();
 
 	void setLayoutVisible();

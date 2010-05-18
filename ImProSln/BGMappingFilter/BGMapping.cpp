@@ -5,7 +5,8 @@
 #define BLACK_VALUE 130
 #define MAX_REF 2
 #define SHOW_WINDOW false
-#define SVAE_IMG  false
+#define SAVE_IMG  false
+#define SAVE_THRES 58000
 
 
 BGTag::BGTag(){
@@ -131,6 +132,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	imgH = returnH ;
 	imgW = returnW ;
 	m_layoutIndex = 0 ;
+	isUsingMask = false ;
 
 	candidate.init(imgH,imgW);
 
@@ -276,7 +278,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	    cvAbsDiff(camImg,tmpImg,tmpImg);
 		cvErode(tmpImg,tmpImg,NULL,erodeValue+1);
 		
-		if(camImg->width == bgMask->width){  
+		if(camImg->width == bgMask->width&& isUsingMask == TRUE){  
 			cvAnd(tmpImg,bgMask,tmpImg);
 		}
 
@@ -291,7 +293,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			realBGindex = i;			
 		}	
 
-		if(minValue > 100000 && SVAE_IMG == true){
+		if(minValue > SAVE_THRES && SAVE_IMG == true&& saveIndex <1000){
 			char saveName[MAX_PATH] ;
 			sprintf(saveName,"debugImg\\%d_cand_%d.jpg",saveIndex,i);
 			cvSaveImage(saveName,candidate.getUsedImg(i));
@@ -313,20 +315,20 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvShowImage("BG" , tmpImg);
 		cvShowImage("src", camImg);				
 		
-		if(minValue > 100000 && SVAE_IMG == true){
+		if(minValue > SAVE_THRES && SAVE_IMG == true&& saveIndex <1000){
 			char saveName[MAX_PATH] ;
 			sprintf(saveName,"debugImg\\%d_src.jpg",saveIndex);
 			cvSaveImage(saveName,camImg);
 		}
 		cvSub(camImg,tmpImg,camImg);
-		if(camImg->width == bgMask->width){
+		if(camImg->width == bgMask->width&& isUsingMask == true){
 			cvAnd(camImg,bgMask,camImg);
 		}
 		cvShowImage("sub", camImg);	
 		cvWaitKey(1);
 	}
 
-	if(minValue > 100000 && SVAE_IMG == true){
+	if(minValue > SAVE_THRES && SAVE_IMG == true && saveIndex <1000){
 		char saveName[MAX_PATH] ;
 		sprintf(saveName,"debugImg\\%d_BG_%d.jpg",saveIndex,realBGindex);
 		cvSaveImage(saveName,tmpImg);
@@ -415,8 +417,8 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 		fscanf(pFile,"\n%d %d\n%f %f %f %f \n%s \n",&newTag->CurTag , &newTag->TagID,&newTag->tagTop.x,&newTag->tagTop.y,
 		&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
 
-		newTag->tagRec.x = newTag->tagTop.x * imgW;
-		newTag->tagRec.y = newTag->tagTop.y * imgH;
+		newTag->tagRec.x = newTag->tagTop.x * (imgW-1);
+		newTag->tagRec.y = newTag->tagTop.y * (imgH-1);
 
 		newTag->tagImg = cvLoadImage(newTag->imgPath,0);
 		newTag->tagRec.height = newTag->tagImg->height ;

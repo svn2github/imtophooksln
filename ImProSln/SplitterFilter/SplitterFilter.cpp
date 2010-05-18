@@ -7,6 +7,12 @@ SplitterFilter::SplitterFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesDa
 : CMuxTransformFilter(NAME("Splitter Filter"), 0, CLSID_SplitterFilter)
 { 
 	getData = false ;
+	isSaveImg = 0 ;
+	saveCount = 0 ;
+	imgH = 480; 
+	imgW = 640;
+	imgChannel = 3 ;
+
 	
 }
 SplitterFilter::~SplitterFilter()
@@ -284,12 +290,17 @@ HRESULT SplitterFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMy
 		CMediaType inputMT = ((CMuxTransformInputPin*)pMyPin)->CurrentMediaType();
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+		imgH = bitHeader.biHeight;
+		imgW = bitHeader.biWidth;
+
 		GUID guidSubType = inputMT.subtype;
 		if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
 		{
+			imgChannel = 3 ;
 		}
 		else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
 		{
+			imgChannel = 4 ;
 		}
 		return S_OK;
 
@@ -327,6 +338,17 @@ HRESULT SplitterFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	pOut->GetPointer(&outByte);
 	cbData = pOut->GetSize();
 
+	// for save img 
+	isSaveImg ++ ;
+	if(isSaveImg % 1000 == 0){
+		IplImage* savetmp = cvCreateImageHeader(cvSize(imgW, imgH), 8, imgChannel);
+		savetmp->imageData = (char*)InData;
+		char saveName[MAX_PATH] ;
+		sprintf(saveName,"saveImg\\cam_%d.jpg",saveCount);
+		cvSaveImage(saveName,savetmp);
+		cvReleaseImageHeader(&savetmp);	
+		isSaveImg = 0 ;
+	}
 	memcpy (outByte,InData,cbData);
 	return S_OK;
 }
