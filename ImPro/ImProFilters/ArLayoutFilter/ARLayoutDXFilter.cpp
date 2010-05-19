@@ -408,7 +408,7 @@ HRESULT ARLayoutDXFilter::GetMediaType(int iPosition, const IPin* pPin, __inout 
 		*pMediaType = mt;
 		return S_OK;
 	}
-	return S_FALSE;
+	return VFW_S_NO_MORE_ITEMS;
 }
 HRESULT ARLayoutDXFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 {

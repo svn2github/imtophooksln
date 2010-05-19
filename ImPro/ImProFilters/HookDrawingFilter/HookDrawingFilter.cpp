@@ -519,7 +519,7 @@ HRESULT HookDrawingFilter::GetMediaType(int iPosition, const IPin* pPin, __inout
 			}
 		}
 	}
-	return S_FALSE;
+	return VFW_S_NO_MORE_ITEMS;
 }
 HRESULT HookDrawingFilter::CheckOutputType(const CMediaType* mtOut, const IPin* pPin)
 {
