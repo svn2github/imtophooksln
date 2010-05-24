@@ -21,6 +21,7 @@ var ge = null;
 var multGeoPlacemark;
 var polygonPlacemark;
 var polygonPlacemarkGround;
+var boundaryHigh = 50;
 
 //for model
 var placemarkModel;
@@ -278,19 +279,19 @@ function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
   // Add points for the outer shape. 
   var outer = ge.createLinearRing(''); 
   outer.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND); 
-  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), 50); 
-  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), 50); 
-  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), 50); 
-  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), 50); 
+  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), boundaryHigh); 
   polygon.setOuterBoundary(outer); 
  
   // Add inner points. 
   var inner = ge.createLinearRing(''); 
   inner.setAltitudeMode(ge.ALTITUDE_RELATIVE_TO_GROUND); 
-  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 50); 
-  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 50); 
-  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 50); 
-  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 50); 
+  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, boundaryHigh); 
   polygon.getInnerBoundaries().appendChild(inner); 
  
   //Create a style and set width and color of line 
@@ -374,6 +375,10 @@ function setIconLoc(latitude,longitude) {
     
     placemarkIcon.setGeometry(point);
 
+}
+
+function setBoundaryHigh(Bhigh) {
+    boundaryHigh = Bhigh;
 }
 
 function remove() {
