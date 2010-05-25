@@ -36,6 +36,7 @@ char    *vconf = "";
 
 CCritSec g_State;
 
+// New York
 double LeftTopLong = -74.013908;
 double LeftTopLat = 40.711236;
 double LeftDownLong = -74.016356;
@@ -46,7 +47,7 @@ double RightTopLong = -74.005278;
 double RightTopLat = 40.711096;
 
 
-// Zoomout to 101
+// Taipei 101
 //double LeftTopLong = 121.55607268966645;
 //double LeftTopLat = 25.041212573911324;
 //double LeftDownLong = 121.55607268966645;
@@ -196,10 +197,6 @@ namespace googleearth {
 		private: static bool boundaryDirty;
 	private: System::Windows::Forms::Button^  button1;
 
-
-
-
-
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
 
@@ -222,7 +219,7 @@ namespace googleearth {
 			g_formPtr = this;
 			
 			boundaryDirty = false;
-			
+						
 			// read parameters ip, port, tabletID from setting.txt
 			loadParamsFromFile();
 
@@ -230,7 +227,7 @@ namespace googleearth {
 			
 			setupArtoolkit();
 			
-			setupSocket();
+			//setupSocket();
 						
 		}
 
@@ -261,8 +258,11 @@ namespace googleearth {
 		
 
 		private: System::Void setupBrowser(){
-			String^ URL = "file:///C:/GE.html";           
-			//String^ URL = "file:///C:/GE464.html";
+			//String^ URL = "file:///C:/GE.html";  
+		    //String^ URL = "file:///C:/GE464.html";
+			String^ URL = Application::StartupPath;
+			URL += "/web_file/GE.html";
+			//MessageBox::Show(URL);
 			this->webBrowser1->Navigate(URL);
 		}
 
@@ -359,8 +359,6 @@ namespace googleearth {
 					Receive();
 				}
 					// Wait for a new message
-					
-
 			}
 			
 		}
@@ -505,7 +503,7 @@ namespace googleearth {
 			this->webBrowser1->Location = System::Drawing::Point(0, 0);
 			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
 			this->webBrowser1->Name = L"webBrowser1";
-			this->webBrowser1->Size = System::Drawing::Size(926, 444);
+			this->webBrowser1->Size = System::Drawing::Size(1161, 610);
 			this->webBrowser1->TabIndex = 0;
 			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
@@ -516,7 +514,7 @@ namespace googleearth {
 			// 
 			// button1
 			// 
-			this->button1->Location = System::Drawing::Point(815, 406);
+			this->button1->Location = System::Drawing::Point(1059, 575);
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(75, 23);
 			this->button1->TabIndex = 1;
@@ -528,7 +526,7 @@ namespace googleearth {
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(926, 444);
+			this->ClientSize = System::Drawing::Size(1161, 610);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
@@ -655,7 +653,7 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);
+				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);
 				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
 				
 				boundaryDirty = false;
@@ -715,7 +713,7 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLineStyle2",parameterB);	
+			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
 
 		 }
 };
