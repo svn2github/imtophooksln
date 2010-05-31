@@ -70,7 +70,7 @@
 				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="strmbase.lib winmm.lib d3dx9.lib d3d9.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib cv210.lib cxcore210.lib OSCSender.lib commonLib.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\AR2WarpController.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -96,7 +96,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -182,7 +182,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

@@ -63,7 +63,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="detours.lib detoured.lib strmbase.lib winmm.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(SolutionDir)..\OtherLib\Detours\lib; &quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\OtherLib\Detours\lib&quot;;&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"

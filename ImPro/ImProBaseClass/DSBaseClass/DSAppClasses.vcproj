@@ -65,7 +65,7 @@
 				UseLibraryDependencyInputs="false"
 				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=""
 				GenerateDebugInformation="true"
 				SubSystem="2"

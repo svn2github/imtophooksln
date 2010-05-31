@@ -70,7 +70,7 @@
 				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="OSCSender.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib commonLib.lib MSPersist.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;.\Touchlib\VideoWrapper\lib;.\Touchlib\lib;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;.\Touchlib\VideoWrapper\lib;.\Touchlib\lib;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\TouchLibFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -96,7 +96,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot; /s&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -182,7 +182,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;"
+				CommandLine="copy &quot;$(TargetDir)$(ProjectName).lib&quot; &quot;$(OutDir)..\..\..\lib\$(ConfigurationName)\$(ProjectName).lib&quot;&#x0D;&#x0A;regsvr32.exe &quot;$(TargetPath)&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

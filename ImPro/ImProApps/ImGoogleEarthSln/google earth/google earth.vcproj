@@ -62,7 +62,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib dxerr.lib dxguid.lib d3dx9d.lib d3dx10d.lib d3d9.lib winmm.lib comctl32.lib DSBaseClass.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
 				AssemblyDebug="1"
 				SubSystem="2"

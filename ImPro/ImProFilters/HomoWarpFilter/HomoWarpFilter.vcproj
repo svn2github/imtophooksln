@@ -70,7 +70,7 @@
 				AdditionalOptions="/Entry:FilterDllMain"
 				AdditionalDependencies="strmbase.lib winmm.lib d3dx9.lib d3d9.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib MSD3DLib.lib commonLib.lib MSPersist.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\HomoWarpFilter.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
