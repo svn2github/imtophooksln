@@ -1,8 +1,9 @@
 #pragma once
 #include "DSBaseClass.h"
-#include <atlbase.h>
 #include "dshow.h"
-
+#include "Streams.h"
+#include <initguid.h>
+#include "combase.h"
 
 class DSBASECLASSES_API CDSBase
 {
@@ -13,8 +14,6 @@ protected:
 	CComPtr<IVideoWindow> m_pVideoWindow;
 
 protected:
-
-
 	virtual HRESULT ConfigFilters();
 	virtual HRESULT ConnectGraph();
 	virtual HRESULT CreateGraph(IGraphBuilder** ppGraph);

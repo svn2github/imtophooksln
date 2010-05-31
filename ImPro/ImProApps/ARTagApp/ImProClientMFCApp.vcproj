@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfMFC="2"
+			UseOfMFC="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -49,7 +49,7 @@
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -268,15 +268,15 @@
 			Name="CameraDS"
 			>
 			<File
-				RelativePath="..\MyLib\ARTagCameraDS.h"
+				RelativePath="..\..\ImProBaseClass\DSBaseClass\ARLayoutCameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\CameraDS.h"
+				RelativePath="..\..\ImProBaseClass\DSBaseClass\ARTagCameraDS.h"
 				>
 			</File>
 			<File
-				RelativePath="..\MyLib\DSBase.h"
+				RelativePath="..\..\ImProBaseClass\DSBaseClass\CameraDS.h"
 				>
 			</File>
 		</Filter>

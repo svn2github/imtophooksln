@@ -21,6 +21,7 @@
 			OutputDirectory="$(SolutionDir)..\bin\$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
+			UseOfMFC="2"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,10 +43,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL; DSBASECLASS_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__AFXDLL; DSBASECLASS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="4"

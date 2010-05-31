@@ -20,8 +20,9 @@
 #include <BaseTsd.h>
 #include <windows.h>
 #include <atlbase.h>
-#include <qedit.h>
+#include "qedit.h"
 #include "dshow.h"
+#include <InitGuid.h>
 #include "cv.h"
 #include "DSBase.h"
 #include "DSBaseClass.h"
