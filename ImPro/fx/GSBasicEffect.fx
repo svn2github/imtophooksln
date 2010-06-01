@@ -76,7 +76,7 @@ RasterizerState DisableCulling
 
 DepthStencilState DepthEnabling
 {
-	DepthEnable = TRUE;
+	DepthEnable = FALSE;
 };
 
 BlendState DisableBlend

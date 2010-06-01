@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter/&quot;;&quot;$(SolutionDir)../ImProBaseClass/mylib/leadtool/Include/&quot;;&quot;$(SolutionDir)../ImProFilters/HookDrawingFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter/MyTestFilter&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../MyLib&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../ImProFilters/ProjectSettingFilter&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__AFXDLL; DSBASECLASS_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,7 +63,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				UseLibraryDependencyInputs="false"
-				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib"
+				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib highgui210.lib commonLib.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;"
 				ModuleDefinitionFile=""
@@ -182,6 +182,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\ARCalibDS.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ARLayoutCameraDS.cpp"
 				>
 			</File>
@@ -261,6 +265,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\ARCalibDS.h"
+				>
+			</File>
 			<File
 				RelativePath=".\ARLayoutCameraDS.h"
 				>

@@ -1116,3 +1116,29 @@ int ARLayoutDXFilter::GetMarkerID(int idx)
 	}	
 	return m_ARMarkers[idx].patt_id;
 }
+
+
+HRESULT ARLayoutDXFilter::GetARLayoutConfig(ARMultiEachMarkerInfoT* ARConfig){
+
+	CAutoLock lck(&m_csARMarker);
+
+	for(int i = 0 ; i < m_numMarker ; i ++){
+		ARConfig[i].patt_id =  m_ARMarkers[i].patt_id ;
+		ARConfig[i].visible = m_ARMarkers[i].visible ;
+		ARConfig[i].width =  m_ARMarkers[i].width;
+		ARConfig[i].center[0] =  m_ARMarkers[i].center[0] ;
+		ARConfig[i].center[1] =  m_ARMarkers[i].center[1] ;
+		for(int j = 0 ; j < 4 ; j ++){
+			ARConfig[i].trans[j][0] = m_ARMarkers[i].trans[j][0] ;
+			ARConfig[i].trans[j][1] = m_ARMarkers[i].trans[j][1] ;
+			ARConfig[i].trans[j][2] = m_ARMarkers[i].trans[j][2] ;
+			ARConfig[i].trans[j][3] = m_ARMarkers[i].trans[j][3] ;
+		}
+	}
+
+	return true;
+}
+
+int ARLayoutDXFilter::GetARLayoutSize(){
+	return m_numMarker;
+}

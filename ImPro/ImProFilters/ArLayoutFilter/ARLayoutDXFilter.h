@@ -92,4 +92,7 @@ private:
 	HRESULT CreateROIImage(int width, int height);
 	HRESULT GetROIData(ROIData*& roiData);
 
+	HRESULT GetARLayoutConfig(ARMultiEachMarkerInfoT* ARConfig);
+	int GetARLayoutSize() ;
+
 };

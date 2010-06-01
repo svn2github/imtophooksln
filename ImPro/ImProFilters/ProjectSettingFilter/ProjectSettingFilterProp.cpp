@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "ProjectSettingFilterProp.h"
 #include "ProjectSettingFilterApp.h"
-
+#include "ProjectSettingFilter.h"
 
 IMPLEMENT_DYNAMIC(ProjectSettingPropPage, CMFCBasePropertyPage)
 
