@@ -10,12 +10,12 @@
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
 #include "cv.h"
-#include "MSPersist.h"
+#include "GSPersist.h"
 
 
 class ARTagDSFilter :
 	public CMuxTransformFilter, public IARTagFilter,
-	public ISpecifyPropertyPages, public CMSPersist
+	public ISpecifyPropertyPages, public CGSPersist
 {
 private: 
 	bool initARSetting(int width, int height, const CMediaType* inputMT);

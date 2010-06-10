@@ -4,7 +4,7 @@
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 using namespace ARToolKitPlus;
 using namespace std;
-#define NUMMARKER 511
+#define NUMMARKER 512
 class ARLayoutDXDisplay :
 	public MS3DDisplay
 {	
