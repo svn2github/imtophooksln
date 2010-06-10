@@ -21,6 +21,7 @@ ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 		m_matCam2VW[i] = NULL;
 		m_matPro2VW[i] = NULL;
 	}
+	m_pMaskSendData = NULL;
 	m_dirtyLowResMask = FALSE;
 	m_dirtyARStrategy = FALSE;
 
@@ -65,6 +66,7 @@ ImProLogicFilter::~ImProLogicFilter()
 	SAFE_DELETE(m_pARStrategyData);
 	SAFE_DELETE(m_pTouchResult);
 	SAFE_DELETE(projCoord);
+	SAFE_DELETE(m_pMaskSendData);
 	if (W2CMat != NULL)
 	{
 		cvReleaseMat(&W2CMat);
@@ -145,7 +147,7 @@ HRESULT ImProLogicFilter::CreatePins()
 	};
 	GSOUTPIN_ACCEPT_MEDIATYPE maskAccType[] =
 	{
-		GSOUTPIN_ACCEPT_MEDIATYPE(GSMEDIATYPE_FILTER_CONFIG, GSMEDIASUBTYPE_GSMASK_CONFIG, FALSE, GSREF_ACCEPT_MEDIATYPE, sizeof(GSMaskConfigData), 0, 0)
+		GSOUTPIN_ACCEPT_MEDIATYPE(GSMEDIATYPE_FILTER_CONFIG, GSMEDIASUBTYPE_GSMASK_CONFIG_PTR, FALSE, GSREF_ACCEPT_MEDIATYPE, sizeof(GSMaskConfigData), 0, 0)
 	};
 	GSOUTPIN_ACCEPT_MEDIATYPE stAccType[] =
 	{
@@ -354,6 +356,13 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 		pSelf->m_matCam2VW[idx]->_23 = mat.data.fl[2*3 + 1];
 		pSelf->m_matCam2VW[idx]->_33 = mat.data.fl[2*3 + 2];
 		hr = pSelf->SetDirty_WarpFromAR(idx, TRUE);
+		if (FAILED(hr))
+		{
+			free(t);
+			free(d);
+			return hr;
+		}
+		hr = pSelf->SetDirty_LowResMask(TRUE);
 		if (FAILED(hr))
 		{
 			free(t);
@@ -588,6 +597,59 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 		return E_FAIL;
 
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	HRESULT hr = S_OK;
+	CAutoLock lck0(&pSelf->m_csDirtyLowResMask);
+	if (pSelf->m_dirtyLowResMask == FALSE )
+	{
+		return S_FALSE;
+	}
+	BYTE* pSendData = NULL;
+	hr = pSample->GetPointer((BYTE**)&pSendData);
+	if (FAILED(hr))
+		return hr;
+
+	int nWorkingCam = 0;
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (pSelf->m_matPro2VW[i] != NULL && pSelf->m_matCam2VW != NULL)
+		{
+			nWorkingCam++;
+		}
+	}
+	if (pSelf->m_pMaskSendData == NULL)
+	{
+		pSelf->m_pMaskSendData = new GSMaskConfigData();
+	}
+	GSMaskConfigData tmpData;
+	tmpData.m_nFlag = BlendMask;
+	tmpData.m_nfRects = nWorkingCam;
+	tmpData.m_pfRects = new GSFRect[nWorkingCam];
+
+	{
+		CAutoLock lck(&pSelf->m_csProjCoord);
+		for (int i = 0; i < nWorkingCam; i++)
+		{
+			tmpData.m_pfRects[i].LT.x = pSelf->projCoord->proj3DPoints[0][0];  
+			tmpData.m_pfRects[i].LT.y = pSelf->projCoord->proj3DPoints[0][1];
+
+			tmpData.m_pfRects[i].LB.x = pSelf->projCoord->proj3DPoints[1][0];  
+			tmpData.m_pfRects[i].LB.y = pSelf->projCoord->proj3DPoints[1][1];
+			
+			tmpData.m_pfRects[i].RB.x = pSelf->projCoord->proj3DPoints[2][0];
+			tmpData.m_pfRects[i].RB.y = pSelf->projCoord->proj3DPoints[2][1];
+
+			tmpData.m_pfRects[i].RT.x = pSelf->projCoord->proj3DPoints[3][0];
+			tmpData.m_pfRects[i].RT.y = pSelf->projCoord->proj3DPoints[3][1];		
+		}
+		
+		*pSelf->m_pMaskSendData = tmpData;
+		*(GSMaskConfigData**)pSendData = pSelf->m_pMaskSendData;
+		SAFE_DELETE_ARRAY(tmpData.m_pfRects);
+		tmpData.m_nfRects = 0;
+
+	}
+	
+	pSelf->SetDirty_LowResMask(FALSE);
 	return S_OK;
 }
 

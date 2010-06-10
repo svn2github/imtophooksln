@@ -12,9 +12,10 @@
 #include "MyMediaSample.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "pointTrans.h"
+#include "IGSMaskFilter.h"
 using namespace ARToolKitPlus;
 using namespace GSARLayoutNS;
-
+using namespace GSMaskNS;
 #define NUMCAM 4
 
 class ImProLogicFilter :
@@ -65,6 +66,9 @@ protected:
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
 	GSARLayoutStartegyData* m_pARStrategyData;
 	ForegroundRegion* m_pTouchResult;
+
+	GSMaskConfigData* m_pMaskSendData;
+
 	// function for projector coordinate to virtual world
 	CCritSec m_csProjCoord;
 	ProjectorTrans2World* projCoord;

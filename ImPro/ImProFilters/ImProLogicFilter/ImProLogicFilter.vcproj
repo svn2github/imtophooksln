@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib highgui210.lib GSCommonLib.lib GSMFCProp.lib GSPersist.lib GSARTagLayoutFilter.lib commonlib.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib highgui210.lib GSCommonLib.lib GSMFCProp.lib GSPersist.lib GSARTagLayoutFilter.lib commonlib.lib GSMaskFilter.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\$(ProjectName).def"
