@@ -89,7 +89,36 @@ ForegroundRegion::~ForegroundRegion()
 		foregroundRects = NULL;
 	}
 }
+ForegroundRegion::ForegroundRegion(const ForegroundRegion& rhs)
+{
+	if (foregroundRects != NULL)
+	{
+		delete [] foregroundRects;
+		foregroundRects = NULL;
+		this->numForeground = 0;
+	}
+	if (rhs.numForeground == 0)
+		return;
+	this->numForeground = rhs.numForeground;
+	this->foregroundRects = new fRECT[this->numForeground];
+	memcpy((void*)this->foregroundRects, rhs.foregroundRects, sizeof(fRECT)*numForeground);
 
+}
+ForegroundRegion& ForegroundRegion::operator = (const ForegroundRegion &rhs)
+{
+	if (foregroundRects != NULL)
+	{
+		delete [] foregroundRects;
+		foregroundRects = NULL;
+		this->numForeground = 0;
+	}
+	if (rhs.numForeground == 0)
+		return *this;
+	this->numForeground = rhs.numForeground;
+	this->foregroundRects = new fRECT[this->numForeground];
+	memcpy((void*)this->foregroundRects, rhs.foregroundRects ,sizeof(fRECT)*numForeground);
+	return *this;
+}
 MaskVertexData::MaskVertexData() : m_points(NULL), m_nPoints(0), m_maskflag(2)
 {
 

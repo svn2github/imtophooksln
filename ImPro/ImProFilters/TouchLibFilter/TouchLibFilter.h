@@ -8,14 +8,14 @@
 #include "TouchScreenDevice.h"
 #include "CTouchScreen.h"
 #include "..\OSCSender\OSCSender.h"
-#include "MSPersist.h"
+#include "GSPersist.h"
 
 using namespace touchlib;
 
 class TouchLibFilter :
 	public CMuxTransformFilter, public ITouchLibFilter,
 	public ISpecifyPropertyPages, public ITouchListener,
-	public CMSPersist
+	public CGSPersist
 {
 
 public:

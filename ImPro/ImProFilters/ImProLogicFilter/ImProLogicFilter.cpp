@@ -390,6 +390,19 @@ HRESULT ImProLogicFilter::PreReceive_TouchResult(void* self, IMediaSample *pSamp
 	}
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
 
+	CAutoLock lck(&pSelf->m_csTouchResult);
+	CMediaSample* pCSample = (CMediaSample*)pSample;
+	ForegroundRegion* pTouchResult = NULL;
+	pCSample->GetPointer((BYTE**)&pTouchResult);
+	if (pTouchResult == NULL)
+		return E_FAIL;
+	if (pSelf->m_pTouchResult == NULL)
+	{
+		pSelf->m_pTouchResult = new ForegroundRegion();
+	}
+	*pSelf->m_pTouchResult = *pTouchResult;
+
+	pSelf->SetDirty_ARStrategy(TRUE);
 	return S_OK;
 }
 HRESULT ImProLogicFilter::GetPages(CAUUID *pPages)
@@ -677,18 +690,6 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	if (FAILED(hr))
 		return hr;
 
-	//////ForeGround Area///////////////
-	{
-		/*CAutoLock lck(&m_csFGList);
-		if (m_pFGList != NULL && m_pFGList->numForeground > 0)
-		{
-			pData->numFingers = m_pFGList->numForeground;
-			pData->fingerRects = new fRECT[pData->numFingers];
-			memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
-			memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
-				sizeof(fRECT)*pData->numFingers);
-		}*/
-	}
 	GSARLayoutStartegyData tmpData;
 	//////Camera looking Area///////////
 	for (int i =0; i < NUMCAM; i++)
@@ -723,6 +724,31 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 
 		j++;
 	}
+	//////ForeGround Area///////////////
+	{
+		CAutoLock lck(&pSelf->m_csTouchResult);
+		if (pSelf->m_pTouchResult != NULL && pSelf->m_pTouchResult->numForeground > 0)
+		{
+			tmpData.numFingers = pSelf->m_pTouchResult->numForeground;
+			SAFE_DELETE_ARRAY(tmpData.fingerRects);
+			tmpData.fingerRects = new GSBoundingBox2D[tmpData.numFingers];
+			for (int i =0; i< tmpData.numFingers; i++)
+			{
+				tmpData.fingerRects[i].LT.x = pSelf->m_pTouchResult->foregroundRects[i].left;
+				tmpData.fingerRects[i].LT.y = pSelf->m_pTouchResult->foregroundRects[i].top;
+
+				tmpData.fingerRects[i].RB.x = pSelf->m_pTouchResult->foregroundRects[i].right;
+				tmpData.fingerRects[i].RB.y = pSelf->m_pTouchResult->foregroundRects[i].bottom;
+			}
+		}
+	}
+
+
+
+
+
+
+
 	if (pSelf->m_pARStrategyData == NULL)
 	{
 		pSelf->m_pARStrategyData = new GSARLayoutStartegyData();
@@ -730,6 +756,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	*pSelf->m_pARStrategyData = tmpData;
 	*(GSARLayoutStartegyData**)pSendData = pSelf->m_pARStrategyData;
 	SAFE_DELETE_ARRAY(tmpData.camViews);
+	SAFE_DELETE_ARRAY(tmpData.fingerRects);
 	hr = pSelf->SetDirty_ARStrategy(FALSE);
 	return S_OK;
 }

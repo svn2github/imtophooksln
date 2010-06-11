@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\oscpack\;.\Touchlib\VideoWrapper\include;.\Touchlib\opencv1.0\otherlibs\cvcam\include;.\Touchlib\VideoWrapper;.\Touchlib\include;.\;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)../ARToolKitPlus_2.1.1/include&quot;;.\Touchlib\tinyxml;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OSCSender/&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;"
+				AdditionalIncludeDirectories=".\oscpack\;.\Touchlib\VideoWrapper\include;.\Touchlib\opencv1.0\otherlibs\cvcam\include;.\Touchlib\VideoWrapper;.\Touchlib\include;.\;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)../ARToolKitPlus_2.1.1/include&quot;;.\Touchlib\tinyxml;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OSCSender/&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSPersist&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="OSCSender.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib commonLib.lib MSPersist.lib"
+				AdditionalDependencies="OSCSender.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib commonLib.lib GSPersist.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;.\Touchlib\VideoWrapper\lib;.\Touchlib\lib;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\TouchLibFilter.def"

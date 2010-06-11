@@ -57,8 +57,7 @@ protected:
 	CCritSec m_csDirtyARStrategy;
 	CCritSec m_csMatCam2VW[NUMCAM];
 	CCritSec m_csMatPro2VW[NUMCAM];
-	
-	CCritSec m_csFGList;
+	CCritSec m_csTouchResult;
 
 
 
@@ -66,7 +65,6 @@ protected:
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
 	GSARLayoutStartegyData* m_pARStrategyData;
 	ForegroundRegion* m_pTouchResult;
-
 	GSMaskConfigData* m_pMaskSendData;
 
 	// function for projector coordinate to virtual world

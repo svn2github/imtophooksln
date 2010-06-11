@@ -60,6 +60,8 @@ public:
 	unsigned int numForeground;
 	ForegroundRegion();
 	~ForegroundRegion();
+	ForegroundRegion(const ForegroundRegion& rhs);
+	ForegroundRegion& operator = (const ForegroundRegion &rhs);
 };
 
 class MaskVertexData
