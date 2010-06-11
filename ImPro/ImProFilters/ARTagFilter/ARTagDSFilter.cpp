@@ -312,7 +312,7 @@ HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int num
 			cvDrawLine(img, pts[i%4], pts[(i+1)%4], cvScalar(0,0,255));
 		}
 		sprintf_s(str, MAX_PATH, "%d\0", markinfos[i].id);
-		cvPutText(img,str, center, &cvFont(1), cvScalar(0,0,255) );
+		//cvPutText(img,str, center, &cvFont(1,1) cvScalar(0,0,255) );
 	}
 	
 	

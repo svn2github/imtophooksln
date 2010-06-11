@@ -369,6 +369,13 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 			free(d);
 			return hr;
 		}
+		hr = pSelf->SetDirty_ARStrategy(TRUE);
+		if (FAILED(hr))
+		{
+			free(t);
+			free(d);
+			return hr;
+		}
 	}
 	free(t);
 	free(d);
@@ -659,9 +666,71 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 		return E_FAIL;
 
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	HRESULT hr = S_OK;
+	CAutoLock lck0(&pSelf->m_csDirtyARStrategy);
+	if (pSelf->m_dirtyARStrategy == FALSE )
+	{
+		return S_FALSE;
+	}
+	BYTE* pSendData = NULL;
+	hr = pSample->GetPointer((BYTE**)&pSendData);
+	if (FAILED(hr))
+		return hr;
 
+	//////ForeGround Area///////////////
+	{
+		/*CAutoLock lck(&m_csFGList);
+		if (m_pFGList != NULL && m_pFGList->numForeground > 0)
+		{
+			pData->numFingers = m_pFGList->numForeground;
+			pData->fingerRects = new fRECT[pData->numFingers];
+			memset((void*)pData->fingerRects, 0, sizeof(fRECT)*pData->numFingers);
+			memcpy((void*)pData->fingerRects, (void*)m_pFGList->foregroundRects, 
+				sizeof(fRECT)*pData->numFingers);
+		}*/
+	}
+	GSARLayoutStartegyData tmpData;
+	//////Camera looking Area///////////
+	for (int i =0; i < NUMCAM; i++)
+	{
+		if (pSelf->m_matCam2VW[i] == NULL)
+			continue;
+		tmpData.numCamView++;
+	}
+	tmpData.camViews = new GSBoundingBox2D[tmpData.numCamView];
+	int j =0;
+	for (int i =0; i < NUMCAM; i++)
+	{
+		CAutoLock lck(&(pSelf->m_csMatCam2VW[i]));
+		if (pSelf->m_matCam2VW[i] == NULL)
+			continue;
+		D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
 
+		D3DXVec4Transform(&lt, &lt, pSelf->m_matCam2VW[i]);
+		D3DXVec4Transform(&lb, &lb, pSelf->m_matCam2VW[i]);
+		D3DXVec4Transform(&rb, &rb, pSelf->m_matCam2VW[i]);
+		D3DXVec4Transform(&rt, &rt, pSelf->m_matCam2VW[i]);
 
+		lt /= lt.z;
+		lb /= lb.z;
+		rb /= rb.z;
+		rt /= rt.z;
+
+		tmpData.camViews[j].LT.x = min(min(min(lt.x, lb.x), rb.x), rt.x); 
+		tmpData.camViews[j].RB.x = max(max(max(lt.x, lb.x), rb.x), rt.x);
+		tmpData.camViews[j].LT.y = min(min(min(lt.y, lb.y), rb.y), rt.y); 
+		tmpData.camViews[j].RB.y = max(max(max(lt.y, lb.y), rb.y), rt.y); 
+
+		j++;
+	}
+	if (pSelf->m_pARStrategyData == NULL)
+	{
+		pSelf->m_pARStrategyData = new GSARLayoutStartegyData();
+	}
+	*pSelf->m_pARStrategyData = tmpData;
+	*(GSARLayoutStartegyData**)pSendData = pSelf->m_pARStrategyData;
+	SAFE_DELETE_ARRAY(tmpData.camViews);
+	hr = pSelf->SetDirty_ARStrategy(FALSE);
 	return S_OK;
 }
 HRESULT ImProLogicFilter::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
