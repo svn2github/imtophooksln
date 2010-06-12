@@ -13,6 +13,7 @@
 #include "ARToolKitPlus/TrackerMultiMarker.h"
 #include "pointTrans.h"
 #include "IGSMaskFilter.h"
+#include "OSCSender.h"
 using namespace ARToolKitPlus;
 using namespace GSARLayoutNS;
 using namespace GSMaskNS;
@@ -66,6 +67,10 @@ protected:
 	GSARLayoutStartegyData* m_pARStrategyData;
 	ForegroundRegion* m_pTouchResult;
 	GSMaskConfigData* m_pMaskSendData;
+	
+	OSCSender* m_pOSCSender;
+
+
 
 	// function for projector coordinate to virtual world
 	CCritSec m_csProjCoord;
@@ -81,6 +86,8 @@ protected:
 	HRESULT SetDirty_ARStrategy(BOOL bDirty);
 
 	virtual HRESULT CreatePins();
+	
+	static HRESULT __stdcall PreReceive_ARResultFromTable(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
 
 	static HRESULT __stdcall PreReceive_ARResult(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
 	static HRESULT __stdcall PreReceive_TouchResult(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample);
@@ -88,10 +95,16 @@ protected:
 	static HRESULT __stdcall FillBuffer_WarpFromAR(void* self, IMediaSample *pSample, IPin* pPin);
 	static HRESULT __stdcall FillBuffer_LowResMask(void* self, IMediaSample *pSample, IPin* pPin);
 	static HRESULT __stdcall FillBuffer_ARStrategy(void* self, IMediaSample *pSample, IPin* pPin);
-	
 
+	HRESULT SendBoundingBox2OSCSender();
+	HRESULT SendDetectedARFromTable2OSCSender(float* tagRects, INT* tagIDs, UINT nTagRect);
 public:
 	ImProLogicFilter(IUnknown * pOuter, HRESULT *phr, BOOL ModifiesData);
 	virtual ~ImProLogicFilter();
 
+	virtual BOOL IsOSCConnected();
+	virtual HRESULT ConnectOSC(char* ipaddress, int port);
+	virtual HRESULT DisConnectOSC();
+	virtual HRESULT GetIPAddress(char* outIpAddress);
+	virtual int GetPort();
 };

@@ -15,12 +15,14 @@
 #include "ip/UdpSocket.h"
 #include <string>
 #include <map>
+
 using namespace touchlib;
 using namespace std;
 
 class OSCSENDER_API OSCSender : public ITouchListener
 {
 public:
+
 	static int m_ref;
 	static OSCSender* GetOSCSender();
 	HRESULT AddRef();
@@ -36,7 +38,7 @@ public:
 	void clearFingers();
 
 	void sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2]);
-
+	void sendDetectedARTag(float* tagRects, int* tagIDs, UINT nTag);
 public:
 	char m_ipAddress[MAX_PATH];
 	int m_port;

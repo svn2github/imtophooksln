@@ -2,8 +2,11 @@
 // Microsoft Visual C++ generated include file.
 // Used by ImProLogicFilter.rc
 //
-#define IDD_ImProLogicFilterProp              107
-#define IDS_ImProLogicFilterProp_Title        3000
+#define IDD_ImProLogicFilterProp        107
+#define IDS_ImProLogicFilterProp_Title  3000
+#define IDC_BTNCONNECT                  16005
+#define IDC_IP                          16006
+#define IDC_Port                        16007
 
 // Next default values for new objects
 // 

@@ -4,11 +4,16 @@
 #include "stdafx.h"
 #include "OSCSender.h"
 #include <math.h>
+#include "Streams.h"
 #define OUTPUT_BUFFER_SIZE 2048
+
+CCritSec g_csOSCSender;
+
 OSCSender* g_OSCSender = NULL;
 int OSCSender::m_ref = 0;
 OSCSender* OSCSender::GetOSCSender()
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (g_OSCSender == NULL)
 	{
 		g_OSCSender = new OSCSender();
@@ -18,11 +23,13 @@ OSCSender* OSCSender::GetOSCSender()
 }
 HRESULT OSCSender::AddRef()
 {
+	CAutoLock lck(&g_csOSCSender);
 	m_ref++;
 	return S_OK;
 }
 HRESULT OSCSender::Release()
 {
+	CAutoLock lck(&g_csOSCSender);
 	m_ref--;
 	if (m_ref <= 0)
 	{
@@ -49,7 +56,8 @@ OSCSender::~OSCSender(void)
 	}
 }
 void OSCSender::connectSocket(char* ip_address, int port)
-{			
+{	
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket != NULL)
 	{
 		delete m_transmitSocket;
@@ -63,6 +71,7 @@ void OSCSender::connectSocket(char* ip_address, int port)
 }
 void OSCSender::disConnectSocket()
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket != NULL)
 	{
 		delete m_transmitSocket;
@@ -71,14 +80,16 @@ void OSCSender::disConnectSocket()
 }
 bool OSCSender::isConnected()
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket == NULL)
 	{
-		return FALSE;
+		return false;
 	}
-
+	return true;
 }
 void OSCSender::fingerDown(TouchData data)
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket == NULL)
 	{
 		return;
@@ -91,6 +102,7 @@ void OSCSender::fingerDown(TouchData data)
 }
 void OSCSender::fingerUpdate(TouchData data)
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket == NULL)
 	{
 		return;
@@ -100,6 +112,7 @@ void OSCSender::fingerUpdate(TouchData data)
 }
 void OSCSender::fingerUp(TouchData data)
 {
+	CAutoLock lck(&g_csOSCSender);
 	if (m_transmitSocket == NULL)
 	{
 		return;
@@ -118,6 +131,7 @@ void OSCSender::fingerUp(TouchData data)
 
 void OSCSender::frame()
 {
+	CAutoLock lck(&g_csOSCSender);
 	if(!m_transmitSocket)
 		return;
 
@@ -253,6 +267,7 @@ void OSCSender::frame()
 
 void OSCSender::sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2])
 {
+	CAutoLock lck(&g_csOSCSender);
 	if(!m_transmitSocket)
 		return;
 
@@ -269,8 +284,28 @@ void OSCSender::sendHighResBoundingBox(int id, float rect[4], float orgPt[4][2])
 	if(p.IsReady())
 		m_transmitSocket->Send( p.Data(), p.Size() );
 }
+void OSCSender::sendDetectedARTag(float* tagRects, int* tagIDs, UINT nTag)
+{
+	CAutoLock lck(&g_csOSCSender);
+	if(!m_transmitSocket || tagRects == NULL || tagIDs == NULL || nTag == 0)
+		return;
 
+	// send update messages..
+
+	char buffer[OUTPUT_BUFFER_SIZE];
+	osc::OutboundPacketStream p( buffer, OUTPUT_BUFFER_SIZE );
+	p.Clear();
+	p << osc::BeginBundle();
+	for (int i =0; i < nTag; i++)
+	{
+		p << osc::BeginMessage( "/tuio/ARTag" ) << "set" << tagIDs[i] << tagRects[8*i+0] <<  tagRects[8*i+1]  <<  tagRects[8*i+2]  <<  tagRects[8*i+3] << osc::EndMessage;
+	}
+	p << osc::EndBundle;
+	if(p.IsReady())
+		m_transmitSocket->Send( p.Data(), p.Size() );
+}
 void OSCSender::clearFingers()
 {
+	CAutoLock lck(&g_csOSCSender);
 	m_fingerList.clear();
 }

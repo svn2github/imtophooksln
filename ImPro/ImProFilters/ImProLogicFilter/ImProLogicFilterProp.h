@@ -27,6 +27,7 @@ protected:
 
 protected:
 	IImProLogicFilter *m_pFilter;
+	HRESULT GetSetting();
 public:
 	// Dialog Data
 	enum {IDD = IDD_ImProLogicFilterProp};
@@ -38,9 +39,14 @@ public:
 	virtual HRESULT OnApplyChanges(void);
 
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
+	
 public: //inherit from CMFCBaseProperty Page
 	virtual int GetDialogResourceID() { return IDD_ImProLogicFilterProp;}
 	virtual int GetTitileResourceID() { return IDS_ImProLogicFilterProp_Title;}
 
 
+	CEdit m_edIP;
+	CButton m_btnConnect;
+	CEdit m_edPort;
+	afx_msg void OnBnClickedBtnconnect();
 };

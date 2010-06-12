@@ -28,6 +28,7 @@ ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	m_pARStrategyData = NULL;
 	m_pTouchResult = NULL;
 	m_RANSIC_Threshold = 0.1;
+	m_pOSCSender = OSCSender::GetOSCSender();
 
 
 	extern HMODULE GetModule();
@@ -67,6 +68,7 @@ ImProLogicFilter::~ImProLogicFilter()
 	SAFE_DELETE(m_pTouchResult);
 	SAFE_DELETE(projCoord);
 	SAFE_DELETE(m_pMaskSendData);
+	SAFE_RELEASE(m_pOSCSender);
 	if (W2CMat != NULL)
 	{
 		cvReleaseMat(&W2CMat);
@@ -134,7 +136,7 @@ HRESULT ImProLogicFilter::CreatePins()
 			GSFILTER_INPUTPIN_FUNCS(ImProLogicFilter::PreReceive_ARResult, NULL, NULL, NULL, NULL)),
 		
 		GSFILTER_INPUTPIN_DESC(L"ARResult from Table", 0, GSINPUT_PIN, GSPIN_ACCEPT_MEDIATYPE_GROUP(arAccType, ARRAYSIZE(arAccType)), 
-			GSFILTER_INPUTPIN_FUNCS(ImProLogicFilter::PreReceive_ARResult, NULL, NULL, NULL, NULL)),
+			GSFILTER_INPUTPIN_FUNCS(ImProLogicFilter::PreReceive_ARResultFromTable, NULL, NULL, NULL, NULL)),
 		GSFILTER_INPUTPIN_DESC(L"TouchResult", 0, GSINPUT_PIN, GSPIN_ACCEPT_MEDIATYPE_GROUP(touchAccType, ARRAYSIZE(touchAccType)), 
 			GSFILTER_INPUTPIN_FUNCS(ImProLogicFilter::PreReceive_TouchResult, NULL, NULL, NULL, NULL)),
 
@@ -181,7 +183,7 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 	hr = pSelf->GetARResult_PinIndex(pReceivePin, idx);
 	if (FAILED(hr))
 		return E_FAIL;
-
+	
 	CMediaSample* pCSample = (CMediaSample*)pSample;
 	ARTagResultData* pARResult = NULL;
 	pCSample->GetPointer((BYTE**)&pARResult);
@@ -379,9 +381,92 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 	}
 	free(t);
 	free(d);
+
+	pSelf->SendBoundingBox2OSCSender();
+
+
 	return S_OK;
 }
+HRESULT ImProLogicFilter::PreReceive_ARResultFromTable(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample)
+{
+	if (self == NULL || pSample == NULL || pReceivePin == NULL)
+	{
+		return E_FAIL;
+	}
+	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	HRESULT hr = S_OK;
 
+	CMediaSample* pCSample = (CMediaSample*)pSample;
+	ARTagResultData* pARResult = NULL;
+	pCSample->GetPointer((BYTE**)&pARResult);
+	if (pARResult == NULL)
+	{
+		return E_FAIL;
+	}
+	if (pARResult->m_pMarkerConfig == NULL)
+		return E_FAIL;
+
+	if (pARResult->m_nDetected <= 0)
+	{
+		return S_FALSE;
+	}
+
+	float w = pARResult->m_screenW;
+	float h = pARResult->m_screenH;
+	if (w <= 0 || h <= 0)
+		return E_FAIL;
+	WCHAR str[MAX_PATH];
+
+	float* detectedTagRect = new float[8*pARResult->m_nDetected];
+	int* detectedTagID = new int[pARResult->m_nDetected];
+	memset(detectedTagID, 0, sizeof(int)*pARResult->m_nDetected);
+
+	for (int i = 0; i< pARResult->m_nDetected; i++)
+	{
+		const ARFloat* arV[4]= {NULL};
+
+		switch (pARResult->m_pDetectedMarks[i].dir)
+		{
+		case 0:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[1];
+			break;
+		case 1:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[0];
+			break;
+		case 2:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[2];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[3];
+			break;
+		case 3:
+			arV[0] = pARResult->m_pDetectedMarks[i].vertex[3];
+			arV[1] = pARResult->m_pDetectedMarks[i].vertex[0];
+			arV[2] = pARResult->m_pDetectedMarks[i].vertex[1];
+			arV[3] = pARResult->m_pDetectedMarks[i].vertex[2];
+			break;
+		default:
+			continue;
+			break;
+		}
+		detectedTagRect[8*i + 0] = arV[0][0]/w;  detectedTagRect[8*i + 1] = arV[0][1]/h;
+		detectedTagRect[8*i + 2] = arV[1][0]/w;  detectedTagRect[8*i + 3] = arV[1][1]/h;
+		detectedTagRect[8*i + 4] = arV[2][0]/w;  detectedTagRect[8*i + 5] = arV[2][1]/h;
+		detectedTagRect[8*i + 6] = arV[3][0]/w;  detectedTagRect[8*i + 7] = arV[3][1]/h;
+
+	}
+	hr = pSelf->SendDetectedARFromTable2OSCSender(detectedTagRect, detectedTagID, pARResult->m_nDetected);
+	SAFE_DELETE_ARRAY(detectedTagRect);
+	SAFE_DELETE_ARRAY(detectedTagID);
+	
+	return hr;
+}
 HRESULT ImProLogicFilter::PreReceive_TouchResult(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample)
 {
 	if (self == NULL || pSample == NULL || pReceivePin == NULL)
@@ -743,12 +828,6 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 		}
 	}
 
-
-
-
-
-
-
 	if (pSelf->m_pARStrategyData == NULL)
 	{
 		pSelf->m_pARStrategyData = new GSARLayoutStartegyData();
@@ -787,4 +866,74 @@ HRESULT ImProLogicFilter::SetDirty_ARStrategy(BOOL bDirty)
 	CAutoLock lck(&m_csDirtyARStrategy);
 	m_dirtyARStrategy = bDirty;
 	return S_OK;
+}
+
+HRESULT ImProLogicFilter::SendBoundingBox2OSCSender()
+{
+	if (m_pOSCSender == NULL || m_pOSCSender->isConnected() == false)
+	{
+		return S_FALSE;
+	}
+	//for testing
+	for (int i=0; i< NUMCAM; i++)
+	{
+		if (m_matPro2VW[i] == NULL)
+		{
+			continue;
+		}			
+		m_pOSCSender->sendHighResBoundingBox(i, projCoord->projBox,projCoord->proj3DPoints);
+	}
+	return S_OK;
+}
+HRESULT ImProLogicFilter::SendDetectedARFromTable2OSCSender(float* tagRects, INT* tagIDs, UINT nTagRect)
+{
+	if (m_pOSCSender == NULL || m_pOSCSender->isConnected() == false)
+	{
+		return S_FALSE;
+	}
+	if (tagRects == NULL || tagIDs == NULL || nTagRect == 0)
+		return E_INVALIDARG;
+
+	m_pOSCSender->sendDetectedARTag(tagRects, tagIDs, nTagRect);
+
+	return S_OK;
+}
+
+
+BOOL ImProLogicFilter::IsOSCConnected()
+{
+	if (m_pOSCSender == NULL)
+		return false;
+	return m_pOSCSender->isConnected();
+}
+HRESULT ImProLogicFilter::ConnectOSC(char* ipaddress, int port)
+{
+	if (m_pOSCSender == NULL)
+		return E_FAIL;
+	if (m_pOSCSender->isConnected())
+	{
+		return S_FALSE;
+	}
+	m_pOSCSender->connectSocket(ipaddress, port);
+	return S_OK;
+}
+HRESULT ImProLogicFilter::DisConnectOSC()
+{
+	if (m_pOSCSender == NULL)
+		return E_FAIL;
+	m_pOSCSender->disConnectSocket();
+	return S_OK;
+}
+HRESULT ImProLogicFilter::GetIPAddress(char* outIpAddress)
+{
+	if (m_pOSCSender == NULL)
+		return E_FAIL;
+	strcpy_s(outIpAddress, MAX_PATH, m_pOSCSender->m_ipAddress);
+	return S_OK;
+}
+int ImProLogicFilter::GetPort()
+{
+	if (m_pOSCSender == NULL)
+		return 0;
+	return m_pOSCSender->m_port;
 }

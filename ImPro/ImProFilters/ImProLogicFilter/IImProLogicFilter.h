@@ -15,6 +15,9 @@ MIDL_INTERFACE("6B51D25F-D02F-6C86-8BD2-BD58596CF157")
 IImProLogicFilter: public IUnknown
 {
 public:
-
-
+	virtual BOOL IsOSCConnected();
+	virtual HRESULT ConnectOSC(char* ipaddress, int port);
+	virtual HRESULT DisConnectOSC();
+	virtual HRESULT GetIPAddress(char* outIpAddress);
+	virtual int GetPort();
 };

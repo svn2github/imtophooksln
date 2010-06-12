@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSMuxFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\StrmBase&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSGlobalFunc&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSMFCProp&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSPersist&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSCommonLib&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\\include\opencv&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSMuxFilter&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib&quot;;&quot;$(SolutionDir)..\GSBaseClass\StrmBase&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSGlobalFunc&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSMFCProp&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSPersist&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSCommonLib&quot;;&quot;$(SolutionDir)..\ImProBaseClass\commonLib&quot;;&quot;$(SolutionDir)..\ImProFilters\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSHomoWarpFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSMaskFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSARTagLayoutFilter&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSMuxFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSD3DLib&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\StrmBase&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSGlobalFunc&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSMFCProp&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSPersist&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSBaseClass\GSCommonLib&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\\include\opencv&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Optional&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib\DXUTLib\DXUT\Core&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSMuxFilter&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib/Effects11/inc&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSD3DLib&quot;;&quot;$(SolutionDir)..\GSBaseClass\StrmBase&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSGlobalFunc&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSMFCProp&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSPersist&quot;;&quot;$(SolutionDir)..\GSBaseClass\GSCommonLib&quot;;&quot;$(SolutionDir)..\ImProBaseClass\commonLib&quot;;&quot;$(SolutionDir)..\ImProFilters\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSHomoWarpFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSMaskFilter&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\GSFilters\GSARTagLayoutFilter&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender&quot;;&quot;$(SolutionDir)..\ImProFilters\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscpack&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib highgui210.lib GSCommonLib.lib GSMFCProp.lib GSPersist.lib GSARTagLayoutFilter.lib commonlib.lib GSMaskFilter.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib cv210.lib cxcore210.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib highgui210.lib GSCommonLib.lib GSMFCProp.lib GSPersist.lib GSARTagLayoutFilter.lib commonlib.lib GSMaskFilter.lib OSCSender.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\$(ProjectName).def"
@@ -278,5 +278,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="ImProLogicFilter.rc"
+		/>
 	</Globals>
 </VisualStudioProject>
