@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\OSCSender\&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscPack&quot;;&quot;$(ProjectDir)..\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../ImProBaseClass/DSBaseClass&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1/include&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)..\OtherLib\OSCSender\&quot;;&quot;$(SolutionDir)..\OtherLib\OSCSender\oscPack&quot;;&quot;$(ProjectDir)..\TouchLibFilter\Touchlib\include&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../ImProBaseClass/DSBaseClass&quot;;&quot;$(SolutionDir)../ImProFilters/ARTagFilter&quot;;&quot;$(SolutionDir)../ImProFilters/ARToolKitPlus_2.1.1/include&quot;;&quot;$(SolutionDir)../ImProFilters/ARLayoutFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXBlendFilter&quot;;&quot;$(SolutionDir)../ImProFilters/DXRender&quot;;&quot;$(SolutionDir)../ImProFilters/HomoWarpFilter&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbase.lib cv210.lib cxcore210.lib  highgui210.lib commonLib.lib DSBaseClass.lib"
+				AdditionalDependencies="strmbase.lib commonLib.lib DSBaseClass.lib opencv_core211.lib opencv_imgproc211.lib opencv_calib3d211.lib opencv_highgui211.lib opencv_video211.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
@@ -151,7 +151,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmbase.lib cv200.lib cxcore200.lib  highgui200.lib commonLib.lib DSBaseClass.lib"
+				AdditionalDependencies="strmbase.lib commonLib.lib DSBaseClass.lib opencv_core211.lib opencv_imgproc211.lib opencv_calib3d211.lib opencv_highgui211.lib opencv_video211.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\bin&quot;;&quot;$(SolutionDir)\DSLib\lib&quot;;&quot;$(SolutionDir)\OpenCV2.0\lib&quot;;&quot;$(SolutionDir)\DXSDK 2008 March\Lib\x86&quot;;&quot;$(SolutionDir)\MyLib\bin&quot;"
 				GenerateDebugInformation="true"

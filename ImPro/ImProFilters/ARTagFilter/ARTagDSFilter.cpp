@@ -10,7 +10,6 @@
 #include "ARTagFilter.h"
 #include "cv.h"
 #include "highgui.h"
-#include "ARTagD3DDisplay.h"
 #include "ARTagProp.h"
 #include "MyMediaSample.h"
 #include "MyARTagMediaSample.h"
@@ -32,7 +31,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_callbackArgv = NULL;
 	m_bDrawTag = true;
 	m_bDrawReproPt = true;
-	m_bGuessPose = true;
+	m_bGuessPose = false;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 }
@@ -312,6 +311,8 @@ HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int num
 			cvDrawLine(img, pts[i%4], pts[(i+1)%4], cvScalar(0,0,255));
 		}
 		sprintf_s(str, MAX_PATH, "%d\0", markinfos[i].id);
+		CvFont font = cvFont(2,1);
+		cvPutText(img, str, center, &font, cvScalar(0,0,255));
 		//cvPutText(img,str, center, &cvFont(1,1) cvScalar(0,0,255) );
 	}
 	

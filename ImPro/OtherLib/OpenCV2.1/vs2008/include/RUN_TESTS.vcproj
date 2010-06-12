@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding = "Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="9.00"
+	Name="RUN_TESTS"
+	ProjectGUID="{294B2E5D-B374-4621-9432-08C588A0FD9E}"
+	Keyword="Win32Proj">
+	<Platforms>
+		<Platform
+			Name="Win32"/>
+	</Platforms>
+	<Configurations>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="Debug"
+			IntermediateDirectory="RUN_TESTS.dir\Debug"
+			ConfigurationType="10"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\.;..;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\opencv;"
+				ExceptionHandling="0"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Debug\&quot;"
+				AssemblerListingLocation="Debug"
+				ObjectFile="$(IntDir)\"
+/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\.;..;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\opencv;"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Debug\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Debug\&quot;"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\ctest.exe&quot; --force-new-ctest-process -C $(OutDir)"/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="Release"
+			IntermediateDirectory="RUN_TESTS.dir\Release"
+			ConfigurationType="10"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\.;..;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\opencv;"
+				ExceptionHandling="0"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Release\&quot;"
+				AssemblerListingLocation="Release"
+				ObjectFile="$(IntDir)\"
+/>
+			<Tool
+				Name="VCCustomBuildTool"/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\.;..;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\opencv;"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Release\&quot;"/>
+			<Tool
+				Name="VCMIDLTool"
+				PreprocessorDefinitions="HAVE_CONFIG_H,CMAKE_INTDIR=\&quot;Release\&quot;"
+				MkTypLibCompatible="FALSE"
+				TargetEnvironment="1"
+				GenerateStublessProxies="TRUE"
+				TypeLibraryName="$(InputName).tlb"
+				OutputDirectory="$(IntDir)"
+				HeaderFileName="$(InputName).h"
+				DLLDataFileName=""
+				InterfaceIdentifierFileName="$(InputName)_i.c"
+				ProxyFileName="$(InputName)_p.c"/>
+			<Tool
+				Name="VCPreBuildEventTool"/>
+			<Tool
+				Name="VCPreLinkEventTool"/>
+			<Tool
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\ctest.exe&quot; --force-new-ctest-process -C $(OutDir)"/>
+		</Configuration>
+	</Configurations>
+	<Files>
+			<File
+				RelativePath="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\CMakeLists.txt">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule D:/Projects/ImPro/OtherLib/OpenCV2.1/OpenCV_SVN/include/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -HD:/Projects/ImPro/OtherLib/OpenCV2.1/OpenCV_SVN -B.. --check-stamp-file CMakeFiles/generate.stamp"
+					AdditionalDependencies="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\CMakeLists.txt;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\CMakeLists.txt;"
+					Outputs="CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description="Building Custom Rule D:/Projects/ImPro/OtherLib/OpenCV2.1/OpenCV_SVN/include/CMakeLists.txt"
+					CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -HD:/Projects/ImPro/OtherLib/OpenCV2.1/OpenCV_SVN -B.. --check-stamp-file CMakeFiles/generate.stamp"
+					AdditionalDependencies="D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\CMakeLists.txt;D:\Projects\ImPro\OtherLib\OpenCV2.1\OpenCV_SVN\include\CMakeLists.txt;"
+					Outputs="CMakeFiles\generate.stamp"/>
+				</FileConfiguration>
+			</File>
+		<Filter
+			Name="CMake Rules"
+			Filter="">
+			<File
+				RelativePath="CMakeFiles\RUN_TESTS_force.rule">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description=" "
+					CommandLine="cd ."
+					AdditionalDependencies="CMakeFiles\RUN_TESTS_force.rule"
+					Outputs="CMakeFiles\RUN_TESTS_force"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+					Name="VCCustomBuildTool"
+					Description=" "
+					CommandLine="cd ."
+					AdditionalDependencies="CMakeFiles\RUN_TESTS_force.rule"
+					Outputs="CMakeFiles\RUN_TESTS_force"/>
+				</FileConfiguration>
+			</File>
+		</Filter>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

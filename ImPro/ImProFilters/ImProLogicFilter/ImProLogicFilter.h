@@ -7,7 +7,7 @@
 #include "combase.h"
 #include "GSDXFilterBase.h"
 #include "GSDXMuxFilter.h"
-#include "GSPersist.h"
+#include "IGSPersist.h"
 #include "IGSARTagLayoutFilter.h"
 #include "MyMediaSample.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
@@ -21,7 +21,7 @@ using namespace GSMaskNS;
 
 class ImProLogicFilter :
 	public GSMuxFilter, public IImProLogicFilter,
-	public ISpecifyPropertyPages, public CGSPersist
+	public ISpecifyPropertyPages, public IGSPersist
 {
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);

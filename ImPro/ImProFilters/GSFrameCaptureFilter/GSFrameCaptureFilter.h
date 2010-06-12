@@ -7,11 +7,11 @@
 #include "combase.h"
 #include "GSDXFilterBase.h"
 #include "GSDXMuxFilter.h"
-#include "GSPersist.h"
+#include "IGSPersist.h"
 
 class GSFrameCaptureFilter :
 	public GSMuxFilter, public IGSFrameCaptureFilter,
-	public ISpecifyPropertyPages, public CGSPersist
+	public ISpecifyPropertyPages, public IGSPersist
 {
 public:
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);

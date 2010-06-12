@@ -5,17 +5,17 @@
 #include "Streams.h"
 #include <initguid.h>
 #include "combase.h"
+#include "IARTagFilter.h"
 #include "ARToolKitPlus/TrackerMultiMarker.h"
-#include "ARTagD3DDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
 #include "cv.h"
-#include "GSPersist.h"
+#include "IGSPersist.h"
 
 
 class ARTagDSFilter :
 	public CMuxTransformFilter, public IARTagFilter,
-	public ISpecifyPropertyPages, public CGSPersist
+	public ISpecifyPropertyPages, public IGSPersist
 {
 private: 
 	bool initARSetting(int width, int height, const CMediaType* inputMT);

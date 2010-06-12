@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MSD3DLIB_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib opencv_core211.lib opencv_imgproc211.lib opencv_calib3d211.lib opencv_highgui211.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
@@ -118,7 +118,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\include\opencv&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass\CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass\commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MSD3DLIB_EXPORTS"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"
@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib highgui210.lib cv210.lib cxcore210.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib strmbase.lib winmm.lib opencv_core211.lib opencv_imgproc211.lib opencv_calib3d211.lib opencv_highgui211.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				GenerateDebugInformation="true"
