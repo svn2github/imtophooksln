@@ -118,7 +118,6 @@ HRESULT ARTagCameraSettingPage::ApplyCameraSetting()
 	WCHAR tmpStr[MAX_PATH];
 	try
 	{
-		
 		GetWindowText(m_edXaxis, tmpStr, MAX_PATH);
 		if (wcscmp(tmpStr, L"") == 0)
 		{
@@ -342,6 +341,8 @@ HRESULT ARTagCameraSettingPage::OnActivate(void)
 }
 HRESULT ARTagCameraSettingPage::OnApplyChanges(void)
 {
+	if (m_hwnd == NULL)
+		return S_FALSE;
     HRESULT hr = ApplyCameraSetting();
 
 	if (FAILED(hr))
@@ -614,7 +615,6 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 	WCHAR str[MAX_PATH] = {0};
 	DWORD cmd = 0;
 	DWORD cmd2 = 0;
-	
 	switch (uMsg) {
 	case WM_COMMAND:
 		cmd = LOWORD(wParam);
@@ -699,6 +699,8 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 }
 HRESULT ARTagGeneralPage::OnApplyChanges(void)
 {
+	if (m_hwnd == NULL)
+		return S_FALSE;
 	if (ApplySetting())
 	{
 		return S_OK;
