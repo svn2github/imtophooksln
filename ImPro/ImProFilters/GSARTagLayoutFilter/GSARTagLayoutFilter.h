@@ -8,8 +8,9 @@
 #include "GSDXFilterBase.h"
 #include "GSDXMuxFilter.h"
 #include "IGSPersist.h"
+#include "MyMediaSample.h"
 #include "MyARTagMediaSample.h"
-
+#include "cv.h"
 #define NUMARTAG 512
 
 using namespace GSARLayoutNS;
@@ -45,10 +46,16 @@ protected:
 	CCritSec m_csLayoutChange;
 	BOOL m_bLayoutChange;
 
-	HRESULT SendLayoutData();
+	CCritSec m_csROIRects;
+	vector<fRECT> m_ROIRects;
 
+	IplImage* m_pROIImg;
+	bool sendROIData();
+	HRESULT SendLayoutData();
 	BOOL GetLayoutChanged();
 	void SetLayoutChanged(BOOL bChanged);
+	HRESULT GetROIData(ROIData*& roiData);
+	HRESULT ComputeROIs();
 	//from GSDXMuxFilter Interface
 	virtual HRESULT _CreatePins(GSFILTER_INPUTPIN_DESC* inDesc, UINT szIn, GSFILTER_OUTPUTPIN_DESC* outDesc, UINT szOut, GSFILTER_STREAMPIN_DESC* streamDesc, UINT szStream );
 	virtual HRESULT CreatePins();

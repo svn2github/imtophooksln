@@ -68,7 +68,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain /verbose:lib "
-				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib d2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSCommonLib.lib GSMFCProp.lib dwrite.lib d3d10.lib d3dx10.lib dxgi.lib d3d10_1.lib Windowscodecs.lib commonlib.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib d2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSCommonLib.lib GSMFCProp.lib dwrite.lib d3d10.lib d3dx10.lib dxgi.lib d3d10_1.lib Windowscodecs.lib commonlib.lib opencv_highgui211.lib opencv_core211.lib opencv_video211.lib opencv_calib3d211.lib opencv_imgproc211.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\lib\$(ConfigurationName)&quot;"
 				IgnoreDefaultLibraryNames="libmtd.lib"
@@ -153,7 +153,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib GSCommonLib.lib GSMFCProp.lib d2d1.lib dwrite.lib d3d10.lib d3dx10.lib dxgi.lib d3d10_1.lib Windowscodecs.lib"
+				AdditionalDependencies="strmbase.lib winmm.lib GSD3DLib.lib GSMuxFilter.lib D2d1.lib Dwrite.lib d3d9.lib d3dx9.lib d3d11.lib d3dx11.lib dxerr.lib dxguid.lib D3DX11Effect.lib d3dcompiler.lib GSGlobalFunc.lib GSCommonLib.lib GSMFCProp.lib d2d1.lib dwrite.lib d3d10.lib d3dx10.lib dxgi.lib d3d10_1.lib Windowscodecs.lib opencv_highgui211.lib opencv_core211.lib opencv_video211.lib opencv_calib3d211.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\OtherLib\GShow\lib\$(ConfigurationName)&quot;"
 				ModuleDefinitionFile=".\$(ProjectName).def"

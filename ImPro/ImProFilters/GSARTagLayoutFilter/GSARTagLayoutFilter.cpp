@@ -5,7 +5,7 @@
 #include "GSMediaType.h"
 #include "MyMediaSample.h"
 #include "GSARTagLayoutDisplay.h"
-
+#include "highgui.h"
 extern HMODULE GetModule();
 GSARTagLayoutFilter::GSARTagLayoutFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : GSDXMuxFilter(NAME("GSSimpleDX Filter"), 0, CLSID_GSARTagLayoutFilter)
@@ -15,10 +15,16 @@ GSARTagLayoutFilter::GSARTagLayoutFilter(IUnknown * pOuter, HRESULT * phr, BOOL 
 	m_FPSLimit = 60;
 	m_pStrategyData = NULL;
 	m_bLayoutChange = TRUE;
+	m_pROIImg = NULL;
 }
 GSARTagLayoutFilter::~GSARTagLayoutFilter()
 {
 	SAFE_DELETE(m_pStrategyData);
+	if (m_pROIImg != NULL)
+	{
+		cvReleaseImage(&m_pROIImg);
+		m_pROIImg = NULL;
+	}
 }
 
 CUnknown *WINAPI GSARTagLayoutFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
@@ -91,7 +97,11 @@ HRESULT GSARTagLayoutFilter::CreatePins()
 		GSOUTPIN_ACCEPT_MEDIATYPE(GSMEDIATYPE_FILTER_CONFIG, GSMEDIASUBTYPE_GSARTagLayout_CONFIG, FALSE, GSREF_ACCEPT_MEDIATYPE, sizeof(GSARTagLayout), 0, 0),
 		GSOUTPIN_ACCEPT_MEDIATYPE(GUID_IMPRO_FeedbackTYPE, GUID_ARLayoutConfigData, FALSE, GSREF_ACCEPT_MEDIATYPE, sizeof(ARLayoutConfigData), 0, 0)
 	};
-
+	GSOUTPIN_ACCEPT_MEDIATYPE roiAccType[] =
+	{
+		GSOUTPIN_ACCEPT_MEDIATYPE(GUID_IMPRO_FeedbackTYPE, GUID_ROIData, FALSE, GSREF_ACCEPT_MEDIATYPE, sizeof(ROIData), 0, 0)
+		
+	};
 	GSOUTPIN_ACCEPT_MEDIATYPE outAccType[] =
 	{
 		GSOUTPIN_ACCEPT_MEDIATYPE(GSMEDIATYPE_GSDX11_SHAREDEVICE_MEDIATYPE, GSMEDIASUBTYPE_GSTEX2D_POINTER, GSFORMAT_DX11TEX2D_DESC, FALSE, GSREF_RENDERTARGET, 0, 0, 0),
@@ -109,6 +119,8 @@ HRESULT GSARTagLayoutFilter::CreatePins()
 
 	GSFILTER_OUTPUTPIN_DESC outputPinDesc[] = {
 		GSFILTER_OUTPUTPIN_DESC(L"layout", 0, GSOUTPUT_PIN, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP(outcfgAccType, ARRAYSIZE(outcfgAccType)), 
+			GSFILTER_OUTPUTPIN_FUNCS(NULL, NULL)),
+		GSFILTER_OUTPUTPIN_DESC(L"ROI", 0, GSOUTPUT_PIN, GSOUTPIN_ACCEPT_MEDIATYPE_GROUP(roiAccType, ARRAYSIZE(roiAccType)), 
 			GSFILTER_OUTPUTPIN_FUNCS(NULL, NULL))
 	};		
 
@@ -273,6 +285,8 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 			{
 				return E_FAIL;
 			}
+			pSelf->ComputeROIs();
+			pSelf->sendROIData();
 			pSelf->SetLayoutChanged(FALSE);
 		}
 	}
@@ -419,6 +433,101 @@ void GSARTagLayoutFilter::SetLayoutChanged(BOOL bChanged)
 	CAutoLock lck(&m_csLayoutChange);
 	m_bLayoutChange = bChanged;
 }
+
+HRESULT GSARTagLayoutFilter::ComputeROIs()
+{
+	HRESULT hr = S_OK;
+	CAutoLock lck0(&m_csRenderPara);
+	CAutoLock lck1(&m_csROIRects);
+	if (m_pD3DDisplay == NULL)
+		return E_FAIL;
+	GSBoundingBox2D** pTagRects = ((GSARTagLayoutDisplay*)m_pD3DDisplay)->GetAllMarkerRects();
+	if (pTagRects == NULL)
+		return E_FAIL;
+	GSARTagLayout* pLayout = NULL;
+	((GSARTagLayoutDisplay*)m_pD3DDisplay)->GetLayout(pLayout);
+	if (pLayout == NULL)
+		return E_FAIL;
+	if (m_pROIImg == NULL)
+	{
+		m_pROIImg = cvCreateImage(cvSize(320, 240), 8, 1);
+	}
+	int imgW = m_pROIImg->width; int imgH = m_pROIImg->height;
+	if (imgW -1 <= 0 || imgH -1 <= 0 )
+	{
+		return E_FAIL;
+	}
+	cvDrawRect(m_pROIImg, cvPoint(0,0), cvPoint(m_pROIImg->width-1, m_pROIImg->height-1), cvScalar(255, 255, 255), -1);
+	for (int i =0; i < pLayout->m_nARTag; i ++)
+	{
+		if (pLayout->m_pARTag[i].m_visible)
+		{
+			float w = (pTagRects[i]->RB.x - pTagRects[i]->LT.x);
+			float h = (pTagRects[i]->RB.y - pTagRects[i]->LT.y);
+			float p0X = max(0.0, pTagRects[i]->LT.x - w*0.13);
+			float p0Y = max(0.0, pTagRects[i]->LT.y - h*0.13);
+			float p1X = min(1.0, pTagRects[i]->RB.x + w*0.13);
+			float p1Y = min(1.0, pTagRects[i]->RB.y + h*0.13);
+			CvPoint p0 = cvPoint(p0X*(imgW-1), p0Y*(imgH-1));
+			CvPoint p1 = cvPoint(p1X*(imgW-1), p1Y*(imgH-1));
+			
+			cvDrawRect(m_pROIImg, p0, p1, cvScalar(0,0,0), -1 );
+		}
+	}
+	cvThreshold(m_pROIImg, m_pROIImg, 128, 255, CV_THRESH_BINARY);
+	CvMemStorage* storage = cvCreateMemStorage(0);
+	CvSeq* cont = 0; 
+
+	cvFindContours(m_pROIImg, storage, &cont, sizeof(CvContour), CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE );
+	m_ROIRects.clear();
+	CvRect cvROIRect;
+	fRECT fROIRect;
+
+	
+	for( ; cont != 0; cont = cont->h_next )	{
+		int count = cont->total; // This is number point in contour
+		cvROIRect = cvContourBoundingRect(cont);
+		fROIRect.left = cvROIRect.x /(float)(imgW-1) ;
+		fROIRect.top = cvROIRect.y /(float)(imgH -1);
+		fROIRect.right = (cvROIRect.x + cvROIRect.width) / (float)(imgW-1);
+		fROIRect.bottom = (cvROIRect.y + cvROIRect.height) / (float)(imgH-1);
+		m_ROIRects.push_back(fROIRect);
+	}
+
+	cvReleaseMemStorage(&storage);
+	storage = NULL;
+
+	return S_OK;
+}
+
+HRESULT GSARTagLayoutFilter::GetROIData(ROIData*& roiData)
+{
+	CAutoLock lck(&m_csROIRects);
+	if (roiData != NULL)
+	{
+		delete roiData;
+		roiData = NULL;
+	}
+	roiData = new ROIData();
+
+	if (m_ROIRects.size() <= 0)
+	{
+		roiData->m_pRECTs = NULL;
+		roiData->m_nRECTs = 0;
+	}
+	else
+	{
+		roiData->m_pRECTs = new fRECT[m_ROIRects.size()];
+		roiData->m_nRECTs = m_ROIRects.size();
+		for (int i=0; i < m_ROIRects.size(); i++)
+		{
+			memcpy((void*)&(roiData->m_pRECTs[i]),  (void*)&(m_ROIRects.at(i)), sizeof(fRECT));
+		}
+	}
+	return S_OK;
+}
+
+
 HRESULT GSARTagLayoutFilter::SendLayoutData()
 {
 	if (m_pD3DDisplay == NULL)
@@ -495,4 +604,41 @@ ARLayoutConfigData* GSARTagLayout2ARLayoutConfig(GSARTagLayout* inData)
 		}
 	}
 	return ret;
+}
+
+bool GSARTagLayoutFilter::sendROIData()
+{
+	if (m_pOutputPins.size() <= 1 || !m_pOutputPins[1]->IsConnected()) 
+	{
+		return false;
+	}
+
+	ROIData* sendData = NULL;
+	{
+		CAutoLock lck(&m_csROIRects);
+		GetROIData(sendData);
+		if (sendData == NULL)
+			return false;
+
+		IMemAllocator* pAllocator = m_pOutputPins[1]->Allocator();
+		CMediaSample* pSendSample = NULL;
+		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
+		if (pSendSample == NULL)
+		{
+			delete sendData;
+			sendData = NULL;
+			return S_FALSE;
+		}
+
+		pSendSample->SetPointer((BYTE*)sendData, sizeof(ROIData));
+		m_pOutputPins[1]->Deliver(pSendSample);
+		delete sendData;
+		sendData = NULL;
+		if (pSendSample != NULL)
+		{
+			pSendSample->Release();
+			pSendSample = NULL;
+		}
+	}
+	return true;
 }

@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSPersist&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -129,7 +129,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSPersist&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG;_USRDLL"
 				RuntimeLibrary="1"
 				EnableFunctionLevelLinking="true"

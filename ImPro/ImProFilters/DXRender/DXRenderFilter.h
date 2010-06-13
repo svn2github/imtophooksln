@@ -5,13 +5,13 @@
 #include <initguid.h>
 #include "combase.h"
 #include "D3DTransformFilterBase.h"
-#include "MSPersist.h"
+#include "IGSPersist.h"
 #include "DXBaseRenderer.h"
 
 class DXRenderFilter :
 	public DXBaseRenderer, public IDXRenderer,
 	public ISpecifyPropertyPages, public D3DTransformFilterBase,
-	public CMSPersist
+	public IGSPersist
 {
 protected:
 	CCritSec m_csDisplayState;

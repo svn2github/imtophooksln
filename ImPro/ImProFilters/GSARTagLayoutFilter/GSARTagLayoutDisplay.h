@@ -51,4 +51,6 @@ public:
 
 	virtual float GetBlackLevel();
 	virtual HRESULT SetBlackLevel(float level);
+
+	virtual GSBoundingBox2D** GetAllMarkerRects(){return m_allMarkerRects;};
 };
