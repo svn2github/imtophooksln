@@ -36,6 +36,6 @@ public:
 	int m_numMarker;
 	ARLayoutConfigData();
 	~ARLayoutConfigData();
-
+	ARLayoutConfigData(const ARLayoutConfigData &rhs);
 	ARLayoutConfigData& operator = (const ARLayoutConfigData &rhs);
 };
