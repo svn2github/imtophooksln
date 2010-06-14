@@ -308,12 +308,13 @@ HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int num
 		int PolyVertexNumber[1]={4};
 		for (int i =0; i<4; i++)
 		{
-			cvDrawLine(img, pts[i%4], pts[(i+1)%4], cvScalar(0,0,255));
+			cvDrawLine(img, pts[i%4], pts[(i+1)%4], cvScalar(0,0,255), 2, CV_AA);
 		}
 		sprintf_s(str, MAX_PATH, "%d\0", markinfos[i].id);
-		CvFont font = cvFont(2,1);
+		CvFont font;
+		cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.0f, 1.0f,0,2,CV_AA);
 		cvPutText(img, str, center, &font, cvScalar(0,0,255));
-		//cvPutText(img,str, center, &cvFont(1,1) cvScalar(0,0,255) );
+		
 	}
 	
 	
