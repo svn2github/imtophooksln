@@ -22,6 +22,7 @@ protected:
 	HWND m_edXaxis;
 	HWND m_edYaxis;
 	HWND m_edZaxis;
+
 	void SetDirty();
 	bool GetSetting();
 	HRESULT ApplyCameraSetting();
@@ -53,6 +54,7 @@ protected:
 	HWND m_ckGuessPose;
 	HWND m_ckAutoThreshold;
 	HWND m_ckUseKalman;
+	HWND m_ckMaskTag;
 
 	HWND m_slrThreshold;
 	HWND m_slrBorderW;
@@ -61,6 +63,7 @@ protected:
 
 	HWND m_txtMeasureNoise;
 	HWND m_slrMeasureNoise;
+
 
 
 	static const int m_BorderWScale = 1000;

@@ -77,6 +77,8 @@ public:
 	virtual bool setbGuessPose(bool v);
 	virtual bool getbUseKalman();
 	virtual bool setbUseKalman(bool v);
+	virtual bool getbMaskTag();
+	virtual bool setbMaskTag(bool v);
 	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov);
 	virtual BOOL SetMeasureNoiseCov(float fNoiseCov);
 
@@ -98,7 +100,7 @@ protected:
 	bool             m_bGuessPose;
 	bool			 m_bDrawTag;
 	bool             m_bDrawReproPt;
-
+	bool             m_bMaskTag;
 
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;
@@ -112,7 +114,7 @@ protected:
 		IMediaSample *pOut, const CMediaType* pOutType);
 	virtual HRESULT Transform( IMediaSample *pIn, IMediaSample *pOut);
 	HRESULT DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo);
-
+	HRESULT MaskTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo);
 	D3DXMATRIX m_matIntri;
 	HRESULT ShowReprojectImage(IplImage* srcImage, int nDetected, const ARMarkerInfo* detectedMarkers, 
 		const ARMultiMarkerInfoT* config, const double* matView, const double* matProj);

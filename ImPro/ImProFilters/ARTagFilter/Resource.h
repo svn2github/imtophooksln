@@ -58,6 +58,8 @@
 #define IDC_edZaxis                     2034
 #define IDC_CKAutoThreshold             2034
 #define IDC_CKUseKalman                 2035
+#define IDC_CKBlackTag                  2036
+#define IDC_CKMaskTag                   2036
 
 // Next default values for new objects
 // 

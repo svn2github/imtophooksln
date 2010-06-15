@@ -57,6 +57,9 @@ public:
 	virtual bool setbGuessPose(bool v);
 	virtual bool getbUseKalman();
 	virtual bool setbUseKalman(bool v);
+	virtual bool getbMaskTag();
+	virtual bool setbMaskTag(bool v);
+
 	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov);
 	virtual BOOL SetMeasureNoiseCov(float fNoiseCov);
 

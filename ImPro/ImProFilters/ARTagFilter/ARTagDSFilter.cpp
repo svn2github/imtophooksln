@@ -32,6 +32,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_bDrawTag = true;
 	m_bDrawReproPt = true;
 	m_bGuessPose = false;
+	m_bMaskTag = false;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 }
@@ -279,6 +280,38 @@ HRESULT ARTagDSFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	return DoTransform(pIn, &inputMT, pOut, &outputMT);
 	
 }
+HRESULT ARTagDSFilter::MaskTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo)
+{
+	if (img == NULL)
+	{
+		return S_FALSE;
+	}
+	CvPoint* pts = new CvPoint[4];
+	char str[MAX_PATH];
+	for (int i=0; i < numMarkinfo; i++)
+	{
+		RECT rect; rect.left = 100000; rect.right = 0; rect.top = 100000; rect.bottom = 0;
+		for (int j =0; j < 4; j++)
+		{
+			pts[j].x = markinfos[i].vertex[j][0];
+			pts[j].y = markinfos[i].vertex[j][1];
+			rect.left = min((float)rect.left, (float)pts[j].x);
+			rect.right = max((float)rect.right, (float)pts[j].x);
+			rect.top = min((float)rect.top, (float)pts[j].y);
+			rect.bottom = max((float)rect.bottom, (float)pts[j].y);
+		}
+		
+		int PolyVertexNumber[1]={4};
+		cvFillPoly(img, &pts, PolyVertexNumber, 1,  cvScalar(0,0,0));
+	}
+	if (pts != NULL)
+	{
+		delete [] pts;
+		pts = NULL;
+	}
+	
+	return S_OK;
+}
 HRESULT ARTagDSFilter::DrawARTag(IplImage* img, ARMarkerInfo* markinfos, int numMarkinfo)
 {
 	if (img == NULL)
@@ -461,6 +494,10 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 
 
 		}	
+	}
+	if (m_bMaskTag)
+	{
+		MaskTag(imgOut, markinfos, numDetected);
 	}
 	if (m_bDrawTag)
 	{
@@ -1388,7 +1425,15 @@ bool ARTagDSFilter::setbUseKalman(bool v)
 	}
 	return m_ARTracker->setbUseKalman(v);
 }
-
+bool ARTagDSFilter::getbMaskTag()
+{
+	return m_bMaskTag;
+}
+bool ARTagDSFilter::setbMaskTag(bool v)
+{
+	m_bMaskTag = v;
+	return true;
+}
 BOOL ARTagDSFilter::GetMeasureNoiseCov(float& fNoiseCov)
 {
 	CAutoLock lck(&m_csARTracker);
