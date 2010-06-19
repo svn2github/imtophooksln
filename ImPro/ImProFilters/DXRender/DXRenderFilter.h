@@ -70,7 +70,7 @@ public:
 	virtual HRESULT SetWindowZoom(BOOL bZoom);
 	virtual BOOL SetHideBorder(BOOL bHideBorder);
 	virtual BOOL IsHideBorder();
-	//from IMSPersist
+	//from IGSPersist
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);

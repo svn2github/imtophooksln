@@ -38,7 +38,7 @@ public:
 
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//from IMSPersist
+	//from IGSPersist
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);

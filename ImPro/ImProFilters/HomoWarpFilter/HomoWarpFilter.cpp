@@ -41,10 +41,10 @@ HRESULT HomoWarpFilter::NonDelegatingQueryInterface(REFIID iid, void **ppv)
 		return GetInterface(
 			static_cast<ISpecifyPropertyPages*>(this),	ppv);
 	}
-	else if (iid == IID_IMSPersist)
+	else if (iid == IID_IGSPersist)
 	{
 		return GetInterface(
-			static_cast<IMSPersist*>(this),	ppv);
+			static_cast<IGSPersist*>(this),	ppv);
 	}
 	else
 	{

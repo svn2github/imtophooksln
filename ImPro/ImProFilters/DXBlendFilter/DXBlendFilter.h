@@ -7,14 +7,14 @@
 #include "DXBlendDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
-#include "MSPersist.h"
+#include "IGSPersist.h"
 #include "cv.h"
 #define NUMINPUT 4
 
 class DXBlendFilter :
 	public CMuxTransformFilter, public IDXBlendFilter,
 	public ISpecifyPropertyPages, public D3DTransformFilterBase,
-	public CMSPersist
+	public IGSPersist
 {
 
 public:

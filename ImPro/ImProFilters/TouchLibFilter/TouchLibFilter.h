@@ -37,7 +37,7 @@ public:
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//implement IMSPersist
+	//implement IGSPersist
 	virtual HRESULT SaveToFile(WCHAR* filename);
 	virtual HRESULT LoadFromFile(WCHAR* filename);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);

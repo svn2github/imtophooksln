@@ -7,11 +7,11 @@
 #include "HomoD3DDisplay.h"
 #include "D3DTransformFilterBase.h"
 #include "CMuxTransformFilter.h"
-#include "MSPersist.h"
+#include "IGSPersist.h"
 class HomoWarpFilter :
 	public CMuxTransformFilter, public IHomoWarpFilter,
 	public ISpecifyPropertyPages, public D3DTransformFilterBase,
-	public CMSPersist
+	public IGSPersist
 {
 
 public:
@@ -33,7 +33,7 @@ public:
 	virtual HRESULT BreakConnect(PIN_DIRECTION dir, const IPin* pPin);
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//from IMSPersist
+	//from IGSPersist
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
