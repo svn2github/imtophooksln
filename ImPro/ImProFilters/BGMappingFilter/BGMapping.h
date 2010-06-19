@@ -2,7 +2,6 @@
 #define _BGHOMO
 #include "cv.h"
 #include "highgui.h"
-#include <cvaux.h>
 #include "stdafx.h"
 #include <vector>
 #define imgMAX 30
@@ -32,25 +31,18 @@ public:
 	IplImage* BGimg;
 	bool isBlendImg;
 	int layoutType ;
-	int layoutTypeCount ;
 	int layoutTotalTag ;
+	int refCount ;
 	vector <bool> layoutVisibleTable ;
 	void setToPool(IplImage* background, bool isBlend);
 };
 
 
-class LayoutTypeCounter{
-public:
-	int imgIndex ;
-	int layoutTypeIndex ;
-	int layoutCount ;
-};
-
 class BGCandidate{
 public:
 	BGCandidate();
 	~BGCandidate();
-	
+
 	IplImage* getUsedImg(int index);
 	int getUsedImgCount() ;
 	int getUnusedImgIndex();
@@ -62,7 +54,7 @@ public:
 	vector <int> usedImg;
 	BGCandidateImgPool bgImgPool[imgMAX];
 
-	vector <LayoutTypeCounter> layoutTypeIndex;
+	vector <int> layoutTypeIndex;
 };
 
 
@@ -71,7 +63,7 @@ class BackGroundMapping{
 public:
 	BackGroundMapping(int w , int h ,int camChannel,char* fileDir);
 	~BackGroundMapping();
-	
+
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
 	void setBackground(IplImage* BGImg);  
@@ -108,10 +100,11 @@ public:
 	vector<BGTag*> BGTran ;
 
 	int tagTranNum ;
+	int m_layoutIndex ;
 	bool isBlend ;
 
 	BGCandidate candidate ;
-	
+
 
 	IplConvKernel* kernelElement;
 
@@ -126,6 +119,7 @@ public:
 	bool camFlip;
 	bool layoutFlip;
 	bool outputFlip;
+	bool isUsingMask ;
 
 	int layoutType ; // 0::RGB   1::MarkerInfo 
 };

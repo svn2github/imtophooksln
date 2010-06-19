@@ -117,7 +117,7 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 				IDirect3DDevice9* pDevice = NULL;
 				m_pInputPin->QueryD3DDevice(pDevice);
 				if (pDevice == NULL)
-					return S_FALSE;
+					return E_FAIL;
 				initD3D(desc->Width, desc->Height, pDevice);
 				pDevice->Release();
 				pDevice = NULL;
@@ -128,7 +128,7 @@ HRESULT DXRenderFilter::CompleteConnect(IPin *pReceivePin)
 			}
 			else
 			{
-				return S_FALSE;
+				return E_FAIL;
 			}
 
 		}

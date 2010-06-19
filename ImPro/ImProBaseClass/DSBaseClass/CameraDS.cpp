@@ -415,7 +415,7 @@ HRESULT CCameraDS::QueryFrame(IplImage*& pFrame)
 		pFrame->nChannels != nChannel)
 	{
 		MYFREEMEDIATYPE(mt);
-		return S_FALSE;
+		return E_FAIL;
 	}
 	hr = m_pSampleGrabber->GetCurrentBuffer(&bufferSize, (long*)pFrame->imageData);
 	cvFlip(pFrame);

@@ -25,9 +25,14 @@ ARLayoutCameraDS::ARLayoutCameraDS(void)
 	m_pARWarpInputPin = NULL;
 	m_pARWarpOutputPin = NULL;
 
-
 	m_pDXBlendFilter = NULL;
 	m_pIDXBlendFilter = NULL;
+
+	m_pBlendWarpFilter = NULL;
+	m_pIBlendWarpFilter = NULL;
+	m_pBlendWarpInputPin = NULL;
+	m_pBlendWarpOutputPin = NULL;
+
 	for (int i =0; i < DXBLEND_PINNUM; i++)
 		m_pDXBlendInputPin[i] = NULL;
 
@@ -66,6 +71,11 @@ void ARLayoutCameraDS::CloseCamera()
 	m_pIARWarpFilter = NULL;
 	m_pARWarpInputPin = NULL;
 	m_pARWarpOutputPin = NULL;
+
+	m_pBlendWarpFilter = NULL;
+	m_pIBlendWarpFilter = NULL;
+	m_pBlendWarpInputPin = NULL;
+	m_pBlendWarpOutputPin = NULL;
 
 	m_pDXBlendFilter = NULL;
 	for (int i =0; i < DXBLEND_PINNUM; i++)
@@ -173,7 +183,8 @@ HRESULT ARLayoutCameraDS::ConnectGraph()
 
 	hr = m_pGraph->Connect(m_pCameraOutput, m_pCamWarpInputPin[0]);
 	hr = m_pGraph->Connect(m_pCamWarpOutputPin[0], m_pDXBlendInputPin[0]);
-	hr = m_pGraph->Connect(m_pDXBlendOutputPin, m_pGrabberInput);
+	hr = m_pGraph->Connect(m_pDXBlendOutputPin, m_pBlendWarpInputPin);
+	hr = m_pGraph->Connect(m_pBlendWarpOutputPin, m_pGrabberInput);
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 
 
@@ -207,13 +218,21 @@ HRESULT ARLayoutCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int
 		IID_IBaseFilter, (LPVOID *)&m_pDXBlendFilter);
 	hr = m_pDXBlendFilter->QueryInterface(IID_IDXBlendFilter, (LPVOID *)&m_pIDXBlendFilter);
 
+	hr = CoCreateInstance(CLSID_HomoWarpFilter, NULL, CLSCTX_INPROC_SERVER, 
+		IID_IBaseFilter, (LPVOID *)&m_pBlendWarpFilter);
+	hr = m_pBlendWarpFilter->QueryInterface(IID_IHomoWarpFilter, (LPVOID *)&m_pIBlendWarpFilter);
+
+	hr = CoCreateInstance(CLSID_ProjectSettingFilter, NULL, CLSCTX_INPROC_SERVER, 
+		IID_IBaseFilter, (LPVOID *)&m_pProjSettingFilter);
+	hr = m_pProjSettingFilter->QueryInterface(IID_IProjectSettingFilter, (void**)&m_pIProjSettingFilter);
+
+
 	for (int i =0; i <DXBLEND_PINNUM; i++)
 	{
 		swprintf_s(str, MAX_PATH, L"input%d", i);
 		hr = m_pDXBlendFilter->FindPin(str, &m_pDXBlendInputPin[i]);
 	}
 	hr = m_pDXBlendFilter->FindPin(L"output", &m_pDXBlendOutputPin);
-
 
 	hr = m_pARLayoutFilter->FindPin(L"Layout", &m_pARLayoutOutputPin);
 	hr = m_pARWarpFilter->FindPin(L"input", &m_pARWarpInputPin);
@@ -222,17 +241,19 @@ HRESULT ARLayoutCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int
 
 	hr = m_pCamWarpFilter[0]->FindPin(L"input", &m_pCamWarpInputPin[0]);
 	hr = m_pCamWarpFilter[0]->FindPin(L"d3dsurf", &m_pCamWarpOutputPin[0]);
+
+	hr = m_pBlendWarpFilter->FindPin(L"input", &m_pBlendWarpInputPin);
+	hr = m_pBlendWarpFilter->FindPin(L"output", &m_pBlendWarpOutputPin);
 	
-	
-
-
-
-
 	hr = m_pGraph->AddFilter(m_pARLayoutFilter, L"ARLayout");
 	hr = m_pGraph->AddFilter(m_pARWarpFilter, L"AR HomoWarp");
 	hr = m_pGraph->AddFilter(m_pDXRenderFilter, L"DXRender");
 	hr = m_pGraph->AddFilter(m_pCamWarpFilter[0], L"Cam HomoWarp");
+	
 	hr = m_pGraph->AddFilter(m_pDXBlendFilter, L"DXBlend");
+	hr = m_pGraph->AddFilter(m_pBlendWarpFilter, L"Blend Warp");
+	hr = m_pGraph->AddFilter(m_pProjSettingFilter, L"ProjSetting");
+
 	return S_OK;
 }
 
@@ -268,6 +289,19 @@ HRESULT ARLayoutCameraDS::ShowCamPinProp(int idx)
 		return E_FAIL;
 	return ShowFilterProp(m_pCamOutputPin[idx]);
 }
+
+HRESULT ARLayoutCameraDS::ShowBlendWarpProp()
+{
+	return ShowFilterProp(m_pBlendWarpFilter);
+}
+
+HRESULT ARLayoutCameraDS::ShowProjSettingProp()
+{
+	return ShowFilterProp(m_pProjSettingFilter);
+}
+
+
+
 int ARLayoutCameraDS::GetNumMarker()
 {
 	if (m_pIARLayoutFilter == NULL)

@@ -15,6 +15,7 @@ MIDL_INTERFACE("D2547418-CD0E-F164-FE3C-36E1868AE047")
 IGSFrameCaptureFilter: public IUnknown
 {
 public:
+	virtual void setIsSaveImg() ;
 
 
 };

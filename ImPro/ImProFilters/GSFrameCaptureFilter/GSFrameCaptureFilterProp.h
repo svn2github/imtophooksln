@@ -43,4 +43,9 @@ public: //inherit from CMFCBaseProperty Page
 	virtual int GetTitileResourceID() { return IDS_GSFrameCaptureFilterProp_Title;}
 
 
+	CButton m_btnSaveImg;
+	afx_msg void OnBnClickedbtnsaveimg();
+
+	
 };
+

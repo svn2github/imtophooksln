@@ -289,7 +289,7 @@ bool ARLayoutDXDisplay::LoadARMarkTexture()
 	for (int i =0; i < NUMMARKER; i++)
 	{
 		LPDIRECT3DTEXTURE9 pTex = NULL;
-		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\mediaFiles\\ARToolKitPlus_AllMarkers\\marker_%03d.png", szPath, i);
+		swprintf_s(str, MAX_PATH, L"%s\\..\\..\\mediaFiles\\ARTagAllMarkers\\marker_%03d.png", szPath, i);
 		hr = D3DXCreateTextureFromFileEx(m_pDevice, str, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, 
 			D3DFMT_UNKNOWN, D3DPOOL_MANAGED, D3DX_FILTER_POINT, D3DX_DEFAULT,
 			0, NULL, NULL, &pTex);

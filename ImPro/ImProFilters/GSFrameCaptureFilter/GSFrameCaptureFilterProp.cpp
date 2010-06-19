@@ -10,6 +10,7 @@ extern CGSFrameCaptureFilterApp theApp;
 void GSFrameCaptureFilterProp::DoDataExchange(CDataExchange* pDX)
 {
 	__super::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_btnSaveImg, m_btnSaveImg);
 }
 BOOL GSFrameCaptureFilterProp::OnInitDialog()
 {
@@ -19,6 +20,7 @@ BOOL GSFrameCaptureFilterProp::OnInitDialog()
 }
 
 BEGIN_MESSAGE_MAP(GSFrameCaptureFilterProp, GSMFCProp)
+	ON_BN_CLICKED(IDC_btnSaveImg, &GSFrameCaptureFilterProp::OnBnClickedbtnsaveimg)
 END_MESSAGE_MAP()
 
 
@@ -96,4 +98,10 @@ CUnknown *WINAPI GSFrameCaptureFilterProp::CreateInstance(LPUNKNOWN punk, HRESUL
 	}
 
 	return pNewObject;
+}
+
+void GSFrameCaptureFilterProp::OnBnClickedbtnsaveimg()
+{
+	m_pFilter->setIsSaveImg();
+	
 }

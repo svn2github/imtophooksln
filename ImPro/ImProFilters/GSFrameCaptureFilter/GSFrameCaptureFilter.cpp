@@ -3,11 +3,14 @@
 #include "GSD3DMediaType.h"
 #include "GSMacro.h"
 #include "cv.h"
+#include "highgui.h"
 //#include "MyMediaSample.h"
 
 GSFrameCaptureFilter::GSFrameCaptureFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : GSMuxFilter(NAME("GSFrameCaptureFilter"), 0, CLSID_GSFrameCaptureFilter)
 { 
+	isSaveImg = FALSE;
+	ImgCount = 0 ;
 
 }
 GSFrameCaptureFilter::~GSFrameCaptureFilter()
@@ -128,6 +131,41 @@ HRESULT GSFrameCaptureFilter::OnTransform(void* self, IMediaSample *pInSample, C
 	pOutSample->GetPointer(&pOutBuffer);
 	if (pInBuffer == NULL || pOutBuffer == NULL)
 		return E_FAIL;
+
+	int cameraW = 640 ;
+	int cameraH = 480 ;
+	int camChannel = 3 ;
+
+	VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) pInMT->pbFormat;
+	BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
+	cameraW = bitHeader.biWidth;
+	cameraH = bitHeader.biHeight;
+	GUID guidSubType = pInMT->subtype;
+	if (IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB24))
+	{
+		camChannel = 3;
+	}
+	else if(IsEqualGUID(guidSubType, MEDIASUBTYPE_RGB32) || IsEqualGUID(guidSubType, MEDIASUBTYPE_ARGB32))
+	{
+		camChannel = 4;
+	}
+
+	if(pSelf->isSaveImg == TRUE){
+		IplImage* camtmp = cvCreateImageHeader(cvSize(cameraW, cameraH), 8, camChannel);
+		camtmp->imageData = (char*)pInBuffer;
+		char saveName[MAX_PATH] ;
+		sprintf(saveName,"saveImg\\%d.jpg",pSelf->ImgCount);
+		cvSaveImage(saveName,camtmp);
+		cvReleaseImageHeader(&camtmp);
+		camtmp = NULL;
+		pSelf->ImgCount ++ ;
+		pSelf->isSaveImg = FALSE ;
+	}
 	memcpy((void*)pOutBuffer, (void*)pInBuffer, pOutSample->GetSize());
 	return S_OK;
+}
+
+
+void GSFrameCaptureFilter::setIsSaveImg(){
+	isSaveImg = !isSaveImg ;
 }

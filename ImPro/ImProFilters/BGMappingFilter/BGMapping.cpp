@@ -3,9 +3,10 @@
 
 
 #define BLACK_VALUE 130
+#define MAX_REF 2
 #define SHOW_WINDOW false
-#define SVAE_IMG  false 
-
+#define SAVE_IMG  true
+#define SAVE_THRES 10000
 
 
 BGTag::BGTag(){
@@ -13,7 +14,7 @@ BGTag::BGTag(){
 	TagID  = 0 ;
 	tagTop.x = 0 ;
 	tagTop.y = 0 ;
-    tagDown.x = 0 ;
+	tagDown.x = 0 ;
 	tagDown.y = 0 ;
 	isVisible = false ;
 	tagRec.height = 0 ;
@@ -30,11 +31,12 @@ BGTag::~BGTag(){
 }
 
 BGCandidateImgPool::BGCandidateImgPool(){
-	
-	 isBlendImg = false;
-	 layoutType = 0;
-	 layoutTotalTag = 0;
-	 layoutVisibleTable.clear();
+
+	isBlendImg = false;
+	layoutType = 0;
+	layoutTotalTag = 0;
+	layoutVisibleTable.clear();
+	refCount = 0;
 
 }
 BGCandidateImgPool::~BGCandidateImgPool(){
@@ -55,17 +57,20 @@ BGCandidate ::BGCandidate(){
 }
 
 BGCandidate ::~BGCandidate(){
+	for(int i = 0 ;i < imgMAX ; i ++){
+		if (bgImgPool[i].BGimg != NULL)
+		{
+			cvReleaseImage(&bgImgPool[i].BGimg);
+			bgImgPool[i].BGimg = NULL;
+
+		}
+	}
 }
 
 
 void BGCandidate::init(int imgH, int imgW){
 	for(int i = 0 ; i <imgMAX ; i ++){
 		unusedImg.push_back(i);
-		LayoutTypeCounter tmp ;
-		tmp.imgIndex = i;
-		tmp.layoutCount = 0;
-		tmp.layoutTypeIndex = i;
-		layoutTypeIndex.push_back(tmp);
 	}
 
 	for(int i = 0 ;i < imgMAX ; i ++){
@@ -75,7 +80,7 @@ void BGCandidate::init(int imgH, int imgW){
 
 int BGCandidate::getUnusedImgIndex(){
 	int unusedNo = 0 ;
-	
+
 	if(unusedImg.empty() == true){
 		unusedNo = usedImg[0];
 		usedImg.erase(usedImg.begin());
@@ -95,7 +100,6 @@ int BGCandidate::getUsedImgCount(){
 
 IplImage* BGCandidate::getUsedImg(int index){
 	return bgImgPool[usedImg[index]].BGimg;
-//return imgPool[usedImg[index]];
 }
 
 int BGCandidate ::getUsedImgID(int index){
@@ -104,6 +108,16 @@ int BGCandidate ::getUsedImgID(int index){
 }
 
 void BGCandidate::setToUnused(int index){
+
+	/*for(int i = 0 ; i < index ; i ++){
+		bgImgPool[usedImg[i]].refCount++;
+		if(bgImgPool[usedImg[i]].refCount >= MAX_REF){
+			bgImgPool[usedImg[i]].refCount = 0 ;
+			unusedImg.push_back(usedImg[0]);
+			usedImg.erase(usedImg.begin());
+			index -- ;
+		}
+	}*/
 
 	for(int i = 0 ; i < index ; i ++){
 		unusedImg.push_back(usedImg[0]);
@@ -118,13 +132,15 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	subValue = 0 ;
 	camFlip = false; 
 	layoutFlip = false ;
-    kerMat = cvCreateMat(5,5,CV_32F);
+	kerMat = cvCreateMat(5,5,CV_32F);
 	initKernel(0.5,0.3,0.2);
 	historyBG.clear();
 	imgIndex = 0 ;
 	tagTranNum = 0 ;
 	imgH = returnH ;
 	imgW = returnW ;
+	m_layoutIndex = 0 ;
+	isUsingMask = false ;
 
 	candidate.init(imgH,imgW);
 
@@ -138,7 +154,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
 	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &erodeValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
-	
+
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	blendBG = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
@@ -157,7 +173,7 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 	cvSetZero(backgroundImg);
 
 	isBlend = false ;
-	
+
 }
 
 BackGroundMapping::~BackGroundMapping(){
@@ -165,8 +181,8 @@ BackGroundMapping::~BackGroundMapping(){
 	cvReleaseMat(&MatHomography);
 
 	if(mappingTable != NULL){
-	cvReleaseImage(&mappingTable);
-	mappingTable = NULL ;
+		cvReleaseImage(&mappingTable);
+		mappingTable = NULL ;
 	}
 	if( camImg != NULL){
 		cvReleaseImage(&camImg);
@@ -200,7 +216,7 @@ BackGroundMapping::~BackGroundMapping(){
 
 void BackGroundMapping::setBackground(IplImage *BGImg){
 
-    int white ,black;
+	int white ,black;
 	if(layoutFlip == true){
 		cvFlip(BGImg);
 	}
@@ -213,14 +229,14 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 		{
 			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + erodeValue;
 			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -subValue;
-			
+
 			if((int)(uchar)BGImg->imageData[i*BGImg->widthStep+j*BGchannel]< BLACK_VALUE){
 				backgroundImg->imageData[i*backgroundImg->width+j] = black;
 			}
 			else {
 				backgroundImg->imageData[i*backgroundImg->width+j] = white;
 			}
-	
+
 		}
 	}		
 
@@ -232,7 +248,7 @@ void BackGroundMapping::setBackground(IplImage *BGImg){
 	/*historyBG.push_back(imgPool[imgIndex]);
 	imgIndex++;
 	if(imgIndex == imgMAX){
-		imgIndex = 0 ;
+	imgIndex = 0 ;
 	}*/
 
 }
@@ -248,11 +264,11 @@ int saveIndex = 0 ;
 IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	isBlend = false ;
-	
+
 	int realBGindex  = 0;
 	int minValue = 1e10 ;
 	int candSubValue = subValue - 10 ;
-	
+
 	cvCvtColor( srcImg, camImg, CV_RGB2GRAY);
 	if(camFlip == true){
 		cvFlip(camImg);
@@ -267,10 +283,10 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			sprintf(frame ,"%d",i) ;
 			cvShowImage(frame,tmpImg);
 		}
-	    cvAbsDiff(camImg,tmpImg,tmpImg);
+		cvAbsDiff(camImg,tmpImg,tmpImg);
 		cvErode(tmpImg,tmpImg,NULL,erodeValue+1);
-		
-		if(camImg->width == bgMask->width){  
+
+		if(camImg->width == bgMask->width && isUsingMask == TRUE){  
 			cvAnd(tmpImg,bgMask,tmpImg);
 		}
 
@@ -284,33 +300,46 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			minValue = sum.val[0];
 			realBGindex = i;			
 		}	
-	}
-	
-	if(candidate.getUsedImg(realBGindex) != NULL){
-		cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
-			
-		cvShowImage("BG" , tmpImg);
-		cvShowImage("src", camImg);				
-		
-		if(minValue > 300000 && SVAE_IMG == true){
+
+
+		if(minValue > SAVE_THRES && SAVE_IMG == true && saveIndex <1000){
 			char saveName[MAX_PATH] ;
-			sprintf(saveName,"debugImg\\%d_src.jpg",saveIndex);
-			cvSaveImage(saveName,camImg);
-			for(int candS = 0 ; candS < BGCandiSize ; candS++){
-				sprintf(saveName,"debugImg\\%d_cand_%d.jpg",saveIndex,candS);
-				cvSaveImage(saveName,candidate.getUsedImg(candS));
+			sprintf(saveName,"debugImg\\%d_cand_%d.jpg",saveIndex,i);
+			cvSaveImage(saveName,candidate.getUsedImg(i));
+			sprintf(saveName,"debugImg\\%d_cand_%d_sub.jpg",saveIndex,i);
+			cvSaveImage(saveName,tmpImg);
 
-			}
 		}
-		cvSub(camImg,tmpImg,camImg);
-		if(camImg->width == bgMask->width){
-			cvAnd(camImg,bgMask,camImg);
-		}
-		cvShowImage("sub", camImg);	
-		cvWaitKey(1);
 	}
 
-	if(minValue > 300000 && SVAE_IMG == true){
+	for(int i = 0 ; i < candidate.getUsedImgCount(); i ++){
+		if(candidate.bgImgPool[candidate.getUsedImgID(i)].layoutType == candidate.bgImgPool[candidate.getUsedImgID(realBGindex)].layoutType){
+			realBGindex = i ;
+			break ;
+		}
+	}
+	if(candidate.getUsedImgCount() != 0 ){
+		if(candidate.getUsedImg(realBGindex) != NULL){
+			cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
+
+			cvShowImage("BG" , tmpImg);
+			cvShowImage("src", camImg);				
+
+			if(minValue > SAVE_THRES && SAVE_IMG == true&& saveIndex <1000){
+				char saveName[MAX_PATH] ;
+				sprintf(saveName,"debugImg\\%d_src.jpg",saveIndex);
+				cvSaveImage(saveName,camImg);
+			}
+			cvSub(camImg,tmpImg,camImg);
+			if(camImg->width == bgMask->width&& isUsingMask == true){
+				cvAnd(camImg,bgMask,camImg);
+			}
+			cvShowImage("sub", camImg);	
+			cvWaitKey(1);
+		}
+	}
+
+	if(minValue > SAVE_THRES && SAVE_IMG == true && saveIndex <1000){
 		char saveName[MAX_PATH] ;
 		sprintf(saveName,"debugImg\\%d_BG_%d.jpg",saveIndex,realBGindex);
 		cvSaveImage(saveName,tmpImg);
@@ -327,7 +356,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	cvDilate(camImg,camImg,NULL,erodeValue);
 	if(SHOW_WINDOW){
 		cvShowImage("erode",camImg);
-		cvWaitKey();
+		cvWaitKey(0);
 	}
 
 	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
@@ -341,7 +370,7 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		cvFlip(result4CImg);
 	}
 	if(SHOW_WINDOW){
-	cvDestroyAllWindows();
+		cvDestroyAllWindows();
 	}
 
 	if(candidate.bgImgPool[realBGindex].isBlendImg == true){
@@ -355,7 +384,7 @@ void BackGroundMapping::initKernel(float center, float inner , float outer){
 
 	outer = outer /16;   // average to all the outer block in 5*5 and there are 16 blocks 
 	inner = inner /8 ;
-	
+
 	for(int i = 0 ; i < 5 ; i ++){
 		for(int j = 0 ; j < 5 ; j ++){
 			if(i == 0 || i == 4 || j == 0 || j == 4){
@@ -397,10 +426,10 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 		BGTag *newTag = new BGTag() ;
 
 		fscanf(pFile,"\n%d %d\n%f %f %f %f \n%s \n",&newTag->CurTag , &newTag->TagID,&newTag->tagTop.x,&newTag->tagTop.y,
-		&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
+			&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
 
-		newTag->tagRec.x = newTag->tagTop.x * imgW;
-		newTag->tagRec.y = newTag->tagTop.y * imgH;
+		newTag->tagRec.x = newTag->tagTop.x * (imgW-1);
+		newTag->tagRec.y = newTag->tagTop.y * (imgH-1);
 
 		newTag->tagImg = cvLoadImage(newTag->imgPath,0);
 		newTag->tagRec.height = newTag->tagImg->height ;
@@ -412,7 +441,7 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 
 
 void BackGroundMapping::setTranBG(){
- 	cvResize(whiteBG, backgroundImg);
+	cvResize(whiteBG, backgroundImg);
 	for (int i = 0 ; i < tagTranNum ; i ++)
 	{
 		if(BGTran[i]->isVisible){
@@ -424,40 +453,88 @@ void BackGroundMapping::setTranBG(){
 
 	int preIndex = candidate.usedImg.size()-1;
 	int index = candidate.getUnusedImgIndex();
-	
+
 	cvCopy(backgroundImg,candidate.bgImgPool[index].BGimg);
 	candidate.bgImgPool[index].layoutTotalTag = tagTranNum ;
 	candidate.bgImgPool[index].isBlendImg = false ;
-	
+	candidate.bgImgPool[index].refCount = 0 ;
+	candidate.bgImgPool[index].layoutVisibleTable.clear();
+
 	for(int i = 0 ; i < tagTranNum ; i ++){
 		bool tmpVisible = BGTran[i]->isVisible ;
 		candidate.bgImgPool[index].layoutVisibleTable.push_back(tmpVisible);
 	}
 
+	if(candidate.getUsedImgCount() == 1){
+		candidate.bgImgPool[index].layoutType = m_layoutIndex;
+		m_layoutIndex ++ ;
+	}
 
-	for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
-		for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
-			if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
-				break ;
+	else{
+		bool layoutMatch = true ;
+		for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
+
+			for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
+				if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
+					layoutMatch = false ;
+					break ;
+				}
+			}
+			if(layoutMatch == true ){
+				candidate.bgImgPool[index].layoutType= candidate.bgImgPool[candidate.getUsedImgID(j)].layoutType;
+				break;
 			}
 		}
+		if(layoutMatch == false){
+			candidate.bgImgPool[index].layoutType = m_layoutIndex;
+			m_layoutIndex ++ ;
+		}
+
 	}
 
 
 	// add blend Img into the bgImgPool
-	if(preIndex >= 0){
-		cvAddWeighted(candidate.bgImgPool[index].BGimg,0.5,candidate.bgImgPool[preIndex].BGimg,0.5,0,blendBG);
-		int blendIndex = candidate.getUnusedImgIndex();
-		
-		cvCopy(blendBG,candidate.bgImgPool[blendIndex].BGimg);
-		candidate.bgImgPool[blendIndex].layoutTotalTag = tagTranNum ;
-		candidate.bgImgPool[blendIndex].isBlendImg = true ;
+	/*if(preIndex >= 0){
+	cvAddWeighted(candidate.bgImgPool[index].BGimg,0.5,candidate.bgImgPool[preIndex].BGimg,0.5,0,blendBG);
+	int blendIndex = candidate.getUnusedImgIndex();
 
-		for(int i = 0 ; i < tagTranNum ; i ++){
-			bool tmpVisible = BGTran[i]->isVisible ;
-			candidate.bgImgPool[blendIndex].layoutVisibleTable.push_back(tmpVisible);
-		}
+	cvCopy(blendBG,candidate.bgImgPool[blendIndex].BGimg);
+	candidate.bgImgPool[blendIndex].layoutTotalTag = tagTranNum ;
+	candidate.bgImgPool[blendIndex].isBlendImg = true ;
+	candidate.bgImgPool[blendIndex].layoutVisibleTable.clear();
+
+
+	for(int i = 0 ; i < tagTranNum ; i ++){
+	bool tmpVisible = BGTran[i]->isVisible ;
+	candidate.bgImgPool[blendIndex].layoutVisibleTable.push_back(tmpVisible);
 	}
+
+	if(candidate.getUsedImgCount() == 1){
+	candidate.bgImgPool[blendIndex].layoutType = m_layoutIndex;
+	m_layoutIndex ++ ;
+	}
+
+	else{
+	bool layoutMatch = true ;
+	for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
+	for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
+	if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[blendIndex].layoutVisibleTable[tagIndex]){
+	layoutMatch = false ;
+	break ;
+	}
+	}
+	if(layoutMatch == true){
+	candidate.bgImgPool[blendIndex].layoutType = candidate.bgImgPool[candidate.getUsedImgID(j)].layoutType;
+	break;
+	}
+	}
+	if(layoutMatch == false ){
+	candidate.bgImgPool[blendIndex].layoutType = m_layoutIndex;
+	m_layoutIndex ++ ;
+	}
+	}
+	}*/
+
 }
 
 

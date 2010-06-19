@@ -38,4 +38,8 @@ protected:
 public:
 	GSFrameCaptureFilter(IUnknown * pOuter, HRESULT *phr, BOOL ModifiesData);
 	virtual ~GSFrameCaptureFilter();
+public:
+	bool isSaveImg ;
+	int ImgCount ;
+	void setIsSaveImg() ;
 };

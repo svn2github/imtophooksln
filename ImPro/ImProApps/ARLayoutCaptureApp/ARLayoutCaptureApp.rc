@@ -140,6 +140,8 @@ BEGIN
     PUSHBUTTON      "Cam Warp 3",IDC_btnCamWarp3,313,262,55,14,WS_DISABLED
     PUSHBUTTON      "Cam Warp 4",IDC_btnCamWarp4,252,262,55,14,WS_DISABLED
     PUSHBUTTON      "DX Blend Prop",IDC_btnDXBlendProp,252,206,235,14,WS_DISABLED
+    PUSHBUTTON      "ProjectSetting Prop",IDC_btnProjectSetting,59,262,82,14
+    PUSHBUTTON      "BlendWarp Prop",IDC_btnBlendWarpProp,152,262,77,14
 END
 
 

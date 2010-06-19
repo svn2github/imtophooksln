@@ -136,4 +136,8 @@ public:
 	afx_msg void OnCbnSelchangecbcam4();
 	CButton m_btnDXBlendProp;
 	afx_msg void OnBnClickedbtndxblendprop();
+	CButton m_btnProjectSetting;
+	afx_msg void OnBnClickedbtnprojectsetting();
+	CButton m_btnBlendWarpProp;
+	afx_msg void OnBnClickedbtnblendwarpprop();
 };
