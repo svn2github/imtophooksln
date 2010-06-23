@@ -22,7 +22,7 @@ public:
 
 	//implement DShow Property Page
 	STDMETHODIMP     GetPages(CAUUID *pPages);
-	//from CMSPersist
+	//from IGSPersist
 	virtual HRESULT SaveToFile(WCHAR* path);
 	virtual HRESULT LoadFromFile(WCHAR* path);
 	virtual HRESULT GetName(WCHAR* name, UINT szName);
@@ -42,4 +42,5 @@ public:
 	bool isSaveImg ;
 	int ImgCount ;
 	void setIsSaveImg() ;
+	WCHAR wszCur[_MAX_PATH];
 };

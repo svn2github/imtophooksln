@@ -11,6 +11,7 @@ GSFrameCaptureFilter::GSFrameCaptureFilter(IUnknown * pOuter, HRESULT * phr, BOO
 { 
 	isSaveImg = FALSE;
 	ImgCount = 0 ;
+	GetCurrentDirectoryW(_MAX_PATH, wszCur);
 
 }
 GSFrameCaptureFilter::~GSFrameCaptureFilter()
@@ -154,7 +155,11 @@ HRESULT GSFrameCaptureFilter::OnTransform(void* self, IMediaSample *pInSample, C
 		IplImage* camtmp = cvCreateImageHeader(cvSize(cameraW, cameraH), 8, camChannel);
 		camtmp->imageData = (char*)pInBuffer;
 		char saveName[MAX_PATH] ;
-		sprintf(saveName,"saveImg\\%d.jpg",pSelf->ImgCount);
+		WCHAR imgPath[MAX_PATH] ;
+
+		swprintf_s(imgPath, MAX_PATH, L"%s\\saveImg\\%d.jpg", pSelf->wszCur, pSelf->ImgCount);
+		wcstombs(saveName, imgPath, MAX_PATH);
+		
 		cvSaveImage(saveName,camtmp);
 		cvReleaseImageHeader(&camtmp);
 		camtmp = NULL;

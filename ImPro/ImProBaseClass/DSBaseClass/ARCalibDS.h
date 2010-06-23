@@ -8,6 +8,12 @@
 #include "IARTagFilter.h"
 #include "IProjectSettingFilter.h"
 
+//#include "IGSARTagLayoutFilter.h"
+#include "IGSDXRenderer.h"
+#include "IGSDXBlendFilter.h"
+#include "IGSHomoWarpFilter.h"
+#include "IGSProjSettingFilter.h"
+
 class DSBASECLASSES_API ARCalibDS :
 	public CCameraDS
 {

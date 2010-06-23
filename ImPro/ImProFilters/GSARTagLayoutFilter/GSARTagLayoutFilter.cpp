@@ -278,17 +278,6 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 			if (FAILED(hr))
 				return hr;
 		}
-		if (pSelf->GetLayoutChanged())
-		{
-			hr = pSelf->SendLayoutData();
-			if (FAILED(hr))
-			{
-				return E_FAIL;
-			}
-			pSelf->ComputeROIs();
-			pSelf->sendROIData();
-			pSelf->SetLayoutChanged(FALSE);
-		}
 	}
 
 	CAutoLock lck3(&pSelf->m_csRenderPara);
@@ -321,6 +310,21 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 	else 
 	{
 		hr = pSelf->CopyGSTexture2Sample(pSelf->m_pRenderTargetList.at(0), pSample, &mt);
+	}
+
+	{
+		CAutoLock lck(&pSelf->m_csStrategyData);
+		if (pSelf->GetLayoutChanged())
+		{
+			hr = pSelf->SendLayoutData();
+			if (FAILED(hr))
+			{
+				return E_FAIL;
+			}
+			pSelf->ComputeROIs();
+			pSelf->sendROIData();
+			pSelf->SetLayoutChanged(FALSE);
+		}
 	}
 	return hr;
 

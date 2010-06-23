@@ -34,6 +34,7 @@ public:
 	int layoutTotalTag ;
 	int refCount ;
 	vector <bool> layoutVisibleTable ;
+	bool* tagVisibleTable;
 	void setToPool(IplImage* background, bool isBlend);
 };
 
@@ -63,11 +64,11 @@ class BackGroundMapping{
 public:
 	BackGroundMapping(int w , int h ,int camChannel,char* fileDir);
 	~BackGroundMapping();
+	WCHAR curDir[MAX_PATH];
 
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
 	void setBackground(IplImage* BGImg);  
-	void initKernel(float center, float inner , float outer);
 
 public:
 	std::vector<CvRect> foregroundLists;
