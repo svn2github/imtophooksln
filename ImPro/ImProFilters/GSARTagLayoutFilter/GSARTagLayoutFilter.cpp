@@ -426,7 +426,13 @@ HRESULT GSARTagLayoutFilter::SetBlackLevel(float level)
 	GSAutoLock lck(m_pD3DDisplay->GetGSCritSec());
 	return ((GSARTagLayoutDisplay*)m_pD3DDisplay)->SetBlackLevel(level);
 }
-
+HRESULT GSARTagLayoutFilter::GetLayout(GSARTagLayout*& pLayout)
+{
+	if (m_pD3DDisplay == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pD3DDisplay->GetGSCritSec());
+	return ((GSARTagLayoutDisplay*)m_pD3DDisplay)->GetLayout(pLayout);
+}
 BOOL GSARTagLayoutFilter::GetLayoutChanged()
 {
 	CAutoLock lck(&m_csLayoutChange);

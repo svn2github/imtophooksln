@@ -152,4 +152,5 @@ public:
 
 	virtual float GetBlackLevel() = 0;
 	virtual HRESULT SetBlackLevel(float level) = 0;
+	virtual HRESULT GetLayout(GSARTagLayout*& pLayout) = 0;
 };

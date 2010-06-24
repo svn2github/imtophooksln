@@ -86,6 +86,7 @@ public:
 
 	virtual HRESULT SetFrameRate(float fps);
 	virtual float GetFrameRate();
+	virtual HRESULT GetLayout(GSARTagLayout*& pLayout);
 
 };
 

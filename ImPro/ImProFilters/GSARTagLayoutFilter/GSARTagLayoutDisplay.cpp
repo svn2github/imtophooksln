@@ -718,9 +718,11 @@ HRESULT GSARTagLayoutDisplay::DecideLayout(GSBoundingBox2D* camRects, UINT numCa
 HRESULT GSARTagLayoutDisplay::GetLayout(GSARTagLayout*& pLayout)
 {
 	CAutoLock lck(&m_csParaSetting);
+	SAFE_DELETE(pLayout);
 	if (m_pLayout == NULL)
 		return E_FAIL;
-	pLayout = m_pLayout;
+	pLayout = new GSARTagLayout();
+	*pLayout = *m_pLayout;
 	return S_OK;
 }
 
