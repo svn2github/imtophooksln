@@ -255,7 +255,7 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 {
 	if (self == NULL ||pSample == NULL || pPin == NULL)
 		return E_FAIL;
-	
+
 	GSARTagLayoutFilter* pSelf = (GSARTagLayoutFilter*)(GSMuxFilter*)self;
 
 	if (pSelf->m_pD3DDisplay == NULL || pSelf->m_pRenderTargetList.size() <= 0)
@@ -313,6 +313,7 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 	}
 
 	{
+		
 		CAutoLock lck(&pSelf->m_csStrategyData);
 		if (pSelf->GetLayoutChanged())
 		{
@@ -325,7 +326,9 @@ HRESULT GSARTagLayoutFilter::OnFillBuffer(void* self, IMediaSample *pSample, IPi
 			pSelf->sendROIData();
 			pSelf->SetLayoutChanged(FALSE);
 		}
+		
 	}
+	
 	return hr;
 
 }
@@ -465,6 +468,7 @@ HRESULT GSARTagLayoutFilter::ComputeROIs()
 	int imgW = m_pROIImg->width; int imgH = m_pROIImg->height;
 	if (imgW -1 <= 0 || imgH -1 <= 0 )
 	{
+		SAFE_DELETE(pLayout);
 		return E_FAIL;
 	}
 	cvDrawRect(m_pROIImg, cvPoint(0,0), cvPoint(m_pROIImg->width-1, m_pROIImg->height-1), cvScalar(255, 255, 255), -1);
@@ -506,7 +510,7 @@ HRESULT GSARTagLayoutFilter::ComputeROIs()
 
 	cvReleaseMemStorage(&storage);
 	storage = NULL;
-
+	SAFE_DELETE(pLayout);
 	return S_OK;
 }
 
@@ -549,6 +553,7 @@ HRESULT GSARTagLayoutFilter::SendLayoutData()
 	
 	if (m_pOutputPins.size() <= 0 || !m_pOutputPins[0]->IsConnected()) 
 	{
+		SAFE_DELETE(pLayout);
 		return S_FALSE;
 	}
 	CMediaType mt = m_pOutputPins[0]->CurrentMediaType();
@@ -562,6 +567,7 @@ HRESULT GSARTagLayoutFilter::SendLayoutData()
 	pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
 	if (pSendSample == NULL)
 	{
+		SAFE_DELETE(pLayout);
 		return E_FAIL;
 	}
 	
@@ -579,6 +585,7 @@ HRESULT GSARTagLayoutFilter::SendLayoutData()
 	m_pOutputPins[0]->Deliver(pSendSample);
 	SAFE_RELEASE(pSendSample);
 	SAFE_DELETE(sendData1);
+	SAFE_DELETE(pLayout);
 	return S_OK;
 }
 
@@ -635,15 +642,13 @@ bool GSARTagLayoutFilter::sendROIData()
 		pAllocator->GetBuffer((IMediaSample**)&pSendSample, NULL, NULL, 0);
 		if (pSendSample == NULL)
 		{
-			delete sendData;
-			sendData = NULL;
+			SAFE_DELETE(sendData);
 			return S_FALSE;
 		}
 
 		pSendSample->SetPointer((BYTE*)sendData, sizeof(ROIData));
 		m_pOutputPins[1]->Deliver(pSendSample);
-		delete sendData;
-		sendData = NULL;
+		SAFE_DELETE(sendData);
 		if (pSendSample != NULL)
 		{
 			pSendSample->Release();

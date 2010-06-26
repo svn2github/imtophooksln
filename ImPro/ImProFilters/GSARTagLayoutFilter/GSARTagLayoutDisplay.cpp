@@ -367,7 +367,7 @@ HRESULT GSARTagLayoutDisplay::generateARTagMesh()
 			{vRT, D3DXVECTOR3(0, 0, -1), 1.0, 0.0}
 		};
 		
-		DWORD indices[] =
+		UINT indices[] =
 		{
 			0,1,2,
 			0,2,3
