@@ -16,6 +16,7 @@
 #include "msxml2.h"
 #include <string.h>
 #include <winerror.h>
+#include <D3DX10Math.h>
 
 using namespace ARToolKitPlus;
 extern CARTagFilterApp theApp;
@@ -33,6 +34,8 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_bDrawReproPt = true;
 	m_bGuessPose = false;
 	m_bMaskTag = false;
+	m_imgW = 640;
+	m_imgH = 480;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 }
@@ -266,6 +269,8 @@ HRESULT ARTagDSFilter::CompleteConnect(PIN_DIRECTION direction, const IPin* pMyP
 		VIDEOINFOHEADER *pvi = (VIDEOINFOHEADER *) inputMT.pbFormat;
 		BITMAPINFOHEADER bitHeader = pvi->bmiHeader;
 		initARSetting(bitHeader.biWidth, bitHeader.biHeight, &inputMT);
+		m_imgW = bitHeader.biWidth;
+		m_imgH = bitHeader.biHeight;
 	}
 	return S_OK;
 }
@@ -440,6 +445,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		else 
 		{
 			CAutoLock lck(&m_csARTracker);
+			GSAutoLock lck2(m_TUIOSender.GetGSCritSec());
 			markinfos = new ARMarkerInfo[numDetected];
 			for (int k = 0; k < numDetected; k++)
 			{
@@ -454,6 +460,10 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 			{
 				ShowReprojectImage(imgOut, numDetected,
 				markinfos, markerConfig,matARView, matARProj );
+			}
+			if (m_TUIOSender.IsConnected())
+			{
+				hr = SendTUIO(markinfos, numDetected);
 			}
 			if (m_pCallback != NULL)
 			{
@@ -1715,5 +1725,129 @@ HRESULT ARTagDSFilter::GetName(WCHAR* name, UINT szName)
 		filterInfo.pGraph->Release();
 		filterInfo.pGraph = NULL;
 	}
+	return S_OK;
+}
+
+
+HRESULT ARTagDSFilter::GetIPAddress(char* ipaddress, UINT szBuf)
+{
+	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
+	return m_TUIOSender.GetIPAddress(ipaddress, szBuf);
+}
+HRESULT ARTagDSFilter::GetPort(UINT& port)
+{
+	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
+	return m_TUIOSender.GetPort(port);
+}
+BOOL ARTagDSFilter::IsOSCConnected()
+{
+	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
+	return m_TUIOSender.IsConnected();
+}
+HRESULT ARTagDSFilter::ConnectOSC(char* ipaddress, int port)
+{
+	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
+	return m_TUIOSender.ConnectSocket(ipaddress, port);
+}
+HRESULT ARTagDSFilter::DisConnectOSC()
+{
+	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
+	return m_TUIOSender.DisConnectSocket();
+}
+
+HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
+{
+	if (pMarkinfos == NULL || numDetected == 0)
+		return E_INVALIDARG;
+	
+	D3DXVECTOR2 pts[4];
+	D3DXVECTOR2 center(0,0);
+
+
+	for (int i=0; i < numDetected; i++)
+	{
+		center.x = 0; center.y = 0;
+		const ARFloat* arV[4]= {NULL};
+
+		switch (pMarkinfos[i].dir)
+		{
+		case 0:
+			arV[0] = pMarkinfos[i].vertex[2];
+			arV[1] = pMarkinfos[i].vertex[3];
+			arV[2] = pMarkinfos[i].vertex[0];
+			arV[3] = pMarkinfos[i].vertex[1];
+			break;
+		case 1:
+			arV[0] = pMarkinfos[i].vertex[1];
+			arV[1] = pMarkinfos[i].vertex[2];
+			arV[2] = pMarkinfos[i].vertex[3];
+			arV[3] = pMarkinfos[i].vertex[0];
+			break;
+		case 2:
+			arV[0] = pMarkinfos[i].vertex[0];
+			arV[1] = pMarkinfos[i].vertex[1];
+			arV[2] = pMarkinfos[i].vertex[2];
+			arV[3] = pMarkinfos[i].vertex[3];
+			break;
+		case 3:
+			arV[0] = pMarkinfos[i].vertex[3];
+			arV[1] = pMarkinfos[i].vertex[0];
+			arV[2] = pMarkinfos[i].vertex[1];
+			arV[3] = pMarkinfos[i].vertex[2];
+			break;
+		default:
+			continue;
+			break;
+		}
+		for (int j =0; j < 4; j++)
+		{
+			pts[j].x = arV[j][0];
+			pts[j].y = arV[j][1];
+			center.x += pts[j].x;
+			center.y += pts[j].y;
+		}
+		center.x = (center.x * 0.25) / m_imgW;
+		center.y = (center.y * 0.25) / m_imgH;
+
+		D3DXVECTOR2 horzVec = ((pts[2]+pts[3]) - (pts[0] + pts[1]))*0.5;
+		D3DXVECTOR2 vertVec = ((pts[1]+pts[2]) - (pts[0] + pts[3]))*0.5;
+		
+
+		D3DXVec2Normalize(&horzVec, &horzVec);
+		D3DXVec2Normalize(&vertVec, &vertVec);
+		D3DXVECTOR3 horzVec3 = D3DXVECTOR3(horzVec.x, horzVec.y, 0);
+		D3DXVECTOR3 vertVec3 = D3DXVECTOR3(vertVec.x, vertVec.y, 0);
+		D3DXVECTOR3 horCrossVec(0,0,0);
+		D3DXVECTOR3 vertCrossVec(0,0,0);
+		
+		float hAngle = 0;
+		float vAngle = 0;
+		D3DXVec3Cross(&horCrossVec,  &(D3DXVECTOR3(1, 0, 0)),  &horzVec3);
+		D3DXVec3Cross(&vertCrossVec, &(D3DXVECTOR3(0, -1, 0)), &vertVec3);
+		float horzDot = D3DXVec2Dot(&horzVec, &D3DXVECTOR2(1, 0));
+		float vertDot = D3DXVec2Dot(&vertVec, &D3DXVECTOR2(0, -1));
+		hAngle = acosf(horzDot);
+		vAngle = acosf(vertDot);
+		
+		if (horCrossVec.z < 0)
+		{
+			hAngle = D3DX_PI*2 - hAngle;
+		}
+		if (vertCrossVec.z < 0)
+		{
+			vAngle = D3DX_PI*2 - vAngle;
+		}
+
+
+		GSTUIO2DObj tagObj;
+		tagObj.m_cID = pMarkinfos[i].id;
+		tagObj.m_sID = pMarkinfos[i].id;
+		tagObj.m_a = (hAngle + vAngle )*0.5;
+		tagObj.m_x = center.x;
+		tagObj.m_y = center.y;
+		
+		m_TUIOSender.Push2DObj(&tagObj, 1);
+	}
+	m_TUIOSender.SendAndClearData();
 	return S_OK;
 }

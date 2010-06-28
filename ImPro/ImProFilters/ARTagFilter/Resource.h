@@ -58,8 +58,11 @@
 #define IDC_edZaxis                     2034
 #define IDC_CKAutoThreshold             2034
 #define IDC_CKUseKalman                 2035
-#define IDC_CKBlackTag                  2036
 #define IDC_CKMaskTag                   2036
+#define IDC_BTNCONNECT                  16005
+#define IDC_edIP                        16006
+#define IDC_EDIT4                       16007
+#define IDC_edPort                      16007
 
 // Next default values for new objects
 // 

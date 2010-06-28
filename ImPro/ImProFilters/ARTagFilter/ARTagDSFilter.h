@@ -11,7 +11,7 @@
 #include "CMuxTransformFilter.h"
 #include "cv.h"
 #include "IGSPersist.h"
-
+#include "GSTUIOSender.h"
 
 class ARTagDSFilter :
 	public CMuxTransformFilter, public IARTagFilter,
@@ -86,13 +86,19 @@ public:
 	virtual bool setWorldBasisScale(double v[3]);
 	virtual bool getWorldBasisScale(double v[3]);
 	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]);
+
+	virtual HRESULT GetIPAddress(char* ipaddress, UINT szBuf);
+	virtual HRESULT GetPort(UINT& port);
+	virtual BOOL IsOSCConnected();
+	virtual HRESULT ConnectOSC(char* ipaddress, int port);
+	virtual HRESULT DisConnectOSC();
 private:
 	HRESULT VariantFromString(PCWSTR wszValue, VARIANT &Variant);
 
 	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts, double basisScale[3]);
 	bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 protected:
-	
+	GSTUIOSender m_TUIOSender;
 	//
 	CCritSec m_csWorldBasisScale;
 	double m_WorldBasisScale[3];
@@ -105,6 +111,8 @@ protected:
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;
 	void** m_callbackArgv;
+
+	UINT m_imgW, m_imgH;
 
 	ARToolKitPlus::TrackerMultiMarker *m_ARTracker;
 	CCritSec m_csARTracker;
@@ -119,10 +127,11 @@ protected:
 	HRESULT ShowReprojectImage(IplImage* srcImage, int nDetected, const ARMarkerInfo* detectedMarkers, 
 		const ARMultiMarkerInfoT* config, const double* matView, const double* matProj);
 
-
+	HRESULT SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected);
 public:
 	ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData);
 	virtual ~ARTagDSFilter();
+
 };
 
 #endif

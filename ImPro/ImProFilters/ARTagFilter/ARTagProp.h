@@ -6,8 +6,9 @@
 #include "combase.h"
 #include "ARTagDSFilter.h"
 #include "DSMacro.h"
-
-
+#include "GSMFCProp.h"
+#include "Resource.h"
+#include "afxwin.h"
 
 class ARTagCameraSettingPage : public CBasePropertyPage
 {
@@ -42,8 +43,9 @@ public:
 
 };
 
-class ARTagGeneralPage : public CBasePropertyPage
+class ARTagGeneralPage : public GSMFCProp
 {
+	DECLARE_DYNAMIC(ARTagGeneralPage)
 protected:
 	IARTagFilter *m_pARProperty;    // Pointer to the filter's custom interface.
 	HWND m_cbPoseEstimator;
@@ -72,10 +74,16 @@ protected:
 	bool GetSetting();
 	bool ApplySetting();
 	bool updateSliderTxt();
+
+
+	virtual BOOL OnInitDialog();
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	DECLARE_MESSAGE_MAP()
 public:
 	ARTagGeneralPage(IUnknown *pUnk);
 	~ARTagGeneralPage();
 
+	enum {IDD = IDD_ARTag_GeneralSettingPage};
 	
 	//override CBasePropertyPage Method
 	virtual HRESULT OnConnect(IUnknown *pUnk);
@@ -86,5 +94,11 @@ public:
 
 	static CUnknown *WINAPI CreateInstance(LPUNKNOWN punk, HRESULT *phr);
 	BOOL OpenFileDialog(HWND hwndParent, WCHAR* pwcsFilter, WCHAR* pwcsDialogTitle, DWORD dwflag, WCHAR* pOutStr, BOOL saveDlg);
+	virtual int GetDialogResourceID() { return IDD_ARTag_GeneralSettingPage;}
+	virtual int GetTitileResourceID() { return IDS_ARTag_GENERALPAGE_TITLE;}
+	CEdit m_edIP;
+	CEdit m_edPort;
+	CButton m_btnConnect;
+	afx_msg void OnBnClickedBtnconnect();
 };
 

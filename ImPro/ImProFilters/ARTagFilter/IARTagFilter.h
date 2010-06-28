@@ -23,46 +23,53 @@ IARTagFilter: public IUnknown
 {
 public:
 	typedef BOOL (__stdcall* CallbackFuncPtr)(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[]);
-	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]);
+	virtual BOOL SetCallback(CallbackFuncPtr pfunc, int argc, void* argv[]) = 0;
 
-	virtual bool IsReady();
-	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker);
-	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip);
-	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor);
-	virtual HRESULT loadCameraFromXMLFile(WCHAR* filename);
-	virtual HRESULT loadARConfigFromFile(WCHAR* filename);
-	virtual bool setBorderWidth(double borderWidth);
-	virtual double getBorderWidth();
-	virtual bool setThreshold(int t);
-	virtual int getThreshold();
+	virtual bool IsReady() = 0;
+	virtual bool setMarkInfo(ARMultiEachMarkerInfoT *marker, int numMarker) = 0;
+	virtual bool setCamera(int xsize, int ysize, double* mat, double* dist_factor,double nNearClip, double nFarClip) = 0;
+	virtual bool getCamera(int& xsize, int &ysize, double* mat, double* dist_factor) = 0;
+	virtual HRESULT loadCameraFromXMLFile(WCHAR* filename) = 0;
+	virtual HRESULT loadARConfigFromFile(WCHAR* filename) = 0;
+	virtual bool setBorderWidth(double borderWidth) = 0;
+	virtual double getBorderWidth() = 0;
+	virtual bool setThreshold(int t) = 0;
+	virtual int getThreshold() = 0;
 
-	virtual bool setConfThreshold(float v);
-	virtual float getConfThreshold();
-	virtual bool setAutoThreshold(bool nEnable);
-	virtual bool getAutoThreshold();
-	virtual bool setMultiThreshold(bool nEnable);
-	virtual bool getMultiThreshold();
+	virtual bool setConfThreshold(float v) = 0;
+	virtual float getConfThreshold() = 0;
+	virtual bool setAutoThreshold(bool nEnable) = 0;
+	virtual bool getAutoThreshold() = 0;
+	virtual bool setMultiThreshold(bool nEnable) = 0;
+	virtual bool getMultiThreshold() = 0;
 
-	virtual bool setUndistortionMode(int mode);
-	virtual int getUndistortionMode();
-	virtual bool setMarkerMode(int mode);
-	virtual int getMarkerMode();
-	virtual bool setPoseEstimator(int rpp);
-	virtual int getPoseEstimator();
-	virtual bool getbDrawTag();
-	virtual bool setbDrawTag(bool v);
-	virtual bool getbDrawReproPt();
-	virtual bool setbDrawReproPt(bool v);
-	virtual bool getbGuessPose();
-	virtual bool setbGuessPose(bool v);
-	virtual bool getbUseKalman();
-	virtual bool setbUseKalman(bool v);
-	virtual bool getbMaskTag();
-	virtual bool setbMaskTag(bool v);
+	virtual bool setUndistortionMode(int mode) = 0;
+	virtual int getUndistortionMode() = 0;
+	virtual bool setMarkerMode(int mode) = 0;
+	virtual int getMarkerMode() = 0;
+	virtual bool setPoseEstimator(int rpp) = 0;
+	virtual int getPoseEstimator() = 0;
+	virtual bool getbDrawTag() = 0;
+	virtual bool setbDrawTag(bool v) = 0;
+	virtual bool getbDrawReproPt() = 0;
+	virtual bool setbDrawReproPt(bool v) = 0;
+	virtual bool getbGuessPose() = 0;
+	virtual bool setbGuessPose(bool v) = 0;
+	virtual bool getbUseKalman() = 0;
+	virtual bool setbUseKalman(bool v) = 0;
+	virtual bool getbMaskTag() = 0;
+	virtual bool setbMaskTag(bool v) = 0;
 
-	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov);
-	virtual BOOL SetMeasureNoiseCov(float fNoiseCov);
+	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov) = 0;
+	virtual BOOL SetMeasureNoiseCov(float fNoiseCov) = 0;
 
-	virtual bool setWorldBasisScale(double v[3]);
-	virtual bool getWorldBasisScale(double v[3]);
+	virtual bool setWorldBasisScale(double v[3]) = 0;
+	virtual bool getWorldBasisScale(double v[3]) = 0;
+
+	
+	virtual HRESULT GetIPAddress(char* ipaddress, UINT szBuf) = 0;
+	virtual HRESULT GetPort(UINT& port) = 0;
+	virtual BOOL IsOSCConnected() = 0;
+	virtual HRESULT ConnectOSC(char* ipaddress, int port) = 0;
+	virtual HRESULT DisConnectOSC() = 0;
 };

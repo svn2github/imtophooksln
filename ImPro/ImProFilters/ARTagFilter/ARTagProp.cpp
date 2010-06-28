@@ -355,9 +355,16 @@ HRESULT ARTagCameraSettingPage::OnApplyChanges(void)
 
 
 
+IMPLEMENT_DYNAMIC(ARTagGeneralPage, GSMFCProp)
+
+BEGIN_MESSAGE_MAP(ARTagGeneralPage, GSMFCProp)
+	
+	ON_BN_CLICKED(IDC_BTNCONNECT, &ARTagGeneralPage::OnBnClickedBtnconnect)
+END_MESSAGE_MAP()
+
 
 ARTagGeneralPage::ARTagGeneralPage(IUnknown *pUnk) : 
-CBasePropertyPage(NAME("ARTag GeneralPage"), pUnk, IDD_ARTag_GeneralSettingPage, IDS_ARTag_GENERALPAGE_TITLE),
+GSMFCProp(NAME("ARTagGeneralPage"), pUnk),
 m_pARProperty(0)
 {
 	m_cbPoseEstimator = 0;
@@ -376,7 +383,20 @@ m_pARProperty(0)
 	m_slrMeasureNoise = 0;
 	m_ckMaskTag = 0;
 }
+BOOL ARTagGeneralPage::OnInitDialog()
+{
+	BOOL ret = __super::OnInitDialog();
 
+	return ret;
+}
+void ARTagGeneralPage::DoDataExchange(CDataExchange* pDX)
+{
+	GSMFCProp::DoDataExchange(pDX);
+
+	DDX_Control(pDX, IDC_edIP, m_edIP);
+	DDX_Control(pDX, IDC_edPort, m_edPort);
+	DDX_Control(pDX, IDC_BTNCONNECT, m_btnConnect);
+}
 ARTagGeneralPage::~ARTagGeneralPage()
 {
 	if (m_pARProperty != NULL)
@@ -460,13 +480,35 @@ bool ARTagGeneralPage::GetSetting()
 	SLIDER_SetPos(m_slrBorderW, borderWValue);
 	WCHAR str[MAX_PATH] = {0};
 	swprintf_s(str, MAX_PATH, L"%d", threshold);
-	SetWindowText(m_txtThreshold, str);
+	::SetWindowText(m_txtThreshold, str);
 
 	swprintf_s(str, MAX_PATH, L"%.3f", SLIDER_GetPos(m_slrBorderW)/(float)m_BorderWScale);
-	SetWindowText(m_txtBorderW, str);
+	::SetWindowText(m_txtBorderW, str);
 
 	swprintf_s(str, MAX_PATH, L"%d", intMeasurenoise);
-	SetWindowText(m_txtMeasureNoise, str);
+	::SetWindowText(m_txtMeasureNoise, str);
+
+	char ipaddress[MAX_PATH] = {0};
+	UINT port = 3333;
+	m_pARProperty->GetIPAddress(ipaddress, MAX_PATH);
+	::SetWindowTextA(m_edIP.GetSafeHwnd(),ipaddress);
+	m_pARProperty->GetPort(port);
+	swprintf(str, MAX_PATH, L"%d", port);
+	m_edPort.SetWindowText(str);
+
+	if (m_pARProperty->IsOSCConnected())
+	{
+		m_edIP.EnableWindow(FALSE);
+		m_edPort.EnableWindow(FALSE);
+		m_btnConnect.SetWindowText(L"DisConnect");
+	}
+	else
+	{
+		m_edIP.EnableWindow(TRUE);
+		m_edPort.EnableWindow(TRUE);
+		m_btnConnect.SetWindowText(L"Connect");
+	}
+
 }
 bool ARTagGeneralPage::ApplySetting()
 {
@@ -525,13 +567,13 @@ bool ARTagGeneralPage::updateSliderTxt()
 
 	WCHAR str[MAX_PATH] = {0};
 	swprintf_s(str, MAX_PATH, L"%d", threshold);
-	SetWindowText(m_txtThreshold, str);
+	::SetWindowText(m_txtThreshold, str);
 
 	swprintf_s(str, MAX_PATH, L"%.3f", borderW);
-	SetWindowText(m_txtBorderW, str);
+	::SetWindowText(m_txtBorderW, str);
 
 	swprintf_s(str, MAX_PATH, L"%d", abs(intMeasureNoise));
-	SetWindowText(m_txtMeasureNoise, str);
+	::SetWindowText(m_txtMeasureNoise, str);
 	return true;
 }
 
@@ -634,7 +676,7 @@ BOOL ARTagGeneralPage::OnReceiveMessage(HWND hwnd,
 		{
 			WCHAR pFileName[MAX_PATH] = {0};
 			
-			OpenFileDialog(m_Dlg, L"*.txt", L"Choose ARTagConfig File", 0, pFileName);
+			OpenFileDialog(this->GetSafeHwnd(), L"*.txt", L"Choose ARTagConfig File", 0, pFileName);
 			if (pFileName != NULL)
 			{
 				m_pARProperty->loadARConfigFromFile(pFileName);
@@ -664,26 +706,26 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 {
 	if (m_pARProperty == NULL || m_pARProperty->IsReady() == false)
 	{
-		::EnableWindow(this->m_Dlg, FALSE);
+		this->EnableWindow(FALSE);
 		return S_OK;
 	}
-	::EnableWindow(this->m_Dlg, TRUE);
-	m_ckGuessPose = GetDlgItem(m_Dlg, IDC_CKGuessPose);
-	m_ckAutoThreshold = GetDlgItem(m_Dlg, IDC_CKAutoThreshold);
-	m_ckUseKalman = GetDlgItem(m_Dlg, IDC_CKUseKalman);
-	m_ckDrawReProj = GetDlgItem(m_Dlg, IDC_CKReProj);
-	m_ckDrawTag = GetDlgItem(m_Dlg, IDC_CHK_DRAWTAG);
-	m_ckMaskTag = GetDlgItem(m_Dlg, IDC_CKMaskTag);
+	this->EnableWindow(TRUE);
+	m_ckGuessPose = ::GetDlgItem(GetSafeHwnd(), IDC_CKGuessPose);
+	m_ckAutoThreshold = ::GetDlgItem(GetSafeHwnd(), IDC_CKAutoThreshold);
+	m_ckUseKalman = ::GetDlgItem(GetSafeHwnd(), IDC_CKUseKalman);
+	m_ckDrawReProj = ::GetDlgItem(GetSafeHwnd(), IDC_CKReProj);
+	m_ckDrawTag = ::GetDlgItem(GetSafeHwnd(), IDC_CHK_DRAWTAG);
+	m_ckMaskTag = ::GetDlgItem(GetSafeHwnd(), IDC_CKMaskTag);
 
-	m_cbPoseEstimator = GetDlgItem(m_Dlg, IDC_COMBO_PoseEstimator);
-	m_cbMarkerMode = GetDlgItem(m_Dlg, IDC_COMBO_MarkerMode);
-	m_cbUnDistortMode = GetDlgItem(m_Dlg, IDC_COMBO_UndistortMode);
-	m_slrBorderW = GetDlgItem(m_Dlg, IDC_SLIDER_BorderW);
-	m_slrThreshold = GetDlgItem(m_Dlg, IDC_SLIDER_Threshold);
-    m_txtBorderW = GetDlgItem(m_Dlg, IDC_txtBorderW);
-	m_txtThreshold = GetDlgItem(m_Dlg, IDC_txtThreshold);
-	m_txtMeasureNoise = GetDlgItem(m_Dlg, IDC_txtMeasureNoise);;
-	m_slrMeasureNoise = GetDlgItem(m_Dlg, IDC_SLIDER_MeasureNoise);
+	m_cbPoseEstimator = ::GetDlgItem(GetSafeHwnd(), IDC_COMBO_PoseEstimator);
+	m_cbMarkerMode = ::GetDlgItem(GetSafeHwnd(), IDC_COMBO_MarkerMode);
+	m_cbUnDistortMode = ::GetDlgItem(GetSafeHwnd(), IDC_COMBO_UndistortMode);
+	m_slrBorderW = ::GetDlgItem(GetSafeHwnd(), IDC_SLIDER_BorderW);
+	m_slrThreshold = ::GetDlgItem(GetSafeHwnd(), IDC_SLIDER_Threshold);
+    m_txtBorderW = ::GetDlgItem(GetSafeHwnd(), IDC_txtBorderW);
+	m_txtThreshold = ::GetDlgItem(GetSafeHwnd(), IDC_txtThreshold);
+	m_txtMeasureNoise = ::GetDlgItem(GetSafeHwnd(), IDC_txtMeasureNoise);;
+	m_slrMeasureNoise = ::GetDlgItem(GetSafeHwnd(), IDC_SLIDER_MeasureNoise);
 
 	ComboBox_AddString(m_cbPoseEstimator, L"Normal");
 	ComboBox_AddString(m_cbPoseEstimator, L"Cont");
@@ -707,8 +749,6 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 }
 HRESULT ARTagGeneralPage::OnApplyChanges(void)
 {
-	if (m_hwnd == NULL)
-		return S_FALSE;
 	if (ApplySetting())
 	{
 		return S_OK;
@@ -719,3 +759,26 @@ HRESULT ARTagGeneralPage::OnApplyChanges(void)
 	}
 }
 
+
+void ARTagGeneralPage::OnBnClickedBtnconnect()
+{
+	if (m_pARProperty == NULL)
+	{
+		return;
+	}
+	char addressIP[MAX_PATH] = {0};
+	::GetWindowTextA(m_edIP.GetSafeHwnd(), addressIP , MAX_PATH);
+	int port = 3333;
+	WCHAR str[MAX_PATH];
+	m_edPort.GetWindowText(str, MAX_PATH);
+	swscanf_s(str, L"%d", &port);
+	if (m_pARProperty->IsOSCConnected())
+	{
+		m_pARProperty->DisConnectOSC();
+	}
+	else
+	{
+		m_pARProperty->ConnectOSC(addressIP, port);
+	}
+	GetSetting();
+}

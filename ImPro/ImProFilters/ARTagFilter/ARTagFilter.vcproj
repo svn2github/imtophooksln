@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSPersist&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSPersist&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/StrmBase&quot;;&quot;$(SolutionDir)../ImProBaseClass/commonLib&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include\opencv&quot;;&quot;$(SolutionDir)../OtherLib/OpenCV2.1\vs2008\include&quot;;&quot;$(ProjectDir)..\ARToolKitPlus_2.1.1\include&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSD3DLib&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMuxTransformFilter&quot;;&quot;$(SolutionDir)../ImProBaseClass/MSPersist&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSMFCProp&quot;;&quot;$(SolutionDir)../ImProBaseClass/CMFCBasePropertyPage&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSTUIOSender&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSTUIOSender/oscpack&quot;;&quot;$(SolutionDir)../OtherLib/GShow/GSBaseClass/GSCommonLib&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG;_USRDLL;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -69,7 +69,7 @@
 				Name="VCLinkerTool"
 				LinkLibraryDependencies="false"
 				AdditionalOptions="/Entry:FilterDllMain"
-				AdditionalDependencies="ARToolKitPlus.lib strmbase.lib winmm.lib d3dx9.lib d3d9.lib opencv_highgui211.lib opencv_core211.lib opencv_video211.lib opencv_calib3d211.lib CMuxTransformFilter.lib CMFCBasePropertyPage.lib commonLib.lib "
+				AdditionalDependencies="ARToolKitPlus.lib strmbase.lib winmm.lib d3dx9.lib d3d9.lib opencv_highgui211.lib opencv_core211.lib opencv_video211.lib opencv_calib3d211.lib CMuxTransformFilter.lib GSMFCProp.lib commonLib.lib GSTUIOSender.lib GSCommonLib.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)..\lib\$(ConfigurationName)&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Debug&quot;;&quot;$(SolutionDir)..\OtherLib\OpenCV2.1\vs2008\lib\Release&quot;;&quot;$(SolutionDir)..\otherLib\GShow\lib\$(ConfigurationName)&quot;"
 				IgnoreDefaultLibraryNames=""
