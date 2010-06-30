@@ -68,7 +68,11 @@ void CARLayoutCaptureAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_btnCamWarp4, m_btnCamWarp4);
 	DDX_Control(pDX, IDC_btnDXBlendProp, m_btnDXBlendProp);
 	DDX_Control(pDX, IDC_btnProjectSetting, m_btnProjectSetting);
-	DDX_Control(pDX, IDC_btnBlendWarp, m_btnBlendWarpProp);
+	DDX_Control(pDX, IDC_btnBlendWarpProp, m_btnBlendWarpProp);
+	DDX_Control(pDX, IDC_btnUndist1, m_btnUndist1);
+	DDX_Control(pDX, IDC_btnUndist2, m_btnUndist2);
+	DDX_Control(pDX, IDC_btnUndist4, m_btnUndist4);
+	DDX_Control(pDX, IDC_btnUndist3, m_btnUndist3);
 }
 
 BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
@@ -113,6 +117,9 @@ BEGIN_MESSAGE_MAP(CARLayoutCaptureAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnDXBlendProp, &CARLayoutCaptureAppDlg::OnBnClickedbtndxblendprop)
 	ON_BN_CLICKED(IDC_btnProjectSetting, &CARLayoutCaptureAppDlg::OnBnClickedbtnprojectsetting)
 	ON_BN_CLICKED(IDC_btnBlendWarpProp, &CARLayoutCaptureAppDlg::OnBnClickedbtnblendwarpprop)
+
+	ON_BN_CLICKED(IDC_btnUndist1, &CARLayoutCaptureAppDlg::OnBnClickedbtnundist1)
+	ON_BN_CLICKED(IDC_btnUndist2, &CARLayoutCaptureAppDlg::OnBnClickedbtnundist2)
 END_MESSAGE_MAP()
 
 
@@ -363,14 +370,19 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtndestorycamera()
 	m_btnCamPinProp2.EnableWindow(FALSE);
 	m_btnCamProp2.EnableWindow(FALSE);
 	m_btnCamWarp2.EnableWindow(FALSE);
+	m_btnUndist2.EnableWindow(FALSE);
+
 
 	m_btnCamPinProp3.EnableWindow(FALSE);
 	m_btnCamProp3.EnableWindow(FALSE);
 	m_btnCamWarp3.EnableWindow(FALSE);
+	m_btnUndist3.EnableWindow(FALSE);
 
 	m_btnCamPinProp4.EnableWindow(FALSE);
 	m_btnCamProp4.EnableWindow(FALSE);
 	m_btnCamWarp4.EnableWindow(FALSE);
+	m_btnUndist4.EnableWindow(FALSE);
+
 }
 
 void CARLayoutCaptureAppDlg::OnBnClickedbtnplay()
@@ -1052,6 +1064,7 @@ void CARLayoutCaptureAppDlg::OnCbnSelchangecbcam2()
 		m_btnCamPinProp2.EnableWindow(TRUE);
 		m_btnCamProp2.EnableWindow(TRUE);
 		m_btnCamWarp2.EnableWindow(TRUE);
+		m_btnUndist2.EnableWindow(TRUE);
 		m_cbCam2.EnableWindow(FALSE);
 		m_cbCam3.EnableWindow(TRUE);
 	}
@@ -1140,3 +1153,21 @@ void CARLayoutCaptureAppDlg::OnBnClickedbtnblendwarpprop()
 	if (m_pDSCam == NULL)
 		return;
 	m_pDSCam->ShowBlendWarpProp();}
+
+
+
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnundist1()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamUndistProp(0);
+}
+
+
+void CARLayoutCaptureAppDlg::OnBnClickedbtnundist2()
+{
+	if (m_pDSCam == NULL)
+		return;
+	m_pDSCam->ShowCamUndistProp(1);
+}

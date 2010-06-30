@@ -49,11 +49,16 @@
 #define IDC_btnDXRenderProp2            1036
 #define IDC_btnDXBlendProp              1036
 #define IDC_btnProjectSetting           1037
-#define IDC_btnBlendWarp                1038
 #define IDC_btnBlendWarpProp            1038
 #define IDC_btnCamWarp2                 1039
 #define IDC_btnCamWarp3                 1040
 #define IDC_btnCamWarp4                 1041
+#define IDC_btnUndist1                  1042
+#define IDC_BUTTON3                     1043
+#define IDC_mundist2                    1044
+#define IDC_btnUndist2                  1044
+#define IDC_btnUndist3                  1045
+#define IDC_btnUndist4                  1046
 #define IDC_EDPath                      7020
 #define IDC_btnBrowse                   7021
 
@@ -63,7 +68,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1047
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

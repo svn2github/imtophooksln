@@ -140,4 +140,11 @@ public:
 	afx_msg void OnBnClickedbtnprojectsetting();
 	CButton m_btnBlendWarpProp;
 	afx_msg void OnBnClickedbtnblendwarpprop();
+	CButton m_btnUndist1;
+	CButton m_btnUndist2;
+	CButton m_btnUndist4;
+	CButton m_btnUndist3;
+
+	afx_msg void OnBnClickedbtnundist1();
+	afx_msg void OnBnClickedbtnundist2();
 };

@@ -106,7 +106,7 @@ BEGIN
     PUSHBUTTON      "AR Warp Prop",IDC_btnARWarpProp,252,167,235,14,WS_DISABLED
     PUSHBUTTON      "DX Render Prop",IDC_btnDXRenderProp,252,185,235,14,WS_DISABLED
     PUSHBUTTON      "Cam Prop1",IDC_btnCamProp1,432,225,55,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp 1",IDC_btnCamWarp1,432,262,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 1",IDC_btnCamWarp1,432,260,55,14,WS_DISABLED
     PUSHBUTTON      "Cam Pin Prop1",IDC_btnCamPinProp1,432,244,55,14,WS_DISABLED
     PUSHBUTTON      "<",IDC_btnLastTag,72,166,25,14,WS_DISABLED
     PUSHBUTTON      ">",IDC_btnNextTag,129,166,25,14,WS_DISABLED
@@ -136,12 +136,16 @@ BEGIN
     PUSHBUTTON      "Cam Pin Prop2",IDC_btnCamPinProp2,374,243,52,14,WS_DISABLED
     PUSHBUTTON      "Cam Pin Prop3",IDC_btnCamPinProp3,313,243,52,14,WS_DISABLED
     PUSHBUTTON      "Cam Pin Prop4",IDC_btnCamPinProp4,252,243,52,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp 2",IDC_btnCamWarp2,374,262,55,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp 3",IDC_btnCamWarp3,313,262,55,14,WS_DISABLED
-    PUSHBUTTON      "Cam Warp 4",IDC_btnCamWarp4,252,262,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 2",IDC_btnCamWarp2,374,260,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 3",IDC_btnCamWarp3,313,260,55,14,WS_DISABLED
+    PUSHBUTTON      "Cam Warp 4",IDC_btnCamWarp4,252,260,55,14,WS_DISABLED
     PUSHBUTTON      "DX Blend Prop",IDC_btnDXBlendProp,252,206,235,14,WS_DISABLED
-    PUSHBUTTON      "ProjectSetting Prop",IDC_btnProjectSetting,59,262,82,14
-    PUSHBUTTON      "BlendWarp Prop",IDC_btnBlendWarpProp,152,262,77,14
+    PUSHBUTTON      "ProjectSetting Prop",IDC_btnProjectSetting,59,260,82,14
+    PUSHBUTTON      "BlendWarp Prop",IDC_btnBlendWarpProp,152,260,77,14
+    PUSHBUTTON      "Cam Undist 1",IDC_btnUndist1,432,278,55,14
+    PUSHBUTTON      "Cam Undist2",IDC_btnUndist2,374,278,54,14
+    PUSHBUTTON      "Cam Undist 3",IDC_btnUndist3,313,278,53,14
+    PUSHBUTTON      "Cam Undist 4",IDC_btnUndist4,252,278,53,14
 END
 
 
@@ -202,12 +206,12 @@ BEGIN
         VERTGUIDE, 374
         VERTGUIDE, 432
         TOPMARGIN, 7
-        BOTTOMMARGIN, 286
+        BOTTOMMARGIN, 292
         HORZGUIDE, 199
         HORZGUIDE, 206
         HORZGUIDE, 225
         HORZGUIDE, 244
-        HORZGUIDE, 262
+        HORZGUIDE, 260
     END
 END
 #endif    // APSTUDIO_INVOKED
