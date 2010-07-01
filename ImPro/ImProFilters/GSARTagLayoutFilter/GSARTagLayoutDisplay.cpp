@@ -595,7 +595,7 @@ HRESULT GSARTagLayoutDisplay::DecideLayout(GSBoundingBox2D* camRects, UINT numCa
 		
 		}
 	}
-	
+	/*
 	if (numCamRect > 0 && camRects != NULL)
 	{
 		for (int i = 0 ; i < numCamRect; i++) //Clip out of boundary part
@@ -671,7 +671,7 @@ HRESULT GSARTagLayoutDisplay::DecideLayout(GSBoundingBox2D* camRects, UINT numCa
 			
 		}
 	}
-	
+	*/
 	for (int iterIdx = 0; iterIdx < undecideIdx.size(); iterIdx++)
 	{
 		int idx = undecideIdx.at(iterIdx);

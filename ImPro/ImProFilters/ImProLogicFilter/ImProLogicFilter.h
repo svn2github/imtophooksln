@@ -53,13 +53,16 @@ protected:
 	BOOL m_dirtyWarpFromAR[NUMCAM];
 	BOOL m_dirtyLowResMask;
 	BOOL m_dirtyARStrategy;
+	/*
 	CCritSec m_csDirtyWarpFromAR[NUMCAM];
 	CCritSec m_csDirtyLowResMask;
 	CCritSec m_csDirtyARStrategy;
 	CCritSec m_csMatCam2VW[NUMCAM];
 	CCritSec m_csMatPro2VW[NUMCAM];
 	CCritSec m_csTouchResult;
-
+	CCritSec m_csProjCoord;
+	*/
+	CCritSec m_csState;
 
 
 	D3DXMATRIX* m_matPro2VW[NUMCAM];
@@ -73,7 +76,6 @@ protected:
 
 
 	// function for projector coordinate to virtual world
-	CCritSec m_csProjCoord;
 	ProjectorTrans2World* projCoord;
 	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
 	int tableHeight;

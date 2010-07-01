@@ -7,7 +7,11 @@
 #include "IHomoWarpFilter.h"
 #include "IDXBlendFilter.h"
 #include "IProjectSettingFilter.h"
-
+#include "IGSProjSettingFilter.h"
+#include "IGSUndistortFilter.h"
+#include "IGSDXBlendFilter.h"
+#include "IGSARTagLayoutFilter.h"
+#include "IGSHomoWarpFilter.h"
 
 #define NUMCAM 4
 #define DXBLEND_PINNUM 4
@@ -16,7 +20,7 @@
 {
 protected:
 	CComPtr<IBaseFilter> m_pARLayoutFilter;
-	CComPtr<IARLayoutDXFilter> m_pIARLayoutFilter;	
+	CComPtr<IGSARTagLayoutFilter> m_pIARLayoutFilter;	
 	CComPtr<IPin> m_pARLayoutOutputPin;
 
 	CComPtr<IBaseFilter> m_pDXRenderFilter;
@@ -27,27 +31,32 @@ protected:
 	CComPtr<IPin> m_pCamOutputPin[NUMCAM];
 
 	CComPtr<IBaseFilter> m_pCamWarpFilter[NUMCAM];
-	CComPtr<IHomoWarpFilter> m_pICamWarpFilter[NUMCAM];
+	CComPtr<IGSHomoWarpFilter> m_pICamWarpFilter[NUMCAM];
 	CComPtr<IPin> m_pCamWarpInputPin[NUMCAM];
 	CComPtr<IPin> m_pCamWarpOutputPin[NUMCAM];
 
 	CComPtr<IBaseFilter> m_pDXBlendFilter;
-	CComPtr<IDXBlendFilter> m_pIDXBlendFilter;
+	CComPtr<IGSDXBlendFilter> m_pIDXBlendFilter;
 	CComPtr<IPin> m_pDXBlendInputPin[DXBLEND_PINNUM];
 	CComPtr<IPin> m_pDXBlendOutputPin;
 
 	CComPtr<IBaseFilter> m_pARWarpFilter;
-	CComPtr<IHomoWarpFilter> m_pIARWarpFilter;
+	CComPtr<IGSHomoWarpFilter> m_pIARWarpFilter;
 	CComPtr<IPin> m_pARWarpInputPin;
 	CComPtr<IPin> m_pARWarpOutputPin;
 
 	CComPtr<IBaseFilter> m_pBlendWarpFilter;
-	CComPtr<IHomoWarpFilter> m_pIBlendWarpFilter;
+	CComPtr<IGSHomoWarpFilter> m_pIBlendWarpFilter;
 	CComPtr<IPin> m_pBlendWarpInputPin;
 	CComPtr<IPin> m_pBlendWarpOutputPin;
 
 	CComPtr<IBaseFilter> m_pProjSettingFilter;
-	CComPtr<IProjectSettingFilter> m_pIProjSettingFilter;
+	CComPtr<IGSProjSettingFilter> m_pIProjSettingFilter;
+
+	CComPtr<IBaseFilter> m_pUndistortFilter[NUMCAM];
+	CComPtr<IGSUndistortFilter> m_pIUndistortFilter[NUMCAM];
+	CComPtr<IPin> m_pUndistortInputPin[NUMCAM];
+	CComPtr<IPin> m_pUndistortOutputPin[NUMCAM];
 
 
 	//overwrite CCameraDS function
@@ -65,6 +74,9 @@ public:
 	virtual HRESULT ShowCamWarpProp(int idx);
 	virtual HRESULT ShowCamProp(int idx);
 	virtual HRESULT ShowCamPinProp(int idx);
+
+	virtual HRESULT ShowCamUndistProp(int idx);
+
 
 	virtual HRESULT ShowBlendWarpProp();
 	virtual HRESULT ShowProjSettingProp();

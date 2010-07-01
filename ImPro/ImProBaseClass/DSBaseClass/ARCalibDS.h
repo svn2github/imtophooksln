@@ -8,7 +8,7 @@
 #include "IARTagFilter.h"
 #include "IProjectSettingFilter.h"
 
-//#include "IGSARTagLayoutFilter.h"
+#include "IGSARTagLayoutFilter.h"
 #include "IGSDXRenderer.h"
 #include "IGSDXBlendFilter.h"
 #include "IGSHomoWarpFilter.h"
@@ -26,11 +26,11 @@ public:
 	CComPtr<IPin> m_pARLayoutOutputPin;
 
 	CComPtr<IBaseFilter> m_pDXCamRenderFilter;
-	CComPtr<IDXRenderer> m_pIDXCamRenderFilter;
+	CComPtr<IGSDXRenderer> m_pIDXCamRenderFilter;
 	CComPtr<IPin> m_pDXCamRenderInputPin;
 
 	CComPtr<IBaseFilter> m_pDXARRenderFilter;
-	CComPtr<IDXRenderer> m_pIDXARRenderFilter;
+	CComPtr<IGSDXRenderer> m_pIDXARRenderFilter;
 	CComPtr<IPin> m_pDXARRenderInputPin;
 
 	CComPtr<IBaseFilter> m_pCamFilter;
@@ -52,7 +52,7 @@ public:
 	CComPtr<IPin> m_pARTagOutputPin;
 
 	CComPtr<IBaseFilter> m_pProjSetFilter;
-	CComPtr<IProjectSettingFilter> m_pIProjSetFilter ;
+	CComPtr<IGSProjSettingFilter> m_pIProjSetFilter ;
 
 	//overwrite CCameraDS function
 	virtual HRESULT ConnectGraph();

@@ -329,7 +329,9 @@ HRESULT CMuxTransformFilter::EndFlush(void)
 	// call EndFlush on downstream pins
 	HRESULT errhr = S_OK; 
 	HRESULT hr = S_OK;
-	ASSERT (m_pOutputPins.size() != 0);
+	if(m_pOutputPins.size() == 0){
+		return E_FAIL;
+	}
 	for (int i = 0 ; i < m_pOutputPins.size(); i++)
 	{
 		if (m_pOutputPins[i]->IsConnected())
@@ -655,7 +657,7 @@ CMuxTransformInputPin::EndFlush(void)
 {
 	CAutoLock lck(&m_pTransformFilter->m_csFilter);
 	//  Are we actually doing anything?
-	ASSERT(m_pTransformFilter->m_pOutputPins.size() != 0);
+
 	if (!IsConnected()){
 			return VFW_E_NOT_CONNECTED;
 	}

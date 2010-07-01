@@ -130,11 +130,11 @@ HRESULT ARCalibDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 
 	hr = CoCreateInstance(CLSID_DXRenderFilter, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pDXCamRenderFilter);
-	hr = m_pDXCamRenderFilter->QueryInterface(IID_IDXRenderer, (LPVOID *)&m_pIDXCamRenderFilter); 
+	hr = m_pDXCamRenderFilter->QueryInterface(IID_IGSDXRenderer, (LPVOID *)&m_pIDXCamRenderFilter); 
 
 	hr = CoCreateInstance(CLSID_DXRenderFilter, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pDXARRenderFilter);
-	hr = m_pDXARRenderFilter->QueryInterface(IID_IDXRenderer, (LPVOID *)&m_pIDXARRenderFilter); 
+	hr = m_pDXARRenderFilter->QueryInterface(IID_IGSDXRenderer, (LPVOID *)&m_pIDXARRenderFilter); 
 
 	hr = CoCreateInstance(CLSID_HomoWarpFilter, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pCamWarpFilter);
@@ -146,7 +146,7 @@ HRESULT ARCalibDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 
 	hr = CoCreateInstance(CLSID_ProjectSettingFilter, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pProjSetFilter);
-	hr = m_pProjSetFilter->QueryInterface(IID_IProjectSettingFilter, (void**)&m_pIProjSetFilter);
+	hr = m_pProjSetFilter->QueryInterface(IID_IGSProjSettingFilter, (void**)&m_pIProjSetFilter);
 
 
 	hr = m_pARLayoutFilter->FindPin(L"Layout", &m_pARLayoutOutputPin);

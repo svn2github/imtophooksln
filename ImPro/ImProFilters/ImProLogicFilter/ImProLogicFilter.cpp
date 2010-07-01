@@ -178,6 +178,7 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 		return E_FAIL;
 	}
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	CAutoLock lckState(&pSelf->m_csState);
 	HRESULT hr = S_OK;
 	UINT idx = 0;
 	hr = pSelf->GetARResult_PinIndex(pReceivePin, idx);
@@ -317,8 +318,6 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 
 	pSelf->GetProjCorner(&cvPt,&dstPt);
 	{
-		CAutoLock lck(&pSelf->m_csMatPro2VW[idx]);
-		CAutoLock lckProj(&pSelf->m_csProjCoord);
 		if (pSelf->m_matPro2VW[idx] == NULL)
 		{
 			pSelf->m_matPro2VW[idx] = new D3DXMATRIX();
@@ -340,7 +339,6 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 
 	cvFindHomography(&cvPt, &dstPt, &mat, CV_RANSAC, pSelf->m_RANSIC_Threshold); // camera to virtual space
 	{
-		CAutoLock lck(&pSelf->m_csMatCam2VW[idx]);
 		if (pSelf->m_matCam2VW[idx] == NULL)
 		{
 			pSelf->m_matCam2VW[idx] = new D3DXMATRIX();
@@ -469,13 +467,14 @@ HRESULT ImProLogicFilter::PreReceive_ARResultFromTable(void* self, IMediaSample 
 }
 HRESULT ImProLogicFilter::PreReceive_TouchResult(void* self, IMediaSample *pSample, const IPin* pReceivePin, IMediaSample*& pOutSample)
 {
+		
 	if (self == NULL || pSample == NULL || pReceivePin == NULL)
 	{
 		return E_FAIL;
 	}
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
-
-	CAutoLock lck(&pSelf->m_csTouchResult);
+	CAutoLock lckState(&pSelf->m_csState);
+	
 	CMediaSample* pCSample = (CMediaSample*)pSample;
 	ForegroundRegion* pTouchResult = NULL;
 	pCSample->GetPointer((BYTE**)&pTouchResult);
@@ -660,13 +659,14 @@ HRESULT ImProLogicFilter::FillBuffer_WarpFromAR(void* self, IMediaSample *pSampl
 		return E_FAIL;
 
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	CAutoLock lckState(&pSelf->m_csState);
 	HRESULT hr = S_OK;
 	UINT idx = 0;
 	hr = pSelf->GetWarpFromAR_PinIndex(pPin, idx);
 	if (FAILED(hr))
 		return hr;
 	
-	CAutoLock lck(&pSelf->m_csDirtyWarpFromAR[idx]);
+	
 
 	if (pSelf->m_dirtyWarpFromAR[idx] == FALSE)
 	{
@@ -680,7 +680,7 @@ HRESULT ImProLogicFilter::FillBuffer_WarpFromAR(void* self, IMediaSample *pSampl
 		return E_FAIL;
 	}
 	{
-		CAutoLock lck(&pSelf->m_csMatPro2VW[idx]);
+
 		if (pSelf->m_matPro2VW[idx] == NULL)
 		{
 			return E_FAIL;
@@ -703,7 +703,7 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
 	HRESULT hr = S_OK;
-	CAutoLock lck0(&pSelf->m_csDirtyLowResMask);
+	CAutoLock lckState(&pSelf->m_csState);
 	if (pSelf->m_dirtyLowResMask == FALSE )
 	{
 		return S_FALSE;
@@ -731,7 +731,7 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 	tmpData.m_pfRects = new GSFRect[nWorkingCam];
 
 	{
-		CAutoLock lck(&pSelf->m_csProjCoord);
+		
 		for (int i = 0; i < nWorkingCam; i++)
 		{
 			tmpData.m_pfRects[i].LT.x = pSelf->projCoord->proj3DPoints[0][0];  
@@ -765,7 +765,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
 	HRESULT hr = S_OK;
-	CAutoLock lck0(&pSelf->m_csDirtyARStrategy);
+	CAutoLock lckState(&pSelf->m_csState);
 	if (pSelf->m_dirtyARStrategy == FALSE )
 	{
 		return S_FALSE;
@@ -787,7 +787,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	int j =0;
 	for (int i =0; i < NUMCAM; i++)
 	{
-		CAutoLock lck(&(pSelf->m_csMatCam2VW[i]));
+		
 		if (pSelf->m_matCam2VW[i] == NULL)
 			continue;
 		D3DXVECTOR4 lt(0,0,1,1), lb(0,1,1,1), rb(1,1,1,1), rt(1,0,1,1);
@@ -811,7 +811,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	}
 	//////ForeGround Area///////////////
 	{
-		CAutoLock lck(&pSelf->m_csTouchResult);
+		
 		if (pSelf->m_pTouchResult != NULL && pSelf->m_pTouchResult->numForeground > 0)
 		{
 			tmpData.numFingers = pSelf->m_pTouchResult->numForeground;
@@ -840,7 +840,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	return S_OK;
 }
 HRESULT ImProLogicFilter::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
-	CAutoLock lck(&m_csProjCoord);
+	CAutoLock lckState(&m_csState);
 	//projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
 	projCoord->getProjHomo();	
 
@@ -851,19 +851,19 @@ HRESULT ImProLogicFilter::SetDirty_WarpFromAR(UINT idx, BOOL bDirty)
 {
 	if (idx >= NUMCAM)
 		return E_FAIL;
-	CAutoLock lck(&m_csDirtyWarpFromAR[idx]);
+	CAutoLock lckState(&m_csState);
 	m_dirtyWarpFromAR[idx] = bDirty;
 	return S_OK;
 }
 HRESULT ImProLogicFilter::SetDirty_LowResMask(BOOL bDirty)
 {
-	CAutoLock lck(&m_csDirtyLowResMask);
+	CAutoLock lckState(&m_csState);
 	m_dirtyLowResMask = bDirty;
 	return S_OK;
 }
 HRESULT ImProLogicFilter::SetDirty_ARStrategy(BOOL bDirty)
 {
-	CAutoLock lck(&m_csDirtyARStrategy);
+	CAutoLock lckState(&m_csState);
 	m_dirtyARStrategy = bDirty;
 	return S_OK;
 }
