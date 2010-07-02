@@ -116,12 +116,12 @@ HRESULT CBGMappingPorpertyPage::updateSliderTxt(){
 	{
 		return false;
 	}
-	m_pFilter->setBGThreshold(::SLIDER_GetPos(m_threshold));
+	m_pFilter->setBGThreshold(SLIDER_GetPos(m_threshold));
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
-	m_pFilter->setSubValue(::SLIDER_GetPos(m_subValue));
+	m_pFilter->setSubValue(SLIDER_GetPos(m_subValue));
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getSubValue());
 	
-	m_pFilter->setErodeValue(::SLIDER_GetPos(m_erodeValue));
+	m_pFilter->setErodeValue(SLIDER_GetPos(m_erodeValue));
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getErodeValue());
 	
 	m_pFilter->setCamFlip(m_checkCamFlip->GetCheck());
@@ -152,16 +152,16 @@ HRESULT CBGMappingPorpertyPage::OnActivate(void)
 	m_checkLayoutFlip = (CButton*)GetDlgItem(IDC_CHECK_Layout);
 	m_checkOutputFlip = (CButton*)GetDlgItem(IDC_CHECK_Output);
 
-	::SLIDER_SetRange(m_threshold, 0, 255);
-	::SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
+	SLIDER_SetRange(m_threshold, 0, 255);
+	SLIDER_SetPos(m_threshold,m_pFilter->getBGThreshold());
 	SetDlgItemInt(IDC_ThresholdTxt,m_pFilter->getBGThreshold());
 
-	::SLIDER_SetRange(m_erodeValue, 0, 10);
-	::SLIDER_SetPos(m_erodeValue,m_pFilter->getErodeValue());
+	SLIDER_SetRange(m_erodeValue, 0, 10);
+	SLIDER_SetPos(m_erodeValue,m_pFilter->getErodeValue());
 	SetDlgItemInt(IDC_EDIT_BLACK,m_pFilter->getErodeValue());
 
-	::SLIDER_SetRange(m_subValue,-255, 255);
-	::SLIDER_SetPos(m_subValue,m_pFilter->getSubValue());
+	SLIDER_SetRange(m_subValue,-255, 255);
+	SLIDER_SetPos(m_subValue,m_pFilter->getSubValue());
 	SetDlgItemInt(IDC_EDIT_WHITE,m_pFilter->getSubValue());
 
 	m_checkCamFlip->SetCheck(m_pFilter->getCamFlip());

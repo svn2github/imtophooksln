@@ -144,17 +144,17 @@ bool CHomoWarpMFCPropertyPage::GetSetting()
 	{
 		return false;
 	}
-	::SLIDER_SetPos(m_slrLTx, (int)(LTx * m_slrScale));
-	::SLIDER_SetPos(m_slrLTy, (int)(LTy * m_slrScale));
+	SLIDER_SetPos(m_slrLTx, (int)(LTx * m_slrScale));
+	SLIDER_SetPos(m_slrLTy, (int)(LTy * m_slrScale));
 
-	::SLIDER_SetPos(m_slrLBx, (int)(LBx * m_slrScale));
-	::SLIDER_SetPos(m_slrLBy, (int)(LBy * m_slrScale));
+	SLIDER_SetPos(m_slrLBx, (int)(LBx * m_slrScale));
+	SLIDER_SetPos(m_slrLBy, (int)(LBy * m_slrScale));
 
-	::SLIDER_SetPos(m_slrRBx, (int)(RBx * m_slrScale));
-	::SLIDER_SetPos(m_slrRBy, (int)(RBy * m_slrScale));
+	SLIDER_SetPos(m_slrRBx, (int)(RBx * m_slrScale));
+	SLIDER_SetPos(m_slrRBy, (int)(RBy * m_slrScale));
 
-	::SLIDER_SetPos(m_slrRTx, (int)(RTx * m_slrScale));
-	::SLIDER_SetPos(m_slrRTy, (int)(RTy * m_slrScale));
+	SLIDER_SetPos(m_slrRTx, (int)(RTx * m_slrScale));
+	SLIDER_SetPos(m_slrRTy, (int)(RTy * m_slrScale));
 	
 	m_ckFlipY.SetCheck(m_pFilter->GetIsFlipY());
 	m_ckInvWarp.SetCheck(m_pFilter->GetIsInvWarp());
@@ -167,17 +167,17 @@ bool CHomoWarpMFCPropertyPage::ApplySetting()
 	{
 		return false;
 	}
-	float LTx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLTx);
-	float LTy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLTy);
+	float LTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTx);
+	float LTy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTy);
 
-	float LBx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLBx);
-	float LBy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLBy);
+	float LBx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLBx);
+	float LBy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLBy);
 
-	float RBx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRBx);
-	float RBy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRBy);
+	float RBx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRBx);
+	float RBy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRBy);
 
-	float RTx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRTx);
-	float RTy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRTy);
+	float RTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRTx);
+	float RTy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRTy);
 
 	m_pFilter->SetWarpVertex(LTx, LTy, LBx, LBy, RBx, RBy, RTx, RTy);
 	m_pFilter->SetIsFlipY(m_ckFlipY.GetCheck());
@@ -185,17 +185,17 @@ bool CHomoWarpMFCPropertyPage::ApplySetting()
 }
 bool CHomoWarpMFCPropertyPage::updateSliderTxt()
 {
-	float LTx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLTx);
-	float LTy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLTy);
+	float LTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTx);
+	float LTy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLTy);
 
-	float LBx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLBx);
-	float LBy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrLBy);
+	float LBx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLBx);
+	float LBy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrLBy);
 
-	float RBx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRBx);
-	float RBy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRBy);
+	float RBx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRBx);
+	float RBy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRBy);
 
-	float RTx = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRTx);
-	float RTy = (1.0/m_slrScale) * ::SLIDER_GetPos(m_slrRTy);
+	float RTx = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRTx);
+	float RTy = (1.0/m_slrScale) * SLIDER_GetPos(m_slrRTy);
 
 	WCHAR str[MAX_PATH] = {0};
 	swprintf_s(str, MAX_PATH, L"%.2f, %.2f", LTx, LTy);
@@ -311,14 +311,14 @@ HRESULT CHomoWarpMFCPropertyPage::OnActivate(void)
 	m_slrRTy = ::GetDlgItem(m_Dlg, IDC_SLIDER_RTy);
 
 
-	::SLIDER_SetRange(m_slrLTx, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
-	::SLIDER_SetRange(m_slrLTy, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
-	::SLIDER_SetRange(m_slrLBx, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
-	::SLIDER_SetRange(m_slrLBy, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
-	::SLIDER_SetRange(m_slrRBx, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
-	::SLIDER_SetRange(m_slrRBy, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
-	::SLIDER_SetRange(m_slrRTx, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
-	::SLIDER_SetRange(m_slrRTy, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
+	SLIDER_SetRange(m_slrLTx, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
+	SLIDER_SetRange(m_slrLTy, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
+	SLIDER_SetRange(m_slrLBx, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
+	SLIDER_SetRange(m_slrLBy, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
+	SLIDER_SetRange(m_slrRBx, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
+	SLIDER_SetRange(m_slrRBy, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
+	SLIDER_SetRange(m_slrRTx, -m_slrScale*(m_slrRangeScale-1), m_slrScale*(m_slrRangeScale+1));
+	SLIDER_SetRange(m_slrRTy, -m_slrScale*m_slrRangeScale, m_slrScale*m_slrRangeScale);
 
 	GetSetting();
 	return NOERROR;
