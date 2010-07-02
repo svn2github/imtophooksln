@@ -84,21 +84,21 @@ bool ARTagCameraSettingPage::GetSetting()
 	SetWindowText(m_hWndYSize, tmpStr);
 	for (int i =0; i< 4; i++)
 	{
-		swprintf_s(tmpStr, MAX_PATH, L"%.2f", dist_factor[i]);
+		swprintf_s(tmpStr, MAX_PATH, L"%.6f", dist_factor[i]);
 		SetWindowText(m_hWndDistFactor[i], tmpStr);
 	}
 	for (int i =0; i< 16; i++)
 	{
-		swprintf_s(tmpStr, MAX_PATH, L"%.2f", mat[i]);
+		swprintf_s(tmpStr, MAX_PATH, L"%.6f", mat[i]);
 		SetWindowText(m_hWndMat[i], tmpStr);
 	}
 	double v[3];
 	m_pARProperty->getWorldBasisScale(v);
-	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[0]);
+	swprintf_s(tmpStr, MAX_PATH, L"%.6f", v[0]);
 	SetWindowText(m_edXaxis, tmpStr);
-	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[1]);
+	swprintf_s(tmpStr, MAX_PATH, L"%.6f", v[1]);
 	SetWindowText(m_edYaxis, tmpStr);
-	swprintf_s(tmpStr, MAX_PATH, L"%.2f", v[2]);
+	swprintf_s(tmpStr, MAX_PATH, L"%.6f", v[2]);
 	SetWindowText(m_edZaxis, tmpStr);
 
 
@@ -749,6 +749,8 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 }
 HRESULT ARTagGeneralPage::OnApplyChanges(void)
 {
+	if (GetSafeHwnd() == NULL)
+		return S_FALSE;
 	if (ApplySetting())
 	{
 		return S_OK;
