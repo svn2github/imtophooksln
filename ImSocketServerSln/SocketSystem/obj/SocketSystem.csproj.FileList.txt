@@ -1,5 +1,0 @@
-bin\Debug\SocketSystem.exe
-bin\Debug\SocketSystem.pdb
-obj\Debug\ResolveAssemblyReference.cache
-obj\Debug\SocketSystem.exe
-obj\Debug\SocketSystem.pdb
