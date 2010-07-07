@@ -37,25 +37,36 @@ char    *vconf = "";
 CCritSec g_State;
 
 // New York
-double LeftTopLong = -74.013908;
-double LeftTopLat = 40.711236;
-double LeftDownLong = -74.016356;
-double LeftDownLat = 40.704047;
-double RightDownLong = -74.006875;
-double RightDownLat = 40.704129;
-double RightTopLong = -74.005278;
-double RightTopLat = 40.711096;
+//double LeftTopLong = -74.013908;
+//double LeftTopLat = 40.711236;
+//double LeftDownLong = -74.016356;
+//double LeftDownLat = 40.704047;
+//double RightDownLong = -74.006875;
+//double RightDownLat = 40.704129;
+//double RightTopLong = -74.005278;
+//double RightTopLat = 40.711096;
 
 
 // Taipei 101
-//double LeftTopLong = 121.55607268966645;
-//double LeftTopLat = 25.041212573911324;
-//double LeftDownLong = 121.55607268966645;
+//double LeftTopLong = 121.561208;
+//double LeftTopLat = 25.035922;
+//double LeftDownLong = 121.561208;
 //double LeftDownLat = 25.025659005961995;
 //double RightTopLong = 121.57323882736176;
-//double RightTopLat = 25.041212573911324;
+//double RightTopLat = 25.035922;
 //double RightDownLong = 121.57323882736176;
 //double RightDownLat = 25.025659005961995;
+
+// LA Convention Center
+double LeftTopLong = -118.277872;
+double LeftTopLat = 34.047147;
+double LeftDownLong = -118.277872;
+double LeftDownLat = 34.033955;
+double RightTopLong = -118.260622;
+double RightTopLat = 34.047147;
+double RightDownLong = -118.260622;
+double RightDownLat = 34.033955;
+
 
 double longitude = 0;
 double latitude = 0;
@@ -80,6 +91,7 @@ double cheading = theading;
 double croll = troll;
 
 bool getFstTag = false;
+int BulidingCount = 0;
 
 int             xsize;
 int             ysize;
@@ -192,10 +204,12 @@ namespace googleearth {
 		private: static System::AsyncCallback^ GetCallbackReadMethod;
 		private: String^ ipAddress;
 		private: Int32 port;
+		private: String^ htmlFile;		
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
 	private: System::Windows::Forms::Button^  button1;
+	private: System::Windows::Forms::Button^  button2;
 
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
@@ -250,10 +264,15 @@ namespace googleearth {
 			String^ _port = line->Split(' ')[1];
 			line = file->ReadLine();
 			String^ _tabletID = line->Split(' ')[1];
+			line = file->ReadLine();
+			String^ _tabletResWidth = line->Split(' ')[1];
+			line = file->ReadLine();
+			String^ _tabletResHeight = line->Split(' ')[1];
 
 			ipAddress = _ip;
 			port = Int32::Parse(_port);
 			tabletName = _tabletID;
+			htmlFile = "GE_" + _tabletResWidth + "_" + _tabletResHeight + ".html";
 		}
 		
 
@@ -261,7 +280,10 @@ namespace googleearth {
 			//String^ URL = "file:///C:/GE.html";  
 		    //String^ URL = "file:///C:/GE464.html";
 			String^ URL = Application::StartupPath;
-			URL += "/web_file/GE.html";
+			//URL += "/web_file/GE.html";
+			URL += "/web_file/";
+			URL += htmlFile;
+			
 			//MessageBox::Show(URL);
 			this->webBrowser1->Navigate(URL);
 		}
@@ -495,6 +517,7 @@ namespace googleearth {
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->button1 = (gcnew System::Windows::Forms::Button());
+			this->button2 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -503,7 +526,7 @@ namespace googleearth {
 			this->webBrowser1->Location = System::Drawing::Point(0, 0);
 			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
 			this->webBrowser1->Name = L"webBrowser1";
-			this->webBrowser1->Size = System::Drawing::Size(1161, 610);
+			this->webBrowser1->Size = System::Drawing::Size(1258, 722);
 			this->webBrowser1->TabIndex = 0;
 			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
@@ -514,7 +537,7 @@ namespace googleearth {
 			// 
 			// button1
 			// 
-			this->button1->Location = System::Drawing::Point(1059, 575);
+			this->button1->Location = System::Drawing::Point(1029, 687);
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(75, 23);
 			this->button1->TabIndex = 1;
@@ -522,11 +545,22 @@ namespace googleearth {
 			this->button1->UseVisualStyleBackColor = true;
 			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click);
 			// 
+			// button2
+			// 
+			this->button2->Location = System::Drawing::Point(1134, 687);
+			this->button2->Name = L"button2";
+			this->button2->Size = System::Drawing::Size(75, 23);
+			this->button2->TabIndex = 2;
+			this->button2->Text = L"button2";
+			this->button2->UseVisualStyleBackColor = true;
+			this->button2->Click += gcnew System::EventHandler(this, &Form1::button2_Click);
+			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1161, 610);
+			this->ClientSize = System::Drawing::Size(1258, 722);
+			this->Controls->Add(this->button2);
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
@@ -715,6 +749,19 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 
 			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
 
+		 }
+private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
+			BulidingCount++;
+
+			array<Object^>^ parameterBuilding = gcnew array<Object^>(1); 
+			parameterBuilding[0] = BulidingCount % 2;
+
+			if(BulidingCount % 2 != 0)	webBrowser1->Document->InvokeScript("Building",parameterBuilding);
+			else{
+				BulidingCount = 0;
+				webBrowser1->Document->InvokeScript("Building",parameterBuilding);
+			}
+			
 		 }
 };
 }
