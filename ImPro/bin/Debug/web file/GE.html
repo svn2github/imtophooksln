@@ -21,6 +21,7 @@ var ge = null;
 var multGeoPlacemark;
 var polygonPlacemark;
 var polygonPlacemarkGround;
+var polygonPlacemarkBlack;
 var boundaryHigh = 50;
 
 //for model
@@ -50,7 +51,7 @@ function initCB1(object) {
   //ge.getOptions().setOverviewMapVisibility(true);
   
   ge.getLayerRoot().enableLayerById(ge.LAYER_BORDERS, true);
-  ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
+  //ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
   ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
   
 ////////Model//////////////////////////////////////////////////////////////////////////////////////////  
@@ -108,22 +109,23 @@ ge.getFeatures().appendChild(placemarkIcon);
 ////  boundaryLineStyle2 & 3  //////////////////////////////////////////////////////////////////////
 // Create the placemark. 
   polygonPlacemark = ge.createPlacemark(''); 
- 
-  // Create the polygon. 
   var polygon = ge.createPolygon(''); 
   polygon.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
   polygonPlacemark.setGeometry(polygon); 
- 
   ge.getFeatures().appendChild(polygonPlacemark);
   
   polygonPlacemarkGround = ge.createPlacemark(''); 
- 
   var polygonGround = ge.createPolygon(''); 
   polygonGround.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
   polygonPlacemarkGround.setGeometry(polygonGround); 
- 
   ge.getFeatures().appendChild(polygonPlacemarkGround);
   
+  polygonPlacemarkBlack = ge.createPlacemark(''); 
+  var polygonBlack = ge.createPolygon(''); 
+  polygonBlack.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  polygonPlacemarkBlack.setGeometry(polygonBlack); 
+  ge.getFeatures().appendChild(polygonPlacemarkBlack);
+   
 /////////////////////////////////////////////////////////////////////////////////////////////
   
 }
@@ -225,14 +227,14 @@ function boundaryLineStyle2(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
   // Add points for the outer shape. 
   var outer = ge.createLinearRing(''); 
   outer.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
-//  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(boundary*3), LeftTopLong-(boundary*3), 0); 
-//  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(boundary*3), LeftDownLong-(boundary*3), 0); 
-//  outer.getCoordinates().pushLatLngAlt(RightDownLat-(boundary*3), RightDownLong+(boundary*3), 0); 
-//  outer.getCoordinates().pushLatLngAlt(RightTopLat+(boundary*3), RightTopLong+(boundary*3), 0); 
-  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), 0); 
-  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), 0); 
-  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), 0); 
-  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), 0); 
+  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat*10), LeftTopLong-(marginLong*10), 0); 
+  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat*10), LeftDownLong-(marginLong*10), 0); 
+  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat*10), RightDownLong+(marginLong*10), 0); 
+  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat*10), RightTopLong+(marginLong*10), 0); 
+//  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), 0); 
+//  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), 0); 
+//  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), 0); 
+//  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), 0); 
   polygon.setOuterBoundary(outer); 
  
   // Add inner points. 
@@ -251,7 +253,7 @@ function boundaryLineStyle2(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
   lineStyle.getColor().set('7f0000ff'); 
   
   var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
-  polyStyle.getColor().set('5f00ffff'); 
+  polyStyle.getColor().set('7f000000'); 
  
   // Add the placemark to Earth. 
   ge.getFeatures().appendChild(polygonPlacemarkNew);
@@ -266,6 +268,7 @@ function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
 
   var marginLong = RightTopLong - LeftTopLong;  
   var marginLat = LeftTopLat - LeftDownLat;
+  
   
   // Create the placemark. 
   var polygonPlacemarkNew = ge.createPlacemark(''); 
@@ -297,11 +300,13 @@ function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
   //Create a style and set width and color of line 
   polygonPlacemarkNew.setStyleSelector(ge.createStyle('')); 
   var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
-  lineStyle.setWidth(5); 
+  lineStyle.setWidth(2); 
   lineStyle.getColor().set('7f0000ff'); 
   
   var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
   polyStyle.getColor().set('af00ffff'); 
+
+
   
   // Create the placemark. 
   var polygonPlacemarkNewGround = ge.createPlacemark(''); 
@@ -332,22 +337,60 @@ function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
   //Create a style and set width and color of line 
   polygonPlacemarkNewGround.setStyleSelector(ge.createStyle('')); 
   var lineStyleGround = polygonPlacemarkNewGround.getStyleSelector().getLineStyle(); 
-  lineStyleGround.setWidth(5); 
+  lineStyleGround.setWidth(2); 
   lineStyleGround.getColor().set('7f0000ff'); 
   
   var polyStyleGround = polygonPlacemarkNewGround.getStyleSelector().getPolyStyle();
   polyStyleGround.getColor().set('5f00ffff'); 
  
+ 
+ 
+  var polygonPlacemarkBlackNew = ge.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygonBlack = ge.createPolygon(''); 
+  polygonBlack.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); //ge.ALTITUDE_CLAMP_TO_GROUND
+  polygonPlacemarkBlackNew.setGeometry(polygonBlack); 
+ 
+  // Add points for the outer shape. 
+  var outerBlack = ge.createLinearRing(''); 
+  outerBlack.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  outerBlack.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat*10), LeftTopLong-(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat*10), LeftDownLong-(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat*10), RightDownLong+(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat*10), RightTopLong+(marginLong*10), 100); 
+  polygonBlack.setOuterBoundary(outerBlack); 
+ 
+  // Add inner points. 
+  var innerBlack = ge.createLinearRing(''); 
+  innerBlack.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+  innerBlack.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 100); 
+  polygonBlack.getInnerBoundaries().appendChild(innerBlack); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkBlackNew.setStyleSelector(ge.createStyle('')); 
+  //var lineStyleBlack = polygonPlacemarkBlackNew.getStyleSelector().getLineStyle(); 
+  //lineStyleBlack.setWidth(5); 
+  //lineStyleBlack.getColor().set('7f0000ff'); 
+  
+  var polyStyleBlack = polygonPlacemarkBlackNew.getStyleSelector().getPolyStyle();
+  polyStyleBlack.getColor().set('af000000'); 
   
   // Add the placemark to Earth. 
   ge.getFeatures().appendChild(polygonPlacemarkNewGround);
   ge.getFeatures().appendChild(polygonPlacemarkNew);
+  ge.getFeatures().appendChild(polygonPlacemarkBlackNew);
     
   ge.getFeatures().removeChild(polygonPlacemark); 
   ge.getFeatures().removeChild(polygonPlacemarkGround); 
+  ge.getFeatures().removeChild(polygonPlacemarkBlack); 
   
   polygonPlacemark = polygonPlacemarkNew;
   polygonPlacemarkGround = polygonPlacemarkNewGround;
+  polygonPlacemarkBlack = polygonPlacemarkBlackNew;
 
 }
 
@@ -391,7 +434,7 @@ function remove() {
 </script>
   </head>
   <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
-    <div id="map3d-1" style="width: 1024px; height: 600px;"></div>
+    <div id="map3d-1" style="width: 1300px; height: 650px;"></div>
     <div id="map3d-2" style="position: absolute; left: 20px; top: 40px; width: 150px; height: 140px;"></div>
   </body>
 </html>
