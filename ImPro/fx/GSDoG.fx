@@ -1,4 +1,6 @@
 
+#define MAXHWNDSIZE 5
+#define MAXWNDAREA (MAXHWNDSIZE*2+1)*(MAXHWNDSIZE*2+1)
 struct AppData {
     float3 Position	: POSITION;
 	float3 Normal	: NORMAL;
@@ -11,23 +13,6 @@ struct VSOUT {
     float2 UV		: TEXCOORD0;
 };
 
-float g_blendWeight <
-	string UIName = "g_SubS";
-    string UIWidget = "slider";
-    float UIMin = 0.1;
-    float UIMax = 1;
-    float UIStep = 0.1;
-> = 0.1;
-bool g_bSrcFlipY = false;
-bool g_bSrcFlipX = false;
-float g_SubS <
-	string UIName = "g_SubS";
-    string UIWidget = "slider";
-    float UIMin = -1;
-    float UIMax = 1;
-    float UIStep = 0.02;
-> = 0.0;
-
 float4x4 WorldViewProj : WorldViewProjection;
 
 Texture2D g_Texture : DIFFUSE <
@@ -36,11 +21,15 @@ Texture2D g_Texture : DIFFUSE <
     string ResourceType = "2D";
 >;
 
-Texture2D g_BGTexture <
+Texture2D g_SubTexture <
     string ResourceName = "default_color.dds";
-    string UIName =  "BG Texture";
+    string UIName =  "Sub Texture";
     string ResourceType = "2D";
 >;
+float g_pixelW = 1.0/(640.0-1.0);
+float g_pixelH = 1.0/(480.0-1.0);
+int g_halfWndW0 = 3;
+float g_smoothWnd0[MAXWNDAREA];
 
 SamplerState g_Sampler = sampler_state {
     Filter = MIN_MAG_MIP_LINEAR;
@@ -55,38 +44,34 @@ VSOUT mainVS(AppData appIn ) {
 	return ret;
 }
 
-float4 mainPS(VSOUT vin) : SV_Target {
-	float2 uv = vin.UV;
-	if (g_bSrcFlipX)
+float4 mainPS_Gaussian(VSOUT vin) : SV_Target {
+	float2 uv = float2(0,0);
+	uint wArea0 = (g_halfWndW0*2+1)*(g_halfWndW0*2+1);
+	int nIdx = 0;
+	float4 color0 = float4(0,0,0,0);
+	int nx =0;
+	int ny = 0;
+	int wndW0 = g_halfWndW0*2 + 1;
+	
+	for (ny = -g_halfWndW0; ny <= g_halfWndW0; ny++)
 	{
-		uv.x = 1 - uv.x;
+		for (nx = -g_halfWndW0; nx <= g_halfWndW0; nx++)
+		{
+			nIdx = (ny+g_halfWndW0)*wndW0 + (nx+g_halfWndW0);
+			uv.x = vin.UV.x + nx*g_pixelW;
+			uv.y = vin.UV.y + ny*g_pixelH;
+			color0 += g_Texture.Sample(g_Sampler, uv) * g_smoothWnd0[nIdx];
+		}
 	}
-	if (g_bSrcFlipY)
-	{
-		uv.y = 1 - uv.y;
-	}
-	float4 colorBG = g_BGTexture.Sample(g_Sampler, vin.UV);
-	float4 colorIn = g_Texture.Sample(g_Sampler, uv);
-	float4 ret = float4((colorIn - colorBG).rgb, 1.0);
-	ret = ret - float4(g_SubS, g_SubS, g_SubS, 0);
-	return ret;
+	
+	
+	return float4(color0.rgb, 1.0);
 }
 
-float4 mainCaptureBG(VSOUT vin) : SV_Target {
-	float2 uv = vin.UV;
-	if (g_bSrcFlipX)
-	{
-		uv.x = 1 - uv.x;
-	}
-	if (g_bSrcFlipY)
-	{
-		uv.y = 1 - uv.y;
-	}
-	float4 colorBG = g_BGTexture.Sample(g_Sampler, vin.UV);
-	float4 colorIn = g_Texture.Sample(g_Sampler, uv);
-	float4 ret = float4((colorBG + colorIn*g_blendWeight).rgb, 1);
-	return ret;
-	
+float4 mainPS_Sub(VSOUT vin) : SV_Target {
+	float4 color0 = g_Texture.Sample(g_Sampler, vin.UV);
+	float4 color1 = g_SubTexture.Sample(g_Sampler, vin.UV);
+	return float4((color0 - color1).rgb, 1);
 }
 ///// TECHNIQUES /////////////////////////////
 RasterizerState DisableCulling
@@ -104,7 +89,7 @@ BlendState DisableBlend
 	BlendEnable[0] = FALSE;
 };
 
-technique10 Main10 <
+technique10 techSub <
 	string Script = "Pass=p0;";
 > {
     pass p0 <
@@ -112,7 +97,7 @@ technique10 Main10 <
     > {
         SetVertexShader( CompileShader( vs_4_0, mainVS() ) );
         SetGeometryShader( NULL );
-        SetPixelShader( CompileShader( ps_4_0, mainPS() ) );
+        SetPixelShader( CompileShader( ps_4_0, mainPS_Sub() ) );
                 
         SetRasterizerState(DisableCulling);       
 		SetDepthStencilState(DepthEnabling, 0);
@@ -120,7 +105,7 @@ technique10 Main10 <
     }
 }
 
-technique10 TechCaptureBG <
+technique10 techGaussian <
 	string Script = "Pass=p0;";
 > {
     pass p0 <
@@ -128,11 +113,12 @@ technique10 TechCaptureBG <
     > {
         SetVertexShader( CompileShader( vs_4_0, mainVS() ) );
         SetGeometryShader( NULL );
-        SetPixelShader( CompileShader( ps_4_0, mainCaptureBG() ) );
+        SetPixelShader( CompileShader( ps_4_0, mainPS_Gaussian() ) );
                 
         SetRasterizerState(DisableCulling);       
 		SetDepthStencilState(DepthEnabling, 0);
 		SetBlendState(DisableBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF);
     }
 }
+
 

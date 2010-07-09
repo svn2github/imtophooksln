@@ -11,39 +11,27 @@ struct VSOUT {
     float2 UV		: TEXCOORD0;
 };
 
-int g_sampleType = 1;
-bool g_bFlipX = false;
-bool g_bFlipY = false;
 float4x4 WorldViewProj : WorldViewProjection;
-
-float4x4 g_matTexTransform   
-<
-	string UIName="matTTS";
-> = {1.0f, 0.0f, 0.0f, 0.0f, 
-     0.0f, 1.0f, 0.0f, 0.0f,
-	 0.0f, 0.0f, 1.0f, 0.0f,
-	 0.0f, 0.0f, 0.0f, 1.0f}; 
-
-SamplerState g_LinearSampler
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
-
-SamplerState g_PointSampler
-{
-    Filter = MIN_MAG_MIP_POINT;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};  
-
 
 Texture2D g_Texture : DIFFUSE <
     string ResourceName = "default_color.dds";
     string UIName =  "Diffuse Texture";
     string ResourceType = "2D";
 >;
+
+SamplerState g_Sampler = sampler_state {
+    Filter = MIN_MAG_MIP_LINEAR;
+    AddressU = Clamp;
+    AddressV = Clamp;
+};  
+uint g_nChannel = 1;
+float g_threshold <
+	string UIName = "g_scaleValue";
+    string UIWidget = "slider";
+    float UIMin = 0.1;
+    float UIMax = 1;
+    float UIStep = 0.01;
+> = 1.0;
 
 VSOUT mainVS(AppData appIn ) {
 	VSOUT ret;
@@ -52,42 +40,32 @@ VSOUT mainVS(AppData appIn ) {
 	return ret;
 }
 
-float4 mainPS(VSOUT vin) : SV_Target{
-	float2 preUV = vin.UV;
-	if (g_bFlipX)
+float4 mainPS(VSOUT vin) : SV_Target {
+	float4 colorPt = g_Texture.Sample(g_Sampler, vin.UV);
+	float gray = 0.0;
+	if (g_nChannel == 1)
 	{
-		preUV.x = 1 - preUV.x;
+		gray = colorPt.r;
 	}
-	if (g_bFlipY)
-	{
-		preUV.y = 1- preUV.y;
-	} 
-	
-	float4 uv = mul(float4(preUV , 1.0, 1.0), g_matTexTransform );
-	
-	uv.x /= uv.z;
-	uv.y /= uv.z;
-	uv.z = 1;
-	
-	float4 colorPt = g_Texture.Sample(g_PointSampler, uv);
-	float4 colorLn = g_Texture.Sample(g_LinearSampler, uv);
-	float4 colorBlack = float4(0,0,0,0);
-	float4 ret = float4(0,0,0,0);
-	if (uv.x > 1.0 || uv.x < 0 || uv.y > 1.0 || uv.y < 0 )
-		ret = colorBlack;
 	else
-	{			
-		if (g_sampleType == 0)
-		{
-			ret = colorPt;
-		}
-		else
-		{
-			ret = colorLn;
-		}
+	{
+		gray = colorPt.r*0.3 + colorPt.g*0.59 + colorPt.b*0.11;
 	}
-	return ret;
+	
+	float4 colorRet = float4(0,0,0,0);
+	
+	if (gray < g_threshold)
+	{
+		colorRet = float4(0,0,0,1);
+	}
+	else
+	{
+		colorRet = float4(1,1,1,1);
+	}
+	
+	return colorRet;
 }
+
 
 ///// TECHNIQUES /////////////////////////////
 RasterizerState DisableCulling
@@ -120,3 +98,4 @@ technique10 Main10 <
 		SetBlendState(DisableBlend, float4( 0.0f, 0.0f, 0.0f, 0.0f ), 0xFFFFFFFF);
     }
 }
+

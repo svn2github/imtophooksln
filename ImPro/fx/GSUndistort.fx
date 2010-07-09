@@ -45,14 +45,6 @@ SamplerState g_LinearSampler
     AddressV = Clamp;
 };
 
-
-SamplerState g_PointSampler 
-{
-    Filter = MIN_MAG_MIP_POINT;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};  
-
 VSOUT mainVS(AppData appIn ) {
 	VSOUT ret;
 	ret.HPosition = mul(float4(appIn.Position.xyz, 1.0), WorldViewProj);
