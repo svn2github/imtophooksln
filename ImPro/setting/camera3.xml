@@ -1,0 +1,9 @@
+
+	<CAMERADATACAMERADATA>
+		<CAMERA label="" type="" chip_width="1.000000" chip_height="1.000000" screen_width="640" screen_height="480" />
+		<OBJECTIVE label="" focal_length="10.000000"/>
+		<DISTORTION dist_1="0.05841" dist_2="-0.08131" dist_3="0.00186" dist_4="-0.01188"/>
+		<FOCALLENGTH len_1="585.48086" len_2="574.95180"/>
+		<PRINCIPALPOINT point_1="380.45956" point_2="300.46414"/>
+	</CAMERADATACAMERADATA>
+
