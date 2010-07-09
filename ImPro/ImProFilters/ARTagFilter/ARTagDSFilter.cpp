@@ -1769,7 +1769,7 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 		center.x = 0; center.y = 0;
 		const ARFloat* arV[4]= {NULL};
 
-		switch (pMarkinfos[i].dir)
+		switch (pMarkinfos[i].dir) // ar are clockwise
 		{
 		case 0:
 			arV[0] = pMarkinfos[i].vertex[2];
@@ -1809,8 +1809,8 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 		center.x = (center.x * 0.25) / m_imgW;
 		center.y = (center.y * 0.25) / m_imgH;
 
-		D3DXVECTOR2 horzVec = ((pts[2]+pts[3]) - (pts[0] + pts[1]))*0.5;
-		D3DXVECTOR2 vertVec = ((pts[1]+pts[2]) - (pts[0] + pts[3]))*0.5;
+		D3DXVECTOR2 horzVec = ((pts[1]+pts[2]) - (pts[0] + pts[3]))*0.5;
+		D3DXVECTOR2 vertVec = ((pts[0] + pts[1]) - (pts[2]+pts[3]))*0.5;
 		
 
 		D3DXVec2Normalize(&horzVec, &horzVec);
