@@ -1,3 +1,5 @@
-ip 192.168.1.2
+ip 192.168.100.168
 port 5000
 tabletID tabletGE_0
+resolutionWidth 1366
+resolutionHeight 768
