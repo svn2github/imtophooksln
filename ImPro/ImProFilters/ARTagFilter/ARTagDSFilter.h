@@ -79,6 +79,10 @@ public:
 	virtual bool setbUseKalman(bool v);
 	virtual bool getbMaskTag();
 	virtual bool setbMaskTag(bool v);
+
+	virtual float getMaskScale();
+	virtual bool setMaskScale(float v);
+
 	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov);
 	virtual BOOL SetMeasureNoiseCov(float fNoiseCov);
 
@@ -107,6 +111,7 @@ protected:
 	bool			 m_bDrawTag;
 	bool             m_bDrawReproPt;
 	bool             m_bMaskTag;
+	float            m_maskScale;
 
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;

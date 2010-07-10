@@ -9,6 +9,7 @@
 #include "GSMFCProp.h"
 #include "Resource.h"
 #include "afxwin.h"
+#include "afxcmn.h"
 
 class ARTagCameraSettingPage : public CBasePropertyPage
 {
@@ -100,5 +101,8 @@ public:
 	CEdit m_edPort;
 	CButton m_btnConnect;
 	afx_msg void OnBnClickedBtnconnect();
+	CSliderCtrl m_slrMaskScale;
+	CStatic m_txtMaskScale;
+	afx_msg void OnNMCustomdrawslrmaskscale(NMHDR *pNMHDR, LRESULT *pResult);
 };
 

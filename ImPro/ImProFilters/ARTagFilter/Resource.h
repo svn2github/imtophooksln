@@ -45,7 +45,10 @@
 #define IDC_txtConfThreshold            2024
 #define IDC_txtMeasureNoise             2024
 #define IDC_Mat20                       2025
+#define IDC_slrMaskScale                2025
 #define IDC_Mat21                       2026
+#define IDC_txtMeasureNoise2            2026
+#define IDC_txtMaskScale                2026
 #define IDC_Mat22                       2027
 #define IDC_Mat23                       2028
 #define IDC_BTN_Load                    2029
@@ -61,7 +64,6 @@
 #define IDC_CKMaskTag                   2036
 #define IDC_BTNCONNECT                  16005
 #define IDC_edIP                        16006
-#define IDC_EDIT4                       16007
 #define IDC_edPort                      16007
 
 // Next default values for new objects

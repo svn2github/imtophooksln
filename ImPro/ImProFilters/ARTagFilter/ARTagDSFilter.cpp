@@ -38,6 +38,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_imgH = 480;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
+	 m_maskScale = 1.0;
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
@@ -295,17 +296,31 @@ HRESULT ARTagDSFilter::MaskTag(IplImage* img, ARMarkerInfo* markinfos, int numMa
 	char str[MAX_PATH];
 	for (int i=0; i < numMarkinfo; i++)
 	{
-		RECT rect; rect.left = 100000; rect.right = 0; rect.top = 100000; rect.bottom = 0;
+		CvPoint2D32f center = cvPoint2D32f(0, 0);
 		for (int j =0; j < 4; j++)
 		{
 			pts[j].x = markinfos[i].vertex[j][0];
 			pts[j].y = markinfos[i].vertex[j][1];
-			rect.left = min((float)rect.left, (float)pts[j].x);
-			rect.right = max((float)rect.right, (float)pts[j].x);
-			rect.top = min((float)rect.top, (float)pts[j].y);
-			rect.bottom = max((float)rect.bottom, (float)pts[j].y);
+
+			center.x += pts[j].x;
+			center.y += pts[j].y;
+		}
+		center.x /= 4.0;
+		center.y /= 4.0;
+
+		CvPoint2D32f vec[4];
+		for (int j =0; j < 4; j++)
+		{
+			vec[j].x = pts[j].x - center.x;
+			vec[j].y = pts[j].y - center.y;
+
+			vec[j].x *= m_maskScale;
+			vec[j].y *= m_maskScale;
+			pts[j].x = center.x + vec[j].x;
+			pts[j].y = center.y + vec[j].y;
 		}
 		
+
 		int PolyVertexNumber[1]={4};
 		cvFillPoly(img, &pts, PolyVertexNumber, 1,  cvScalar(0,0,0));
 	}
@@ -1446,6 +1461,17 @@ bool ARTagDSFilter::getbMaskTag()
 bool ARTagDSFilter::setbMaskTag(bool v)
 {
 	m_bMaskTag = v;
+	return true;
+}
+float ARTagDSFilter::getMaskScale()
+{
+	return m_maskScale;
+}
+bool ARTagDSFilter::setMaskScale(float v)
+{
+	if (v <= 0)
+		return false;
+	m_maskScale = v;
 	return true;
 }
 BOOL ARTagDSFilter::GetMeasureNoiseCov(float& fNoiseCov)

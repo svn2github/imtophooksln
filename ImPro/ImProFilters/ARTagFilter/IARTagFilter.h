@@ -59,6 +59,8 @@ public:
 	virtual bool setbUseKalman(bool v) = 0;
 	virtual bool getbMaskTag() = 0;
 	virtual bool setbMaskTag(bool v) = 0;
+	virtual float getMaskScale() = 0;
+	virtual bool setMaskScale(float v) = 0;
 
 	virtual BOOL GetMeasureNoiseCov(float& fNoiseCov) = 0;
 	virtual BOOL SetMeasureNoiseCov(float fNoiseCov) = 0;

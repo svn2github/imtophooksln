@@ -5,6 +5,8 @@
 #include "ARTagFilter.h"
 #include <windowsx.h>
 
+#define MASKSCALE 100.0
+
 extern CARTagFilterApp theApp;
 ARTagCameraSettingPage::ARTagCameraSettingPage(IUnknown *pUnk) : 
 CBasePropertyPage(NAME("ARTagProp"), pUnk, IDD_ARTag_CAMSETTING_PAGE, IDS_ARTag_PROPPAGE_TITLE),
@@ -101,6 +103,7 @@ bool ARTagCameraSettingPage::GetSetting()
 	swprintf_s(tmpStr, MAX_PATH, L"%.6f", v[2]);
 	SetWindowText(m_edZaxis, tmpStr);
 
+	
 
 	return true;
 }
@@ -335,6 +338,7 @@ HRESULT ARTagCameraSettingPage::OnActivate(void)
 	m_edYaxis = GetDlgItem(m_Dlg, IDC_edYaxis);
 	m_edZaxis = GetDlgItem(m_Dlg, IDC_edZaxis);
 
+	
 	GetSetting();
 
 	return NOERROR;
@@ -360,6 +364,7 @@ IMPLEMENT_DYNAMIC(ARTagGeneralPage, GSMFCProp)
 BEGIN_MESSAGE_MAP(ARTagGeneralPage, GSMFCProp)
 	
 	ON_BN_CLICKED(IDC_BTNCONNECT, &ARTagGeneralPage::OnBnClickedBtnconnect)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_slrMaskScale, &ARTagGeneralPage::OnNMCustomdrawslrmaskscale)
 END_MESSAGE_MAP()
 
 
@@ -396,6 +401,8 @@ void ARTagGeneralPage::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_edIP, m_edIP);
 	DDX_Control(pDX, IDC_edPort, m_edPort);
 	DDX_Control(pDX, IDC_BTNCONNECT, m_btnConnect);
+	DDX_Control(pDX, IDC_slrMaskScale, m_slrMaskScale);
+	DDX_Control(pDX, IDC_txtMaskScale, m_txtMaskScale);
 }
 ARTagGeneralPage::~ARTagGeneralPage()
 {
@@ -508,6 +515,13 @@ bool ARTagGeneralPage::GetSetting()
 		m_edPort.EnableWindow(TRUE);
 		m_btnConnect.SetWindowText(L"Connect");
 	}
+
+	float fMaskScale = m_pARProperty->getMaskScale();
+	int nMaskScale = fMaskScale * MASKSCALE;
+	m_slrMaskScale.SetPos(nMaskScale);
+	swprintf_s(str, MAX_PATH, L"%.2f", fMaskScale);
+	m_txtMaskScale.SetWindowText(str);
+
 
 }
 bool ARTagGeneralPage::ApplySetting()
@@ -744,6 +758,7 @@ HRESULT ARTagGeneralPage::OnActivate(void)
 	SLIDER_SetRange(m_slrMeasureNoise, 0, m_MNoiseScale);
 	SLIDER_SetRange(m_slrThreshold, 0, 255);
 	SLIDER_SetRange(m_slrBorderW, 0, m_BorderWScale);
+	m_slrMaskScale.SetRange(1, 2*MASKSCALE);
 	GetSetting();
 	return NOERROR;
 }
@@ -783,4 +798,20 @@ void ARTagGeneralPage::OnBnClickedBtnconnect()
 		m_pARProperty->ConnectOSC(addressIP, port);
 	}
 	GetSetting();
+}
+
+void ARTagGeneralPage::OnNMCustomdrawslrmaskscale(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	*pResult = 0;
+	if (m_pARProperty == NULL)
+		return;
+	WCHAR str[MAX_PATH] = {0};
+	int nMaskScale = m_slrMaskScale.GetPos();
+	float fMaskScale = nMaskScale / MASKSCALE;
+	m_pARProperty->setMaskScale(fMaskScale);
+
+	swprintf_s(str, MAX_PATH, L"%.2f", fMaskScale);
+	m_txtMaskScale.SetWindowText(str);
 }
