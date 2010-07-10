@@ -403,7 +403,11 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
-		
+			GSAutoLock lck2(m_TUIOSender.GetGSCritSec());
+			if (m_TUIOSender.IsConnected())
+			{
+				hr = SendTUIO(NULL, 0);
+			}
 			/*
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
 			{
@@ -1758,7 +1762,10 @@ HRESULT ARTagDSFilter::DisConnectOSC()
 HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 {
 	if (pMarkinfos == NULL || numDetected == 0)
-		return E_INVALIDARG;
+	{
+		m_TUIOSender.SendAndClearData();
+		return S_OK;
+	}
 	
 	D3DXVECTOR2 pts[4];
 	D3DXVECTOR2 center(0,0);
