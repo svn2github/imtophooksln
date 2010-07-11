@@ -103,6 +103,8 @@ private:
 	bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 protected:
 	GSTUIOSender m_TUIOSender;
+	map<int, GSTUIO2DObj> m_lastFrameObj;
+	int m_nextID;
 	//
 	CCritSec m_csWorldBasisScale;
 	double m_WorldBasisScale[3];
@@ -112,7 +114,7 @@ protected:
 	bool             m_bDrawReproPt;
 	bool             m_bMaskTag;
 	float            m_maskScale;
-
+	
 	CallbackFuncPtr  m_pCallback;
 	int m_callbackArgc;
 	void** m_callbackArgv;

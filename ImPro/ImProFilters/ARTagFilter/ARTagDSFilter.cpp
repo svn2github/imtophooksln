@@ -36,6 +36,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	m_bMaskTag = false;
 	m_imgW = 640;
 	m_imgH = 480;
+	m_nextID = 0;
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 	 m_maskScale = 1.0;
@@ -1790,12 +1791,14 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 	if (pMarkinfos == NULL || numDetected == 0)
 	{
 		m_TUIOSender.SendAndClearData();
+		m_lastFrameObj.clear();
 		return S_OK;
 	}
 	
 	D3DXVECTOR2 pts[4];
 	D3DXVECTOR2 center(0,0);
 
+	map<int, GSTUIO2DObj> newList;
 
 	for (int i=0; i < numDetected; i++)
 	{
@@ -1874,13 +1877,24 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 
 		GSTUIO2DObj tagObj;
 		tagObj.m_cID = pMarkinfos[i].id;
-		tagObj.m_sID = pMarkinfos[i].id;
+		if (this->m_lastFrameObj.find(tagObj.m_cID) != this->m_lastFrameObj.end())
+		{
+			tagObj.m_sID = m_lastFrameObj[tagObj.m_cID].m_sID;
+		}
+		else
+		{
+			tagObj.m_sID = m_nextID;
+			m_nextID++;
+		}
 		tagObj.m_a = (hAngle + vAngle )*0.5;
 		tagObj.m_x = center.x;
 		tagObj.m_y = center.y;
 		
 		m_TUIOSender.Push2DObj(&tagObj, 1);
+		newList[tagObj.m_cID] = tagObj;
 	}
+
 	m_TUIOSender.SendAndClearData();
+	m_lastFrameObj = newList;
 	return S_OK;
 }
