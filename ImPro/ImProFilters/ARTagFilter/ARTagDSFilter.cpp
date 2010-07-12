@@ -40,6 +40,8 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 	 m_maskScale = 1.0;
+	 QueryGlobalTUIOSender(m_pTUIOSender);
+
 }
 ARTagDSFilter::~ARTagDSFilter()
 {
@@ -53,6 +55,7 @@ ARTagDSFilter::~ARTagDSFilter()
 		delete[] m_callbackArgv;
 		m_callbackArgv = NULL;
 	}
+	SAFE_RELEASE(m_pTUIOSender);
 }
 CUnknown *WINAPI ARTagDSFilter::CreateInstance(LPUNKNOWN punk, HRESULT *phr)
 {
@@ -419,8 +422,8 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
-			GSAutoLock lck2(m_TUIOSender.GetGSCritSec());
-			if (m_TUIOSender.IsConnected())
+			GSAutoLock lck2(m_pTUIOSender->GetGSCritSec());
+			if (m_pTUIOSender->IsConnected())
 			{
 				hr = SendTUIO(NULL, 0);
 			}
@@ -465,7 +468,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		else 
 		{
 			CAutoLock lck(&m_csARTracker);
-			GSAutoLock lck2(m_TUIOSender.GetGSCritSec());
+			GSAutoLock lck2(m_pTUIOSender->GetGSCritSec());
 			markinfos = new ARMarkerInfo[numDetected];
 			for (int k = 0; k < numDetected; k++)
 			{
@@ -481,7 +484,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 				ShowReprojectImage(imgOut, numDetected,
 				markinfos, markerConfig,matARView, matARProj );
 			}
-			if (m_TUIOSender.IsConnected())
+			if (m_pTUIOSender->IsConnected())
 			{
 				hr = SendTUIO(markinfos, numDetected);
 			}
@@ -1762,35 +1765,50 @@ HRESULT ARTagDSFilter::GetName(WCHAR* name, UINT szName)
 
 HRESULT ARTagDSFilter::GetIPAddress(char* ipaddress, UINT szBuf)
 {
-	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
-	return m_TUIOSender.GetIPAddress(ipaddress, szBuf);
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	return m_pTUIOSender->GetIPAddress(ipaddress, szBuf);
 }
 HRESULT ARTagDSFilter::GetPort(UINT& port)
 {
-	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
-	return m_TUIOSender.GetPort(port);
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	return m_pTUIOSender->GetPort(port);
 }
 BOOL ARTagDSFilter::IsOSCConnected()
 {
-	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
-	return m_TUIOSender.IsConnected();
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	return m_pTUIOSender->IsConnected();
 }
 HRESULT ARTagDSFilter::ConnectOSC(char* ipaddress, int port)
 {
-	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
-	return m_TUIOSender.ConnectSocket(ipaddress, port);
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	return m_pTUIOSender->ConnectSocket(ipaddress, port);
 }
 HRESULT ARTagDSFilter::DisConnectOSC()
 {
-	GSAutoLock lck(m_TUIOSender.GetGSCritSec());
-	return m_TUIOSender.DisConnectSocket();
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	return m_pTUIOSender->DisConnectSocket();
 }
 
 HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 {
+	if (m_pTUIOSender == NULL)
+		return E_FAIL;
+
+	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
+	m_pTUIOSender->Clear2DObj();
 	if (pMarkinfos == NULL || numDetected == 0)
-	{
-		m_TUIOSender.SendAndClearData();
+	{	
+		m_pTUIOSender->Send(TUIO_2DObj);
 		m_lastFrameObj.clear();
 		return S_OK;
 	}
@@ -1883,18 +1901,20 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 		}
 		else
 		{
-			tagObj.m_sID = m_nextID;
-			m_nextID++;
+			 
+			LONGLONG sID = 0;
+			m_pTUIOSender->AcquireSID(TUIO_2DObj, sID);
+			tagObj.m_sID = sID;
 		}
 		tagObj.m_a = (hAngle + vAngle )*0.5;
 		tagObj.m_x = center.x;
 		tagObj.m_y = center.y;
 		
-		m_TUIOSender.Push2DObj(&tagObj, 1);
+		m_pTUIOSender->Push2DObj(&tagObj, 1);
 		newList[tagObj.m_cID] = tagObj;
 	}
 
-	m_TUIOSender.SendAndClearData();
+	m_pTUIOSender->Send(TUIO_2DObj);
 	m_lastFrameObj = newList;
 	return S_OK;
 }

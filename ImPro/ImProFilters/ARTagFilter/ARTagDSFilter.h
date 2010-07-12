@@ -102,7 +102,7 @@ private:
 	bool ARTag2World3D(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts, double basisScale[3]);
 	bool ARTag2VW(const ARMultiEachMarkerInfoT* pMarker, D3DXVECTOR3*& vts);
 protected:
-	GSTUIOSender m_TUIOSender;
+	GSTUIOSender* m_pTUIOSender;
 	map<int, GSTUIO2DObj> m_lastFrameObj;
 	int m_nextID;
 	//
