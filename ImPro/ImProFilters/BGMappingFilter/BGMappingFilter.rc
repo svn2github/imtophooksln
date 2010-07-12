@@ -136,9 +136,9 @@ BEGIN
     IDD_BGMappingPropPage, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 188
+        RIGHTMARGIN, 195
         TOPMARGIN, 7
-        BOTTOMMARGIN, 120
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -149,23 +149,28 @@ END
 // Dialog
 //
 
-IDD_BGMappingPropPage DIALOGEX 0, 0, 195, 127
+IDD_BGMappingPropPage DIALOGEX 0, 0, 197, 197
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    CONTROL         "",IDC_Slider_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,24,100,15
-    EDITTEXT        IDC_ThresholdTxt,117,39,21,13,ES_AUTOHSCROLL
-    LTEXT           "Threshold",IDC_STATIC,32,26,38,12
-    CONTROL         "",IDC_SLIDER_WHITE,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,77,83,100,15
-    CONTROL         "",IDC_SLIDER_BLACK,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,51,100,15
-    EDITTEXT        IDC_EDIT_WHITE,118,95,21,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_BLACK,118,69,21,12,ES_AUTOHSCROLL
-    LTEXT           "BGAddValue",IDC_STATIC,28,86,40,13
-    LTEXT           "ErodeValue",IDC_STATIC,30,54,44,12
-    PUSHBUTTON      "Save",IDC_BUTTON1,153,105,26,15
+    CONTROL         "",IDC_Slider_Threshold,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,55,100,15
+    EDITTEXT        IDC_EDIT_threshold,117,66,21,13,ES_AUTOHSCROLL
+    LTEXT           "ThresholdforROI",IDC_STATIC,15,59,59,12
+    CONTROL         "",IDC_SLIDER_BGAdiustValue,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,98,100,15
+    CONTROL         "",IDC_SLIDER_diffSub,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,77,100,15
+    EDITTEXT        IDC_EDIT_BGAdjust,118,110,21,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DiffSub,118,88,21,12,ES_AUTOHSCROLL
+    LTEXT           "BGAdjustValue",IDC_STATIC,19,103,61,13
+    LTEXT           " AbsDiffSubValue",IDC_STATIC,14,82,65,12
+    PUSHBUTTON      "Save",IDC_BUTTON1,145,156,26,15
     CONTROL         "CameraFlip",IDC_CHECK_camera,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,13,49,11
     CONTROL         "LayoutFlip",IDC_CHECK_Layout,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,70,14,47,8
     CONTROL         "OutputFlip",IDC_CHECK_Output,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,14,47,8
+    CONTROL         "Show Window",IDC_CHECK_Show,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,71,29,61,10
+    CONTROL         "Save Img",IDC_CHECK_Save,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,29,46,10
+    CONTROL         "",IDC_SLIDER_erode,"msctls_trackbar32",TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,79,123,100,15
+    EDITTEXT        IDC_EDIT_Erode,117,135,22,14,ES_AUTOHSCROLL
+    LTEXT           "Erode Time",IDC_STATIC,23,127,36,8
 END
 
 #endif    // English (U.S.) resources

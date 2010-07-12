@@ -225,6 +225,9 @@ HRESULT ARLayoutCameraDS::ConnectGraph()
 	hr = m_pGraph->Connect(m_pUndistortOutputPin[0], m_pCamWarpInputPin[0]);
 	hr = m_pGraph->Connect(m_pCamWarpOutputPin[0], m_pDXBlendInputPin[0]);
 	hr = m_pGraph->Connect(m_pDXBlendOutputPin, m_pBlendWarpInputPin);
+    
+	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Sample Grabber");
+
 	hr = m_pGraph->Connect(m_pBlendWarpOutputPin, m_pGrabberInput);
 	hr = m_pGraph->Connect(m_pGrabberOutput, m_pRenderInputPin);
 
@@ -247,9 +250,9 @@ HRESULT ARLayoutCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int
 		IID_IBaseFilter, (LPVOID *)&m_pARWarpFilter);
 	hr = m_pARWarpFilter->QueryInterface(IID_IGSHomoWarpFilter, (LPVOID *)&m_pIARWarpFilter);
 
-	hr = CoCreateInstance(CLSID_DXRenderFilter, NULL, CLSCTX_INPROC_SERVER, 
+	hr = CoCreateInstance(CLSID_GSDXRenderer, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pDXRenderFilter);
-	hr = m_pDXRenderFilter->QueryInterface(IID_IDXRenderer, (LPVOID *)&m_pIDXRenderFilter); 
+	hr = m_pDXRenderFilter->QueryInterface(IID_IGSDXRenderer, (LPVOID *)&m_pIDXRenderFilter); 
 
 	hr = CoCreateInstance(CLSID_GSHomoWarpFilter, NULL, CLSCTX_INPROC_SERVER, 
 		IID_IBaseFilter, (LPVOID *)&m_pCamWarpFilter[0]);

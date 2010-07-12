@@ -76,7 +76,7 @@ HRESULT CCameraDS::CreateFilters(int nCamID, bool bDisplayProperties, int nWidth
 	hr = m_pGraph->AddFilter(m_pRenderFilter, L"Video Renderer");
 	hr = m_pSampleGrabberFilter->QueryInterface(IID_ISampleGrabber, (void**)&m_pSampleGrabber);
 
-	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Sample Grabber");
+//	m_pGraph->AddFilter(m_pSampleGrabberFilter, L"Sample Grabber");
 
 	// Bind Device Filter.  We know the device because the id was passed in
 	BindFilter(nCamID, &m_pDeviceFilter);

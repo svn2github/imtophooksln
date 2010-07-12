@@ -1,12 +1,10 @@
 #include "stdafx.h"
 #include "BGMapping.h"
 
-
-#define BLACK_VALUE 130
 #define MAX_REF 2
-#define SHOW_WINDOW false
-#define SAVE_IMG  false
-#define SAVE_THRES 120000
+#define SAVE_THRES 150000
+#define USEMASK true // for single camera 
+
 
 
 BGTag::BGTag(){
@@ -68,7 +66,6 @@ BGCandidate ::~BGCandidate(){
 		{
 			cvReleaseImage(&bgImgPool[i].BGimg);
 			bgImgPool[i].BGimg = NULL;
-
 		}
 	}
 }
@@ -133,12 +130,17 @@ void BGCandidate::setToUnused(int index){
 
 BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,char* fileDir){
 
-	BGthreshold = 0;
+	ROIthreshold = 0;
 	erodeValue = 0;
-	subValue = 0 ;
+	absDiffsubValue = 0 ;
+	BGadjustValue = 0 ;
+
 	camFlip = false; 
 	layoutFlip = false ;
-	kerMat = cvCreateMat(5,5,CV_32F);
+	showWindow = true; 
+	saveImage = false ;
+
+
 	historyBG.clear();
 	imgIndex = 0 ;
 	tagTranNum = 0 ;
@@ -160,20 +162,27 @@ BackGroundMapping::BackGroundMapping(int returnW, int returnH,int camChannel,cha
 
 	FILE  * pFile ;
 	pFile = fopen(settingFile,"r");
-	fscanf(pFile ,"[ %d %d %d %d %d %d] \n",&BGthreshold , &erodeValue,&subValue,&camFlip,&layoutFlip, &outputFlip);  // threshold , blackvalue , whiteValue
+	fscanf(pFile ,"[ %d %d %d %d %d %d %d %d %d ] \n",&ROIthreshold , &absDiffsubValue,&BGadjustValue,&erodeValue,&camFlip,&layoutFlip, &outputFlip, &showWindow, &saveImage);  // threshold , blackvalue , whiteValue
 
 	mappingTable = cvCreateImage(cvSize(returnW,returnH),8,3);
 	backgroundImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	blendBG = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 
 	camImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	absDiffImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	subImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
 	tmpImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	thresholdROIImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	erodeImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+
+	spotMask= cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,1);
+	cvResize(bgMask,spotMask,1);
 	result4CImg = cvCreateImage(cvSize(returnW,returnH),IPL_DEPTH_8U,camChannel);
 	MatHomography = cvCreateMat( 3, 3, CV_32F);
 	kernelElement = cvCreateStructuringElementEx(3,3,0,0,CV_SHAPE_ELLIPSE,NULL);
 
 	char whiteBGName[100];
-	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.png",fileDir);
+	sprintf(whiteBGName,"%s\\BackgroundCaliData\\BG.jpg",fileDir);
 	whiteBG = cvLoadImage(whiteBGName,0);
 
 	loadBGTranData(fileDir);	
@@ -211,6 +220,10 @@ BackGroundMapping::~BackGroundMapping(){
 		cvReleaseImage(&blendBG);
 		blendBG = NULL ;
 	}
+	if(spotMask != NULL){
+		cvReleaseImage(&spotMask);
+		spotMask = NULL ;
+	}
 	cvReleaseStructuringElement(&kernelElement);
 	for(int i = 0 ; i < imgMAX; i ++){
 		if(historyBG[i] != NULL){
@@ -219,34 +232,6 @@ BackGroundMapping::~BackGroundMapping(){
 		}
 
 	}
-}
-
-void BackGroundMapping::setBackground(IplImage *BGImg){
-
-	int white ,black;
-	if(layoutFlip == true){
-		cvFlip(BGImg);
-	}
-	int BGchannel = BGImg->nChannels;
-	int mapChannel = mappingTable->nChannels;
-
-	for(int i=0;i<mappingTable->height;i++)
-	{
-		for(int j=0;j<mappingTable->width;j++)
-		{
-			black = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel] + erodeValue;
-			white = (int)(uchar)mappingTable->imageData[i*mappingTable->width*mapChannel+j*mapChannel+1] -subValue;
-
-			if((int)(uchar)BGImg->imageData[i*BGImg->widthStep+j*BGchannel]< BLACK_VALUE){
-				backgroundImg->imageData[i*backgroundImg->width+j] = black;
-			}
-			else {
-				backgroundImg->imageData[i*backgroundImg->width+j] = white;
-			}
-
-		}
-	}		
-
 }
 
 void BackGroundMapping::loadHomo(char *homoName, char *mTableName){
@@ -263,7 +248,10 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	int realBGindex  = 0;
 	int minValue = 1e10 ;
-	int candSubValue = subValue - 10 ;
+
+	int threadID = GetCurrentThreadId();
+	char windowName[MAX_PATH] ;
+	WCHAR windowTitle[MAX_PATH] ;
 
 	cvCvtColor( srcImg, camImg, CV_RGB2GRAY);
 	if(camFlip == true){
@@ -273,24 +261,18 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 	int BGCandiSize = candidate.usedImg.size();
 
 	for(int i = 0 ;i < BGCandiSize; i ++){
-		cvAddS(candidate.getUsedImg(i),cvScalar(candSubValue,candSubValue,candSubValue),tmpImg);
-		if(SHOW_WINDOW){
-			char frame[MAX_PATH];
-			sprintf(frame ,"%d",i) ;
-			cvShowImage(frame,tmpImg);
-		}
+		cvAddS(candidate.getUsedImg(i),cvScalar(BGadjustValue,BGadjustValue,BGadjustValue),tmpImg);
+	
 		cvAbsDiff(camImg,tmpImg,tmpImg);
-		cvErode(tmpImg,tmpImg,NULL,erodeValue+1);
+		
+		cvSubS(tmpImg,cvScalar(absDiffsubValue,absDiffsubValue,absDiffsubValue),subImg);
+		
+		cvErode(subImg,tmpImg,NULL,erodeValue);
 
-		if(camImg->width == bgMask->width && isUsingMask == TRUE){  
-			cvAnd(tmpImg,bgMask,tmpImg);
+		if(USEMASK == true ){  
+			cvAnd(tmpImg,spotMask,tmpImg);			
 		}
-
-		if(SHOW_WINDOW){
-			char frame[MAX_PATH];
-			sprintf(frame ,"sub%d",i) ;
-			cvShowImage(frame,tmpImg);
-		}
+		
 		CvScalar sum = cvSum(tmpImg);
 
 		if(sum.val[0] < minValue){
@@ -298,14 +280,14 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 			realBGindex = i;			
 		}	
 
-		if(minValue > SAVE_THRES && SAVE_IMG == true && saveIndex <1000){
+		if(minValue > SAVE_THRES && saveImage == true && saveIndex <1000){
 			char saveName[MAX_PATH] ;
 			WCHAR imgPath[MAX_PATH] ;
 			swprintf_s(imgPath, MAX_PATH, L"%s\\debugImg\\%d_cand_%d.jpg",curDir,saveIndex,i);
 			wcstombs(saveName, imgPath, MAX_PATH);
 
 			cvSaveImage(saveName,candidate.getUsedImg(i));
-			sprintf(saveName,"debugImg\\%d_cand_%d_sub_%d.jpg",saveIndex,i,sum.val[0]);
+			sprintf(saveName,"debugImg\\%d_cand_%d_sub_%f.jpg",saveIndex,i,sum.val[0]);
 			cvSaveImage(saveName,tmpImg);
 		}
 	}
@@ -319,38 +301,73 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 
 	if(candidate.getUsedImgCount() != 0 ){
 		if(candidate.getUsedImg(realBGindex) != NULL){
-			cvAddS(candidate.getUsedImg(realBGindex),cvScalar(subValue,subValue,subValue),tmpImg);
+			cvAddS(candidate.getUsedImg(realBGindex),cvScalar(BGadjustValue,BGadjustValue,BGadjustValue),backgroundImg);
+			swprintf_s(windowTitle, MAX_PATH, L"Background %d",threadID);
+			wcstombs(windowName, windowTitle, MAX_PATH);
+			if(showWindow){
+				cvShowImage( windowName , backgroundImg);
+			}
+			else{
+				cvDestroyWindow(windowName);
+			}
 
-			cvShowImage("BG" , tmpImg);
-			cvShowImage("src", camImg);				
+			cvAbsDiff(camImg,backgroundImg,tmpImg);
 
-			if(minValue > SAVE_THRES && SAVE_IMG == true&& saveIndex <1000){
+			cvSubS(tmpImg,cvScalar(absDiffsubValue,absDiffsubValue,absDiffsubValue),tmpImg);
+
+			swprintf_s(windowTitle, MAX_PATH, L"AbsDiffSub %d",threadID);
+			wcstombs(windowName, windowTitle, MAX_PATH);
+			if(showWindow){
+				cvShowImage(windowName,tmpImg);
+			}
+			else{
+				cvDestroyWindow(windowName);
+			}
+
+			swprintf_s(windowTitle, MAX_PATH, L"cameraImg %d",threadID);
+			wcstombs(windowName, windowTitle, MAX_PATH);
+			
+			if(showWindow){
+				cvShowImage(windowName, camImg);		
+			}
+			else{
+				cvDestroyWindow(windowName);
+			}
+
+			if(minValue > SAVE_THRES && saveImage == true && saveIndex <1000){
 				char saveName[MAX_PATH] ;
 				WCHAR imgPath[MAX_PATH] ;
 				swprintf_s(imgPath, MAX_PATH, L"%s\\debugImg\\%d_src.jpg",curDir,saveIndex);
 				wcstombs(saveName, imgPath, MAX_PATH);
-
 				cvSaveImage(saveName,camImg);
+			}		
+
+			cvSub(camImg,backgroundImg,subImg);
+			if(USEMASK == true){
+				cvAnd(subImg,spotMask,subImg);
 			}
-			cvSub(camImg,tmpImg,camImg);
-			if(camImg->width == bgMask->width&& isUsingMask == true){
-				cvAnd(camImg,bgMask,camImg);
+			swprintf_s(windowTitle, MAX_PATH, L"subImg %d",threadID);
+			wcstombs(windowName, windowTitle, MAX_PATH);
+			if(showWindow){	
+				cvShowImage(windowName, subImg);	
+				cvWaitKey(1);
 			}
-			cvShowImage("sub", camImg);	
-			cvWaitKey(1);
+			else {
+				cvDestroyWindow(windowName);
+			}
 		}
 	}
 
-	if(minValue > SAVE_THRES && SAVE_IMG == true && saveIndex <1000){
+	if(minValue > SAVE_THRES && saveImage == true && saveIndex <1000){
 		char saveName[MAX_PATH] ;
 		WCHAR imgPath[MAX_PATH] ;
-		swprintf_s(imgPath, MAX_PATH, L"%s\\debugImg\\%d_BG_%d.jpg",curDir,saveIndex,realBGindex);
+		swprintf_s(imgPath, MAX_PATH, L"%s\\debugImg\\%d_sBG_%d.jpg",curDir,saveIndex,realBGindex);
 		wcstombs(saveName, imgPath, MAX_PATH);
-		cvSaveImage(saveName,tmpImg);
+		cvSaveImage(saveName,backgroundImg);
 		
 		swprintf_s(imgPath, MAX_PATH, L"%s\\debugImg\\sub_%d.jpg",curDir,saveIndex);
 		wcstombs(saveName, imgPath, MAX_PATH);
-		cvSaveImage(saveName,camImg);
+		cvSaveImage(saveName,subImg);
 
 		saveIndex++;
 	}
@@ -359,26 +376,18 @@ IplImage* BackGroundMapping::getForeground(IplImage* srcImg){
 		candidate.setToUnused(realBGindex);
 	}
 
-	cvErode(camImg,camImg,NULL,erodeValue);
-	cvDilate(camImg,camImg,NULL,erodeValue);
+	cvErode(subImg,erodeImg,NULL,1);
+	cvDilate(erodeImg,erodeImg,NULL,1);
 
-	if(SHOW_WINDOW){
-		cvShowImage("erode",camImg);
-		cvWaitKey(0);
+	cvCvtColor(erodeImg, result4CImg, CV_GRAY2RGB);
+
+	if(ROIthreshold != 0){
+		cvThreshold(erodeImg,thresholdROIImg,ROIthreshold,255,0);
 	}
-
-	cvCvtColor(camImg, result4CImg, CV_GRAY2RGB);
-
-	if(BGthreshold != 0){
-		cvThreshold(camImg,camImg,BGthreshold,255,0);
-	}
-	findForegroundRect(camImg);
+	findForegroundRect(thresholdROIImg);
 
 	if(outputFlip == true){
 		cvFlip(result4CImg);
-	}
-	if(SHOW_WINDOW){
-		cvDestroyAllWindows();
 	}
 
 	if(candidate.bgImgPool[realBGindex].isBlendImg == true){
@@ -411,21 +420,30 @@ void BackGroundMapping::loadBGTranData(char* fileDir){
 	FILE  * pFile ;
 	pFile = fopen(tagConfigFile,"r");
 	fscanf(pFile,"%d " ,&tagTranNum);
-	for(int i = 0 ; i < tagTranNum ; i ++){
+
+	BGConfig = new BGTag[tagTranNum];
+
+	for(int i = 0 ; i < tagTranNum ; i++){
 		BGTag *newTag = new BGTag() ;
 
 		fscanf(pFile,"\n%d %d\n%f %f %f %f \n%s \n",&newTag->CurTag , &newTag->TagID,&newTag->tagTop.x,&newTag->tagTop.y,
 			&newTag->tagDown.x, &newTag->tagDown.y ,&newTag->imgPath);
 
-		newTag->tagRec.x = newTag->tagTop.x * (imgW-1);
-		newTag->tagRec.y = newTag->tagTop.y * (imgH-1);
+		BGConfig[i].CurTag = newTag->CurTag;
+		BGConfig[i].TagID = newTag->TagID;
+		BGConfig[i].tagDown = newTag->tagDown;
+		BGConfig[i].tagTop = newTag->tagTop;
+	
+		BGConfig[i].tagRec.x = newTag->tagTop.x * (imgW-1) + 0.5;  // plus 0.5 for round off
+		BGConfig[i].tagRec.y = newTag->tagTop.y * (imgH-1) + 0.5;
 
-		newTag->tagImg = cvLoadImage(newTag->imgPath,0);
-		newTag->tagRec.height = newTag->tagImg->height ;
-		newTag->tagRec.width = newTag->tagImg->width ;
-		newTag->isVisible = false ;
-		BGTran.push_back(newTag);
+		BGConfig[i].tagImg = cvLoadImage(newTag->imgPath,0);
+		BGConfig[i].tagRec.height = BGConfig[i].tagImg->height ;
+		BGConfig[i].tagRec.width = BGConfig[i].tagImg->width ;
+		BGConfig[i].isVisible = false ;
+
 	}
+	
 }
 
 
@@ -434,9 +452,10 @@ void BackGroundMapping::setTranBG(){
 
 	for (int i = 0 ; i < tagTranNum ; i ++)
 	{
-		if(BGTran[i]->isVisible){
-			cvSetImageROI(backgroundImg,BGTran[i]->tagRec) ;
-			cvSub(backgroundImg,BGTran[i]->tagImg,backgroundImg);
+		if(BGConfig[i].isVisible){
+			
+			cvSetImageROI(backgroundImg,BGConfig[i].tagRec) ;
+			cvSub(backgroundImg,BGConfig[i].tagImg,backgroundImg);
 			cvResetImageROI(backgroundImg);
 		}
 	}
@@ -453,9 +472,8 @@ void BackGroundMapping::setTranBG(){
 	candidate.bgImgPool[index].tagVisibleTable = new bool [tagTranNum];
 
 	for(int i = 0 ; i < tagTranNum ; i ++){
-		bool tmpVisible = BGTran[i]->isVisible ;
-		candidate.bgImgPool[index].tagVisibleTable[i] = tmpVisible ; 
-		//candidate.bgImgPool[index].layoutVisibleTable.push_back(tmpVisible);
+		
+		candidate.bgImgPool[index].tagVisibleTable[i] = BGConfig[i].isVisible  ; 
 	}
 
 	if(candidate.getUsedImgCount() == 1){
@@ -469,10 +487,6 @@ void BackGroundMapping::setTranBG(){
 		for(int j = 0 ; j < candidate.getUsedImgCount() ; j ++){
 
 			for(int tagIndex = 0 ; tagIndex < tagTranNum ; tagIndex ++){
-				/*if(candidate.bgImgPool[candidate.getUsedImgID(j)].layoutVisibleTable[tagIndex] != candidate.bgImgPool[index].layoutVisibleTable[tagIndex]){
-					layoutMatch = false ;
-					break ;
-				}*/
 				if(candidate.bgImgPool[candidate.getUsedImgID(j)].tagVisibleTable[tagIndex] != candidate.bgImgPool[index].tagVisibleTable[tagIndex]){
 					layoutMatch = false ;
 					break ;

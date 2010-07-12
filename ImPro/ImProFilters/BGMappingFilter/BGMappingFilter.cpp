@@ -85,33 +85,28 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		return S_FALSE;
 	}
 	CAutoLock lck(&m_csBGSetting);
+	
 	if(getIsReceiveBG() == true ){
-		
-
-		if(BG->layoutType == 0){
-			BG->setBackground(backgroundIplImg);
-		}
-		else if(BG->layoutType == 1){
-			for(int numConfig = 0 ; numConfig < tagConfigVec.size() ; numConfig++){
-				int tagSize = 0 ;
-				
-				tagSize = tagConfigVec[numConfig]->m_numMarker;
-				for(int i = 0 ; i < tagSize ; i ++){
-					BG->BGTran[i]->isVisible = tagConfigVec[numConfig]->m_ARMarkers[i].visible ;
-				}
-				BG->setTranBG();
-			}
+		for(int numConfig = 0 ; numConfig < tagConfigVec.size() ; numConfig++){
+			int tagSize = 0 ;
 			
-			for (int i = 0 ; i < tagConfigVec.size(); i++)
-			{
-				if(tagConfigVec[i] != NULL){
-					delete tagConfigVec[i];
-					tagConfigVec[i] = NULL;
-				}
+			tagSize = tagConfigVec[numConfig]->m_numMarker;
+			for(int i = 0 ; i < tagSize ; i ++){
+				BG->BGConfig[i].isVisible = tagConfigVec[numConfig]->m_ARMarkers[i].visible ;
 			}
-			tagConfigVec.clear();
+			BG->setTranBG();
 		}
-			setIsReceiveBG(false);
+		
+		for (int i = 0 ; i < tagConfigVec.size(); i++)
+		{
+			if(tagConfigVec[i] != NULL){
+				delete tagConfigVec[i];
+				tagConfigVec[i] = NULL;
+			}
+		}
+		tagConfigVec.clear();
+	
+		setIsReceiveBG(false);
 	}
 
 	AM_SAMPLE2_PROPERTIES * const pProps = ((CMuxTransformInputPin*)pReceivePin)->SampleProps();
@@ -150,6 +145,7 @@ HRESULT BGMappingFilter::ReceiveCameraImg(IMediaSample *pSample, const IPin* pRe
 		// really S_OK (same as NOERROR, of course.)
 		if (hr == NOERROR ) {
 			hr = GetConnectedOutputPin()->Deliver(pOutSample);// m_pInputPin->Receive(pOutSample);
+
 			m_bSampleSkipped = FALSE;	// last thing no longer dropped
 		} else {
 			// S_FALSE returned from Transform is a PRIVATE agreement
@@ -236,13 +232,14 @@ CMuxTransformOutputPin* BGMappingFilter::GetConnectedOutputPin()
 
 HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 {
+
 	HRESULT hr = S_OK;
 	if (m_pInputPins.size() >= 1 && pReceivePin == m_pInputPins[0])
 	{
 		CAutoLock lck(&m_csBGSetting);
-		OutputDebugStringW(L"@@@@ ReceiveCameraImg ---->");
+		//OutputDebugStringW(L"ReceiveCameraImg ------>");
 		hr = ReceiveCameraImg(pSample, pReceivePin);
-		OutputDebugStringW(L"@@@@ ReceiveCameraImg <----");
+		//OutputDebugStringW(L"ReceiveCameraImg <------");
 
 	}
 	if (m_pInputPins.size() >= 2 && pReceivePin == m_pInputPins[1])
@@ -251,9 +248,10 @@ HRESULT BGMappingFilter::Receive(IMediaSample *pSample, const IPin* pReceivePin)
 
 		CMediaType mt = ((CMuxTransformInputPin*)pReceivePin)->CurrentMediaType();
 		if(mt.subtype == GUID_ARLayoutConfigData){
-			OutputDebugStringW(L"@@@@ ReceiveARLayout ---->");
+			//OutputDebugStringW(L"ReceiveARLayout ------>");
 			hr = ReceiveARLayout(pSample, pReceivePin);
-			OutputDebugStringW(L"@@@@ ReceiveARLayout <----");
+			//OutputDebugStringW(L"ReceiveARLayout ------>");
+
 		}
 		else {
 			hr = ReceiveBackground(pSample, pReceivePin);
@@ -529,6 +527,7 @@ HRESULT BGMappingFilter::Transform( IMediaSample *pIn, IMediaSample *pOut)
 	
 	CAutoLock cAutoLockShared(&m_cSharedState);
 	foregroundIplImg = BG->getForeground(cameraInputIplImg);
+	
 	memcpy (foregroundByteData, (BYTE*)foregroundIplImg->imageData,cbData);
 
 	return S_OK;
@@ -638,13 +637,14 @@ HRESULT BGMappingFilter::GetPages(CAUUID *pPages)
 }
 
 int BGMappingFilter::getBGThreshold(){
-	if(BG->BGthreshold == NULL)
+	if(BG->ROIthreshold == NULL)
 		return 0 ;
-	return BG->BGthreshold;
+	return BG->ROIthreshold;
+	
 }
 
 HRESULT BGMappingFilter::setBGThreshold(int BGthres){
-	BG->BGthreshold = BGthres;
+	BG->ROIthreshold = BGthres;
 	return S_OK;
 }
 
@@ -660,14 +660,25 @@ HRESULT BGMappingFilter::setErodeValue(int erodeValue){
 }
 
 
-int BGMappingFilter::getSubValue(){
-	if(BG->subValue == NULL)
+int BGMappingFilter::getAbsDiffSubValue(){
+	if(BG->absDiffsubValue == NULL)
 		return 0 ;
-	return BG->subValue;
+	return BG->absDiffsubValue;
 }
 
-HRESULT BGMappingFilter::setSubValue(int sValue){
-	BG->subValue = sValue;
+HRESULT BGMappingFilter::setAbsDiffSubValue(int sValue){
+	BG->absDiffsubValue = sValue;
+	return S_OK;
+}
+
+int BGMappingFilter::getBGAdjustValue(){
+	if(BG->BGadjustValue == NULL)
+		return 0 ;
+	return BG->BGadjustValue;
+}
+
+HRESULT BGMappingFilter::setBGAdjustValue(int sValue){
+	BG->BGadjustValue = sValue;
 	return S_OK;
 }
 
@@ -740,6 +751,22 @@ HRESULT BGMappingFilter:: setOutputFlip(bool value) {
 bool BGMappingFilter::getOutputFlip(){
 	return BG->outputFlip;
 }
+
+HRESULT BGMappingFilter:: setShowWindow(bool value) {
+	BG->showWindow = value ;
+	return S_OK;
+}
+bool BGMappingFilter::getShowWindow(){
+	return BG->showWindow;
+}
+HRESULT BGMappingFilter:: setSaveImg(bool value) {
+	BG->saveImage = value ;
+	return S_OK;
+}
+bool BGMappingFilter::getSaveImg(){
+	return BG->saveImage;
+}
+
 
 void BGMappingFilter::setIsReceiveBG(bool bRecBG){
 	CAutoLock loc(&m_csRecBG);

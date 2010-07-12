@@ -10,10 +10,12 @@ IBGMappingFilter: public IUnknown
 public:
 	virtual HRESULT setBGThreshold(int BGthres) ;
 	virtual int getBGThreshold();
-	virtual HRESULT setSubValue(int wValue) ;
-	virtual int getSubValue();
 	virtual HRESULT setErodeValue(int eValue) ;
 	virtual int getErodeValue();
+	virtual HRESULT setBGAdjustValue(int sValue) ;
+	virtual int getBGAdjustValue();
+	virtual HRESULT setAbsDiffSubValue(int sValue) ;
+	virtual int getAbsDiffSubValue();
 
 	virtual HRESULT setCamFlip(bool value) ;
 	virtual bool getCamFlip();
@@ -21,4 +23,9 @@ public:
 	virtual bool getLayoutFlip();
 	virtual HRESULT setOutputFlip(bool value) ;
 	virtual bool getOutputFlip();
+	virtual HRESULT setShowWindow(bool value) ;
+	virtual bool getShowWindow();
+	virtual HRESULT setSaveImg(bool value) ;
+	virtual bool getSaveImg();
+
 };

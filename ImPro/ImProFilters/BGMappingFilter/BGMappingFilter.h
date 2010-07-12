@@ -62,14 +62,22 @@ public:
 	virtual int getBGThreshold();
 	virtual HRESULT setErodeValue(int eValue) ;
 	virtual int getErodeValue();
-	virtual HRESULT setSubValue(int sValue) ;
-	virtual int getSubValue();
-	virtual HRESULT setCamFlip(bool value) ;
+	virtual HRESULT setBGAdjustValue(int sValue) ;
+	virtual int getBGAdjustValue();
+	virtual HRESULT setAbsDiffSubValue(int sValue) ;
+	virtual int getAbsDiffSubValue();
+	
+	virtual HRESULT setCamFlip(bool value) ;	
 	virtual bool getCamFlip();
 	virtual HRESULT setLayoutFlip(bool value) ;
 	virtual bool getLayoutFlip();
 	virtual HRESULT setOutputFlip(bool value) ;
 	virtual bool getOutputFlip();
+	virtual HRESULT setShowWindow(bool value) ;
+	virtual bool getShowWindow();
+	virtual HRESULT setSaveImg(bool value) ;
+	virtual bool getSaveImg();
+	
 	HRESULT SendForegroundRect();
 
 	void setLayoutVisible();

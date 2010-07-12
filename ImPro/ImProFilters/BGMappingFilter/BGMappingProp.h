@@ -46,11 +46,14 @@ public:
 	HWND m_Btxt;
 	HWND m_subValue;
 	HWND m_Wtxt;
+	HWND m_BGadjustValue;
+	HWND m_Atxt;
 
 	CButton* m_checkCamFlip;
 	CButton* m_checkLayoutFlip;
 	CButton* m_checkOutputFlip;
-
+	CButton* m_checkShowWindow;
+	CButton* m_checkSaveImg;
 
 
 public: //inherit from CMFCBaseProperty Page
@@ -60,7 +63,4 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 
 	afx_msg void OnBnClickedButton1();
-	afx_msg void OnEnChangeEditWhite();
-	afx_msg void OnBnClickedCheckLayout();
-	afx_msg void OnNMCustomdrawSliderWhite(NMHDR *pNMHDR, LRESULT *pResult);
 };

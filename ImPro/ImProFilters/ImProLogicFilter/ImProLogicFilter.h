@@ -64,7 +64,6 @@ protected:
 	*/
 	CCritSec m_csState;
 
-
 	D3DXMATRIX* m_matPro2VW[NUMCAM];
 	D3DXMATRIX* m_matCam2VW[NUMCAM];
 	GSARLayoutStartegyData* m_pARStrategyData;
@@ -73,11 +72,9 @@ protected:
 	
 	OSCSender* m_pOSCSender;
 
-
-
 	// function for projector coordinate to virtual world
-	ProjectorTrans2World* projCoord;
-	virtual HRESULT GetProjCorner(CvMat* camPoints, CvMat* worldPoints); 
+	ProjectorTrans2World* projTrans;
+
 	int tableHeight;
 	int tableWidth;
 	CvMat* W2CMat ;

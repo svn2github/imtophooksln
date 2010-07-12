@@ -68,7 +68,6 @@ public:
 
 	void loadHomo(char* homoName , char* mTableName);
 	IplImage* getForeground(IplImage* srcImg);
-	void setBackground(IplImage* BGImg);  
 
 public:
 	std::vector<CvRect> foregroundLists;
@@ -96,9 +95,18 @@ public:
 	IplImage* bgMask ;
 	IplImage* whiteBG ;
 	IplImage* blendBG ;
+	IplImage* spotMask ;
+
+	IplImage* absDiffImg;
+	IplImage* subImg;
+	IplImage* thresholdROIImg;
+	IplImage* erodeImg;	
 
 	vector<IplImage*> historyBG ;
-	vector<BGTag*> BGTran ;
+
+	BGTag* BGConfig;
+
+//	BGTag BG;
 
 	int tagTranNum ;
 	int m_layoutIndex ;
@@ -109,9 +117,11 @@ public:
 
 	IplConvKernel* kernelElement;
 
-	int BGthreshold;
+	int ROIthreshold;
 	int erodeValue;
-	int subValue;
+	int absDiffsubValue;
+	int BGadjustValue ;
+
 	int imgIndex ;
 	int imgH ;
 	int imgW ;
@@ -121,6 +131,8 @@ public:
 	bool layoutFlip;
 	bool outputFlip;
 	bool isUsingMask ;
+	bool showWindow;
+	bool saveImage;
 
 	int layoutType ; // 0::RGB   1::MarkerInfo 
 };

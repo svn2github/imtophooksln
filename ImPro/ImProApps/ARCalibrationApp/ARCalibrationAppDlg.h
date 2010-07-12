@@ -6,6 +6,7 @@
 #include "ARCalibDS.h"
 #include <map>
 #include "streams.h"
+#include "GSMacro.h"
 using namespace std;
 
 class DetectedMarker{
@@ -137,4 +138,5 @@ public:
 	CCritSec m_csdetectedTag;
 
 	void saveD3DMat(D3DXMATRIX* mat, char* fileName);
+	afx_msg void OnDestroy();
 };

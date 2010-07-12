@@ -4,8 +4,11 @@
 
 #define BLENDVALUE 0.5
 
+ProjectorTrans2World::ProjectorTrans2World(){
+
+}
 // tableW and tableH is the real size of the table in mm 710 * 520
-ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir){
+ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDir, int camIndex){
 	pro2CamExtrinsic = NULL;
 	proIntrinsic = NULL;
 	camIntrinsic = NULL;
@@ -66,8 +69,72 @@ ProjectorTrans2World::ProjectorTrans2World(int tableW , int tableH ,char* fileDi
 	pro3DPointsMat = cvCreateMat(4,2,CV_32F);
 	proHomoMat = cvCreateMat( 3, 3, CV_32F);
 	 
-	initProjRes(800,600);
-	loadCalibParam(fileDir);	 
+	loadCalibParam(fileDir,camIndex);	 
+	cvInvert(pro2CamExtrinsic,pro2CamExtrinsic,CV_SVD);
+	cvInvert(proIntrinsic,invProIntrinsic,CV_SVD);
+}
+void ProjectorTrans2World::Init(int tableW , int tableH ,char* fileDir, int camIndex){
+	pro2CamExtrinsic = NULL;
+	proIntrinsic = NULL;
+	camIntrinsic = NULL;
+	proDisto = NULL;
+	camDisto = NULL;;
+
+	invProIntrinsic = NULL;
+	pro2WorldRotation = NULL;
+
+	cam2WorldExtrinsic = NULL;
+	pro2WorldExtrinsic = NULL;
+	world2CamExtrinsic = NULL;
+	proPositionInWorld = NULL;
+	cameraPoint = NULL;
+	objectPoint = NULL;
+	oriProPos = NULL;
+
+	rotateW2C = NULL;
+	transW2C = NULL;
+	rotateRodrigues = NULL;
+
+	proVector = NULL ;
+	proVectorInWorld = NULL;
+	pro3DPointsMat = NULL;
+	proHomoMat = NULL;
+	firstProjPoints = true ;
+	// init the mat for camera and projector parameters 
+	proIntrinsic = cvCreateMat(3,3,CV_32F) ;
+	camIntrinsic=cvCreateMat(3,3,CV_32F);
+	camDisto=cvCreateMat(4,1,CV_32F);
+	proDisto = cvCreateMat(4,1,CV_32F);
+	pro2CamExtrinsic = cvCreateMat(4,4,CV_32F) ;
+
+	cam2WorldExtrinsic = cvCreateMat(4,4,CV_32F) ;
+	pro2WorldExtrinsic = cvCreateMat(4,4,CV_32F);
+	world2CamExtrinsic = cvCreateMat(4,4,CV_32F);
+
+	invProIntrinsic = cvCreateMat(3,3,CV_32F) ; 
+	pro2WorldRotation = cvCreateMat(3,3,CV_32F) ; 
+	proPositionInWorld = cvCreateMat(4,1,CV_32F);
+
+	// set projector's original at [0,0,0,1]
+	oriProPos = cvCreateMat(4,1,CV_32F);
+	cvSetZero(oriProPos);
+	oriProPos->data.fl[3] = 1 ;  
+
+	proVector = cvCreateMat(3,1,CV_32F);
+	proVectorInWorld = cvCreateMat(3,1,CV_32F);
+
+	//ProjResHeight = projHeight;
+	//ProjResWidth = projWidth;
+	tableHeight = tableH;
+	tableWidth = tableW;
+
+	rotateW2C = cvCreateMat( 3, 3, CV_32F);
+	transW2C = cvCreateMat( 3, 1, CV_32F);
+	rotateRodrigues = cvCreateMat( 3, 1, CV_32F);
+	pro3DPointsMat = cvCreateMat(4,2,CV_32F);
+	proHomoMat = cvCreateMat( 3, 3, CV_32F);
+
+	loadCalibParam(fileDir,camIndex);	 
 	cvInvert(pro2CamExtrinsic,pro2CamExtrinsic,CV_SVD);
 	cvInvert(proIntrinsic,invProIntrinsic,CV_SVD);
 }
@@ -106,10 +173,10 @@ ProjectorTrans2World::~ProjectorTrans2World(){
 }
 
 
-void ProjectorTrans2World::loadCalibParam(char* fileDir){
+void ProjectorTrans2World::loadCalibParam(char* fileDir, int camIndex){
 
 	char Dir[100];
-	sprintf(Dir,"%s..\\..\\setting\\ProjectorCalibData\\caliPara.txt",fileDir) ;
+	sprintf(Dir,"%s\\ProjectorCalibData\\caliPara%d.txt",fileDir,camIndex) ;
 
 	fstream file ;
 	char temp ;
@@ -159,6 +226,13 @@ void ProjectorTrans2World::loadCalibParam(char* fileDir){
 			cvmSet(pro2CamExtrinsic,i,j , value) ;
 		}
 	}
+	getline(file,s) ;
+	getline(file,s) ;
+
+	file >> ProjResWidth ;
+	file >> ProjResHeight ;
+	initProjRes(ProjResWidth,ProjResHeight);
+
 	file.close();
 
 }

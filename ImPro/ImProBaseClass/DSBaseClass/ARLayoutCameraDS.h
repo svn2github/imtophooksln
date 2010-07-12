@@ -12,6 +12,7 @@
 #include "IGSDXBlendFilter.h"
 #include "IGSARTagLayoutFilter.h"
 #include "IGSHomoWarpFilter.h"
+#include "IGSDXRenderer.h"
 
 #define NUMCAM 4
 #define DXBLEND_PINNUM 4

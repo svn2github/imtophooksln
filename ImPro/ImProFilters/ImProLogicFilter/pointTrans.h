@@ -13,11 +13,14 @@ using namespace std;
 
 class ProjectorTrans2World{
 public :
-	ProjectorTrans2World(int tableW, int tableH ,char* fileDir);
+	ProjectorTrans2World();
+	ProjectorTrans2World(int tableW, int tableH ,char* fileDir, int camIndex);
 	~ProjectorTrans2World() ;
+	void Init(int tableW, int tableH ,char* fileDir, int camIndex);
+
 	void findCam2WorldExtrinsic(CvMat* cameraPoint, CvMat* objectPoint);
 	void findPro2WorldExtrinsic();
-	void loadCalibParam(char* fileDir);
+	void loadCalibParam(char* fileDir, int camIndex);
 
 	// combine rotation matrix and translation matrix into a 4*4 extrinsic matrix
 	void buildExtrinsicMat(CvMat* rotation, CvMat* translate, CvMat* dstExtrinsicMat);

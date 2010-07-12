@@ -9,6 +9,7 @@
 #include "highgui.h"
 
 
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -114,6 +115,7 @@ BEGIN_MESSAGE_MAP(CARCalibrationAppDlg, CDialog)
 	ON_BN_CLICKED(IDC_btnARTagProp, &CARCalibrationAppDlg::OnBnClickedbtnartagprop)
 	ON_BN_CLICKED(IDC_btnProjSetting, &CARCalibrationAppDlg::OnBnClickedbtnprojsetting)
 	ON_BN_CLICKED(IDC_btnCalibOnce, &CARCalibrationAppDlg::OnBnClickedbtncalibonce)
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 
@@ -913,4 +915,20 @@ void CARCalibrationAppDlg::OnBnClickedbtncalibonce()
 	}
 	Calibration();
 	ResetDetectedMarker();
+}
+
+void CARCalibrationAppDlg::OnDestroy()
+{
+	CDialog::OnDestroy();
+
+	if (m_pCalibDS != NULL)
+	{
+		delete m_pCalibDS;
+		m_pCalibDS = NULL;
+	}
+
+	SAFE_DELETE_ARRAY(m_layoutConfig);
+	SAFE_DELETE_ARRAY(m_detectedARMarker);
+	SAFE_DELETE_ARRAY(m_configMarker);
+	SAFE_DELETE(m_pCalibDS);
 }

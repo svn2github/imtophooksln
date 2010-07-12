@@ -51,8 +51,12 @@ ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	tableHeight = 540;
 	W2CMat = cvCreateMat(4, 4, CV_32F);
 
-	projCoord = NULL;
-	projCoord = new ProjectorTrans2World(tableWidth,tableHeight,fileDir);
+	projTrans = new ProjectorTrans2World[NUMCAM];
+
+	for(int i = 0 ; i < NUMCAM ; i++){
+		
+		projTrans[i].Init(tableWidth,tableHeight,fileDir,i);
+	}
 }
 ImProLogicFilter::~ImProLogicFilter()
 {
@@ -63,10 +67,12 @@ ImProLogicFilter::~ImProLogicFilter()
 	for (int i=0; i < NUMCAM; i++)
 	{
 		SAFE_DELETE(m_matPro2VW[i]);
+		
 	}
 	SAFE_DELETE(m_pARStrategyData);
 	SAFE_DELETE(m_pTouchResult);
-	SAFE_DELETE(projCoord);
+	SAFE_DELETE(projTrans);
+	
 	SAFE_DELETE(m_pMaskSendData);
 	SAFE_RELEASE(m_pOSCSender);
 	if (W2CMat != NULL)
@@ -307,33 +313,33 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 
 	for(int row = 0 ; row < 4 ; row ++){
 		for(int col = 0 ; col <4 ; col ++){
-			cvmSet(pSelf->projCoord->world2CamExtrinsic,row,col,(float)pARResult->m_pMarkerConfig->cvTrans[row][col]);
+			cvmSet(pSelf->projTrans[idx].world2CamExtrinsic,row,col,(float)pARResult->m_pMarkerConfig->cvTrans[row][col]);
 		}
 	}
 	for(int i = 0 ; i < 3 ; i ++){
-		cvmSet(pSelf->projCoord->world2CamExtrinsic,i,3 , (float)(cvmGet(pSelf->projCoord->world2CamExtrinsic,i,3)*pSelf->tableHeight)) ; 
-		cvmSet(pSelf->projCoord->world2CamExtrinsic,i,1 , (float)-cvmGet(pSelf->projCoord->world2CamExtrinsic,i,1)) ; 
-		cvmSet(pSelf->projCoord->world2CamExtrinsic,i,2 , (float)-cvmGet(pSelf->projCoord->world2CamExtrinsic,i,2)) ; 
+		cvmSet(pSelf->projTrans[idx].world2CamExtrinsic,i,3 , (float)(cvmGet(pSelf->projTrans[idx].world2CamExtrinsic,i,3)*pSelf->tableHeight)) ; 
+		cvmSet(pSelf->projTrans[idx].world2CamExtrinsic,i,1 , (float)-cvmGet(pSelf->projTrans[idx].world2CamExtrinsic,i,1)) ; 
+		cvmSet(pSelf->projTrans[idx].world2CamExtrinsic,i,2 , (float)-cvmGet(pSelf->projTrans[idx].world2CamExtrinsic,i,2)) ; 
 	}	
 
-	pSelf->GetProjCorner(&cvPt,&dstPt);
+	pSelf->projTrans[idx].getProjHomo();	
 	{
 		if (pSelf->m_matPro2VW[idx] == NULL)
 		{
 			pSelf->m_matPro2VW[idx] = new D3DXMATRIX();
 		}
 		D3DXMatrixIdentity(pSelf->m_matPro2VW[idx]);
-		pSelf->m_matPro2VW[idx]->_11 = pSelf->projCoord->proHomoMat->data.fl[0*3 + 0];
-		pSelf->m_matPro2VW[idx]->_21 = pSelf->projCoord->proHomoMat->data.fl[0*3 + 1];
-		pSelf->m_matPro2VW[idx]->_31 = pSelf->projCoord->proHomoMat->data.fl[0*3 + 2];
+		pSelf->m_matPro2VW[idx]->_11 = pSelf->projTrans[idx].proHomoMat->data.fl[0*3 + 0];
+		pSelf->m_matPro2VW[idx]->_21 = pSelf->projTrans[idx].proHomoMat->data.fl[0*3 + 1];
+		pSelf->m_matPro2VW[idx]->_31 = pSelf->projTrans[idx].proHomoMat->data.fl[0*3 + 2];
 
-		pSelf->m_matPro2VW[idx]->_12 = pSelf->projCoord->proHomoMat->data.fl[1*3 + 0];
-		pSelf->m_matPro2VW[idx]->_22 = pSelf->projCoord->proHomoMat->data.fl[1*3 + 1];
-		pSelf->m_matPro2VW[idx]->_32 = pSelf->projCoord->proHomoMat->data.fl[1*3 + 2];
+		pSelf->m_matPro2VW[idx]->_12 = pSelf->projTrans[idx].proHomoMat->data.fl[1*3 + 0];
+		pSelf->m_matPro2VW[idx]->_22 = pSelf->projTrans[idx].proHomoMat->data.fl[1*3 + 1];
+		pSelf->m_matPro2VW[idx]->_32 = pSelf->projTrans[idx].proHomoMat->data.fl[1*3 + 2];
 
-		pSelf->m_matPro2VW[idx]->_13 = pSelf->projCoord->proHomoMat->data.fl[2*3 + 0];
-		pSelf->m_matPro2VW[idx]->_23 = pSelf->projCoord->proHomoMat->data.fl[2*3 + 1];
-		pSelf->m_matPro2VW[idx]->_33 = pSelf->projCoord->proHomoMat->data.fl[2*3 + 2];
+		pSelf->m_matPro2VW[idx]->_13 = pSelf->projTrans[idx].proHomoMat->data.fl[2*3 + 0];
+		pSelf->m_matPro2VW[idx]->_23 = pSelf->projTrans[idx].proHomoMat->data.fl[2*3 + 1];
+		pSelf->m_matPro2VW[idx]->_33 = pSelf->projTrans[idx].proHomoMat->data.fl[2*3 + 2];
 
 	}
 
@@ -734,17 +740,17 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 		
 		for (int i = 0; i < nWorkingCam; i++)
 		{
-			tmpData.m_pfRects[i].LT.x = pSelf->projCoord->proj3DPoints[0][0];  
-			tmpData.m_pfRects[i].LT.y = pSelf->projCoord->proj3DPoints[0][1];
+			tmpData.m_pfRects[i].LT.x = pSelf->projTrans[i].proj3DPoints[0][0];  
+			tmpData.m_pfRects[i].LT.y = pSelf->projTrans[i].proj3DPoints[0][1];
 
-			tmpData.m_pfRects[i].LB.x = pSelf->projCoord->proj3DPoints[1][0];  
-			tmpData.m_pfRects[i].LB.y = pSelf->projCoord->proj3DPoints[1][1];
+			tmpData.m_pfRects[i].LB.x = pSelf->projTrans[i].proj3DPoints[1][0];  
+			tmpData.m_pfRects[i].LB.y = pSelf->projTrans[i].proj3DPoints[1][1];
 			
-			tmpData.m_pfRects[i].RB.x = pSelf->projCoord->proj3DPoints[2][0];
-			tmpData.m_pfRects[i].RB.y = pSelf->projCoord->proj3DPoints[2][1];
+			tmpData.m_pfRects[i].RB.x = pSelf->projTrans[i].proj3DPoints[2][0];
+			tmpData.m_pfRects[i].RB.y = pSelf->projTrans[i].proj3DPoints[2][1];
 
-			tmpData.m_pfRects[i].RT.x = pSelf->projCoord->proj3DPoints[3][0];
-			tmpData.m_pfRects[i].RT.y = pSelf->projCoord->proj3DPoints[3][1];		
+			tmpData.m_pfRects[i].RT.x = pSelf->projTrans[i].proj3DPoints[3][0];
+			tmpData.m_pfRects[i].RT.y = pSelf->projTrans[i].proj3DPoints[3][1];		
 		}
 		
 		*pSelf->m_pMaskSendData = tmpData;
@@ -839,13 +845,7 @@ HRESULT ImProLogicFilter::FillBuffer_ARStrategy(void* self, IMediaSample *pSampl
 	hr = pSelf->SetDirty_ARStrategy(FALSE);
 	return S_OK;
 }
-HRESULT ImProLogicFilter::GetProjCorner(CvMat* camPoints, CvMat* worldPoints){
-	CAutoLock lckState(&m_csState);
-	//projCoord->findCam2WorldExtrinsic(camPoints,worldPoints);
-	projCoord->getProjHomo();	
 
-	return S_OK;
-}
 
 HRESULT ImProLogicFilter::SetDirty_WarpFromAR(UINT idx, BOOL bDirty)
 {
@@ -881,7 +881,7 @@ HRESULT ImProLogicFilter::SendBoundingBox2OSCSender()
 		{
 			continue;
 		}			
-		m_pOSCSender->sendHighResBoundingBox(i, projCoord->projBox,projCoord->proj3DPoints);
+		m_pOSCSender->sendHighResBoundingBox(i, projTrans[i].projBox,projTrans[i].proj3DPoints);
 	}
 	return S_OK;
 }
