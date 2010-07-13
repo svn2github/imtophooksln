@@ -1,0 +1,10 @@
+; ImProSyncFilter.def : Declares the module parameters for the DLL.
+
+LIBRARY      "ImProSyncFilter"
+
+EXPORTS
+			DllMain                 PRIVATE
+            DllGetClassObject       PRIVATE
+            DllCanUnloadNow         PRIVATE
+            DllRegisterServer       PRIVATE
+            DllUnregisterServer     PRIVATE
