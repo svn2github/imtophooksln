@@ -50,7 +50,7 @@ ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 	tableWidth = 720;
 	tableHeight = 540;
 	W2CMat = cvCreateMat(4, 4, CV_32F);
-
+	projTrans = NULL;
 	projTrans = new ProjectorTrans2World[NUMCAM];
 
 	for(int i = 0 ; i < NUMCAM ; i++){
@@ -71,7 +71,7 @@ ImProLogicFilter::~ImProLogicFilter()
 	}
 	SAFE_DELETE(m_pARStrategyData);
 	SAFE_DELETE(m_pTouchResult);
-	SAFE_DELETE(projTrans);
+	SAFE_DELETE_ARRAY(projTrans);
 	
 	SAFE_DELETE(m_pMaskSendData);
 	SAFE_RELEASE(m_pOSCSender);
@@ -479,8 +479,9 @@ HRESULT ImProLogicFilter::PreReceive_TouchResult(void* self, IMediaSample *pSamp
 		return E_FAIL;
 	}
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
+	//OutputDebugStringW(L"@@@@@  ImProLogicFilter::PreReceive_TouchResult before lck ---->\n");
 	CAutoLock lckState(&pSelf->m_csState);
-	
+	//OutputDebugStringW(L"@@@@@  ImProLogicFilter::PreReceive_TouchResult after lck ---->\n");
 	CMediaSample* pCSample = (CMediaSample*)pSample;
 	ForegroundRegion* pTouchResult = NULL;
 	pCSample->GetPointer((BYTE**)&pTouchResult);
@@ -493,6 +494,7 @@ HRESULT ImProLogicFilter::PreReceive_TouchResult(void* self, IMediaSample *pSamp
 	*pSelf->m_pTouchResult = *pTouchResult;
 
 	pSelf->SetDirty_ARStrategy(TRUE);
+	//OutputDebugStringW(L"@@@@@  ImProLogicFilter::PreReceive_TouchResult <----\n");
 	return S_OK;
 }
 HRESULT ImProLogicFilter::GetPages(CAUUID *pPages)

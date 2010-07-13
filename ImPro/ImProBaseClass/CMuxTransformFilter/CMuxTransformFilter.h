@@ -352,6 +352,7 @@ protected:
 	vector<CMuxTransformInputPin*> m_pInputPins;
 	vector<CMuxTransformOutputPin*> m_pOutputPins;
 	vector<CMuxTransformStream*> m_pStreamPins;
+	BOOL m_bFlushing;
 private:
 	virtual BOOL IsAnyInputPinConnect();
 	virtual BOOL IsAnyOutPinConnect();

@@ -2,7 +2,7 @@
 
 CMuxTransformFilter::CMuxTransformFilter(__in_opt LPCTSTR pName, __inout_opt LPUNKNOWN pUnk, REFCLSID  clsid) :
 CBaseFilter(pName, pUnk, &m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE), 
-m_bSampleSkipped(FALSE)
+m_bSampleSkipped(FALSE), m_bFlushing(FALSE)
 {
 	
 }
@@ -11,7 +11,7 @@ CMuxTransformFilter::CMuxTransformFilter(__in_opt LPCSTR pName,
 								   __inout_opt LPUNKNOWN pUnk,
 								   REFCLSID  clsid) :
 CBaseFilter(pName,pUnk,&m_csFilter, clsid), m_bEOSDelivered(FALSE), m_bQualityChanged(FALSE),
-m_bSampleSkipped(FALSE)
+m_bSampleSkipped(FALSE), m_bFlushing(FALSE)
 {
 
 #ifdef PERF
@@ -306,6 +306,12 @@ HRESULT CMuxTransformFilter::EndOfStream(void)
 HRESULT CMuxTransformFilter::BeginFlush(void)
 {
 	HRESULT hr = NOERROR;
+	CAutoLock lck(&m_csFilter);
+	if (m_bFlushing)
+	{
+		return hr;
+	}
+	m_bFlushing = TRUE;
 	for (int i =0; i< m_pOutputPins.size(); i++)
 	{
 		// block receives -- done by caller (CBaseInputPin::BeginFlush)
@@ -317,6 +323,7 @@ HRESULT CMuxTransformFilter::BeginFlush(void)
 		// call downstream
 		hr = m_pOutputPins[i]->DeliverBeginFlush();
 	}
+	
 	return hr;
 }
 
@@ -327,11 +334,12 @@ HRESULT CMuxTransformFilter::EndFlush(void)
 	// ensure no more data to go downstream -- we have no queued data
 
 	// call EndFlush on downstream pins
+	CAutoLock lck(&m_csFilter);
+	
 	HRESULT errhr = S_OK; 
 	HRESULT hr = S_OK;
-	if(m_pOutputPins.size() == 0){
-		return E_FAIL;
-	}
+	if (m_bFlushing == FALSE)
+		return S_OK;
 	for (int i = 0 ; i < m_pOutputPins.size(); i++)
 	{
 		if (m_pOutputPins[i]->IsConnected())
@@ -343,6 +351,7 @@ HRESULT CMuxTransformFilter::EndFlush(void)
 			}
 		}
 	}
+	m_bFlushing = FALSE;
 	return errhr;
 	// caller (the input pin's method) will unblock Receives
 }
