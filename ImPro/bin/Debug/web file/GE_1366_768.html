@@ -15,7 +15,7 @@
 google.load("earth", "1");
 
 var ge = null;
-//var ge2 = null;
+var ge2 = null;
 
 //for boundary
 var multGeoPlacemark;
@@ -23,6 +23,11 @@ var polygonPlacemark;
 var polygonPlacemarkGround;
 var polygonPlacemarkBlack;
 var boundaryHigh = 50;
+
+var polygonPlacemarkSmall;
+var polygonPlacemarkGroundSmall;
+var polygonPlacemarkBlackSmall;
+var ViewPolygonPlacemark;
 
 //for model
 var placemarkModel;
@@ -37,7 +42,7 @@ var point;
 function init() {
 
   google.earth.createInstance("map3d-1", initCB1, failureCB);
-  //google.earth.createInstance('map3d-2', initCB2, failureCB);
+  google.earth.createInstance('map3d-2', initCB2, failureCB);
   
 }
 
@@ -54,22 +59,22 @@ function initCB1(object) {
   //ge.getLayerRoot().enableLayerById(ge.LAYER_ROADS, true);
   ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
   
-////////Model//////////////////////////////////////////////////////////////////////////////////////////  
+//////////Model//////////////////////////////////////////////////////////////////////////////////////////  
 
-  placemarkModel = ge.createPlacemark(''); 
-  placemarkModel.setName('model'); 
-  
-  model = ge.createModel(''); 
-  model.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
-  placemarkModel.setGeometry(model); 
-  
-  var link = ge.createLink(''); 
-  link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImProSln/model/circle.dae'); 
-  model.setLink(link); 
-  
-  ge.getFeatures().appendChild(placemarkModel);
+//  placemarkModel = ge.createPlacemark(''); 
+//  placemarkModel.setName('model'); 
+//  
+//  model = ge.createModel(''); 
+//  model.setAltitudeMode(ge.ALTITUDE_CLAMP_TO_GROUND); 
+//  placemarkModel.setGeometry(model); 
+//  
+//  var link = ge.createLink(''); 
+//  link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImProSln/model/circle.dae'); 
+//  model.setLink(link); 
+//  
+//  ge.getFeatures().appendChild(placemarkModel);
 
-//////////////////////////////////////////////////////////////////////////////////////////////////  
+////////////////////////////////////////////////////////////////////////////////////////////////////  
 
 ////////icon//////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,19 +135,73 @@ ge.getFeatures().appendChild(placemarkIcon);
   
 }
 
-//function initCB2(object) {
+function initCB2(object) {
 
-//    ge2 = object;
-//    
-//    ge2.getWindow().setVisibility(true);
-//    //ge2.getNavigationControl().setVisibility(ge2.VISIBILITY_AUTO);
-//    //ge2.getOptions().setStatusBarVisibility(true);
+    ge2 = object;
+    
+    ge2.getWindow().setVisibility(true);
+    //ge2.getNavigationControl().setVisibility(ge2.VISIBILITY_AUTO);
+    //ge2.getOptions().setStatusBarVisibility(true);
+     
+    //ge2.getLayerRoot().enableLayerById(ge2.LAYER_BORDERS, true);
+    //ge2.getLayerRoot().enableLayerById(ge2.LAYER_ROADS, true);
+    ge2.getLayerRoot().enableLayerById(ge2.LAYER_BUILDINGS, true);    
+    
+    polygonPlacemarkSmall = ge2.createPlacemark(''); 
+    var polygon = ge2.createPolygon(''); 
+    polygon.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND);  
+    polygonPlacemarkSmall.setGeometry(polygon); 
+    ge2.getFeatures().appendChild(polygonPlacemarkSmall);
+  
+    polygonPlacemarkGroundSmall = ge2.createPlacemark(''); 
+    var polygonGround = ge2.createPolygon(''); 
+    polygonGround.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+    polygonPlacemarkGroundSmall.setGeometry(polygonGround); 
+    ge2.getFeatures().appendChild(polygonPlacemarkGroundSmall);
+  
+    polygonPlacemarkBlackSmall = ge2.createPlacemark(''); 
+    var polygonBlack = ge2.createPolygon(''); 
+    polygonBlack.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+    polygonPlacemarkBlackSmall.setGeometry(polygonBlack); 
+    ge2.getFeatures().appendChild(polygonPlacemarkBlackSmall);
+    
+////////Model//////////////////////////////////////////////////////////////////////////////////////////  
+
+    placemarkModel = ge2.createPlacemark(''); 
+    placemarkModel.setName('model'); 
+      
+    model = ge2.createModel(''); 
+    model.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND);  //ALTITUDE_CLAMP_TO_GROUND
+    placemarkModel.setGeometry(model); 
+      
+    var link = ge2.createLink(''); 
+    link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/model/improTablet.dae'); 
+    model.setLink(link); 
+      
+    ge2.getFeatures().appendChild(placemarkModel);
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+//    ViewPolygonPlacemark = ge2.createPlacemark(''); 
+// 
+//    // Create the polygon. 
+//    var polygonView = ge2.createPolygon(''); 
+//    polygonView.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+//    ViewPolygonPlacemark.setGeometry(polygonView); 
 //     
-//    ge2.getLayerRoot().enableLayerById(ge2.LAYER_BORDERS, true);
-//    ge2.getLayerRoot().enableLayerById(ge2.LAYER_ROADS, true);
-//    ge2.getLayerRoot().enableLayerById(ge2.LAYER_BUILDINGS, true);    
+//    //Create a style and set width and color of line 
+//    ViewPolygonPlacemark.setStyleSelector(ge2.createStyle('')); 
+//    var lineStyle = ViewPolygonPlacemark.getStyleSelector().getLineStyle(); 
+//    lineStyle.setWidth(2); 
+//    lineStyle.getColor().set('7f0000ff'); 
+//      
+//    var polyStyle = ViewPolygonPlacemark.getStyleSelector().getPolyStyle();
+//    polyStyle.getColor().set('af00ffff'); 
+//    
+//    polygonView. 
 
-//}
+//    ge2.getFeatures().appendChild(ViewPolygonPlacemark);
+
+}
 
 function failureCB(object) {
   /***
@@ -151,34 +210,94 @@ function failureCB(object) {
    ***/
 }
 
-function cameraView(latitude, longitude, altitude, heading, tilt, roll) { 
+function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLong, SVmidLat, SVRange, SVAngle) { 
         
         //省略相機移動的動畫    
         ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
       
         var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND); 
+        var temp = 90 - tilt;
             
         camera.set(latitude, longitude, altitude, 
                     ge.ALTITUDE_RELATIVE_TO_GROUND,heading,tilt,roll);
                     
         ge.getView().setAbstractView(camera); 
+       
+        if(SVAngle > 45 && SVAngle <= 135){
+            ge2.getOptions().setFlyToSpeed(3);
+          
+            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+            
+            lookat.set(SVmidLat, SVmidLong, 0, 
+                        ge2.ALTITUDE_RELATIVE_TO_GROUND,90,60,SVRange);
+                        
+            ge2.getView().setAbstractView(lookat); 
+        } 
+        else if(SVAngle > 135 && SVAngle <= 225){
+            ge2.getOptions().setFlyToSpeed(3);
+          
+            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+            
+            lookat.set(SVmidLat, SVmidLong, 0, 
+                        ge2.ALTITUDE_RELATIVE_TO_GROUND,180,60,SVRange);
+                        
+            ge2.getView().setAbstractView(lookat); 
+        } 
+        else if(SVAngle > 225 && SVAngle <= 315){
+            ge2.getOptions().setFlyToSpeed(3);
+          
+            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+            
+            lookat.set(SVmidLat, SVmidLong, 0, 
+                        ge2.ALTITUDE_RELATIVE_TO_GROUND,270,60,SVRange);
+                        
+            ge2.getView().setAbstractView(lookat); 
+        } 
+        else{
+            ge2.getOptions().setFlyToSpeed(3);
+          
+            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+            
+            lookat.set(SVmidLat, SVmidLong, 0, 
+                        ge2.ALTITUDE_RELATIVE_TO_GROUND,0,60,SVRange);
+                        
+            ge2.getView().setAbstractView(lookat); 
+        }
+        
+        var loc = ge2.createLocation(''); 
+        loc.setLatitude(latitude); 
+        loc.setLongitude(longitude); 
+        loc.setAltitude(altitude);
+        
+        var ori = ge2.createOrientation(''); 
+        ori.setHeading(heading); 
+        ori.setTilt(temp); 
+        ori.setRoll(roll);
+        
+        var scale = ge2.createScale('');
+        scale.setX(450);
+        scale.setY(450);
+        scale.setZ(450);
+        
+        model.setLocation(loc); 
+        model.setOrientation(ori);
+        model.setScale(scale);
      
 }
 
-//function small_cameraView(latitude, longitude, altitude, heading, tilt, roll) { 
+function small_cameraView(SVmidLong,SVmidLat,SVRange) { 
 
-//        //省略相機移動的動畫    
-//        ge2.getOptions().setFlyToSpeed(ge2.SPEED_TELEPORT);  
-//      
-//        var camera2 = ge2.getView().copyAsCamera(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-//            
-//        camera2.set(latitude, longitude, 1000, 
-//                    ge2.ALTITUDE_RELATIVE_TO_GROUND,0,0,0);
-//                    
-//        ge2.getView().setAbstractView(camera2); 
+        //省略相機移動的動畫    
+        ge2.getOptions().setFlyToSpeed(ge2.SPEED_TELEPORT);
+      
+        var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+        
+        lookat.set(SVmidLat, SVmidLong, 0, 
+                    ge2.ALTITUDE_RELATIVE_TO_GROUND,0,60,SVRange);
+                    
+        ge2.getView().setAbstractView(lookat); 
 
-
-//}
+}
 
 function boundaryLineStyle1(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,RightTopLong,RightTopLat,RightDownLong,RightDownLat){
   
@@ -394,6 +513,136 @@ function boundaryLineStyle3(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,Righ
 
 }
 
+function small_boundaryLine(LeftTopLong,LeftTopLat,LeftDownLong,LeftDownLat,RightTopLong,RightTopLat,RightDownLong,RightDownLat) {
+
+  var marginLong = RightTopLong - LeftTopLong;  
+  var marginLat = LeftTopLat - LeftDownLat;
+  
+  
+  // Create the placemark. 
+  var polygonPlacemarkNew = ge2.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygon = ge2.createPolygon(''); 
+  polygon.setExtrude(true); 
+  polygon.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND); //ge.ALTITUDE_CLAMP_TO_GROUND
+  polygonPlacemarkNew.setGeometry(polygon); 
+ 
+  // Add points for the outer shape. 
+  var outer = ge2.createLinearRing(''); 
+  outer.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+  outer.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), boundaryHigh); 
+  outer.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), boundaryHigh); 
+  polygon.setOuterBoundary(outer); 
+ 
+  // Add inner points. 
+  var inner = ge2.createLinearRing(''); 
+  inner.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+  inner.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, boundaryHigh); 
+  inner.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, boundaryHigh); 
+  polygon.getInnerBoundaries().appendChild(inner); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkNew.setStyleSelector(ge2.createStyle('')); 
+  var lineStyle = polygonPlacemarkNew.getStyleSelector().getLineStyle(); 
+  lineStyle.setWidth(2); 
+  lineStyle.getColor().set('7f0000ff'); 
+  
+  var polyStyle = polygonPlacemarkNew.getStyleSelector().getPolyStyle();
+  polyStyle.getColor().set('af00ffff'); 
+
+
+  
+  // Create the placemark. 
+  var polygonPlacemarkNewGround = ge2.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygonGround = ge2.createPolygon(''); 
+  polygonGround.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); //ge.ALTITUDE_CLAMP_TO_GROUND
+  polygonPlacemarkNewGround.setGeometry(polygonGround); 
+ 
+  // Add points for the outer shape. 
+  var outerGround = ge2.createLinearRing(''); 
+  outerGround.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+  outerGround.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat/10), LeftTopLong-(marginLong/10), 100); 
+  outerGround.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat/10), LeftDownLong-(marginLong/10), 100); 
+  outerGround.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat/10), RightDownLong+(marginLong/10), 100); 
+  outerGround.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat/10), RightTopLong+(marginLong/10), 100); 
+  polygonGround.setOuterBoundary(outerGround); 
+ 
+  // Add inner points. 
+  var innerGround = ge2.createLinearRing(''); 
+  innerGround.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+  innerGround.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 100); 
+  innerGround.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 100); 
+  innerGround.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 100); 
+  innerGround.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 100); 
+  polygonGround.getInnerBoundaries().appendChild(innerGround); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkNewGround.setStyleSelector(ge2.createStyle('')); 
+  var lineStyleGround = polygonPlacemarkNewGround.getStyleSelector().getLineStyle(); 
+  lineStyleGround.setWidth(2); 
+  lineStyleGround.getColor().set('7f0000ff'); 
+  
+  var polyStyleGround = polygonPlacemarkNewGround.getStyleSelector().getPolyStyle();
+  polyStyleGround.getColor().set('5f00ffff'); 
+ 
+ 
+ 
+  var polygonPlacemarkBlackNew = ge2.createPlacemark(''); 
+ 
+  // Create the polygon. 
+  var polygonBlack = ge2.createPolygon(''); 
+  polygonBlack.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); //ge.ALTITUDE_CLAMP_TO_GROUND
+  polygonPlacemarkBlackNew.setGeometry(polygonBlack); 
+ 
+  // Add points for the outer shape. 
+  var outerBlack = ge2.createLinearRing(''); 
+  outerBlack.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+  outerBlack.getCoordinates().pushLatLngAlt(LeftTopLat+(marginLat*10), LeftTopLong-(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(LeftDownLat-(marginLat*10), LeftDownLong-(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(RightDownLat-(marginLat*10), RightDownLong+(marginLong*10), 100); 
+  outerBlack.getCoordinates().pushLatLngAlt(RightTopLat+(marginLat*10), RightTopLong+(marginLong*10), 100); 
+  polygonBlack.setOuterBoundary(outerBlack); 
+ 
+  // Add inner points. 
+  var innerBlack = ge2.createLinearRing(''); 
+  innerBlack.setAltitudeMode(ge2.ALTITUDE_CLAMP_TO_GROUND); 
+  innerBlack.getCoordinates().pushLatLngAlt(LeftTopLat, LeftTopLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(LeftDownLat, LeftDownLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(RightDownLat, RightDownLong, 100); 
+  innerBlack.getCoordinates().pushLatLngAlt(RightTopLat, RightTopLong, 100); 
+  polygonBlack.getInnerBoundaries().appendChild(innerBlack); 
+ 
+  //Create a style and set width and color of line 
+  polygonPlacemarkBlackNew.setStyleSelector(ge2.createStyle('')); 
+  //var lineStyleBlack = polygonPlacemarkBlackNew.getStyleSelector().getLineStyle(); 
+  //lineStyleBlack.setWidth(5); 
+  //lineStyleBlack.getColor().set('7f0000ff'); 
+  
+  var polyStyleBlack = polygonPlacemarkBlackNew.getStyleSelector().getPolyStyle();
+  polyStyleBlack.getColor().set('af000000'); 
+  
+  // Add the placemark to Earth. 
+  ge2.getFeatures().appendChild(polygonPlacemarkNewGround);
+  ge2.getFeatures().appendChild(polygonPlacemarkNew);
+  ge2.getFeatures().appendChild(polygonPlacemarkBlackNew);
+    
+  ge2.getFeatures().removeChild(polygonPlacemarkSmall); 
+  ge2.getFeatures().removeChild(polygonPlacemarkGroundSmall); 
+  ge2.getFeatures().removeChild(polygonPlacemarkBlackSmall); 
+  
+  polygonPlacemarkSmall = polygonPlacemarkNew;
+  polygonPlacemarkGroundSmall = polygonPlacemarkNewGround;
+  polygonPlacemarkBlackSmall = polygonPlacemarkBlackNew;
+
+}
+
 function setModelLoc(latitude,longitude) {
 
     var loc = ge.createLocation(''); 
@@ -402,9 +651,9 @@ function setModelLoc(latitude,longitude) {
     loc.setAltitude(10);
     
     var scale = ge.createScale('');
-    scale.setX(50);
-    scale.setY(50);
-    scale.setZ(50);
+    scale.setX(200);
+    scale.setY(200);
+    scale.setZ(200);
     
     model.setLocation(loc); 
     model.setScale(scale);
@@ -440,6 +689,6 @@ function Building(temp) {
   </head>
   <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
     <div id="map3d-1" style="width: 1300px; height: 650px;"></div>
-    <div id="map3d-2" style="position: absolute; left: 20px; top: 40px; width: 150px; height: 140px;"></div>
+    <div id="map3d-2" style="position: absolute; left: 1050px; top: 465px; width: 260px; height: 200px;"></div>
   </body>
 </html>
