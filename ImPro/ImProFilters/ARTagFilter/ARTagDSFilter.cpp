@@ -40,7 +40,7 @@ ARTagDSFilter::ARTagDSFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData
 	for (int i =0; i< 3; i++)
 		m_WorldBasisScale[i] = 1.0; 
 	 m_maskScale = 1.0;
-	 QueryGlobalTUIOSender(m_pTUIOSender);
+	 m_pTUIOSender = NULL;
 
 }
 ARTagDSFilter::~ARTagDSFilter()
@@ -422,10 +422,13 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		numDetected = m_ARTracker->calc(pOutData, m_bGuessPose);
 		if (numDetected <= 0)
 		{
-			GSAutoLock lck2(m_pTUIOSender->GetGSCritSec());
-			if (m_pTUIOSender->IsConnected())
+			if (m_pTUIOSender != NULL)
 			{
-				hr = SendTUIO(NULL, 0);
+				GSAutoLock lck2(m_pTUIOSender->GetGSCritSec());
+				if (m_pTUIOSender->IsConnected())
+				{
+					hr = SendTUIO(NULL, 0);
+				}
 			}
 			/*
 			if (m_pOutputPins.size() >= 2 && m_pOutputPins[1]->IsConnected())
@@ -468,7 +471,7 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 		else 
 		{
 			CAutoLock lck(&m_csARTracker);
-			GSAutoLock lck2(m_pTUIOSender->GetGSCritSec());
+			
 			markinfos = new ARMarkerInfo[numDetected];
 			for (int k = 0; k < numDetected; k++)
 			{
@@ -484,9 +487,13 @@ HRESULT ARTagDSFilter::DoTransform(IMediaSample *pIn, const CMediaType* pInType,
 				ShowReprojectImage(imgOut, numDetected,
 				markinfos, markerConfig,matARView, matARProj );
 			}
-			if (m_pTUIOSender->IsConnected())
+			if (m_pTUIOSender != NULL && m_pTUIOSender->IsConnected())
 			{
-				hr = SendTUIO(markinfos, numDetected);
+				GSAutoLock lckTUIO(m_pTUIOSender->GetGSCritSec());
+				if (m_pTUIOSender->IsConnected())
+				{
+					hr = SendTUIO(markinfos, numDetected);
+				}
 			}
 			if (m_pCallback != NULL)
 			{
@@ -1780,14 +1787,20 @@ HRESULT ARTagDSFilter::GetPort(UINT& port)
 BOOL ARTagDSFilter::IsOSCConnected()
 {
 	if (m_pTUIOSender == NULL)
-		return E_FAIL;
+		return FALSE;
 	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
 	return m_pTUIOSender->IsConnected();
 }
 HRESULT ARTagDSFilter::ConnectOSC(char* ipaddress, int port)
 {
+	HRESULT hr = S_OK;
 	if (m_pTUIOSender == NULL)
-		return E_FAIL;
+	{	
+		hr = QueryGlobalTUIOSender(m_pTUIOSender);
+		if (FAILED(hr))
+			return hr;
+		
+	}
 	GSAutoLock lck(m_pTUIOSender->GetGSCritSec());
 	return m_pTUIOSender->ConnectSocket(ipaddress, port);
 }

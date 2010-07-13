@@ -496,6 +496,7 @@ bool ARTagGeneralPage::GetSetting()
 	::SetWindowText(m_txtMeasureNoise, str);
 
 	char ipaddress[MAX_PATH] = {0};
+	sprintf_s(ipaddress, MAX_PATH, "127.0.0.1");
 	UINT port = 3333;
 	m_pARProperty->GetIPAddress(ipaddress, MAX_PATH);
 	::SetWindowTextA(m_edIP.GetSafeHwnd(),ipaddress);
