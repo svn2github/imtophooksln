@@ -19,6 +19,8 @@ countAllData::countAllData()
 
 	altitude_scale = 1.0;
 
+	SVAngle = 0;
+
 }
 
 void countAllData::countLoc(double x, double y, double z, double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat)
@@ -190,6 +192,28 @@ void countAllData::countIntersectPoint(D3DXVECTOR3 origin_point,D3DXVECTOR3 look
 
 }
 
+void countAllData::countSVAngle(D3DXVECTOR3 SVBase, D3DXVECTOR3 SVCamera)
+{
+	D3DXVECTOR3 z;
+	D3DXVec3Cross(&z,&SVCamera,&SVBase);
+
+	double cosin = 0;
+	double arcosin = 0;
+
+	D3DXVec3Normalize(&SVBase,&SVBase);
+	D3DXVec3Normalize(&SVCamera,&SVCamera);
+
+	cosin = D3DXVec3Dot(&SVCamera, &SVBase);
+	arcosin = acos(cosin);
+
+	SVAngle = (double)180*(double)arcosin / (double)PI;
+
+	if(z.z >= 0)	SVAngle = SVAngle;
+	else	SVAngle = 360 - SVAngle;
+
+}
+
+
 void countAllData::computeNeedData(double cvTrans[4][4],double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat)
 {
 	char        string[256];
@@ -260,17 +284,30 @@ void countAllData::computeNeedData(double cvTrans[4][4],double LeftDownLong, dou
 	altitude *= 111000;  //¤@«× = 111000 ¤½¤Ø
 	altitude *= altitude_scale;
 
+	mid_point.x = LeftTopLong + (RightDownLong - LeftTopLong) / 2;
+	mid_point.y = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
+	mid_point.z = 0;
+
+	SVBase.x = 0;
+	SVBase.y = LeftDownLat - mid_point.y;
+	SVBase.z = 0;
+
+	SVCamera.x = longitude - mid_point.x; 
+	SVCamera.y = latitude - mid_point.y;	
+	SVCamera.z = 0; 
+
+	countSVAngle(SVBase,SVCamera);
+
 	WCHAR str[MAX_PATH] = {0};
 	
-	OutputDebugStringW(L"@@@@@@@@@@@@\n");
-	swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
-		origin_point.x, origin_point.y, origin_point.z);
-	OutputDebugStringW(str);
+	//OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	//swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
+	//	origin_point.x, origin_point.y, origin_point.z);
+	//OutputDebugStringW(str);
 
-	swprintf_s(str, MAX_PATH, L"@@@@ google_earth = ( %f, %f, %f) \n", 
-		longitude, latitude, altitude);
+	swprintf_s(str, MAX_PATH, L"@@@@ angle = (%f) \n", SVAngle);
 	OutputDebugStringW(str);
-	OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	//OutputDebugStringW(L"@@@@@@@@@@@@\n");
 
 }
 
@@ -309,6 +346,11 @@ double countAllData::getAltitude_scale()
 	return altitude_scale;
 }
 
+double countAllData::getSVAngle()
+{
+	return SVAngle;
+}
+
 D3DXVECTOR3 countAllData::getIntersect_origin_point()
 {
 	return intersect_origin_point;
@@ -318,5 +360,6 @@ D3DXVECTOR3 countAllData::getIntersect_point()
 {
 	return intersect_point;
 }
+
 	
 	

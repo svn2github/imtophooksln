@@ -48,24 +48,24 @@ CCritSec g_State;
 
 
 // Taipei 101
-//double LeftTopLong = 121.561208;
-//double LeftTopLat = 25.035922;
-//double LeftDownLong = 121.561208;
-//double LeftDownLat = 25.025659005961995;
-//double RightTopLong = 121.57323882736176;
-//double RightTopLat = 25.035922;
-//double RightDownLong = 121.57323882736176;
-//double RightDownLat = 25.025659005961995;
+double LeftTopLong = 121.561008; //-200
+double LeftTopLat = 25.035922;
+double LeftDownLong = 121.561208;
+double LeftDownLat = 25.025659005961995;
+double RightTopLong = 121.57323882736176;
+double RightTopLat = 25.035922;
+double RightDownLong = 121.57323882736176;
+double RightDownLat = 25.025659005961995;
 
 // LA Convention Center
-double LeftTopLong = -118.277872;
-double LeftTopLat = 34.047147;
-double LeftDownLong = -118.277872;
-double LeftDownLat = 34.033955;
-double RightTopLong = -118.260622;
-double RightTopLat = 34.047147;
-double RightDownLong = -118.260622;
-double RightDownLat = 34.033955;
+//double LeftTopLong = -118.277872;
+//double LeftTopLat = 34.047147;
+//double LeftDownLong = -118.277872;
+//double LeftDownLat = 34.033955;
+//double RightTopLong = -118.260622;
+//double RightTopLat = 34.047147;
+//double RightDownLong = -118.260622;
+//double RightDownLat = 34.033955;
 
 
 double longitude = 0;
@@ -210,6 +210,8 @@ namespace googleearth {
 		private: static bool boundaryDirty;
 	private: System::Windows::Forms::Button^  button1;
 	private: System::Windows::Forms::Button^  button2;
+
+
 
 		//private : CSocketClient^ socketClient;;
 	private : delegate System::Void updateCallback(System::String^ text);
@@ -514,6 +516,7 @@ namespace googleearth {
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
+			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
 			this->button1 = (gcnew System::Windows::Forms::Button());
@@ -537,7 +540,7 @@ namespace googleearth {
 			// 
 			// button1
 			// 
-			this->button1->Location = System::Drawing::Point(1029, 687);
+			this->button1->Location = System::Drawing::Point(904, 687);
 			this->button1->Name = L"button1";
 			this->button1->Size = System::Drawing::Size(75, 23);
 			this->button1->TabIndex = 1;
@@ -547,11 +550,11 @@ namespace googleearth {
 			// 
 			// button2
 			// 
-			this->button2->Location = System::Drawing::Point(1134, 687);
+			this->button2->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"button2.Image")));
+			this->button2->Location = System::Drawing::Point(28, 530);
 			this->button2->Name = L"button2";
-			this->button2->Size = System::Drawing::Size(75, 23);
+			this->button2->Size = System::Drawing::Size(115, 116);
 			this->button2->TabIndex = 2;
-			this->button2->Text = L"button2";
 			this->button2->UseVisualStyleBackColor = true;
 			this->button2->Click += gcnew System::EventHandler(this, &Form1::button2_Click);
 			// 
@@ -644,15 +647,18 @@ namespace googleearth {
 			 ctilt += ((ttilt - ctilt)/2);
  			 croll += ((troll - croll)/2);
 			 */ 
-			
 				
-				array<Object^>^ parameter = gcnew array<Object^>(6); 
+				array<Object^>^ parameter = gcnew array<Object^>(10); 
 				parameter[0] = clatitude;
 				parameter[1] = clongitude;
 				parameter[2] = caltitude;
 				parameter[3] = cheading;
 				parameter[4] = ctilt;
 				parameter[5] = croll;
+				parameter[6] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
+				parameter[7] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
+				parameter[8] = (RightTopLong - LeftTopLong) * 111000 * 2;
+				parameter[9] = GEData.getSVAngle();
 
 				double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
 				for (int i = 0; i < 6; i++)
@@ -664,7 +670,7 @@ namespace googleearth {
 				}
 
 				webBrowser1->Document->InvokeScript("cameraView",parameter);
-
+				
 
 				array<Object^>^ parameterModel = gcnew array<Object^>(2); 
 				parameterModel[0] = GEData.getIntersect_point().y;
@@ -676,7 +682,7 @@ namespace googleearth {
 			 }
 			 
 			 if(boundaryDirty){
-				array<Object^>^ parameterB = gcnew array<Object^>(8); 
+ 				array<Object^>^ parameterB = gcnew array<Object^>(8); 
 				
 				parameterB[0] = LeftTopLong;
 				parameterB[1] = LeftTopLat;
@@ -687,8 +693,26 @@ namespace googleearth {
 				parameterB[6] = RightDownLong;
 				parameterB[7] = RightDownLat;
 
-				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);
-				//webBrowser1->Document->InvokeScript("small_cameraView",parameterB);
+ 				array<Object^>^ parameterSB = gcnew array<Object^>(8); 
+				
+				parameterSB[0] = LeftTopLong;
+				parameterSB[1] = LeftTopLat;
+				parameterSB[2] = LeftDownLong;
+				parameterSB[3] = LeftDownLat;
+				parameterSB[4] = RightTopLong;
+				parameterSB[5] = RightTopLat;
+				parameterSB[6] = RightDownLong;
+				parameterSB[7] = RightDownLat;
+
+				array<Object^>^ parameterC = gcnew array<Object^>(3); 
+
+				parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
+				parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
+				parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * 2;
+
+				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+				webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
+				webBrowser1->Document->InvokeScript("small_boundaryLine",parameterSB);
 				
 				boundaryDirty = false;
 			 }
@@ -747,9 +771,29 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 			parameterB[6] = RightDownLong;
 			parameterB[7] = RightDownLat;
 
-			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+ 			array<Object^>^ parameterSB = gcnew array<Object^>(8); 
+			
+			parameterSB[0] = LeftTopLong;
+			parameterSB[1] = LeftTopLat;
+			parameterSB[2] = LeftDownLong;
+			parameterSB[3] = LeftDownLat;
+			parameterSB[4] = RightTopLong;
+			parameterSB[5] = RightTopLat;
+			parameterSB[6] = RightDownLong;
+			parameterSB[7] = RightDownLat;
 
+			array<Object^>^ parameterC = gcnew array<Object^>(3); 
+
+			parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
+			parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
+			parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * 2;
+
+			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+			webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
+			webBrowser1->Document->InvokeScript("small_boundaryLine",parameterSB);
+		
 		 }
+
 private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
 			BulidingCount++;
 
