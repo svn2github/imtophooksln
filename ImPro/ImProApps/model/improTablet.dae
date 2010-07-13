@@ -4,8 +4,8 @@
         <contributor>
             <authoring_tool>Google SketchUp 7.1.6860</authoring_tool>
         </contributor>
-        <created>2010-07-13T07:59:34Z</created>
-        <modified>2010-07-13T07:59:34Z</modified>
+        <created>2010-07-13T08:01:31Z</created>
+        <modified>2010-07-13T08:01:31Z</modified>
         <unit meter="0.0254" name="inch" />
         <up_axis>Z_UP</up_axis>
     </asset>
@@ -180,10 +180,10 @@
                 <instance_geometry url="#ID112">
                     <bind_material>
                         <technique_common>
-                            <instance_material symbol="Material2" target="#ID8">
+                            <instance_material symbol="Material2" target="#ID113">
                                 <bind_vertex_input semantic="UVSET0" input_semantic="TEXCOORD" input_set="0" />
                             </instance_material>
-                            <instance_material symbol="Material3" target="#ID113">
+                            <instance_material symbol="Material3" target="#ID8">
                                 <bind_vertex_input semantic="UVSET0" input_semantic="TEXCOORD" input_set="0" />
                             </instance_material>
                         </technique_common>
@@ -851,11 +851,11 @@
                     <input semantic="POSITION" source="#ID115" />
                     <input semantic="NORMAL" source="#ID116" />
                 </vertices>
-                <triangles count="3" material="Material3">
+                <triangles count="3" material="Material2">
                     <input offset="0" semantic="VERTEX" source="#ID117" />
                     <p>0 1 2 1 0 3 3 0 4</p>
                 </triangles>
-                <triangles count="3" material="Material2">
+                <triangles count="3" material="Material3">
                     <input offset="0" semantic="VERTEX" source="#ID117" />
                     <p>5 6 7 7 6 8 9 8 6</p>
                 </triangles>
@@ -1100,8 +1100,14 @@
                 <technique sid="COMMON">
                     <lambert>
                         <diffuse>
-                            <color>0.1568627 0.2352941 0.3764706 1</color>
+                            <color>0.1568627 0.2352941 0.3764706 0.6</color>
                         </diffuse>
+                        <transparent opaque="RGB_ZERO">
+                            <color>0.4 0.4 0.4 0.4</color>
+                        </transparent>
+                        <transparency>
+                            <float>1</float>
+                        </transparency>
                     </lambert>
                 </technique>
             </profile_COMMON>
