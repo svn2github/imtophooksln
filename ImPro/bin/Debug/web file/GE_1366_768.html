@@ -175,7 +175,7 @@ function initCB2(object) {
     placemarkModel.setGeometry(model); 
       
     var link = ge2.createLink(''); 
-    link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/model/improTablet.dae'); 
+    link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/model/improTablet2.dae'); 
     model.setLink(link); 
       
     ge2.getFeatures().appendChild(placemarkModel);
@@ -210,7 +210,7 @@ function failureCB(object) {
    ***/
 }
 
-function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLong, SVmidLat, SVRange, SVAngle) { 
+function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLong, SVmidLat, SVRange, SVAngle, SVModelScale) { 
         
         //省略相機移動的動畫    
         ge.getOptions().setFlyToSpeed(ge.SPEED_TELEPORT);  
@@ -223,46 +223,46 @@ function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLon
                     
         ge.getView().setAbstractView(camera); 
        
-        if(SVAngle > 45 && SVAngle <= 135){
+//        if(SVAngle > 45 && SVAngle <= 135){
+//            ge2.getOptions().setFlyToSpeed(3);
+//          
+//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+//            
+//            lookat.set(SVmidLat, SVmidLong, 0, 
+//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,90,40,SVRange);
+//                        
+//            ge2.getView().setAbstractView(lookat); 
+//        } 
+//        else if(SVAngle > 135 && SVAngle <= 225){
+//            ge2.getOptions().setFlyToSpeed(3);
+//          
+//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+//            
+//            lookat.set(SVmidLat, SVmidLong, 0, 
+//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,180,40,SVRange);
+//                        
+//            ge2.getView().setAbstractView(lookat); 
+//        } 
+//        else if(SVAngle > 225 && SVAngle <= 315){
+//            ge2.getOptions().setFlyToSpeed(3);
+//          
+//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+//            
+//            lookat.set(SVmidLat, SVmidLong, 0, 
+//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,270,40,SVRange);
+//                        
+//            ge2.getView().setAbstractView(lookat); 
+//        } 
+//        else{
             ge2.getOptions().setFlyToSpeed(3);
           
             var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
             
             lookat.set(SVmidLat, SVmidLong, 0, 
-                        ge2.ALTITUDE_RELATIVE_TO_GROUND,90,60,SVRange);
+                        ge2.ALTITUDE_RELATIVE_TO_GROUND,SVAngle,40,SVRange);
                         
             ge2.getView().setAbstractView(lookat); 
-        } 
-        else if(SVAngle > 135 && SVAngle <= 225){
-            ge2.getOptions().setFlyToSpeed(3);
-          
-            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-            
-            lookat.set(SVmidLat, SVmidLong, 0, 
-                        ge2.ALTITUDE_RELATIVE_TO_GROUND,180,60,SVRange);
-                        
-            ge2.getView().setAbstractView(lookat); 
-        } 
-        else if(SVAngle > 225 && SVAngle <= 315){
-            ge2.getOptions().setFlyToSpeed(3);
-          
-            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-            
-            lookat.set(SVmidLat, SVmidLong, 0, 
-                        ge2.ALTITUDE_RELATIVE_TO_GROUND,270,60,SVRange);
-                        
-            ge2.getView().setAbstractView(lookat); 
-        } 
-        else{
-            ge2.getOptions().setFlyToSpeed(3);
-          
-            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-            
-            lookat.set(SVmidLat, SVmidLong, 0, 
-                        ge2.ALTITUDE_RELATIVE_TO_GROUND,0,60,SVRange);
-                        
-            ge2.getView().setAbstractView(lookat); 
-        }
+//        }
         
         var loc = ge2.createLocation(''); 
         loc.setLatitude(latitude); 
@@ -273,11 +273,12 @@ function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLon
         ori.setHeading(heading); 
         ori.setTilt(temp); 
         ori.setRoll(roll);
-        
+       
+        var scaleData = 450 * SVModelScale;
         var scale = ge2.createScale('');
-        scale.setX(450);
-        scale.setY(450);
-        scale.setZ(450);
+        scale.setX(scaleData);
+        scale.setY(scaleData);
+        scale.setZ(scaleData);
         
         model.setLocation(loc); 
         model.setOrientation(ori);
@@ -293,7 +294,7 @@ function small_cameraView(SVmidLong,SVmidLat,SVRange) {
         var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
         
         lookat.set(SVmidLat, SVmidLong, 0, 
-                    ge2.ALTITUDE_RELATIVE_TO_GROUND,0,60,SVRange);
+                    ge2.ALTITUDE_RELATIVE_TO_GROUND,0,40,SVRange);
                     
         ge2.getView().setAbstractView(lookat); 
 
@@ -689,6 +690,6 @@ function Building(temp) {
   </head>
   <body onload="init()" style="font-family: arial, sans-serif; font-size: 13px; border: 0;">
     <div id="map3d-1" style="width: 1300px; height: 650px;"></div>
-    <div id="map3d-2" style="position: absolute; left: 1050px; top: 465px; width: 260px; height: 200px;"></div>
+    <div id="map3d-2" style="position: absolute; left: 1000px; top: 415px; width: 310px; height: 250px;"></div>
   </body>
 </html>
