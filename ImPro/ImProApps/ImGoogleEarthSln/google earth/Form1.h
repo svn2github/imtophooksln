@@ -14,6 +14,9 @@
 #include "Streams.h"
 #include "countAllData.h"
 
+#define RANGE_SCALE 1.3
+#define BASE_BOUNDARY 0.01223
+
 using namespace System;
 using namespace System::ComponentModel;
 using namespace System::Collections;
@@ -648,7 +651,7 @@ namespace googleearth {
  			 croll += ((troll - croll)/2);
 			 */ 
 				
-				array<Object^>^ parameter = gcnew array<Object^>(10); 
+				array<Object^>^ parameter = gcnew array<Object^>(11); 
 				parameter[0] = clatitude;
 				parameter[1] = clongitude;
 				parameter[2] = caltitude;
@@ -657,8 +660,9 @@ namespace googleearth {
 				parameter[5] = croll;
 				parameter[6] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
 				parameter[7] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-				parameter[8] = (RightTopLong - LeftTopLong) * 111000 * 2;
+				parameter[8] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
 				parameter[9] = GEData.getSVAngle();
+				parameter[10] = (RightTopLong - LeftTopLong) / BASE_BOUNDARY;
 
 				double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
 				for (int i = 0; i < 6; i++)
@@ -708,7 +712,7 @@ namespace googleearth {
 
 				parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
 				parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-				parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * 2;
+				parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
 
 				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
 				webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
@@ -786,7 +790,7 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 
 			parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
 			parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-			parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * 2;
+			parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
 
 			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
 			webBrowser1->Document->InvokeScript("small_cameraView",parameterC);

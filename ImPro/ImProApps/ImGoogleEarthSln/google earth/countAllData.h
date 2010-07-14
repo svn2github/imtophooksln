@@ -15,7 +15,8 @@ public:
 	void countHeading(void);
 	void countRoll(void);
 	void countIntersectPoint(D3DXVECTOR3 origin_point, D3DXVECTOR3 lookat,double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat);
-	void countSVAngle(D3DXVECTOR3 SVBase, D3DXVECTOR3 SVCamera);
+	void countSVAngle(void);
+	double countTheta(D3DXVECTOR3 vector, D3DXVECTOR3 vectorBase);
 
 	void computeNeedData(double cvTrans[4][4], double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat);
 	
@@ -46,9 +47,7 @@ private:
 	D3DXVECTOR3 intersect_point;
 	D3DXVECTOR3 mid_point;  //桌子的中心點
 
-	//count small view angle
-	D3DXVECTOR3 SVBase;
-	D3DXVECTOR3 SVCamera;
+	int SVFlag;
 
 	double longitude;
 	double latitude;

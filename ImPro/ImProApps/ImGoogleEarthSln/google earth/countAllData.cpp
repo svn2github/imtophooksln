@@ -20,7 +20,23 @@ countAllData::countAllData()
 	altitude_scale = 1.0;
 
 	SVAngle = 0;
+	SVFlag = 1;
 
+}
+
+double countAllData::countTheta(D3DXVECTOR3 vector, D3DXVECTOR3 vectorBase)
+{
+	double cosin = 0;
+	double arcosin = 0;
+
+	D3DXVec3Normalize(&vector,&vector);
+	D3DXVec3Normalize(&vectorBase,&vectorBase);
+
+	cosin = D3DXVec3Dot(&vector, &vectorBase);
+	arcosin = acos(cosin);
+
+	return (double)180*(double)arcosin / (double)PI;
+	
 }
 
 void countAllData::countLoc(double x, double y, double z, double LeftDownLong, double LeftDownLat, double LeftTopLong, double LeftTopLat, double RightDownLong, double RightDownLat)
@@ -192,24 +208,75 @@ void countAllData::countIntersectPoint(D3DXVECTOR3 origin_point,D3DXVECTOR3 look
 
 }
 
-void countAllData::countSVAngle(D3DXVECTOR3 SVBase, D3DXVECTOR3 SVCamera)
+void countAllData::countSVAngle()
 {
-	D3DXVECTOR3 z;
-	D3DXVec3Cross(&z,&SVCamera,&SVBase);
+	D3DXVECTOR3 lookatXY(lookat.x, lookat.y, 0);
+	D3DXVec3Normalize(&lookatXY,&lookatXY);
+	D3DXVECTOR3 N(0,1,0);
+	D3DXVECTOR3 S(0,-1,0);
+	D3DXVECTOR3 E(1,0,0);
+	D3DXVECTOR3 W(-1,0,0);
 
-	double cosin = 0;
-	double arcosin = 0;
+	double NAngle = countTheta(lookatXY,N);
+	double SAngle = countTheta(lookatXY,S);
+	double EAngle = countTheta(lookatXY,E);
+	double WAngle = countTheta(lookatXY,W);
 
-	D3DXVec3Normalize(&SVBase,&SVBase);
-	D3DXVec3Normalize(&SVCamera,&SVCamera);
+	int scopeBig = 60;
+	int scopeSmall = 30;
 
-	cosin = D3DXVec3Dot(&SVCamera, &SVBase);
-	arcosin = acos(cosin);
+	if(tilt <= 10)	SVAngle = SVAngle;	
+	else{
+		switch(SVFlag){
+			case 1:
+				if(NAngle <= scopeBig)	SVAngle = 0;
+				else if(SAngle <= scopeBig)	SVAngle = 180;
+				else if(EAngle <= scopeSmall)	{SVAngle = 90;	SVFlag = 2;}
+				else if(WAngle <= scopeSmall)	{SVAngle = 270;	SVFlag = 2;}
+				break;
+			case 2:
+				if(NAngle <= scopeSmall)	{SVAngle = 0;	SVFlag = 1;}
+				else if(SAngle <= scopeSmall)	{SVAngle = 180;	SVFlag = 1;}
+				else if(EAngle <= scopeBig)	SVAngle = 90;
+				else if(WAngle <= scopeBig)	SVAngle = 270;
+				break;
+		}
+	}
 
-	SVAngle = (double)180*(double)arcosin / (double)PI;
+	//D3DXVECTOR3 z;
+	//D3DXVec3Cross(&z,&SVCamera,&SVBase);
 
-	if(z.z >= 0)	SVAngle = SVAngle;
-	else	SVAngle = 360 - SVAngle;
+	//double cosin = 0;
+	//double arcosin = 0;
+
+	//D3DXVec3Normalize(&SVBase,&SVBase);
+	//D3DXVec3Normalize(&SVCamera,&SVCamera);
+
+	//cosin = D3DXVec3Dot(&SVCamera, &SVBase);
+	//arcosin = acos(cosin);
+
+	//SVAngle = (double)180*(double)arcosin / (double)PI;
+
+	//if(z.z >= 0)	SVAngle = SVAngle;
+	//else	SVAngle = 360 - SVAngle;
+
+	WCHAR str[MAX_PATH] = {0};
+	
+	//OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	//swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
+	//	origin_point.x, origin_point.y, origin_point.z);
+	//OutputDebugStringW(str);
+
+	swprintf_s(str, MAX_PATH, L"@@@@ tilt = (%f) \n", tilt);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ N = (%f) \n", NAngle);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ S = (%f) \n", SAngle);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ E = (%f) \n", EAngle);
+	OutputDebugStringW(str);
+	swprintf_s(str, MAX_PATH, L"@@@@ W = (%f) \n", WAngle);
+	OutputDebugStringW(str);
 
 }
 
@@ -284,29 +351,26 @@ void countAllData::computeNeedData(double cvTrans[4][4],double LeftDownLong, dou
 	altitude *= 111000;  //¤@«× = 111000 ¤½¤Ø
 	altitude *= altitude_scale;
 
-	mid_point.x = LeftTopLong + (RightDownLong - LeftTopLong) / 2;
-	mid_point.y = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-	mid_point.z = 0;
+	countSVAngle();
 
-	SVBase.x = 0;
-	SVBase.y = LeftDownLat - mid_point.y;
-	SVBase.z = 0;
+	//WCHAR str[MAX_PATH] = {0};
+	//
+	////OutputDebugStringW(L"@@@@@@@@@@@@\n");
+	////swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
+	////	origin_point.x, origin_point.y, origin_point.z);
+	////OutputDebugStringW(str);
 
-	SVCamera.x = longitude - mid_point.x; 
-	SVCamera.y = latitude - mid_point.y;	
-	SVCamera.z = 0; 
-
-	countSVAngle(SVBase,SVCamera);
-
-	WCHAR str[MAX_PATH] = {0};
-	
-	//OutputDebugStringW(L"@@@@@@@@@@@@\n");
-	//swprintf_s(str, MAX_PATH, L"@@@@ origin_point = ( %f, %f, %f) \n", 
-	//	origin_point.x, origin_point.y, origin_point.z);
+	//swprintf_s(str, MAX_PATH, L"@@@@ tilt = (%f) \n", tilt);
+	//OutputDebugStringW(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@ N = (%f) \n", tilt);
+	//OutputDebugStringW(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@ S = (%f) \n", tilt);
+	//OutputDebugStringW(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@ E = (%f) \n", tilt);
+	//OutputDebugStringW(str);
+	//swprintf_s(str, MAX_PATH, L"@@@@ W = (%f) \n", tilt);
 	//OutputDebugStringW(str);
 
-	swprintf_s(str, MAX_PATH, L"@@@@ angle = (%f) \n", SVAngle);
-	OutputDebugStringW(str);
 	//OutputDebugStringW(L"@@@@@@@@@@@@\n");
 
 }
