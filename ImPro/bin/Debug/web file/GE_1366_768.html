@@ -132,6 +132,38 @@ ge.getFeatures().appendChild(placemarkIcon);
   ge.getFeatures().appendChild(polygonPlacemarkBlack);
    
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+/////////screen overlay//////////////////////////////////////////////////////////////////////
+var screenOverlay = ge.createScreenOverlay('');
+// Set the visibility to false while we construct the overlay.
+screenOverlay.setVisibility(false);
+var icon = ge.createIcon('');
+icon.setHref('http://earth-api-samples.googlecode.com/svn/trunk/examples/' + 'static/frame.png');
+// Loads an gilded picture frame.
+screenOverlay.setIcon(icon);
+
+var screenXY = screenOverlay.getScreenXY();
+screenXY.setXUnits(ge.UNITS_PIXELS);
+screenXY.setYUnits(ge.UNITS_PIXELS);
+screenXY.setX(0);
+screenXY.setY(0);
+
+var overlayXY = screenOverlay.getOverlayXY();
+overlayXY.setXUnits(ge.UNITS_PIXELS);
+overlayXY.setYUnits(ge.UNITS_PIXELS);
+overlayXY.setX(900);
+overlayXY.setY(0);
+
+var overlaySize = screenOverlay.getSize();
+overlaySize.setXUnits(ge.UNITS_FRACTION);
+overlaySize.setYUnits(ge.UNITS_FRACTION);
+overlaySize.setX(0.3);
+overlaySize.setY(0.5);
+
+screenOverlay.setVisibility(true);
+ge.getFeatures().appendChild(screenOverlay);
+
+/////////////////////////////////////////////////////////////////////////////////////////////
   
 }
 
@@ -175,7 +207,7 @@ function initCB2(object) {
     placemarkModel.setGeometry(model); 
       
     var link = ge2.createLink(''); 
-    link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/model/improTablet2.dae'); 
+    link.setHref('http://imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/model/improTablet3.dae'); 
     model.setLink(link); 
       
     ge2.getFeatures().appendChild(placemarkModel);
