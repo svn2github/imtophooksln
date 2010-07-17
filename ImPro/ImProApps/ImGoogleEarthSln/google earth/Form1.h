@@ -14,7 +14,7 @@
 #include "Streams.h"
 #include "countAllData.h"
 
-#define RANGE_SCALE 1.3
+#define RANGE_SCALE 1.5
 #define BASE_BOUNDARY 0.01223
 
 using namespace System;
@@ -211,8 +211,9 @@ namespace googleearth {
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
-	private: System::Windows::Forms::Button^  button1;
+
 	private: System::Windows::Forms::Button^  button2;
+	private: System::Windows::Forms::Button^  button1;
 
 
 
@@ -233,7 +234,11 @@ namespace googleearth {
 			//
 			
 			//full screen mode
-			//setFullScreen();			
+			//setFullScreen();		
+
+			image1 = gcnew System::Drawing::Bitmap("C:/3D.jpg");
+			image2 = gcnew System::Drawing::Bitmap("C:/2D.jpg");
+			button2->BackgroundImage = image1;
 
 			g_formPtr = this;
 			
@@ -283,11 +288,11 @@ namespace googleearth {
 
 		private: System::Void setupBrowser(){
 			//String^ URL = "file:///C:/GE.html";  
-		    //String^ URL = "file:///C:/GE464.html";
-			String^ URL = Application::StartupPath;
+		    String^ URL = "C:/GE_1366_768.html";
+			//String^ URL = Application::StartupPath;
 			//URL += "/web_file/GE.html";
-			URL += "/web_file/";
-			URL += htmlFile;
+			//URL += "/web_file/";
+			//URL += htmlFile;
 			
 			//MessageBox::Show(URL);
 			this->webBrowser1->Navigate(URL);
@@ -335,8 +340,9 @@ namespace googleearth {
 			
 			// register to TcpServer.
 			//sendData("11," + tabletName + "\0");
-			//sendData("15,flashGE,tabletGE,geLogin" + "\0");
 			sendData("11," + tabletName);
+			sendData("15,flashGE,tabletGE,geLogin");
+
 			
 
 			/*socketClient = gcnew CSocketClient(10240, nullptr,
@@ -499,6 +505,9 @@ namespace googleearth {
 			}
 		}
 
+	Bitmap^ image1;
+	Bitmap^ image2;
+
 	public: System::Windows::Forms::WebBrowser^  webBrowser1;
 	//private: System::Windows::Forms::Timer^  arTimer;
 	private: System::ComponentModel::IContainer^  components;
@@ -519,11 +528,10 @@ namespace googleearth {
 		void InitializeComponent(void)
 		{
 			this->components = (gcnew System::ComponentModel::Container());
-			System::ComponentModel::ComponentResourceManager^  resources = (gcnew System::ComponentModel::ComponentResourceManager(Form1::typeid));
 			this->webBrowser1 = (gcnew System::Windows::Forms::WebBrowser());
 			this->animTimer = (gcnew System::Windows::Forms::Timer(this->components));
-			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->button2 = (gcnew System::Windows::Forms::Button());
+			this->button1 = (gcnew System::Windows::Forms::Button());
 			this->SuspendLayout();
 			// 
 			// webBrowser1
@@ -532,7 +540,7 @@ namespace googleearth {
 			this->webBrowser1->Location = System::Drawing::Point(0, 0);
 			this->webBrowser1->MinimumSize = System::Drawing::Size(20, 20);
 			this->webBrowser1->Name = L"webBrowser1";
-			this->webBrowser1->Size = System::Drawing::Size(1258, 722);
+			this->webBrowser1->Size = System::Drawing::Size(988, 722);
 			this->webBrowser1->TabIndex = 0;
 			this->webBrowser1->PreviewKeyDown += gcnew System::Windows::Forms::PreviewKeyDownEventHandler(this, &Form1::OnBrowsePreviewKeyDown);
 			// 
@@ -541,33 +549,34 @@ namespace googleearth {
 			this->animTimer->Interval = 30;
 			this->animTimer->Tick += gcnew System::EventHandler(this, &Form1::animTimer_Tick);
 			// 
-			// button1
-			// 
-			this->button1->Location = System::Drawing::Point(904, 687);
-			this->button1->Name = L"button1";
-			this->button1->Size = System::Drawing::Size(75, 23);
-			this->button1->TabIndex = 1;
-			this->button1->Text = L"button1";
-			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click);
-			// 
 			// button2
 			// 
-			this->button2->Image = (cli::safe_cast<System::Drawing::Image^  >(resources->GetObject(L"button2.Image")));
-			this->button2->Location = System::Drawing::Point(28, 530);
+			this->button2->BackgroundImageLayout = System::Windows::Forms::ImageLayout::Stretch;
+			this->button2->Location = System::Drawing::Point(35, 582);
 			this->button2->Name = L"button2";
-			this->button2->Size = System::Drawing::Size(115, 116);
+			this->button2->Size = System::Drawing::Size(117, 116);
 			this->button2->TabIndex = 2;
 			this->button2->UseVisualStyleBackColor = true;
 			this->button2->Click += gcnew System::EventHandler(this, &Form1::button2_Click);
+			// 
+			// button1
+			// 
+			this->button1->Location = System::Drawing::Point(803, 687);
+			this->button1->Name = L"button1";
+			this->button1->Size = System::Drawing::Size(75, 23);
+			this->button1->TabIndex = 3;
+			this->button1->Text = L"button1";
+			this->button1->UseVisualStyleBackColor = true;
+			this->button1->Visible = false;
+			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click_1);
 			// 
 			// Form1
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
 			this->AutoScaleMode = System::Windows::Forms::AutoScaleMode::Font;
-			this->ClientSize = System::Drawing::Size(1258, 722);
-			this->Controls->Add(this->button2);
+			this->ClientSize = System::Drawing::Size(988, 722);
 			this->Controls->Add(this->button1);
+			this->Controls->Add(this->button2);
 			this->Controls->Add(this->webBrowser1);
 			this->Name = L"Form1";
 			this->Text = L"Form1";
@@ -621,8 +630,8 @@ namespace googleearth {
 				String^ _vspaceY = vspaceY.ToString("0.0000");
 				String^ _heading = heading.ToString("0.0000");
 				
-				if(GetNetworkStream != nullptr)
-					sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY + "," + _heading);
+				//if(GetNetworkStream != nullptr)
+				//	sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY + "," + _heading);
 				
 				clatitude = tlatitude;
 				clongitude = tlongitude;
@@ -762,8 +771,25 @@ private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Wi
 			 }
 		 }
 
-private: System::Void button1_Click(System::Object^  sender, System::EventArgs^  e) {
 
+private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
+			BulidingCount++;
+
+			array<Object^>^ parameterBuilding = gcnew array<Object^>(1); 
+			parameterBuilding[0] = BulidingCount % 2;
+
+			if(BulidingCount % 2 != 0){
+				button2->BackgroundImage = image2;
+				webBrowser1->Document->InvokeScript("Building",parameterBuilding);
+			}
+			else{
+				BulidingCount = 0;
+				button2->BackgroundImage = image1;
+				webBrowser1->Document->InvokeScript("Building",parameterBuilding);
+			}
+			
+		 }
+private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs^  e) {
  			array<Object^>^ parameterB = gcnew array<Object^>(8); 
 			
 			parameterB[0] = LeftTopLong;
@@ -795,21 +821,6 @@ private: System::Void button1_Click(System::Object^  sender, System::EventArgs^ 
 			webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
 			webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
 			webBrowser1->Document->InvokeScript("small_boundaryLine",parameterSB);
-		
-		 }
-
-private: System::Void button2_Click(System::Object^  sender, System::EventArgs^  e) {
-			BulidingCount++;
-
-			array<Object^>^ parameterBuilding = gcnew array<Object^>(1); 
-			parameterBuilding[0] = BulidingCount % 2;
-
-			if(BulidingCount % 2 != 0)	webBrowser1->Document->InvokeScript("Building",parameterBuilding);
-			else{
-				BulidingCount = 0;
-				webBrowser1->Document->InvokeScript("Building",parameterBuilding);
-			}
-			
 		 }
 };
 }
