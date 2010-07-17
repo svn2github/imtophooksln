@@ -10,7 +10,9 @@
 #include "IGSMaskFilter.h"
 #include "IGSARTagLayoutFilter.h"
 
+#define MARKERALIVETIME 0.8  // second
 using namespace GSMaskNS;
+
 
 ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL ModifiesData)
 : GSMuxFilter(NAME("ImProLogicFilter"), 0, CLSID_ImProLogicFilter)
@@ -20,6 +22,8 @@ ImProLogicFilter::ImProLogicFilter(IUnknown * pOuter, HRESULT * phr, BOOL Modifi
 		m_dirtyWarpFromAR[i] = FALSE;
 		m_matCam2VW[i] = NULL;
 		m_matPro2VW[i] = NULL;
+		camEnable[i] = 0 ;
+		markerDetected[i] = false ;
 	}
 	m_pMaskSendData = NULL;
 	m_dirtyLowResMask = FALSE;
@@ -206,6 +210,8 @@ HRESULT ImProLogicFilter::PreReceive_ARResult(void* self, IMediaSample *pSample,
 	{
 		return S_FALSE;
 	}
+
+	pSelf->markerDetected[idx] = true;
 
 	float w = pARResult->m_screenW;
 	float h = pARResult->m_screenH;
@@ -712,6 +718,9 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 	ImProLogicFilter* pSelf = (ImProLogicFilter*)(GSMuxFilter*)self;
 	HRESULT hr = S_OK;
 	CAutoLock lckState(&pSelf->m_csState);
+
+	pSelf->checkTimestamp();
+
 	if (pSelf->m_dirtyLowResMask == FALSE )
 	{
 		return S_FALSE;
@@ -742,17 +751,17 @@ HRESULT ImProLogicFilter::FillBuffer_LowResMask(void* self, IMediaSample *pSampl
 		
 		for (int i = 0; i < nWorkingCam; i++)
 		{
-			tmpData.m_pfRects[i].LT.x = pSelf->projTrans[i].proj3DPoints[0][0];  
-			tmpData.m_pfRects[i].LT.y = pSelf->projTrans[i].proj3DPoints[0][1];
+			tmpData.m_pfRects[i].LT.x = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[0][0];  
+			tmpData.m_pfRects[i].LT.y = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[0][1];
 
-			tmpData.m_pfRects[i].LB.x = pSelf->projTrans[i].proj3DPoints[1][0];  
-			tmpData.m_pfRects[i].LB.y = pSelf->projTrans[i].proj3DPoints[1][1];
+			tmpData.m_pfRects[i].LB.x = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[1][0];  
+			tmpData.m_pfRects[i].LB.y = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[1][1];
 			
-			tmpData.m_pfRects[i].RB.x = pSelf->projTrans[i].proj3DPoints[2][0];
-			tmpData.m_pfRects[i].RB.y = pSelf->projTrans[i].proj3DPoints[2][1];
+			tmpData.m_pfRects[i].RB.x = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[2][0];
+			tmpData.m_pfRects[i].RB.y = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[2][1];
 
-			tmpData.m_pfRects[i].RT.x = pSelf->projTrans[i].proj3DPoints[3][0];
-			tmpData.m_pfRects[i].RT.y = pSelf->projTrans[i].proj3DPoints[3][1];		
+			tmpData.m_pfRects[i].RT.x = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[3][0];
+			tmpData.m_pfRects[i].RT.y = pSelf->projTrans[pSelf->camEnable[i]].proj3DPoints[3][1];		
 		}
 		
 		*pSelf->m_pMaskSendData = tmpData;
@@ -938,4 +947,37 @@ int ImProLogicFilter::GetPort()
 	if (m_pOSCSender == NULL)
 		return 0;
 	return m_pOSCSender->m_port;
+}
+
+void ImProLogicFilter::checkTimestamp(){
+	double currentTime = timeGetTime();
+	int camNum = 0 ;
+	for(int i = 0 ; i < NUMCAM ; i ++){
+		if(markerDetected[i] == false){
+	
+			if(currentTime - markerTime[i] > MARKERALIVETIME *1000){
+				m_matCam2VW[i] = NULL;
+				m_matPro2VW[i] = NULL;
+				m_dirtyLowResMask = true ;		
+			}
+			else{
+				camEnable[camNum] = i ;
+				camNum++ ;
+			}
+		}
+		else{
+			markerTime[i] = currentTime;
+			camEnable[camNum] = i ;
+			camNum++ ;
+			markerDetected[i] = false ;
+		}
+	}
+
+}
+
+void ImProLogicFilter::resetProj3DPoint(int index){
+	for(int p = 0 ; p < 4 ; p ++){
+		projTrans[index].proj3DPoints[p][0] = 0 ;
+		projTrans[index].proj3DPoints[p][1] = 0 ;
+	}
 }

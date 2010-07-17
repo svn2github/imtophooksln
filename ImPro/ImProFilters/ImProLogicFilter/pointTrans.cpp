@@ -3,6 +3,7 @@
 #include "common.h"
 
 #define BLENDVALUE 0.5
+#define PROJECTIONBIOS 2
 
 ProjectorTrans2World::ProjectorTrans2World(){
 
@@ -307,14 +308,14 @@ CvPoint3D32f ProjectorTrans2World:: findPro3D(CvMat* pointMat){
 }
 
 void ProjectorTrans2World::initProjRes(int width, int height){
-	projCorner[0] = 0 ;
-	projCorner[1] = 0 ;
-	projCorner[2] = width ;
-	projCorner[3] = 0 ;
-	projCorner[4] = width ;
-	projCorner[5] = height ;
-	projCorner[6] = 0 ;
-	projCorner[7] = height ;
+	projCorner[0] = PROJECTIONBIOS ;
+	projCorner[1] = PROJECTIONBIOS ;
+	projCorner[2] = width - PROJECTIONBIOS ;
+	projCorner[3] = PROJECTIONBIOS ;
+	projCorner[4] = width - PROJECTIONBIOS ;
+	projCorner[5] = height - PROJECTIONBIOS ;
+	projCorner[6] = PROJECTIONBIOS ;
+	projCorner[7] = height - PROJECTIONBIOS ;
 
 	projCornerMat = cvMat(4,2,CV_32F,projCorner);
 

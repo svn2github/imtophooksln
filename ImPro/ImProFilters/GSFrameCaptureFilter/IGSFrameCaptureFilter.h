@@ -16,6 +16,10 @@ IGSFrameCaptureFilter: public IUnknown
 {
 public:
 	virtual void setIsSaveImg() ;
+	virtual void resetSavingCount() ;
+	virtual void setImgName(WCHAR* name) ;
+
+
 
 
 };

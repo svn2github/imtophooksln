@@ -106,4 +106,11 @@ public:
 	virtual HRESULT DisConnectOSC();
 	virtual HRESULT GetIPAddress(char* outIpAddress);
 	virtual int GetPort();
+
+	bool markerDetected[NUMCAM];
+	double markerTime[NUMCAM];
+	int camEnable[NUMCAM];
+	void checkTimestamp() ;
+	void resetProj3DPoint(int index);
+
 };

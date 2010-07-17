@@ -47,5 +47,9 @@ public: //inherit from CMFCBaseProperty Page
 	afx_msg void OnBnClickedbtnsaveimg();
 
 	
+	CEdit m_edt_name;
+	CButton m_btn_reset;
+	afx_msg void OnBnClickedBtnReset();
+	afx_msg void OnEnChangeEdtName();
 };
 

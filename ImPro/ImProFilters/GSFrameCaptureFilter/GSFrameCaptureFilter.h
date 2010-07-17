@@ -41,6 +41,9 @@ public:
 public:
 	bool isSaveImg ;
 	int ImgCount ;
-	void setIsSaveImg() ;
+	WCHAR saveName[_MAX_PATH];
+	virtual void setIsSaveImg() ;
+	virtual void resetSavingCount() ;
+	virtual void setImgName(WCHAR* name) ;
 	WCHAR wszCur[_MAX_PATH];
 };

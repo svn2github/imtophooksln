@@ -11,6 +11,8 @@ void GSFrameCaptureFilterProp::DoDataExchange(CDataExchange* pDX)
 {
 	__super::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_btnSaveImg, m_btnSaveImg);
+	DDX_Control(pDX, IDC_EDT_Name, m_edt_name);
+	DDX_Control(pDX, IDC_Btn_Reset, m_btn_reset);
 }
 BOOL GSFrameCaptureFilterProp::OnInitDialog()
 {
@@ -21,6 +23,8 @@ BOOL GSFrameCaptureFilterProp::OnInitDialog()
 
 BEGIN_MESSAGE_MAP(GSFrameCaptureFilterProp, GSMFCProp)
 	ON_BN_CLICKED(IDC_btnSaveImg, &GSFrameCaptureFilterProp::OnBnClickedbtnsaveimg)
+	ON_BN_CLICKED(IDC_Btn_Reset, &GSFrameCaptureFilterProp::OnBnClickedBtnReset)
+	ON_EN_CHANGE(IDC_EDT_Name, &GSFrameCaptureFilterProp::OnEnChangeEdtName)
 END_MESSAGE_MAP()
 
 
@@ -102,6 +106,32 @@ CUnknown *WINAPI GSFrameCaptureFilterProp::CreateInstance(LPUNKNOWN punk, HRESUL
 
 void GSFrameCaptureFilterProp::OnBnClickedbtnsaveimg()
 {
+	WCHAR* wtmpName;
+
+	CString csFileName;	
+	m_edt_name.GetWindowText(csFileName);
+
+	
+	wtmpName=csFileName.GetBuffer(0);
+	
+	int size= wcslen(wtmpName);
+	
+	m_pFilter->setImgName(wtmpName);
 	m_pFilter->setIsSaveImg();
 	
+}
+
+void GSFrameCaptureFilterProp::OnBnClickedBtnReset()
+{
+	m_pFilter->resetSavingCount();
+}
+
+void GSFrameCaptureFilterProp::OnEnChangeEdtName()
+{
+	// TODO:  If this is a RICHEDIT control, the control will not
+	// send this notification unless you override the GSMFCProp::OnInitDialog()
+	// function and call CRichEditCtrl().SetEventMask()
+	// with the ENM_CHANGE flag ORed into the mask.
+
+	// TODO:  Add your control notification handler code here
 }
