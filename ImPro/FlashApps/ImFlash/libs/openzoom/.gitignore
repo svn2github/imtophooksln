@@ -1,0 +1,8 @@
+# .gitignore
+.DS_Store
+local.properties
+bin-debug
+bin-release
+bin
+docs
+*.swf

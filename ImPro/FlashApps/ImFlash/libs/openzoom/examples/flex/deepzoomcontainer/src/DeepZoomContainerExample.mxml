@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--////////////////////////////////////////////////////////////////////////////
+
+    OpenZoom SDK Example
+    Copyright (c) 2007-2009, Daniel Gasienica <daniel@gasienica.ch>
+
+    License: MPL 1.1/GPL 3/LGPL 3
+
+/////////////////////////////////////////////////////////////////////////////-->
+<mx:Application
+    xmlns:mx="http://www.adobe.com/2006/mxml"
+    xmlns:openzoom="org.openzoom.flex.components.*"
+    xmlns:controllers="org.openzoom.flash.viewport.controllers.*"
+    xmlns:transformers="org.openzoom.flash.viewport.transformers.*"
+    backgroundGradientColors="[0, 0]"
+    layout="absolute"
+    >
+    <mx:Script>
+        <![CDATA[
+
+    		import org.openzoom.flash.descriptors.deepzoom.DeepZoomImageDescriptor;
+
+            private var path:String = "../../../../resources/images/deepzoom/billions.xml"
+            private var xml:XML = <Image xmlns="http://schemas.microsoft.com/deepzoom/2008"
+                                         TileSize="256" Overlap="1" Format="jpg">
+                                    <Size Width="3872" Height="2592"/>
+                                  </Image>;
+
+            [Bindable]
+            public var image:DeepZoomImageDescriptor = DeepZoomImageDescriptor.fromXML(path, xml)
+
+        ]]>
+    </mx:Script>
+    <!--
+        source="{image}"
+        source="../../../../resources/images/deepzoom/collection/la-degustation/dzc_output.xml"
+    -->
+    <openzoom:DeepZoomContainer
+        source="../../../../resources/images/deepzoom/billions.xml"
+        id="container"
+        top="0" right="0" bottom="0" left="0"
+        >
+        <openzoom:transformer>
+            <transformers:TweenerTransformer/>
+        </openzoom:transformer>
+        <openzoom:controllers>
+            <controllers:MouseController/>
+            <controllers:KeyboardController/>
+        </openzoom:controllers>
+    </openzoom:DeepZoomContainer>
+</mx:Application>

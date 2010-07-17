@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--////////////////////////////////////////////////////////////////////////////
+//
+//  OpenZoom SDK
+//
+//  Version: MPL 1.1/GPL 3/LGPL 3
+//
+//  The contents of this file are subject to the Mozilla Public License Version
+//  1.1 (the "License"); you may not use this file except in compliance with
+//  the License. You may obtain a copy of the License at
+//  http://www.mozilla.org/MPL/
+//
+//  Software distributed under the License is distributed on an "AS IS" basis,
+//  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+//  for the specific language governing rights and limitations under the
+//  License.
+//
+//  The Original Code is the OpenZoom SDK.
+//
+//  The Initial Developer of the Original Code is Daniel Gasienica.
+//  Portions created by the Initial Developer are Copyright (c) 2007-2009
+//  the Initial Developer. All Rights Reserved.
+//
+//  Contributor(s):
+//    Daniel Gasienica <daniel@gasienica.ch>
+//
+//  Alternatively, the contents of this file may be used under the terms of
+//  either the GNU General Public License Version 3 or later (the "GPL"), or
+//  the GNU Lesser General Public License Version 3 or later (the "LGPL"),
+//  in which case the provisions of the GPL or the LGPL are applicable instead
+//  of those above. If you wish to allow use of your version of this file only
+//  under the terms of either the GPL or the LGPL, and not to allow others to
+//  use your version of this file under the terms of the MPL, indicate your
+//  decision by deleting the provisions above and replace them with the notice
+//  and other provisions required by the GPL or the LGPL. If you do not delete
+//  the provisions above, a recipient may use your version of this file under
+//  the terms of any one of the MPL, the GPL or the LGPL.
+//
+/////////////////////////////////////////////////////////////////////////////-->
+<project name="OpenZoom" default="lib" basedir=".">
+	
+    <property name="OPENZOOM_HOME" location="${basedir}"/>
+	
+    <property file="${OPENZOOM_HOME}/local.properties"/>
+    <property file="${OPENZOOM_HOME}/build.properties"/>
+	
+    <property name="openzoom.version" value="0.4.2"/>
+    <property name="openzoom.lib" location="${OPENZOOM_HOME}/lib"/>
+    <property name="openzoom.src" location="${OPENZOOM_HOME}/src" />
+    <property name="openzoom.doc" location="${OPENZOOM_HOME}/resources/docs" />
+    <property name="openzoom.doc.out" location="${OPENZOOM_HOME}/docs" />
+    <property name="openzoom.swc.out" location="${OPENZOOM_HOME}/bin" />
+	
+    <target name="clean" depends="lib-clean, doc-clean" description="Clean"/>
+	
+    <target name="lib-clean">
+        <delete dir="${openzoom.swc.out}" failOnError="false" includeEmptyDirs="true"/>
+        <mkdir dir="${openzoom.swc.out}"/>
+    </target>
+	
+    <target name="doc-clean">
+        <delete dir="${openzoom.doc.out}" failOnError="false" includeEmptyDirs="true"/>
+        <mkdir dir="${openzoom.doc.out}"/>
+    </target>
+
+    <target name="doc" depends="doc-clean, asdoc" description="Build documentation"/>
+	
+    <target name="asdoc">
+        <exec executable="${flex_sdk.asdoc}" failonerror="true">
+            <arg line='-source-path ${openzoom.src}'/>
+            <arg line='-doc-sources ${openzoom.src}/OpenZoomSDK.as'/>
+            <arg line='-library-path ${openzoom.lib}'/>
+            <arg line='-library-path ${flex_sdk.dir}/frameworks/libs/'/>
+            <arg line='-package org.openzoom.flash.components "The org.openzoom.flash.components package contains the OpenZoom components for Flash."'/>
+            <arg line='-package org.openzoom.flash.descriptors "The org.openzoom.flash.descriptors package contains the OpenZoom descriptor classes and base classes for custom descriptors."'/>
+            <arg line='-package org.openzoom.flash.descriptors.deepzoom "The org.openzoom.flash.descriptors.deepzoom package contains the descriptor classes for the Microsoft Deep Zoom image and collection file format."'/>
+            <arg line='-package org.openzoom.flash.descriptors.djatoka "The org.openzoom.flash.descriptors.djatoka pacakge contains the descriptor class for the aDORe djatoka JPEG 2000 image server."'/>
+            <arg line='-package org.openzoom.flash.descriptors.gigapan "The org.openzoom.flash.descriptors.gigapan package contains the descriptor class for the GigaPan.org project."'/>
+            <arg line='-package org.openzoom.flash.descriptors.openstreetmap "The org.openzoom.flash.descriptors.openstreetmap package contains the descriptor class for the OpenStreetMap.org project."'/>
+            <arg line='-package org.openzoom.flash.descriptors.openzoom "The org.openzoom.flash.descriptors.openzoom package contains the descriptor class for the OpenZoom Description Format."'/>
+            <arg line='-package org.openzoom.flash.descriptors.rosettaproject "The org.openzoom.flash.descriptors.rosettaproject package contains the descriptor class for the Rosetta Project."'/>
+            <arg line='-package org.openzoom.flash.descriptors.virtualearth "The org.openzoom.flash.descriptors.virtualearth package contains the descriptor class for Microsoft Virtual Earth."'/>
+            <arg line='-package org.openzoom.flash.descriptors.zoomify "The org.openzoom.flash.descriptors.zoomify package contains the descriptor class for the Zoomify file format."'/>
+            <arg line='-package org.openzoom.flash.events "The org.openzoom.flash.events package contains the classes that define OpenZoom events."'/>
+            <arg line='-package org.openzoom.flash.renderers "The org.openzoom.flash.renderers package contains OpenZoom renderer classes."'/>
+            <arg line='-package org.openzoom.flash.scene "The org.openzoom.flash.scene package contains the scene classes."'/>
+            <arg line='-package org.openzoom.flash.utils "The org.openzoom.flash.utils package contains the utility classes and interfaces, such as data structures like Cache."'/>
+            <arg line='-package org.openzoom.flash.utils.math "The org.openzoom.flash.utils.math package contains the mathematical utility classes."'/>
+            <arg line='-package org.openzoom.flash.utils.uri "The org.openzoom.flash.utils.uri package contains the utility classes for handling URI."'/>
+            <arg line='-package org.openzoom.flash.viewport "The org.openzoom.flash.viewport package contains the viewport classes."'/>
+            <arg line='-package org.openzoom.flash.viewport.constraints "The org.openzoom.flash.viewport.constraints package contains the viewport constraint classes."'/>
+            <arg line='-package org.openzoom.flash.viewport.controllers "The org.openzoom.flash.viewport.controllers package contains the viewport controller classes."'/>
+            <arg line='-package org.openzoom.flash.viewport.transformers "The org.openzoom.flash.viewport.transformers package contains the viewport transformer classes."'/>
+            <arg line='-package org.openzoom.flex.components "The org.openzoom.flex.components package contains the OpenZoom components for Flex."'/>
+            <arg line='-window-title "OpenZoom SDK ${openzoom.version}"'/>
+            <arg line='-templates-path ${openzoom.doc}/templates'/>
+            <arg line='-output ${openzoom.doc.out}'/>
+        </exec>
+    </target>
+
+    <target name="lib" depends="lib-clean">
+        <exec executable="${flex_sdk.compc}" failonerror="true">
+            <arg line='-source-path ${openzoom.src}'/>
+            <arg line='-library-path ${openzoom.lib}'/>
+            <arg line='-library-path ${flex_sdk.dir}/frameworks/libs/'/>
+            <arg line="-library-path ${flex_sdk.dir}/frameworks/locale/en_US"/>
+            <arg line='-namespace http://ns.openzoom.org/sdk/2009 manifest.xml'/>
+            <arg line='-include-namespaces http://ns.openzoom.org/sdk/2009'/>
+            <arg line='-output ${openzoom.swc.out}/openzoom.swc'/>
+        </exec>
+    </target>
+</project>
