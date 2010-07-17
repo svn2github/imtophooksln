@@ -79,7 +79,7 @@ public class InteractiveRenderers extends Sprite
 //    	var transformer:TweensyZeroTransformer = new TweensyZeroTransformer()
 
         transformer.easing = "easeOutElastic"
-    	transformer.duration = 10
+    	transformer.duration = 2
     	container.transformer = transformer
     	container.constraint = new CenterConstraint()
     	

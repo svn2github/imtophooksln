@@ -23,6 +23,7 @@ package impro
 				new IMView("0", width, 0, width, height)	// high relosution 1
 				,new IMView("1", width*2, 0, width, height)	// high relosution 1				
 				);
+				
 		public static function getiFlashlightIMView():IMView{
 			return HRes[0];
 		}

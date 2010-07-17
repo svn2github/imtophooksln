@@ -47,6 +47,7 @@ import flash.geom.Rectangle;
 import flash.utils.Timer;
 
 import impro.googlemap.TouchEventsManager;
+import impro.openzoom.IMMultiScaleContainer;
 
 import org.openzoom.flash.core.openzoom_internal;
 import org.openzoom.flash.viewport.IViewportController;
@@ -555,14 +556,14 @@ public final class IMTouchController extends ViewportControllerBase
 			  			centerPointBlob1Blob2.x / view.width,
                         centerPointBlob1Blob2.y / view.height);
 						
-					if(viewport.zoom < _minZoomFactor){
-						viewport.zoomBy(_minZoomFactor/viewport.zoom);
-						trace("too small, reset");
-					}
-					if(viewport.zoom > _maxZoomFactor){
-						viewport.zoomBy(_maxZoomFactor/viewport.zoom);
-						trace("too big, reset");						
-					}
+//					if(viewport.zoom < _minZoomFactor){
+//						(view as IMMultiScaleContainer).illegalZoom();
+//						viewport.zoomBy(_minZoomFactor/viewport.zoom);
+//					}
+//					if(viewport.zoom > _maxZoomFactor){
+//						(view as IMMultiScaleContainer).illegalZoom();						
+//						viewport.zoomBy(_maxZoomFactor/viewport.zoom);
+//					}
 					
 				  	trace("viewport.zoom:" + viewport.zoom);
 				  	  

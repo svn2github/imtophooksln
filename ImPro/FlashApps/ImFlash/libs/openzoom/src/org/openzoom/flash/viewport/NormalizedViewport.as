@@ -277,7 +277,7 @@ public final class NormalizedViewport extends EventDispatcher
      */
     public function get transform():IViewportTransform
     {
-        return _transform.clone()
+        	return _transform.clone();
     }
 
     public function set transform(value:IViewportTransform):void
@@ -747,6 +747,7 @@ public final class NormalizedViewport extends EventDispatcher
     {
         dispatchEvent(new ViewportEvent(ViewportEvent.TARGET_UPDATE));
         transformer.transform(transform, immediately);
+        trace("immediately: " + immediately);
     }
 
     /**

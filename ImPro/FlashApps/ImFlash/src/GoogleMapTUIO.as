@@ -21,8 +21,7 @@ package {
 	[SWF(width=2400, height=600, frameRate=24, backgroundColor=0xEB7F00)]
 	public class GoogleMapTUIO extends Sprite implements IImproApp
 	{
-		private var multiResMap:MultiResMap;			
-		private var socket:XMLSocket;
+		private var multiResMap:MultiResMap;				
 		private var loader:URLLoader;
 		private var sights:Dictionary;
 		private var imgLoader:ImagesLoader;
@@ -31,11 +30,13 @@ package {
 		private var location:String;
 		private var loadLocal:Boolean = false;
 		
-		public function GoogleMapTUIO(location:String = "")
+		private var socket:XMLSocket;
+		
+		public function GoogleMapTUIO(location:String = "", socket:XMLSocket = null)
 		{									
 		   trace(stage);
 		   this.location = location;
-		   
+		   this.socket = socket;
 		   //如果直接執行該swf, stage是有值的  
 		   //但如果是被載入, stage一開始是null  
 		   //要避免這樣的問題, 就直接偵聽 AddedToStage 事件即可     
@@ -66,7 +67,6 @@ package {
 			//add stage listener 
 //			stage.addEventListener(MouseEvent.MOUSE_DOWN, touchDown);
 //			stage.addEventListener(TouchEvent.CLICK, touchDown);
-			
 //			stage.addEventListener(KeyboardEvent.KEY_DOWN, function(e:KeyboardEvent):void{
 //				if(e.keyCode == Keyboard.LEFT)
 //					geControl.moveLeft();
@@ -126,14 +126,6 @@ package {
 					imgLoader.push("http://ivlab.csie.ntu.edu.tw/imPro/resource/sightseeings/"+location+".png", location);								
 			}
 			imgLoader.startLoading();
-		}
-		
-		// called when double-clikc event found in iFlashlight Device
-		public function setIFlashlightBlack(value:Boolean):void{
-			multiResMap.setIFlashlightBlack(value);	
-		}
-		public function getIFlashlightBlack():Boolean{
-			return multiResMap.getIFlashlightBlack();
 		}
 		
 		private function sightImageLoaded():void{
@@ -223,8 +215,6 @@ package {
 //		}
 		
 		private function addGoogleEarthClient(number:Number):void{
-			// add ge delegate control
-			setupSocket();
 			
 			for(var i:Number=0;i<number;i++){
 				var ge:GEControl = multiResMap.addGeControl(socket, "tabletGE_"+i, 100*(i+1), 100*(i+1));
@@ -260,82 +250,11 @@ package {
 //			arrowLoader.startLoading();
 		}
 		
-		private function setupSocket():void{
-											
-			socket = new XMLSocket();
-			socket.addEventListener(Event.CONNECT, function(event:Event):void{
-				socket.send("11,flashGE");
-//				socket.send("14,flashGE-login"); // broadcast
-			});
-			
-            socket.addEventListener(DataEvent.DATA, dataHandler);
-			socket.addEventListener(Event.CONNECT, connectHandler);
-            socket.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
-			socket.addEventListener(Event.CLOSE, closeHandler);
-			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 
-			socket.connect(Setting.ServerIP, Setting.ServerPort);			
-		}	
-
-		private  function dataHandler(e:DataEvent):void{
-			var msg:String = e.data;
-			var data:Array = msg.split(',');
-			var from:String = data[2];
-			var cmd:String = data[3];
-			if(cmd=="geLogin"){
-//				var geControl:GEControl = multiResMap.addGeControl(socket, 150, 150);				
-//				socket.send("15," + from + ",flashGE," + "assignID," + geControl.id);
-//				trace("assignID: " + geControl.id);				
-				
-			}
-//			else if(cmd=="geDebug"){
-//				var vspaceX:Number = Number(data[4]);
-//				var vspaceY:Number = Number(data[5]);
-//				var heading:Number = Number(data[6]);
-//				heading = (heading + 180) % 360;
-//
-//				var ge:GEControl = multiResMap.getGeControl(from);
-//				if(ge!=null){
-//					var lresX:Number = vspaceX * Setting.LRes.stageWidth;
-//					var lresY:Number = vspaceY * Setting.LRes.stageHeight;
-//					
-//					var radius:Number = 0;
-//					if(lresX < 0)	radius = Math.abs(lresX);
-//					if(lresX > Setting.LRes.stageWidth)
-//						radius = Math.max(radius, lresX - Setting.LRes.stageWidth);						
-//					if(lresY < 0)	radius = Math.max(radius, -lresY);
-//					if(lresY > Setting.LRes.stageHeight)
-//						radius = Math.max(radius, lresY - Setting.LRes.stageHeight);
-//						
-//					ge.setPositionHeading(lresX, lresY, heading, radius);
-//				}
-//			}
-			else if(cmd=="clientLogin"){
-				var who:String = data[4];
-				trace(who + " login");
-				
-				var ge:GEControl = multiResMap.getGeControl(who);
-				if(ge != null)
-					ge.update();			
-				
-			}else if(cmd=="clientLogout"){
-//				var who:String = data[4];
-//				multiResMap.removeGeControl(who);
-			}
-		}
-		private function connectHandler(e:Event):void{
-            trace("connectHandler: " + e);
+		public function updateHResMap():void{
+			multiResMap.updateHResMap(); // send latlng coordinate info to iView clients	
 		}		
-		private function closeHandler(e:Event):void{
-            trace("closeHandler: " + e);			
-		}
-        private function ioErrorHandler(event:IOErrorEvent):void {
-            trace("ioErrorHandler: " + event);
-        }
-        private function securityErrorHandler(event:SecurityErrorEvent):void {
-            trace("securityErrorHandler: " + event);
-        }
-        
+		        
         public function updateView():void{        	
         }
         

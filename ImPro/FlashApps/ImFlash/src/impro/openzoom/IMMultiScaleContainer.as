@@ -67,6 +67,7 @@ import org.openzoom.flash.viewport.IViewportConstraint;
 import org.openzoom.flash.viewport.IViewportController;
 import org.openzoom.flash.viewport.IViewportTransformer;
 import org.openzoom.flash.viewport.NormalizedViewport;
+import org.openzoom.flash.viewport.transformers.TweenerTransformer;
 
 use namespace openzoom_internal;
 
@@ -111,6 +112,14 @@ public final class IMMultiScaleContainer extends Sprite
     {
     	// for imPro
     	this.isLResView = viewportListenToEvent;
+
+	    dragTransformer = new TweenerTransformer();
+	    dragTransformer.easing = "easeOutCubic"; //"easeOutBack";
+	    dragTransformer.duration = 1; // seconds
+
+	    illegalMoveTransformer = new TweenerTransformer();
+	    illegalMoveTransformer.easing = "easeOutInElastic"; //"easeOutBack";
+	    illegalMoveTransformer.duration = 2; // seconds
     	
         createChildren()
     }
@@ -120,6 +129,11 @@ public final class IMMultiScaleContainer extends Sprite
     //  Variables
     //
     //--------------------------------------------------------------------------
+
+	// add by me
+	private var dragTransformer:TweenerTransformer;
+	private var illegalMoveTransformer:TweenerTransformer;
+
 
     private var mouseCatcher:Sprite
     private var contentMask:Shape
@@ -531,7 +545,7 @@ public final class IMMultiScaleContainer extends Sprite
 
     private function viewport_transformStartHandler(event:ViewportEvent):void
     {
-//        trace("Container: ViewportEvent.TRANSFORM_START")
+        trace("Container: ViewportEvent.TRANSFORM_START")
     }
 	
 	public function viewportUpdated():void{
@@ -540,6 +554,8 @@ public final class IMMultiScaleContainer extends Sprite
 	
     private function viewport_transformUpdateHandler(event:ViewportEvent):void
     {        
+        trace("Container: ViewportEvent.TRANSFORM_UPDATE")
+    	
         
 		// NOW: update LResView in IMTouchController
 //		if(isLResView){
@@ -547,15 +563,21 @@ public final class IMMultiScaleContainer extends Sprite
 //	        dispatchEvent(new IMLowResEvent(IMLowResEvent.LRES_UPDATE));        
 //		}        
 
+	    
         invalidated = true;
+    }
+    
+    public function illegalZoom():void{
+	    this.transformer = illegalMoveTransformer;
     }
     
     private var invalidated:Boolean = true
 
     private function viewport_transformEndHandler(event:ViewportEvent):void
     {
-    	// impro: update view after dragging
-    	
+        trace("Container: ViewportEvent.TRANSFORM_END")
+	    this.transformer = dragTransformer;
+	        	
     	// NOW: update LResView in IMTouchController
 //    	if(isLResView){
 //        	trace("Container: ViewportEvent.TRANSFORM_END");

@@ -38,8 +38,6 @@ package impro.googlemap
 		private var mapPanel:Sprite = new Sprite();		
 		private var mapReady:Boolean = false;
 		
-		private var blackScreen:Sprite = new Sprite();
-		
 //		private var imgLoader:Loader;
 //		private var maskBmp:Bitmap;
 		
@@ -97,12 +95,6 @@ package impro.googlemap
 //		        childMap.setInitOptions(mapOptions);					
 //			});			
 			mapPanel.addChild(childMap);
-
-			blackScreen.graphics.beginFill(0x000000);
-			blackScreen.graphics.drawRect(0,0,screenWidth, screenHeight);
-			blackScreen.graphics.endFill();
-			blackScreen.visible = false;
-			mapPanel.addChild(blackScreen);
 									
 			addChild(mapPanel);
 			mapPanel.scaleX = 1;
@@ -147,19 +139,12 @@ package impro.googlemap
 	//			this.setChildIndex(TYPE_BUTTON, this.numChildren-1);
 			} 			
 		}
-		
-		public function setBlackScreen(value:Boolean):void{
-			blackScreen.visible = value;				
-		}
-		public function getBlackScreen():Boolean{
-			return blackScreen.visible;
-		}
-		
+				
 		public function dispose():void{						
 			
 			if(childMap)
 				childMap.unload();
-			childMap = null;
+//			childMap = null;
 			
 			ruler = null;
 			mapPanel = null;

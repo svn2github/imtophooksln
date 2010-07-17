@@ -29,9 +29,7 @@ package impro.googlemap
 		private var geControlDict:Dictionary;		
 		private var viewportDict:Dictionary;				
 		private var geocoder:ClientGeocoder;
-
-		private var flashlighDraging:Boolean = false;
-	
+		
 		//-------------------------------------- DEBUG VARS			
 		private var DEBUG:Boolean;				
 		private var DEBUG_TEXT:TextField;		 
@@ -101,8 +99,7 @@ package impro.googlemap
 			
 			map.dispose();
 			map.unload();
-			map = null;	
-				
+//			map = null;	
 			 								
 			for each (var geControl:GEControl in geControlDict)
 				geControl.dispose();
@@ -141,17 +138,7 @@ package impro.googlemap
 //            trace(event);
 //            trace(event.status);
 //        }
-		
-		public function setIFlashlightBlack(value:Boolean):void{
-			if(getViewport(Setting.getiFlashlightIMView().id))
-				getViewport(Setting.getiFlashlightIMView().id).setBlackScreen(value);
-		}
-		public function getIFlashlightBlack():Boolean{			
-			if(getViewport(Setting.getiFlashlightIMView().id))				
-				return getViewport(Setting.getiFlashlightIMView().id).getBlackScreen();
-			return false;
-		}
-		
+				
 		public function getParentMap():Map{
 			return map;
 		}
@@ -174,10 +161,10 @@ package impro.googlemap
 				}
 				
 				// for i-m-Flashlight
-				if(he.ID == 1 && flashlighDraging){
-					// calculate the drag distance
-					// move the context map
-				}								
+//				if(he.ID == 1 && _iFlashlightDraging){
+//					// calculate the drag distance
+//					// move the context map
+//				}								
 			}
 		}
 		
@@ -292,7 +279,7 @@ package impro.googlemap
 //	      map.setInitOptions(myMapOptions);
 //	    }
 		
-		private function updateHResMap():void{
+		public function updateHResMap():void{
 			for each (var viewport:MapViewport in viewportDict) 
                 viewport.update();            			
 
