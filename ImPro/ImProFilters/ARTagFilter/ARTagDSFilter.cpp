@@ -1658,6 +1658,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	int bGuessPose = this->getbGuessPose();
 	int bAutoThreshold = this->getAutoThreshold();
 	int bUseKalman = this->getbUseKalman();
+	int bMaskTag = this->getbMaskTag();
 
 	float kalmanMNNoise = 0.01;
 	this->GetMeasureNoiseCov(kalmanMNNoise);
@@ -1672,7 +1673,7 @@ HRESULT ARTagDSFilter::SaveToFile(WCHAR* path)
 	this->getWorldBasisScale(worldScale);
 
 	fwprintf_s(filestream, L"%d %d %d \n", poseEstimator, markermode, undistMode);
-	fwprintf_s(filestream, L"%d %d %d %d %d\n", bDrawTag,  bDrawReProj, bGuessPose, bAutoThreshold, bUseKalman);
+	fwprintf_s(filestream, L"%d %d %d %d %d %d\n", bDrawTag,  bDrawReProj, bGuessPose, bAutoThreshold, bUseKalman, bMaskTag);
 	fwprintf_s(filestream, L"%f %d %f\n", kalmanMNNoise, threshold, borderWidth);
 	
 	fwprintf_s(filestream, L"%d %d \n", camXsize, camYsize);
@@ -1708,6 +1709,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	int bGuessPose = 1;
 	int bAutoThreshold = 0;
 	int bUseKalman = 0;
+	int bMaskTag = 0;
 	double kalmanMNoise = 0.01;
 	int threshold = 100;
 	double borderWidth = 0.125;
@@ -1718,7 +1720,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	double worldScale[3] = {1};
 
 	fwscanf_s(filestream, L"%d %d %d \n", &poseEstimator, &markermode, &undistMode);
-	fwscanf_s(filestream, L"%d %d %d %d %d\n", &bDrawTag, &bDrawReProj, &bGuessPose, &bAutoThreshold, &bUseKalman);
+	fwscanf_s(filestream, L"%d %d %d %d %d %d\n", &bDrawTag, &bDrawReProj, &bGuessPose, &bAutoThreshold, &bUseKalman, &bMaskTag);
 	fwscanf_s(filestream, L"%lf %d %lf\n", &kalmanMNoise, &threshold, &borderWidth);
 
 	fwscanf_s(filestream, L"%d %d \n", &camXsize, &camYsize);
@@ -1743,6 +1745,7 @@ HRESULT ARTagDSFilter::LoadFromFile(WCHAR* path)
 	this->setbGuessPose(bGuessPose);
 	this->setAutoThreshold(bAutoThreshold);
 	this->setbUseKalman(bUseKalman);
+	this->setbMaskTag(bMaskTag);
 	this->SetMeasureNoiseCov(kalmanMNoise);
 	this->setThreshold(threshold);
 	this->setBorderWidth(borderWidth);
