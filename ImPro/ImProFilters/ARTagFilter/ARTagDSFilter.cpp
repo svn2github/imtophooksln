@@ -1911,20 +1911,33 @@ HRESULT ARTagDSFilter::SendTUIO(ARMarkerInfo* pMarkinfos, UINT numDetected)
 
 		GSTUIO2DObj tagObj;
 		tagObj.m_cID = pMarkinfos[i].id;
+
+		tagObj.m_a = (hAngle + vAngle )*0.5;
+		tagObj.m_x = center.x;
+		tagObj.m_y = center.y;
+
 		if (this->m_lastFrameObj.find(tagObj.m_cID) != this->m_lastFrameObj.end())
 		{
 			tagObj.m_sID = m_lastFrameObj[tagObj.m_cID].m_sID;
+			tagObj.m_vx = tagObj.m_x - m_lastFrameObj[tagObj.m_cID].m_x;
+			tagObj.m_vy = tagObj.m_y - m_lastFrameObj[tagObj.m_cID].m_y;
+			float aa = tagObj.m_a - m_lastFrameObj[tagObj.m_cID].m_a;
+			if (abs(aa) > abs((2*CV_PI - aa)))
+			{
+				aa = 2*CV_PI - aa;
+			}
+			if (abs(aa) > abs(2*CV_PI + aa))
+			{
+				aa = 2*CV_PI + aa;
+			}
 		}
 		else
 		{
-			 
 			LONGLONG sID = 0;
 			m_pTUIOSender->AcquireSID(TUIO_2DObj, sID);
 			tagObj.m_sID = sID;
 		}
-		tagObj.m_a = (hAngle + vAngle )*0.5;
-		tagObj.m_x = center.x;
-		tagObj.m_y = center.y;
+	
 		
 		m_pTUIOSender->Push2DObj(&tagObj, 1);
 		newList[tagObj.m_cID] = tagObj;
