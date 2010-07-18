@@ -545,7 +545,7 @@ public final class IMMultiScaleContainer extends Sprite
 
     private function viewport_transformStartHandler(event:ViewportEvent):void
     {
-        trace("Container: ViewportEvent.TRANSFORM_START")
+//        trace("Container: ViewportEvent.TRANSFORM_START")
     }
 	
 	public function viewportUpdated():void{
@@ -554,7 +554,7 @@ public final class IMMultiScaleContainer extends Sprite
 	
     private function viewport_transformUpdateHandler(event:ViewportEvent):void
     {        
-        trace("Container: ViewportEvent.TRANSFORM_UPDATE")
+//        trace("Container: ViewportEvent.TRANSFORM_UPDATE")
     	
         
 		// NOW: update LResView in IMTouchController
@@ -575,7 +575,7 @@ public final class IMMultiScaleContainer extends Sprite
 
     private function viewport_transformEndHandler(event:ViewportEvent):void
     {
-        trace("Container: ViewportEvent.TRANSFORM_END")
+//        trace("Container: ViewportEvent.TRANSFORM_END")
 //	    this.transformer = dragTransformer;
 	        	
     	// NOW: update LResView in IMTouchController

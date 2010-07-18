@@ -688,7 +688,7 @@ public final class NormalizedViewport extends EventDispatcher
      */
     public function beginTransform():void
     {
-        trace("[NormalizedViewport]", "beginTransform")
+//        trace("[NormalizedViewport]", "beginTransform")
         dispatchEvent(new ViewportEvent(ViewportEvent.TRANSFORM_START))
     }
 
@@ -699,7 +699,7 @@ public final class NormalizedViewport extends EventDispatcher
      */
     private function dispatchUpdateTransformEvent(oldTransform:IViewportTransform=null):void
     {
-        trace("[NormalizedViewport]", "updateTransform")
+//        trace("[NormalizedViewport]", "updateTransform")
         dispatchEvent(new ViewportEvent(ViewportEvent.TRANSFORM_UPDATE,
                                         false, false, oldTransform))
     }
@@ -709,7 +709,7 @@ public final class NormalizedViewport extends EventDispatcher
      */
     public function endTransform():void
     {
-        trace("[NormalizedViewport]", "endTransform")
+//        trace("[NormalizedViewport]", "endTransform")
         dispatchEvent(new ViewportEvent(ViewportEvent.TRANSFORM_END))
     }
 
@@ -747,7 +747,6 @@ public final class NormalizedViewport extends EventDispatcher
     {
         dispatchEvent(new ViewportEvent(ViewportEvent.TARGET_UPDATE));
         transformer.transform(transform, immediately);
-        trace("immediately: " + immediately);
     }
 
     /**

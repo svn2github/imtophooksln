@@ -18,8 +18,7 @@ package flash.events {
 	import flash.text.TextFieldAutoSize;
 	import flash.text.TextFormat;
 	import flash.utils.getTimer;
-	//import caurina.transitions.Tweener;
-
+	
 	import impro.multiview.IMView;
 
 	public class TUIO
@@ -59,6 +58,15 @@ package flash.events {
 		//--------------------------------------
 		private static var SWIPE_THRESHOLD:Number = 1000;
 		private static var HOLD_THRESHOLD:Number = 4000;
+
+		// calculate everything here			
+		private static var dirty:Boolean;
+		private static var frameIndex:Number = 0;;
+		private static var preCenter:Point = new Point();
+		private static var preAveLength:Number
+		private static var translation:Point = new Point();;
+		private static var scale:Number = 1;
+		
 		
 //---------------------------------------------------------------------------------------------------------------------------------------------	
 // CONSTRUCTOR - SINGLETON
@@ -172,6 +180,11 @@ package flash.events {
 			IMObject.removeListener(reciever);
 		}		
 //---------------------------------------------------------------------------------------------------------------------------------------------
+		
+		public static function getObjects():Array{
+			return OBJECT_ARRAY;
+		}
+
 		public static function getObjectById(id:Number):TUIOObject
 		{
 			if(id == 0)
@@ -265,10 +278,10 @@ package flash.events {
 //						trace("alive: " + aliveItem.@VALUE);
 						if(getObjectById(aliveItem.@VALUE)){
 							getObjectById(aliveItem.@VALUE).TUIO_ALIVE = true;
-							trace("alive: " + aliveItem.@VALUE + " true" );
+//							trace("alive: " + aliveItem.@VALUE + " true" );
 						}
-						else
- 							trace("alive: " + aliveItem.@VALUE + " false" );
+//						else
+// 							trace("alive: " + aliveItem.@VALUE + " false" );
 
 					}   
 					ID_ARRAY = newIdArray;
@@ -355,7 +368,6 @@ package flash.events {
 //									tuioobj.TUIO_OBJECT.dispatchEvent(new TouchEvent(TouchEvent.MOUSE_MOVE, true, false, x, y, localPoint.x, localPoint.y, tuioobj.dX, tuioobj.dY, tuioobj.oldX, tuioobj.oldY, tuioobj.TUIO_OBJECT, false,false,false, true, m, "2Dobj", id, sID, a));
 									
 									tuioobj.TUIO_OBJECT.dispatchEvent(new TouchEvent(TouchEvent.MOUSE_MOVE, true, false, x, y, localPoint.x, localPoint.y, tuioobj.dX, tuioobj.dY, tuioobj.oldX+100, tuioobj.oldY, tuioobj.TUIO_OBJECT, false,false,false, true, m, "2Dobj", id, sID, a));
-									trace("2Dobj >>> " + tuioobj.TUIO_OBJECT);
 								}
 							} catch (e)
 							{
@@ -421,6 +433,10 @@ package flash.events {
 								tuioobj.notifyCreated();
 								
 								trace(id + " >> 2Dcur Created!");
+								trace("OBJECT_ARRAY.length: " + OBJECT_ARRAY.length);
+								dirty = true;
+								trace("dirty = true;");
+								
 							} else {
 								tuioobj.TUIO_CURSOR.x = x;
 								tuioobj.TUIO_CURSOR.y = y;
@@ -443,7 +459,6 @@ package flash.events {
 									trace(id + " >> 2Dcur Moved");
 								}
 								
-
 								
 								if( int(Y*250) == 0 && int(Y*250) == 0) {
 									if(Math.abs(d.time - tuioobj.lastModifiedTime) > HOLD_THRESHOLD)
@@ -482,7 +497,6 @@ package flash.events {
 								{							
 									var localPoint:Point = tuioobj.TUIO_OBJECT.parent.globalToLocal(stagePoint);							
 									tuioobj.TUIO_OBJECT.dispatchEvent(new TouchEvent(TouchEvent.MOUSE_MOVE, true, false, x, y, localPoint.x, localPoint.y, tuioobj.dX, tuioobj.dY, tuioobj.oldX, tuioobj.oldY, tuioobj.TUIO_OBJECT, false,false,false, true, m, "2Dcur", id, 0, 0));
-									trace("2Dcur >>> " + tuioobj.TUIO_OBJECT);
 								}
 							} catch (e:Error)
 							{
@@ -571,7 +585,71 @@ package flash.events {
 					}
 				}
 			}
+						
+			frameIndex++;				
+							
+			var numFinger:Number = 0;
+			for each(var tuioobj:TUIOObject in OBJECT_ARRAY)
+				if(tuioobj.TUIO_TYPE == "2Dcur" && !tuioobj.NEW2)
+					numFinger++;					
+			
+			trace("Number of Fingers not New: " + numFinger + " (" + OBJECT_ARRAY.length + ")");
+			
+			
+			if(numFinger > 0){
+				// calculate translation			
+				var curCenter:Point = new Point();							
+				for each(var tuioobj:TUIOObject in OBJECT_ARRAY){
+					if(tuioobj.TUIO_TYPE == "2Dcur"){
+						curCenter.x += tuioobj.x;
+						curCenter.y += tuioobj.y;
+					} 									
+				}
+				curCenter.x /= numFinger;
+				curCenter.y /= numFinger;
+				
+				translation.x = curCenter.x - preCenter.x;
+				translation.y = curCenter.y - preCenter.y;
+//				trace("cur: " + curCenter.x + ", " + curCenter.y);
+	
+				// ignore the frame if too small translation
+	//			if( Math.sqrt(translate.x*translate.x+translate.y*translate.y) < 2)
+	//				return;
+									
+				preCenter.x = curCenter.x;
+				preCenter.y = curCenter.y;
+						
+				// calculate scale
+				if(numFinger > 1){
+					var curAveLength:Number = 0;
+					var dx:Number, dy:Number;
+					for each(var tuioobj:TUIOObject in OBJECT_ARRAY){
+						if(tuioobj.TUIO_TYPE == "2Dcur"){
+							dx = (tuioobj.x - curCenter.x);
+							dy = (tuioobj.y - curCenter.y);
+							curAveLength += Math.sqrt(dx * dx + dy * dy);
+						} 	
+					}
+					
+					curAveLength /= numFinger;			
+					scale = curAveLength / preAveLength;
+					preAveLength = curAveLength;					
+				}else
+					scale = 1;
+				
+				if(dirty){
+					translation.x = 0;
+					translation.y = 0;
+					scale = 1;
+					dirty = false;
+					trace("dirty = false;");
+				}
+				
+//				trace("translation: " + translation.x + ", " + translation.y);
+//				trace("scale: " + scale);
+				
 
+			}
 			
 			
 			if(DEBUG)
@@ -611,6 +689,20 @@ package flash.events {
 		if(DEBUG)
 		DEBUG_TEXT.appendText("  T - " + (getTimer() - time)+"  \n");	
 		}
+		
+		public static function Scale():Number{
+			return scale;
+		}
+		public static function Translation():Point{
+			return translation;
+		}
+		public static function FrameIndex():Number{
+			return frameIndex;
+		}
+		public static function Center():Point{
+			return preCenter;	
+		}
+		
 //---------------------------------------------------------------------------------------------------------------------------------------------
         private static function activateDebugMode():void 
         {

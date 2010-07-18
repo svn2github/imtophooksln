@@ -81,7 +81,7 @@ package
 			
 			setupApps();
 			
-			launchApp(appDict["36"]);
+			launchApp(appDict["39"]);
 		}		
 
 		private function setupApps():void{

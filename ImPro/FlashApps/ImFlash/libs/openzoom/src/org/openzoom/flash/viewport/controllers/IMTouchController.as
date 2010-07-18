@@ -47,7 +47,6 @@ import flash.geom.Rectangle;
 import flash.utils.Timer;
 
 import impro.googlemap.TouchEventsManager;
-import impro.openzoom.IMMultiScaleContainer;
 
 import org.openzoom.flash.core.openzoom_internal;
 import org.openzoom.flash.viewport.IViewportController;
@@ -79,6 +78,8 @@ public final class IMTouchController extends ViewportControllerBase
 	private var STATE_NOTHING:String = "nothing";
 	private var ZOOM_THRESHOLD:Number = 100;
 	
+	private var preFrameIndex:Number = 0;
+	
 	private var eventListener:Sprite = new Sprite();
 
     //--------------------------------------------------------------------------
@@ -100,6 +101,7 @@ public final class IMTouchController extends ViewportControllerBase
     //  Constructor
     //
     //--------------------------------------------------------------------------
+
 
     /**
      *  Constructor.
@@ -425,6 +427,45 @@ public final class IMTouchController extends ViewportControllerBase
 		  		return;
 		  	}
 			
+			
+			
+			
+			// apply translation & sclae to application
+			if(!panning)
+				return;
+			
+			var frameIndex:Number = TUIO.FrameIndex();
+			
+			if(frameIndex == preFrameIndex)
+				return;
+//			trace("frameIndex: " + frameIndex);
+			preFrameIndex = frameIndex;
+				
+			var translation:Point = TUIO.Translation();
+			var zoom:Number = TUIO.Scale();
+			var curCenter:Point = TUIO.Center();
+			
+				        
+	        var distanceX:Number = translation.x / viewport.viewportWidth;
+	        var distanceY:Number = translation.y / viewport.viewportHeight;	
+	        var targetX:Number = curCenter.x - (distanceX * viewport.width);
+	        var targetY:Number = curCenter.y - (distanceY * viewport.height);
+			
+			trace("viewport.width: " + viewport.width);
+			
+			if(distanceX + distanceY != 0){
+	//        	viewport.panTo(targetX, targetY, !smoothPanning);
+				viewport.panBy(-distanceX/2, -distanceY/2, !smoothPanning);				
+			}
+			
+			if(zoom != 1){
+	  			viewport.zoomBy(zoom,  
+		  			curCenter.x / view.width,
+	                curCenter.y / view.height);				
+			}
+			
+			
+			/*						
 			//trace(this, "handleEnterFrame");
 			//make your own TouchEvent object in case that you want to render
 			//a TouchEvent.MOUSE_UP (you will want to if you're blob has gone
@@ -439,10 +480,10 @@ public final class IMTouchController extends ViewportControllerBase
 					//find out how far your finger has moved since the last frame
 //					var getSizeX:Number = (view as IMMultiScaleContainer).viewportWidth;
 //					var getSizeY:Number = (view as IMMultiScaleContainer).viewportHeight;
-					var getSizeX:Number = 600;
-					var getSizeY:Number = 450;
-					var percentPannedX:Number = (tuioobj.x - firstPos.x)/getSizeX;
-					var percentPannedY:Number = (tuioobj.y - firstPos.y)/getSizeY;
+//					var getSizeX:Number = 600;
+//					var getSizeY:Number = 450;
+//					var percentPannedX:Number = (tuioobj.x - firstPos.x)/getSizeX;
+//					var percentPannedY:Number = (tuioobj.y - firstPos.y)/getSizeY;
 //					var percentPannedX:Number = (tuioobj.x - firstPos.x)/getSize().x;
 //					var percentPannedY:Number = (tuioobj.y - firstPos.y)/getSize().y;
 					
@@ -454,7 +495,7 @@ public final class IMTouchController extends ViewportControllerBase
 
 			        // update view drag vector
 			        viewDragVector.bottomRight = new Point(tuioobj.x, tuioobj.y);
-			
+					
 			        var distanceX:Number;
 			        var distanceY:Number;
 			        var targetX:Number;
@@ -580,6 +621,7 @@ public final class IMTouchController extends ViewportControllerBase
 					}
 				}
 			}
+			*/
 		}
 
 	//calculates the length of the vector between two points

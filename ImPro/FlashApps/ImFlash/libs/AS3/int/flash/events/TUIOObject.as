@@ -1,6 +1,6 @@
 ﻿package flash.events 
 {
-	import flash.display.DisplayObject;	
+	import flash.display.DisplayObject;
 	import flash.geom.Point;
 
 	public class TUIOObject 
@@ -35,7 +35,9 @@
 		
 		internal var downX:Number;
 		internal var downY:Number;	
-
+		
+		internal var NEW2:Boolean;
+		
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // CONSTRUCTOR
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,11 +73,14 @@
 			}
 			
 			NEW = true;
+			NEW2 = true;
 			
 			var d:Date = new Date();
 			startTime = d.time;
 			lastModifiedTime = startTime;
 			//trace(startTime);
+			
+			
 		}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // PUBLIC METHODS
@@ -128,7 +133,9 @@
 				localPoint = EVENT_ARRAY[i].parent.globalToLocal(new Point(x, y));			
 				trace("Notify moved"+ localPoint);
 				EVENT_ARRAY[i].dispatchEvent(new TouchEvent(TouchEvent.MOUSE_MOVE, true, false, x, y, localPoint.x, localPoint.y, dX, dY, oldX, oldY, EVENT_ARRAY[i], false,false,false, true, 0, TUIO_TYPE, ID, sID, angle));	
-			}			
+			}
+			
+			NEW2 = false;
 		}
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		internal function notifyRemoved():void
