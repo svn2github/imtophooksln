@@ -113,13 +113,13 @@ public final class IMMultiScaleContainer extends Sprite
     	// for imPro
     	this.isLResView = viewportListenToEvent;
 
-	    dragTransformer = new TweenerTransformer();
-	    dragTransformer.easing = "easeOutCubic"; //"easeOutBack";
-	    dragTransformer.duration = 1; // seconds
-
-	    illegalMoveTransformer = new TweenerTransformer();
-	    illegalMoveTransformer.easing = "easeOutInElastic"; //"easeOutBack";
-	    illegalMoveTransformer.duration = 2; // seconds
+//	    dragTransformer = new TweenerTransformer();
+//	    dragTransformer.easing = "easeOutCubic"; //"easeOutBack";
+//	    dragTransformer.duration = 0.3; // seconds
+//
+//	    illegalMoveTransformer = new TweenerTransformer();
+//	    illegalMoveTransformer.easing = "easeOutInElastic"; //"easeOutBack";
+//	    illegalMoveTransformer.duration = 2; // seconds
     	
         createChildren()
     }
@@ -131,8 +131,8 @@ public final class IMMultiScaleContainer extends Sprite
     //--------------------------------------------------------------------------
 
 	// add by me
-	private var dragTransformer:TweenerTransformer;
-	private var illegalMoveTransformer:TweenerTransformer;
+//	private var dragTransformer:TweenerTransformer;
+//	private var illegalMoveTransformer:TweenerTransformer;
 
 
     private var mouseCatcher:Sprite
@@ -568,7 +568,7 @@ public final class IMMultiScaleContainer extends Sprite
     }
     
     public function illegalZoom():void{
-	    this.transformer = illegalMoveTransformer;
+//	    this.transformer = illegalMoveTransformer;
     }
     
     private var invalidated:Boolean = true
@@ -576,7 +576,7 @@ public final class IMMultiScaleContainer extends Sprite
     private function viewport_transformEndHandler(event:ViewportEvent):void
     {
         trace("Container: ViewportEvent.TRANSFORM_END")
-	    this.transformer = dragTransformer;
+//	    this.transformer = dragTransformer;
 	        	
     	// NOW: update LResView in IMTouchController
 //    	if(isLResView){

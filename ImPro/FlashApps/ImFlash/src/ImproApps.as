@@ -21,7 +21,7 @@ package
 	{	
 		private var appDict:Dictionary = new Dictionary();
 		
-		private var preApp:IImproApp; // preApp for not crash, when removing curApp which is running animation
+//		private var preApp:IImproApp; // preApp for not crash, when removing curApp which is running animation
 		private var curApp:IImproApp;
 		
 		private var theAppName:String;
@@ -81,22 +81,23 @@ package
 			
 			setupApps();
 			
-			launchApp(appDict["40"]);
+			launchApp(appDict["36"]);
 		}		
 
 		private function setupApps():void{
 			
-			var index:Number = 32;
+			var index:Number = 36;
 			appDict[String(index++)] = "googlemap,sight_Taipei101";
 			appDict[String(index++)] = "googlemap,sight_NYTimeSquare";
 			appDict[String(index++)] = "googlemap,sight_LACenter";
 			appDict[String(index++)] = "river";
-			appDict[String(index++)] = "npm_animal_3";
-//			appDict[String(index++)] = "npm_animal_7";
-			appDict[String(index++)] = "impro_photoset_01";
-			appDict[String(index++)] = "moneyNotArt";			
-			appDict[String(index++)] = "p1165-baudisch";
 			appDict[String(index++)] = "uist2010_impro";
+			
+//			appDict[String(index++)] = "npm_animal_3";
+//			appDict[String(index++)] = "npm_animal_7";
+//			appDict[String(index++)] = "impro_photoset_01";
+//			appDict[String(index++)] = "moneyNotArt";			
+//			appDict[String(index++)] = "p1165-baudisch";
 //			appDict["38"] = "pap1072-chan";				
 		}
         		
@@ -133,16 +134,23 @@ package
 				return;
 			}
 
-			if(preApp){
-				(preApp as IImproApp).dispose();
-				preApp = null;
-				cacheClear();	
-			}
-			
+//			if(preApp){
+//				(preApp as IImproApp).dispose();
+//				preApp = null;
+//				cacheClear();	
+//			}
+//			
+//			if(curApp){
+//				preApp = curApp;
+//				appContainer.removeChild(curApp as DisplayObject);
+//				curApp = null;
+//			}
+
 			if(curApp){
-				preApp = curApp;
+				(curApp as IImproApp).dispose();
 				appContainer.removeChild(curApp as DisplayObject);
 				curApp = null;
+				cacheClear();					
 			}
 			
 			theAppName = app;
