@@ -9,7 +9,8 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <title>Google Earth</title>
-    <script src="http://www.google.com/jsapi?key=ABQIAAAA1XbMiDxx_BTCY2_FkPh06RRaGTYH6UMl8mADNa0YKuWNNa8VNxQEerTAUcfkyrr6OwBovxn7TDAH5Q"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.google.com/jsapi?key=ABQIAAAA1XbMiDxx_BTCY2_FkPh06RRaGTYH6UMl8mADNa0YKuWNNa8VNxQEerTAUcfkyrr6OwBovxn7TDAH5Q"></script>
     <script type="text/javascript">
 
 google.load("earth", "1");
@@ -39,11 +40,13 @@ var placemarkIcon;
 var icon;
 var point; 
 
+var screenOverlay;
+
 function init() {
 
   google.earth.createInstance("map3d-1", initCB1, failureCB);
   google.earth.createInstance('map3d-2', initCB2, failureCB);
-  
+ 
 }
 
 function initCB1(object) {
@@ -134,11 +137,11 @@ ge.getFeatures().appendChild(placemarkIcon);
 /////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////screen overlay//////////////////////////////////////////////////////////////////////
-var screenOverlay = ge.createScreenOverlay('');
+screenOverlay = ge.createScreenOverlay('');
 // Set the visibility to false while we construct the overlay.
 screenOverlay.setVisibility(false);
 var icon = ge.createIcon('');
-icon.setHref('http://earth-api-samples.googlecode.com/svn/trunk/examples/' + 'static/frame.png');
+icon.setHref('imtophooksln.googlecode.com/svn/trunk/ImPro/ImProApps/101 button/boundary.png');
 // Loads an gilded picture frame.
 screenOverlay.setIcon(icon);
 
@@ -151,8 +154,8 @@ screenXY.setY(0);
 var overlayXY = screenOverlay.getOverlayXY();
 overlayXY.setXUnits(ge.UNITS_PIXELS);
 overlayXY.setYUnits(ge.UNITS_PIXELS);
-overlayXY.setX(900);
-overlayXY.setY(0);
+overlayXY.setX(975);
+overlayXY.setY(-65);
 
 var overlaySize = screenOverlay.getSize();
 overlaySize.setXUnits(ge.UNITS_FRACTION);
@@ -177,7 +180,8 @@ function initCB2(object) {
      
     //ge2.getLayerRoot().enableLayerById(ge2.LAYER_BORDERS, true);
     //ge2.getLayerRoot().enableLayerById(ge2.LAYER_ROADS, true);
-    ge2.getLayerRoot().enableLayerById(ge2.LAYER_BUILDINGS, true);    
+    ge2.getLayerRoot().enableLayerById(ge2.LAYER_BUILDINGS, true);   
+    ge2.getOptions().setFadeInOutEnabled(true); 
     
     polygonPlacemarkSmall = ge2.createPlacemark(''); 
     var polygon = ge2.createPolygon(''); 
@@ -715,6 +719,25 @@ function remove() {
 function Building(temp) {
     if(temp)    ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, false);
     else    ge.getLayerRoot().enableLayerById(ge.LAYER_BUILDINGS, true);
+}
+
+function ShowSV()
+{
+     var divstyle = new String();        
+     divstyle = document.getElementById("map3d-2").style.visibility;        
+     document.getElementById("map3d-2").style.visibility = "visible";
+     
+     screenOverlay.setVisibility(true);
+}
+
+
+function HideSV()
+{
+     var divstyle = new String();        
+     divstyle = document.getElementById("map3d-2").style.visibility;        
+     document.getElementById("map3d-2").style.visibility = "hidden";
+     
+     screenOverlay.setVisibility(false);
 }
 
 
