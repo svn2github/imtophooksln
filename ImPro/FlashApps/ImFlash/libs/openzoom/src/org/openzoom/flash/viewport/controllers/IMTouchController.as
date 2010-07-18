@@ -434,11 +434,9 @@ public final class IMTouchController extends ViewportControllerBase
 			if(!panning)
 				return;
 			
-			var frameIndex:Number = TUIO.FrameIndex();
-			
+			var frameIndex:Number = TUIO.FrameIndex();			
 			if(frameIndex == preFrameIndex)
 				return;
-//			trace("frameIndex: " + frameIndex);
 			preFrameIndex = frameIndex;
 				
 			var translation:Point = TUIO.Translation();
@@ -448,21 +446,33 @@ public final class IMTouchController extends ViewportControllerBase
 				        
 	        var distanceX:Number = translation.x / viewport.viewportWidth;
 	        var distanceY:Number = translation.y / viewport.viewportHeight;	
-	        var targetX:Number = curCenter.x - (distanceX * viewport.width);
-	        var targetY:Number = curCenter.y - (distanceY * viewport.height);
+//	        var targetX:Number = curCenter.x - (distanceX * viewport.width);
+//	        var targetY:Number = curCenter.y - (distanceY * viewport.height);
 			
 			trace("viewport.width: " + viewport.width);
 			
-			if(distanceX + distanceY != 0){
+
+//			if(distanceX + distanceY != 0)
+			{
 	//        	viewport.panTo(targetX, targetY, !smoothPanning);
-				viewport.panBy(-distanceX/2, -distanceY/2, !smoothPanning);				
+				viewport.panBy(-distanceX*viewport.width, -distanceY*viewport.height, !smoothPanning);				
 			}
-			
-			if(zoom != 1){
+						
+			if(zoom > 0){
+				trace(">>> zoom: " + zoom);
 	  			viewport.zoomBy(zoom,  
 		  			curCenter.x / view.width,
-	                curCenter.y / view.height);				
+	                curCenter.y / view.height);	
+				
+//				if(viewport.zoom < _minZoomFactor){
+//					viewport.zoomBy(_minZoomFactor/viewport.zoom);
+//				}
+//				if(viewport.zoom > _maxZoomFactor){
+//					viewport.zoomBy(_maxZoomFactor/viewport.zoom);
+//				}	                			
 			}
+			
+			
 			
 			
 			/*						

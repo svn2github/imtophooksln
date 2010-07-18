@@ -1,22 +1,14 @@
 package impro.googlemap
 {
-	import caurina.transitions.Tweener;
-	
 	import com.google.maps.LatLng;
 	import com.google.maps.LatLngBounds;
 	import com.google.maps.Map;
 	import com.google.maps.MapEvent;
-	import com.google.maps.controls.NavigationControl;
-	import com.google.maps.overlays.Marker;
-	import com.google.maps.overlays.MarkerOptions;
-	import com.google.maps.styles.FillStyle;
-	import com.google.maps.styles.StrokeStyle;
 	
-	import impro.openzoom.IMLowResEvent;
-	
-	import flash.display.Sprite;
 	import flash.events.*;
 	import flash.geom.Point;
+	
+	import impro.openzoom.IMLowResEvent;
 	
 //	import tuio.TUIO;
 //	import tuio.TUIOObject;
@@ -43,10 +35,17 @@ package impro.googlemap
 		private var STATE_NOTHING:String = "nothing";
 		private var ZOOM_THRESHOLD:Number = 40;//100;
 		
+		private var floatZoom:Number;
+		private var isMapReady:Boolean = false;
+		
+		
 //		private var markerA:Marker;
 		
 //		private var centerLat:Number = 0;
 //		private var centerLon:Number = 0;
+
+		// new touch reasoning
+		private var preFrameIndex:Number = 0;		
 		
 		public function TappableMap()
 		{
@@ -72,7 +71,7 @@ package impro.googlemap
 			centerPointBlob1Blob2 = null;
 			firstPos = null;
 			
-			removeEventListener(MapEvent.MAP_READY, onMapReady);			
+			removeEventListener(MapEvent.MAP_READY, onMapReady);		
 			removeEventListener(TouchEvent.MOUSE_DOWN, onTouchDown);
 			removeEventListener(Event.ENTER_FRAME, handleEnterFrame);
 		}
@@ -96,31 +95,22 @@ package impro.googlemap
 //		}
 		
 		private function onMapReady(event:MapEvent):void {
-			
-			this.addControl(new NavigationControl());
-			this.setZoom(14);
-			
-			//HOWTO: add a marker to your map.
-//			markerA = new Marker(
-//      			new LatLng(50.08474,8.237396),
-//			      new MarkerOptions({
-//			                  strokeStyle: new StrokeStyle({color: 0x987654}),
-//			                  fillStyle: new FillStyle({color: 0x223344, alpha: 0.8}),
-//			                  radius: 12,
-//			                  hasShadow: true
-//			      }));
-			//uncomment this to see the marker on the map
-//			addOverlay(markerA);			
+			floatZoom = this.getZoom();
+			isMapReady = true;
 		}
 		
 		protected function onTouchDown(e:TouchEvent):void 
-		{			
+		{	
+			if(!isMapReady)
+				return;
+			
 			//add touch event to global touch array
 			TouchEventsManager.getInstance().addActiveEvent(e, this);
 			mouseDownCounter=mouseDownCounter+1;
 			addEventListener(TouchEvent.MOUSE_UP, localMouseUp);
 			addEventListener(Event.ENTER_FRAME, handleEnterFrame);
 			
+			/*
 			var curPt:Point = new Point(e.stageX, e.stageY);
 			
 			//find out if the contact was with one or with more fingers
@@ -159,6 +149,7 @@ package impro.googlemap
 			//the point in the map where you tapped. you need this for panning in the map.
 			firstPos.x = curPt.x;
 			firstPos.y = curPt.y;
+			*/
 		}
 		
 		//reset everything after removing your finger	    
@@ -167,14 +158,15 @@ package impro.googlemap
 			mouseDownCounter = activeEvents.length;
 			
 			if(mouseDownCounter == 0){
-				state = STATE_NOTHING;
+//				state = STATE_NOTHING;
 				removeEventListener(TouchEvent.MOUSE_UP, localMouseUp);
 				removeEventListener(Event.ENTER_FRAME, handleEnterFrame);
-				isDragging = false;
+//				isDragging = false;
 				
 				// dispatch update HRes
 				dispatchEvent(new IMLowResEvent(IMLowResEvent.LRES_UPDATE));
 			}
+			/*
 			if(mouseDownCounter == 1){
 				state = STATE_DRAGGING;
 			}
@@ -186,6 +178,7 @@ package impro.googlemap
 			if(mouseDownCounter > 1){
 				state = STATE_SCALE;
 			}
+			*/
 		}
 		
 		//take your touch out of the global touch array and
@@ -204,7 +197,87 @@ package impro.googlemap
 		//handleEnterFrame carries out the panning and zooming activities
 		//it is called in every frame while you're touching the screen
 		protected function handleEnterFrame(e:Event):void {
+			
+			trace("handleEnterFrame");
+			
+			var frameIndex:Number = TUIO.FrameIndex();			
+			if(frameIndex == preFrameIndex)
+				return;
+			preFrameIndex = frameIndex;			
 
+			var translation:Point = TUIO.Translation();
+			var zoom:Number = TUIO.Scale();
+			var curCenter:Point = TUIO.Center();
+			
+			//////////////////////////////////////
+			// For applying translation
+			//////////////////////////////////////
+			
+//			if(translation.x + translation.y != 0)
+			
+			//find out how far your finger has moved since the last frame
+			var percentPannedX:Number = (translation.x)/getSize().x;
+			var percentPannedY:Number = (translation.y)/getSize().y;
+						
+			//get the bounding box of the map that is currently on screen
+			var bounds:LatLngBounds = getLatLngBounds();
+			//calculate lat/lon coordinate distance of bounds on screen 
+		  	var spanX:Number = bounds.getNorthWest().lng() - bounds.getSouthEast().lng();
+		  	var spanY:Number = bounds.getNorthWest().lat() - bounds.getSouthEast().lat();
+		  	
+		  	//set new map center by adding to the map's center the lat/lon distance multiplied 
+		  	//with the amount that your finger has moved on screen 
+		  	var newCenterLat:Number = getCenter().lat() + spanY*percentPannedY;
+		  	var newCenterLon:Number = getCenter().lng() + spanX*percentPannedX;
+		  					  	
+		  	this.setCenter(new LatLng(newCenterLat, newCenterLon));
+			
+			
+			///////////////////////////////////
+			// For applying zoom
+			///////////////////////////////////
+			
+			//get map's bounding box
+			var boundsn:LatLngBounds = getLatLngBounds();
+			//calculate lat/lon distances of current map coutout
+			var spanXn:Number =  boundsn.getSouthEast().lng()-boundsn.getNorthWest().lng();
+		  	var spanYn:Number =  boundsn.getSouthEast().lat()-boundsn.getNorthWest().lat();
+			
+			//add the zoom amount to the maps lat/lon positions to get the new center
+		  	var newCenterLonn:Number = boundsn.getNorthWest().lng() + spanXn*zoom;
+		  	var newCenterLatn:Number = boundsn.getNorthWest().lat() + spanYn*zoom;
+		  	
+		  	floatZoom *= zoom;
+			while(floatZoom > getZoom()+1){
+				if(getZoom() < this.getMaxZoomLevel())
+	  				zoomIn(new LatLng(newCenterLatn,newCenterLonn));
+	  			else
+	  				floatZoom-=1;		
+			}
+			while(floatZoom < getZoom()-1){
+				if(getZoom() > this.getMinZoomLevel())				
+		  			zoomOut(new LatLng(newCenterLatn,newCenterLonn));	
+	  			else
+	  				floatZoom+=1;				  						
+			}
+
+//			var zoomedIn:Boolean = false;
+//		  	if(zoomDistance > 0 && zoomDistance > ZOOM_THRESHOLD){
+//		  		while(zoomDistance - ZOOM_THRESHOLD > 0){
+//		  			this.zoomIn(new LatLng(newCenterLatn,newCenterLonn));
+//		  			zoomDistance = zoomDistance-ZOOM_THRESHOLD;
+//		  			zoomedIn = true;
+//		  		}
+//		  	}
+//		  	
+//		  	if(zoomDistance < 0 && zoomDistance < -ZOOM_THRESHOLD){
+//		  		while(zoomDistance+ZOOM_THRESHOLD<0){
+//		  			this.zoomOut(new LatLng(newCenterLatn,newCenterLonn));
+//		  			zoomDistance = zoomDistance+ZOOM_THRESHOLD;
+//		  		}
+//		  	}
+		  				
+			/*
 			//make your own TouchEvent object in case that you want to render
 			//a TouchEvent.MOUSE_UP (you will want to if you're blob has gone
 			//that means you do not touch the screen anymore
@@ -311,7 +384,7 @@ package impro.googlemap
 						localMouseUp(touchEvent);
 					}
 				}
-			}
+			}*/
 		}
 		
 		//calculates the length of the vector between two points

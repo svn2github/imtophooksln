@@ -16,7 +16,7 @@ package
 	import impro.TangibleCardLayer;
 	import impro.multiview.IMView;
 
-	[SWF(width=2400, height=600, frameRate=24)]
+	[SWF(width=2400, height=600, frameRate=30)]
 	public class ImproApps extends Sprite
 	{	
 		private var appDict:Dictionary = new Dictionary();
@@ -81,7 +81,7 @@ package
 			
 			setupApps();
 			
-			launchApp(appDict["39"]);
+			launchApp(appDict["36"]);
 		}		
 
 		private function setupApps():void{

@@ -53,15 +53,15 @@ package impro.googlemap
 			
 			map.addEventListener(MapEvent.MAP_PREINITIALIZE, function(e:Event):void{
 			  var myMapOptions:MapOptions = new MapOptions();
-//			  myMapOptions.zoom = zoom; // useless if set here
+			  myMapOptions.zoom = zoom; // useless if set here
 			  myMapOptions.center = latlng;
 			  myMapOptions.mapType = MapType.HYBRID_MAP_TYPE;
 			  map.setInitOptions(myMapOptions);		
 			});
 			
-			map.addEventListener(MapEvent.MAP_READY, function(e:Event):void{
-				map.setZoom(zoom);
-			});			
+//			map.addEventListener(MapEvent.MAP_READY, function(e:Event):void{
+//				map.setZoom(zoom);
+//			});			
 
 //			map.addEventListener(MapZoomEvent.ZOOM_CHANGED, onMapZoom);			
 //			if(Setting.interactiveDrag)
@@ -154,7 +154,8 @@ package impro.googlemap
 			
 			if(getViewport(String(he.ID))){
 				var _vpControl:MapViewport = getViewport(String(he.ID));				
-				if(_vpControl.isBeyondStable(he, 5)){
+//				if(_vpControl.isBeyondStable(he, 5))
+				{
 					_vpControl.setViewportBound(he.rx1, he.ry1, he.rx2, he.ry2);			
 					_vpControl.setViewportOriPts(he.oriPt1, he.oriPt2, he.oriPt3, he.oriPt4);
 					_vpControl.update();					

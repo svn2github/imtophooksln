@@ -60,7 +60,7 @@ package flash.events {
 		private static var HOLD_THRESHOLD:Number = 4000;
 
 		// calculate everything here			
-		private static var dirty:Boolean;
+		private static var dirty:Number;
 		private static var frameIndex:Number = 0;;
 		private static var preCenter:Point = new Point();
 		private static var preAveLength:Number
@@ -434,7 +434,7 @@ package flash.events {
 								
 								trace(id + " >> 2Dcur Created!");
 								trace("OBJECT_ARRAY.length: " + OBJECT_ARRAY.length);
-								dirty = true;
+								dirty = 3; // need to clean dirty twice
 								trace("dirty = true;");
 								
 							} else {
@@ -591,7 +591,7 @@ package flash.events {
 			var numFinger:Number = 0;
 			for each(var tuioobj:TUIOObject in OBJECT_ARRAY)
 				if(tuioobj.TUIO_TYPE == "2Dcur" && !tuioobj.NEW2)
-					numFinger++;					
+					numFinger++;			
 			
 			trace("Number of Fingers not New: " + numFinger + " (" + OBJECT_ARRAY.length + ")");
 			
@@ -607,11 +607,9 @@ package flash.events {
 				}
 				curCenter.x /= numFinger;
 				curCenter.y /= numFinger;
-				
 				translation.x = curCenter.x - preCenter.x;
 				translation.y = curCenter.y - preCenter.y;
-//				trace("cur: " + curCenter.x + ", " + curCenter.y);
-	
+				
 				// ignore the frame if too small translation
 	//			if( Math.sqrt(translate.x*translate.x+translate.y*translate.y) < 2)
 	//				return;
@@ -624,25 +622,34 @@ package flash.events {
 					var curAveLength:Number = 0;
 					var dx:Number, dy:Number;
 					for each(var tuioobj:TUIOObject in OBJECT_ARRAY){
-						if(tuioobj.TUIO_TYPE == "2Dcur"){
+						if(tuioobj.TUIO_TYPE == "2Dcur" && !tuioobj.NEW2){
 							dx = (tuioobj.x - curCenter.x);
 							dy = (tuioobj.y - curCenter.y);
 							curAveLength += Math.sqrt(dx * dx + dy * dy);
 						} 	
 					}
+
 					
-					curAveLength /= numFinger;			
-					scale = curAveLength / preAveLength;
-					preAveLength = curAveLength;					
+					curAveLength /= numFinger;
+
+					trace("cur: " + curAveLength + " , pre: " + preAveLength);
+					
+					if(preAveLength != 0)
+						scale = curAveLength / preAveLength;
+					preAveLength = curAveLength;
+					trace("acur: " + curAveLength + " , apre: " + preAveLength);
+					
+
 				}else
 					scale = 1;
 				
-				if(dirty){
+				if(dirty > 0){
 					translation.x = 0;
 					translation.y = 0;
 					scale = 1;
-					dirty = false;
-					trace("dirty = false;");
+					
+					dirty--;
+					trace("dirty = false (" + dirty + ")");
 				}
 				
 //				trace("translation: " + translation.x + ", " + translation.y);
@@ -666,7 +673,9 @@ package flash.events {
 				if(OBJECT_ARRAY[i].TUIO_ALIVE == false)
 				{
 					trace("STAGE.removeChild: " + OBJECT_ARRAY[i].ID);
-
+					
+					dirty = 3;
+					
 					OBJECT_ARRAY[i].notifyRemoved();
 					STAGE.removeChild(OBJECT_ARRAY[i].TUIO_CURSOR);
 					OBJECT_ARRAY.splice(i, 1);
