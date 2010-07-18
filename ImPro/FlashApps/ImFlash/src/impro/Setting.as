@@ -25,7 +25,7 @@ package impro
 				);
 				
 		public static function getiFlashlightIMView():IMView{
-			return HRes[1];
+			return HRes[0];
 		}
 
 	}
