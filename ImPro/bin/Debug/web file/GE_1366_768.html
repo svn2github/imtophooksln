@@ -14,6 +14,7 @@
     <script type="text/javascript">
 
 google.load("earth", "1");
+google.load("jquery.js","1.4");
 
 var ge = null;
 var ge2 = null;
@@ -45,14 +46,15 @@ var screenOverlay;
 function init() {
 
   google.earth.createInstance("map3d-1", initCB1, failureCB);
-  google.earth.createInstance('map3d-2', initCB2, failureCB);
+  google.earth.createInstance("map3d-2", initCB2, failureCB);
+  //$("#map3d-2").rotateRight(45);
  
 }
 
 function initCB1(object) {
 
   ge = object;
-  
+
   ge.getWindow().setVisibility(true);
   ge.getNavigationControl().setVisibility(ge.VISIBILITY_AUTO);
   ge.getOptions().setStatusBarVisibility(true);
@@ -728,6 +730,7 @@ function ShowSV()
      document.getElementById("map3d-2").style.visibility = "visible";
      
      screenOverlay.setVisibility(true);
+     
 }
 
 
