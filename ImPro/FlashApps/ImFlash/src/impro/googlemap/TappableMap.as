@@ -4,6 +4,7 @@ package impro.googlemap
 	import com.google.maps.LatLngBounds;
 	import com.google.maps.Map;
 	import com.google.maps.MapEvent;
+    import com.google.maps.controls.ZoomControl;
 	
 	import flash.events.*;
 	import flash.geom.Point;
@@ -97,6 +98,7 @@ package impro.googlemap
 		private function onMapReady(event:MapEvent):void {
 			floatZoom = this.getZoom();
 			isMapReady = true;
+			this.addControl(new ZoomControl());
 		}
 		
 		protected function onTouchDown(e:TouchEvent):void 
@@ -238,27 +240,36 @@ package impro.googlemap
 			///////////////////////////////////
 			
 			//get map's bounding box
-			var boundsn:LatLngBounds = getLatLngBounds();
-			//calculate lat/lon distances of current map coutout
-			var spanXn:Number =  boundsn.getSouthEast().lng()-boundsn.getNorthWest().lng();
-		  	var spanYn:Number =  boundsn.getSouthEast().lat()-boundsn.getNorthWest().lat();
-			
-			//add the zoom amount to the maps lat/lon positions to get the new center
-		  	var newCenterLonn:Number = boundsn.getNorthWest().lng() + spanXn*zoom;
-		  	var newCenterLatn:Number = boundsn.getNorthWest().lat() + spanYn*zoom;
+//			var boundsn:LatLngBounds = getLatLngBounds();
+//			//calculate lat/lon distances of current map coutout
+//			var spanXn:Number =  boundsn.getSouthEast().lng()-boundsn.getNorthWest().lng();
+//		  	var spanYn:Number =  boundsn.getSouthEast().lat()-boundsn.getNorthWest().lat();
+//			
+//			//add the zoom amount to the maps lat/lon positions to get the new center
+//		  	var newCenterLonn:Number = boundsn.getNorthWest().lng() + spanXn*zoom;
+//		  	var newCenterLatn:Number = boundsn.getNorthWest().lat() + spanYn*zoom;
 		  	
 		  	floatZoom *= zoom;
 			while(floatZoom > getZoom()+1){
-				if(getZoom() < this.getMaxZoomLevel())
-	  				zoomIn(new LatLng(newCenterLatn,newCenterLonn));
+				if(getZoom() < this.getMaxZoomLevel()-1)
+	  				zoomIn(new LatLng(newCenterLat,newCenterLon));
 	  			else
-	  				floatZoom-=1;		
+	  				floatZoom-=1;
+	  				
+//	  			floatZoom = Math.max(floatZoom, getMaxZoomLevel());
+	  						
 			}
+			
+			trace("getMinZoomLevel: " + getMinZoomLevel());
+			
 			while(floatZoom < getZoom()-1){
-				if(getZoom() > this.getMinZoomLevel())				
-		  			zoomOut(new LatLng(newCenterLatn,newCenterLonn));	
-	  			else
-	  				floatZoom+=1;				  						
+				if(getZoom() > 3){
+		  			zoomOut(new LatLng(newCenterLat,newCenterLon));		  			
+		  		}	
+	  			floatZoom += 1;
+//	  			floatZoom = Math.max(floatZoom, getMinZoomLevel());
+	  			
+	  			trace("floatZoom: " + floatZoom + " , getZoom(): " + getZoom());			  						
 			}
 
 //			var zoomedIn:Boolean = false;
