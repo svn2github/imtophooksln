@@ -288,11 +288,11 @@ namespace googleearth {
 
 		private: System::Void setupBrowser(){
 			//String^ URL = "file:///C:/GE.html";  
-		    String^ URL = "C:/GE_1366_768.html";
-			//String^ URL = Application::StartupPath;
+		    //String^ URL = "C:/GE_1366_768.html";
+			String^ URL = Application::StartupPath;
 			//URL += "/web_file/GE.html";
-			//URL += "/web_file/";
-			//URL += htmlFile;
+			URL += "/web_file/";
+			URL += htmlFile;
 			
 			//MessageBox::Show(URL);
 			this->webBrowser1->Navigate(URL);
@@ -552,7 +552,7 @@ namespace googleearth {
 			// button2
 			// 
 			this->button2->BackgroundImageLayout = System::Windows::Forms::ImageLayout::Stretch;
-			this->button2->Location = System::Drawing::Point(35, 582);
+			this->button2->Location = System::Drawing::Point(47, 528);
 			this->button2->Name = L"button2";
 			this->button2->Size = System::Drawing::Size(117, 116);
 			this->button2->TabIndex = 2;
@@ -567,7 +567,6 @@ namespace googleearth {
 			this->button1->TabIndex = 3;
 			this->button1->Text = L"button1";
 			this->button1->UseVisualStyleBackColor = true;
-			this->button1->Visible = false;
 			this->button1->Click += gcnew System::EventHandler(this, &Form1::button1_Click_1);
 			// 
 			// Form1
@@ -578,6 +577,7 @@ namespace googleearth {
 			this->Controls->Add(this->button1);
 			this->Controls->Add(this->button2);
 			this->Controls->Add(this->webBrowser1);
+			this->DoubleBuffered = true;
 			this->Name = L"Form1";
 			this->Text = L"Form1";
 			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
@@ -683,6 +683,11 @@ namespace googleearth {
 				}
 
 				webBrowser1->Document->InvokeScript("cameraView",parameter);
+
+				int rollDifference1 = abs(croll - 90);
+				int rollDifference2 = abs(croll + 90);
+				if(rollDifference1 <= 20 || rollDifference2 <= 20 || croll >= 90 || croll <= -90)	webBrowser1->Document->InvokeScript("HideSV");	
+				else	webBrowser1->Document->InvokeScript("ShowSV");	
 				
 
 				array<Object^>^ parameterModel = gcnew array<Object^>(2); 
@@ -787,7 +792,6 @@ private: System::Void button2_Click(System::Object^  sender, System::EventArgs^ 
 				button2->BackgroundImage = image1;
 				webBrowser1->Document->InvokeScript("Building",parameterBuilding);
 			}
-			
 		 }
 private: System::Void button1_Click_1(System::Object^  sender, System::EventArgs^  e) {
  			array<Object^>^ parameterB = gcnew array<Object^>(8); 
