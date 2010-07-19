@@ -174,3 +174,14 @@ HRESULT GSFrameCaptureFilter::OnTransform(void* self, IMediaSample *pInSample, C
 void GSFrameCaptureFilter::setIsSaveImg(){
 	isSaveImg = !isSaveImg ;
 }
+
+void GSFrameCaptureFilter::resetSavingCount(){
+
+	ImgCount = 0 ;
+}
+void GSFrameCaptureFilter::setImgName(WCHAR* name){
+	for(int i = 0 ; i < _MAX_PATH ; i ++){
+		saveName[i] = name[i];
+	}
+
+}
