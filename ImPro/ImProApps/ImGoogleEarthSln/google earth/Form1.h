@@ -14,7 +14,7 @@
 #include "Streams.h"
 #include "countAllData.h"
 
-#define RANGE_SCALE 1.5
+#define RANGE_SCALE 1.7
 #define BASE_BOUNDARY 0.01223
 
 using namespace System;
