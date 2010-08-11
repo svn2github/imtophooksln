@@ -1,0 +1,169 @@
+%%% Show the extrinsic parameters
+ kk = 1 ;
+
+no_grid  = 0 ;
+if ~exist('dX'),
+    eval(['dX = norm(TcProj' ')/10;']);
+    dY = dX;
+end;
+
+IP = 2*dX*[1 -alpha_c 0;0 1 0;0 0 1]*[1/fc(1) 0 0;0 1/fc(2) 0;0 0 1]*[1 0 -cc(1);0 1 -cc(2);0 0 1]*[0 nx-1 nx-1 0 0 ; 0 0 ny-1 ny-1 0;1 1 1 1 1];
+BASE = 2*(.9)*dX*([0 1 0 0 0 0;0 0 0 1 0 0;0 0 0 0 0 1]);
+IP = reshape([IP;BASE(:,1)*ones(1,5);IP],3,15);
+POS = [[6*dX;0;0] [0;6*dX;0] [-dX;0;5*dX] [-dX;-dX;-dX] [0;0;-dX]];
+
+IP_cam = 2*dX*[1 -alpha_c_cam 0;0 1 0;0 0 1]*[1/fc_cam(1) 0 0;0 1/fc_cam(2) 0;0 0 1]*[1 0 -cc_cam(1);0 1 -cc_cam(2);0 0 1]*[0 nx_cam-1 nx_cam-1 0 0 ; 0 0 ny_cam-1 ny_cam-1 0;1 1 1 1 1];
+BASE_cam = 2*(.9)*dX*([0 1 0 0 0 0;0 0 0 1 0 0;0 0 0 0 0 1]);
+IP_cam = reshape([IP_cam;BASE_cam(:,1)*ones(1,5);IP_cam],3,15);
+POS_cam = [[6*dX;0;0] [0;6*dX;0] [-dX;0;5*dX] [-dX;-dX;-dX] [0;0;-dX]];
+
+if ishandle(4),
+    figure(4);
+    [a,b] = view;
+else
+    figure(4);
+    a = 50;
+    b = 20;
+end;
+
+
+figure(4);
+clf;
+hold on;
+
+R_kk = rodrigues(omcProj);
+
+BASEk = R_kk'*(BASE - TcProj * ones(1,6));
+IPk = R_kk'*(IP - TcProj * ones(1,15));
+POSk = R_kk'*(POS - TcProj * ones(1,5));
+
+% Plot the projector
+plot3(BASEk(1,:),BASEk(2,:),BASEk(3,:),'b-','linewidth',2');
+plot3(IPk(1,:),IPk(2,:),IPk(3,:),'g-','linewidth',2);
+text(POSk(1,5),POSk(2,5),POSk(3,5),'Projector','fontsize',10,'color','k','FontWeight','bold');
+ 
+
+% Plot the camera
+plot3(BASE_cam(1,:),BASE_cam(2,:),BASE_cam(3,:),'b-','linewidth',2');
+plot3(IP_cam(1,:),IP_cam(2,:),IP_cam(3,:),'r-','linewidth',2);
+text(POS_cam(1,5),POS_cam(2,5),POS_cam(3,5),'Camera','fontsize',10,'color','k','FontWeight','bold');
+
+%%
+R1_kk = rodrigues(omcProj);
+
+	       
+	       temp = R1_kk * printed_grid + TcProj * ones(1,length(printed_grid));
+	       YYkk = R_kk * temp + TcProj * ones(1,length(temp));
+	       uu = [-dX;-dY;0]/2;
+	       uu = R1_kk * uu + TcProj; 
+	       
+	       if ~no_grid,
+		  YYx = zeros(n_sq_x+1,n_sq_y+1);
+		  YYy = zeros(n_sq_x+1,n_sq_y+1);
+		  YYz = zeros(n_sq_x+1,n_sq_y+1);
+		  
+		  YYx(:) = YY_kk(1,:);
+		  YYy(:) = YY_kk(2,:);
+		  YYz(:) = YY_kk(3,:);
+		  
+		  %keyboard;
+		  
+		  figure(4);
+		  hhh= mesh(YYx,YYz,-YYy);
+		  set(hhh,'edgecolor',colors(rem(4-1,6)+1),'linewidth',1); %,'facecolor','none');
+		  %plot3(YY_kk(1,:),YY_kk(3,:),-YY_kk(2,:),['o' colors(rem(kk-1,6)+1)]);
+		  text(uu(1),uu(3),-uu(2),num2str(kk),'fontsize',14,'color',colors(rem(kk-1,6)+1));
+	       else
+		  
+		  figure(4);
+		  plot3(YY_kk(1,:),YY_kk(3,:),-YY_kk(2,:),['.' colors(rem(4-1,6)+1)]);
+		  text(uu(1),uu(3),-uu(2),num2str(kk),'fontsize',14,'color',colors(rem(kk-1,6)+1));
+		  
+	       end;
+           
+	 
+
+
+%% Plot the projected planes
+
+    if exist(['X_' num2str(kk)]) & exist(['omc_' num2str(kk)]),
+    % if the image has been used to calibrate
+    
+        eval(['XX_kk = X_' num2str(kk) ';']);
+           if ~isnan(XX_kk(1,1))
+                
+              omc_kk = omcProj ;
+              Tc_kk = TcProj ;
+                N_kk = size(XX_kk,2);
+                
+                if ~exist(['n_sq_x_' num2str(kk)]),
+                    no_grid = 1;
+                else
+                    eval(['n_sq_x = n_sq_x_' num2str(kk) ';']);
+                    if isnan(n_sq_x(1)),
+                        no_grid = 1;
+                    end;  
+                end;
+                
+                
+                if ~no_grid,
+                    eval(['n_sq_x = n_sq_x_' num2str(kk) ';']);
+                    eval(['n_sq_y = n_sq_y_' num2str(kk) ';']);
+                    if (N_kk ~= ((n_sq_x+1)*(n_sq_y+1))),
+                        no_grid = 1;
+                    end;
+                end;
+                
+                if ~isnan(omc_kk(1,1)),
+                    
+
+                    
+                    YY_kk = XX_kk;
+                    
+                    if ~no_grid,
+                        
+                        YYx = zeros(n_sq_x+1,n_sq_y+1);
+                        YYy = zeros(n_sq_x+1,n_sq_y+1);
+                        YYz = zeros(n_sq_x+1,n_sq_y+1);
+                        
+                        YYx(:) = YY_kk(1,:);
+                        YYy(:) = YY_kk(2,:);
+                        YYz(:) = YY_kk(3,:);
+                        
+                        %plot the mesh and label it
+                        hhh= mesh(YYx,YYy,YYz);
+                        set(hhh,'edgecolor',colors(rem(kk-1,6)+1),'linewidth',1); %,'facecolor','none');
+%                       text(POSk(1,5),POSk(2,5),POSk(3,5),num2str(kk),'fontsize',10,'color','k','FontWeight','bold');
+                        text(YYx(end-n_sq_x)-dX/2,YYy(end-n_sq_x)-dY/2,YYz(end-n_sq_x),num2str(kk),'fontsize',14,'color',colors(rem(kk-1,6)+1),'HorizontalAlignment','center');
+                    end
+                end
+           end
+    end
+
+
+% Draw the camera at the origin
+normT = 2*dX;
+text(dX,0,0,'X_c');
+text(0,dX,0,'Y_c');
+text(0,0,dX,'Z_c');
+text(dX/4,dX/4,0,'O_c');
+
+
+
+grid on
+
+figure(4);rotate3d on;
+axis('equal');
+title('Extrinsic parameters (camera-centered)');
+
+xlabel('X_{world}')
+ylabel('Y_{world}')
+zlabel('Z_{world}')
+view(a,b);
+
+axis vis3d;
+axis tight;
+hold off;
+set(4,'color',[1 1 1]);
+
+set(4,'Name','3D','NumberTitle','off');
