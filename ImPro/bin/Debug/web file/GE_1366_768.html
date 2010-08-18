@@ -47,7 +47,6 @@ function init() {
 
   google.earth.createInstance("map3d-1", initCB1, failureCB);
   google.earth.createInstance("map3d-2", initCB2, failureCB);
-  //$("#map3d-2").rotateRight(45);
  
 }
 
@@ -218,27 +217,6 @@ function initCB2(object) {
       
     ge2.getFeatures().appendChild(placemarkModel);
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-//    ViewPolygonPlacemark = ge2.createPlacemark(''); 
-// 
-//    // Create the polygon. 
-//    var polygonView = ge2.createPolygon(''); 
-//    polygonView.setAltitudeMode(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-//    ViewPolygonPlacemark.setGeometry(polygonView); 
-//     
-//    //Create a style and set width and color of line 
-//    ViewPolygonPlacemark.setStyleSelector(ge2.createStyle('')); 
-//    var lineStyle = ViewPolygonPlacemark.getStyleSelector().getLineStyle(); 
-//    lineStyle.setWidth(2); 
-//    lineStyle.getColor().set('7f0000ff'); 
-//      
-//    var polyStyle = ViewPolygonPlacemark.getStyleSelector().getPolyStyle();
-//    polyStyle.getColor().set('af00ffff'); 
-//    
-//    polygonView. 
-
-//    ge2.getFeatures().appendChild(ViewPolygonPlacemark);
-
 }
 
 function failureCB(object) {
@@ -261,46 +239,15 @@ function cameraView(latitude, longitude, altitude, heading, tilt, roll, SVmidLon
                     
         ge.getView().setAbstractView(camera); 
        
-//        if(SVAngle > 45 && SVAngle <= 135){
-//            ge2.getOptions().setFlyToSpeed(3);
-//          
-//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-//            
-//            lookat.set(SVmidLat, SVmidLong, 0, 
-//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,90,40,SVRange);
-//                        
-//            ge2.getView().setAbstractView(lookat); 
-//        } 
-//        else if(SVAngle > 135 && SVAngle <= 225){
-//            ge2.getOptions().setFlyToSpeed(3);
-//          
-//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-//            
-//            lookat.set(SVmidLat, SVmidLong, 0, 
-//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,180,40,SVRange);
-//                        
-//            ge2.getView().setAbstractView(lookat); 
-//        } 
-//        else if(SVAngle > 225 && SVAngle <= 315){
-//            ge2.getOptions().setFlyToSpeed(3);
-//          
-//            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
-//            
-//            lookat.set(SVmidLat, SVmidLong, 0, 
-//                        ge2.ALTITUDE_RELATIVE_TO_GROUND,270,40,SVRange);
-//                        
-//            ge2.getView().setAbstractView(lookat); 
-//        } 
-//        else{
-            ge2.getOptions().setFlyToSpeed(3);
-          
-            var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
+       
+        ge2.getOptions().setFlyToSpeed(3);
+        var lookat = ge2.getView().copyAsLookAt(ge2.ALTITUDE_RELATIVE_TO_GROUND); 
             
-            lookat.set(SVmidLat, SVmidLong, 0, 
-                        ge2.ALTITUDE_RELATIVE_TO_GROUND,SVAngle,40,SVRange);
+        lookat.set(SVmidLat, SVmidLong, 0, 
+                    ge2.ALTITUDE_RELATIVE_TO_GROUND,SVAngle,40,SVRange);
                         
-            ge2.getView().setAbstractView(lookat); 
-//        }
+        ge2.getView().setAbstractView(lookat); 
+  
         
         var loc = ge2.createLocation(''); 
         loc.setLatitude(latitude); 
