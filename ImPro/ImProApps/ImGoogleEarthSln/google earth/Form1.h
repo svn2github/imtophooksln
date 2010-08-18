@@ -49,7 +49,6 @@ CCritSec g_State;
 //double RightTopLong = -74.005278;
 //double RightTopLat = 40.711096;
 
-
 // Taipei 101
 double LeftTopLong = 121.561008; //-200
 double LeftTopLat = 25.035922;
@@ -133,7 +132,7 @@ countAllData GEData;
 //////////////////////////////////
 
 
-
+//get the coordinate of the camera relative to the ARTag
 BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, const ARMultiMarkerInfoT* config, const double* matView, const double* matProj, int argc, void* argv[])
 {
 	
@@ -152,39 +151,6 @@ BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, con
 
 	return TRUE;
 }
-
-
-bool arTimerTickFunc()
-{
-	// set target camera
-	tlatitude = latitude;
-	tlongitude = longitude;
-	taltitude = altitude;
-	theading = heading;
-	ttilt = tilt;
-	troll = roll;
-
-	if(!getFstTag){
-		clatitude = tlatitude;
-		clongitude = tlongitude;
-		caltitude = taltitude;
-		cheading = theading;
-		ctilt = ttilt;
-		croll = troll;
-		double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
-		for (int i =0; i<6; i++)
-		{
-			if (Double::IsNaN(para[i]))
-			{
-				int test = 0;
-			}
-		}
-		getFstTag = true;
-	}
-	return true;
-}
-
-
 
 namespace googleearth {
 
@@ -212,16 +178,14 @@ namespace googleearth {
 		private: System::Windows::Forms::Timer^  animTimer;
 		private: static bool boundaryDirty;
 
-	private: System::Windows::Forms::Button^  button2;
-	private: System::Windows::Forms::Button^  button1;
-
-
+		private: System::Windows::Forms::Button^  button2;
+		private: System::Windows::Forms::Button^  button1;
 
 		//private : CSocketClient^ socketClient;;
-	private : delegate System::Void updateCallback(System::String^ text);
+		private : delegate System::Void updateCallback(System::String^ text);
 
 
-	private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
+		private: static array<Byte>^ GetRawBuffer; // Buffer to store the response bytes.	
 
 	public:
 
@@ -298,13 +262,8 @@ namespace googleearth {
 			this->webBrowser1->Navigate(URL);
 		}
 
-		private: System::Void setupArtoolkit()
-				 {
-			//if( init() < 0 ) 
-			//	exit(0);
-			//arVideoCapStart();
+		private: System::Void setupArtoolkit(){
 
-			//this->arTimer->Start();
 					 if (g_pARCam == NULL)
 					 {
 						g_pARCam = new ARTagCameraDS();			
@@ -315,17 +274,16 @@ namespace googleearth {
 					 g_pARCam->SetARCallback(ARTagCallback, 0, NULL);
 					 g_pARCam->Play();
 					 this->animTimer->Start();
+
 				}
 		
 
 		private: System::Void setupSocket(){
-			
-	
+		
 			// Attempt to establish a connection
 			tcpClient = gcnew TcpClient(ipAddress ,port );
 			GetNetworkStream = tcpClient->GetStream();
-			
-			
+				
 			// Set these socket options
 			tcpClient->ReceiveBufferSize = 1048576;
             tcpClient->SendBufferSize = 1048576;
@@ -343,12 +301,10 @@ namespace googleearth {
 			sendData("11," + tabletName);
 			sendData("15,flashGE,tabletGE,geLogin");
 
-			
-
 			/*socketClient = gcnew CSocketClient(10240, nullptr,
 			gcnew CSocketClient::MESSAGE_HANDLER(&Form1::MessageHandlerClient),
-			  gcnew CSocketClient::CLOSE_HANDLER(&Form1::CloseHandler),
-			  gcnew CSocketClient::ERROR_HANDLER(&Form1::ErrorHandler));*/
+			gcnew CSocketClient::CLOSE_HANDLER(&Form1::CloseHandler),
+			gcnew CSocketClient::ERROR_HANDLER(&Form1::ErrorHandler));*/
 		}
 
 		/*
@@ -454,7 +410,7 @@ namespace googleearth {
 
 		//設定tag對應的四個點經緯度位置
 		private: static System::Void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat) {
-		//static void set_4_point(double LTLong,double LTLat,double LDLong,double LDLat,double RTLong,double RTLat,double RDLong,double RDLat){
+
 			LeftTopLong = LTLong;
 			LeftTopLat = LTLat;
 			LeftDownLong = LDLong;
@@ -465,26 +421,7 @@ namespace googleearth {
 			RightDownLat = RDLat;
 
 			boundaryDirty = true;
-			
-			/*
-			array<Object^>^ parameterB = gcnew array<Object^>(8); 
-			
-			parameterB[0] = LeftTopLong;
-			parameterB[1] = LeftTopLat;
-			parameterB[2] = LeftDownLong;
-			parameterB[3] = LeftDownLat;
-			parameterB[4] = RightTopLong;
-			parameterB[5] = RightTopLat;
-			parameterB[6] = RightDownLong;
-			parameterB[7] = RightDownLat;
-			
-			//System::Windows::Forms::WebBrowser^ browser = g_formPtr->webBrowser1;
-			//browser->Document->InvokeScript("boundaryLine",parameterB);
-			webBrowser1->Document->InvokeScript("boundaryLine",parameterB);
 
-			
-			//webBrowser1->Document->InvokeScript("boundaryLine",parameterB);		
-			*/
 		}
 
 	protected:
@@ -509,7 +446,6 @@ namespace googleearth {
 	Bitmap^ image2;
 
 	public: System::Windows::Forms::WebBrowser^  webBrowser1;
-	//private: System::Windows::Forms::Timer^  arTimer;
 	private: System::ComponentModel::IContainer^  components;
 	private: static int temp = 300;
 
@@ -580,21 +516,20 @@ namespace googleearth {
 			this->DoubleBuffered = true;
 			this->Name = L"Form1";
 			this->Text = L"Form1";
-			this->KeyUp += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyUp);
-			this->KeyDown += gcnew System::Windows::Forms::KeyEventHandler(this, &Form1::OnKeyDown);
 			this->ResumeLayout(false);
 
 		}
 
 #pragma endregion
 	
+		//timer
 		private: System::Void animTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
 
 			 if(!getFstTag)		return;
 				
 			 else{
 
-				double tmpcvTrans[4][4];
+                double tmpcvTrans[4][4];
 				{
 					CAutoLock lck(&g_State);
 					for (int row = 0; row < 4; row++)
@@ -639,27 +574,8 @@ namespace googleearth {
 				cheading = theading;
 				ctilt = ttilt;
  				croll = troll;
-			
-			/*
-			 double alpha = 0.2;
-			 clatitude = clatitude*alpha + tlatitude*(1-alpha);
-			 clongitude = clongitude*alpha + tlongitude*(1-alpha);
-			 caltitude = caltitude*alpha + taltitude*(1-alpha);
-			 cheading = cheading*alpha + theading*(1-alpha);
-			 ctilt = ctilt*alpha + ttilt*(1-alpha);
- 			 croll = croll*alpha + troll*(1-alpha);
-			*/
-
-			/*
-			 // calculate current camera
-			 clatitude += ((tlatitude - clatitude)/2);
-			 clongitude += ((tlongitude - clongitude)/2);
-			 caltitude += ((taltitude - caltitude)/2);
-			 cheading += ((theading - cheading)/2);
-			 ctilt += ((ttilt - ctilt)/2);
- 			 croll += ((troll - croll)/2);
-			 */ 
 				
+				//send data to javascript
 				array<Object^>^ parameter = gcnew array<Object^>(11); 
 				parameter[0] = clatitude;
 				parameter[1] = clongitude;
@@ -699,6 +615,7 @@ namespace googleearth {
 			 
 			 }
 			 
+			 //draw boundary
 			 if(boundaryDirty){
  				array<Object^>^ parameterB = gcnew array<Object^>(8); 
 				
@@ -750,14 +667,6 @@ namespace googleearth {
 		 
 		}
 
-private: System::Void OnKeyUp(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) 
-		 {
-
-
-		 }
-
-private: System::Void OnKeyDown(System::Object^  sender, System::Windows::Forms::KeyEventArgs^  e) {
-		 }
 private: System::Void OnBrowsePreviewKeyDown(System::Object^  sender, System::Windows::Forms::PreviewKeyDownEventArgs^  e) {
 			 if (g_pARCam != NULL)
 			 {
