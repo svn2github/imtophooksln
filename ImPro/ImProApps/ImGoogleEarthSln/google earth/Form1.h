@@ -12,7 +12,8 @@
 #include <d3dx9math.h>
 #include <vcclr.h>
 #include "Streams.h"
-#include "countAllData.h"
+#include "GEPosition.h"
+#include "GEUser.h"
 
 #define RANGE_SCALE 1.7
 #define BASE_BOUNDARY 0.01223
@@ -92,28 +93,16 @@ double ctilt = ttilt;
 double cheading = theading;
 double croll = troll;
 
-bool getFstTag = false;
+
+// bool
+bool cameraMoved = false;
+bool view_polygon_initialized = false;
+bool boundaryMoved = false;
+bool SVInitialized = false;
+
+
+// test parameter
 int BulidingCount = 0;
-
-int             xsize;
-int             ysize;
-int             thresh = 100;
-//ARParam         cparam;
-int             outputMode = 0;
-
-int             mouse_ox;
-int             mouse_oy;
-int             mouse_st = 0;
-int             disp_mode = 1;
-double          a =   0.0;
-double          b = -45.0;
-double          r = 500.0;
-
-int             target_id;
-double          target_center[2] = {0.5, 0.5};
-double          target_width = 1.0;
-//double          target_center[2] = {0, 0};
-//double          target_width = 80.0;
 
 namespace googleearth{
 	ref class Form1;
@@ -122,13 +111,9 @@ namespace googleearth{
 gcroot<googleearth::Form1^> g_formPtr = NULL;
 ARTagCameraDS* g_pARCam = NULL;
 
-bool computeNeedData(float cvTrans[4][4]);
-bool arTimerTickFunc();
-bool animTimerTickFunc();
-
 
 //create Google Earth Data class//
-countAllData GEData;
+GEPosition GEData;
 //////////////////////////////////
 
 
@@ -147,7 +132,7 @@ BOOL __stdcall ARTagCallback(int numDetected, const ARMarkerInfo* markinfos, con
 		}
 	}
 
-	getFstTag = true;
+	cameraMoved = true;
 
 	return TRUE;
 }
@@ -176,8 +161,6 @@ namespace googleearth {
 		private: String^ htmlFile;		
 	    private: static String^ tabletName;
 		private: System::Windows::Forms::Timer^  animTimer;
-		private: static bool boundaryDirty;
-
 		private: System::Windows::Forms::Button^  button2;
 		private: System::Windows::Forms::Button^  button1;
 
@@ -206,8 +189,6 @@ namespace googleearth {
 
 			g_formPtr = this;
 			
-			boundaryDirty = false;
-						
 			// read parameters ip, port, tabletID from setting.txt
 			loadParamsFromFile();
 
@@ -252,11 +233,13 @@ namespace googleearth {
 
 		private: System::Void setupBrowser(){
 			//String^ URL = "file:///C:/GE.html";  
-		    //String^ URL = "C:/GE_1366_768.html";
-			String^ URL = Application::StartupPath;
+		    //String^ URL = "C:/GE_MU.html";
+		    String^ URL = "C:/GE_test.html";
+			//String^ URL = "C:/GE_1366_768.html";
+			//String^ URL = Application::StartupPath;
 			//URL += "/web_file/GE.html";
-			URL += "/web_file/";
-			URL += htmlFile;
+			//URL += "/web_file/";
+			//URL += htmlFile;
 			
 			//MessageBox::Show(URL);
 			this->webBrowser1->Navigate(URL);
@@ -420,9 +403,133 @@ namespace googleearth {
 			RightDownLong = RDLong;
 			RightDownLat = RDLat;
 
-			boundaryDirty = true;
+			boundaryMoved = true;
 
 		}
+
+		private: System::Void boundaryMovedUpdate() {	
+
+			 if(boundaryMoved){
+				 // update table boundary in main view
+				 array<Object^>^ parameterB = gcnew array<Object^>(8); 
+				 parameterB[0] = LeftTopLong;
+				 parameterB[1] = LeftTopLat;
+				 parameterB[2] = LeftDownLong;
+				 parameterB[3] = LeftDownLat;
+				 parameterB[4] = RightTopLong;
+				 parameterB[5] = RightTopLat;
+				 parameterB[6] = RightDownLong;
+				 parameterB[7] = RightDownLat;
+				 webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
+				 array<Object^>^ parameterSB = gcnew array<Object^>(8); 
+
+				 // update table boundary in small view
+				 parameterSB[0] = LeftTopLong;
+				 parameterSB[1] = LeftTopLat;
+				 parameterSB[2] = LeftDownLong;
+				 parameterSB[3] = LeftDownLat;
+				 parameterSB[4] = RightTopLong;
+				 parameterSB[5] = RightTopLat;
+				 parameterSB[6] = RightDownLong;
+				 parameterSB[7] = RightDownLat;
+				 webBrowser1->Document->InvokeScript("small_boundaryLine",parameterSB);
+
+				 boundaryMoved = false;
+			 }
+		}
+
+		private: System::Void cameraMovedUpdate() {		
+
+				 //google earth view
+				 if(!cameraMoved)		
+					 return;
+
+				 // compute camera position
+				 double tmpcvTrans[4][4];
+				 {
+					 CAutoLock lck(&g_State);
+					 for (int row = 0; row < 4; row++)
+					 {
+						 for(int col = 0; col < 4; col++)
+						 {
+							 tmpcvTrans[row][col] = GEData.g_cvTrans[row][col];
+						 }
+					 }
+				 }
+
+				 //(width_ratio, high_ratio, focalLength, cvTrans[4][4], table_boundary......)
+				 GEData.computeNeedData(0.1,0.1,-0.1,tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
+
+				 //update main view
+				 //update camera position of main view
+				 array<Object^>^ parameter = gcnew array<Object^>(6); 
+				 parameter[0] = GEData.getLatitude();
+				 parameter[1] = GEData.getLongitude();
+				 parameter[2] = GEData.getAltitude();
+				 parameter[3] = GEData.getHeading();
+				 parameter[4] = GEData.getTilt();
+				 parameter[5] = GEData.getRoll();
+				 webBrowser1->Document->InvokeScript("cameraView",parameter);
+
+				 // update camera position of small view
+				 array<Object^>^ parameterC = gcnew array<Object^>(5); 
+				 parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
+				 parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
+				 parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
+				 parameterC[3] = GEData.getSVAngle();
+				 parameterC[4] = SVInitialized;	
+				 webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
+				 SVInitialized = true;
+
+				 // update the position of the model in the small view
+				 array<Object^>^ parameterSM = gcnew array<Object^>(7); 
+				 parameterSM[0] = GEData.getLatitude();
+				 parameterSM[1] = GEData.getLongitude();
+				 parameterSM[2] = GEData.getAltitude();
+				 parameterSM[3] = GEData.getHeading();
+				 parameterSM[4] = GEData.getTilt();
+				 parameterSM[5] = GEData.getRoll();
+				 parameterSM[6] = (RightTopLong - LeftTopLong) / BASE_BOUNDARY;
+				 webBrowser1->Document->InvokeScript("setSVModel_position",parameterSM);
+
+
+				 // view polygon initialized
+				 if(!view_polygon_initialized){	
+					 webBrowser1->Document->InvokeScript("create_view_polygon");
+					 view_polygon_initialized = true;
+				 }
+				 // update the position of the view polygon 
+				 else{	
+					 array<Object^>^ parameterVP = gcnew array<Object^>(12); 
+					 parameterVP[0] = GEData.getLatitude_LT();
+					 parameterVP[1] = GEData.getLongitude_LT();
+					 parameterVP[2] = GEData.getAltitude_LT();
+					 parameterVP[3] = GEData.getLatitude_LD();
+					 parameterVP[4] = GEData.getLongitude_LD();
+					 parameterVP[5] = GEData.getAltitude_LD();
+					 parameterVP[6] = GEData.getLatitude_RT();
+					 parameterVP[7] = GEData.getLongitude_RT();
+					 parameterVP[8] = GEData.getAltitude_RT();
+					 parameterVP[9] = GEData.getLatitude_RD();
+					 parameterVP[10] = GEData.getLongitude_RD();
+					 parameterVP[11] = GEData.getAltitude_RD();
+					 webBrowser1->Document->InvokeScript("set_view_polygon_position",parameterVP);
+				 }
+
+
+				 // view polygon on the ground //
+				 
+
+
+				 // control visibility of small view
+				 int rollDifference1 = abs(GEData.getRoll() - 90);
+				 int rollDifference2 = abs(GEData.getRoll() + 90);
+				 if(rollDifference1 <= 20 || rollDifference2 <= 20 || GEData.getRoll() >= 90 || GEData.getRoll() <= -90)	
+					 webBrowser1->Document->InvokeScript("HideSV");	
+				 else	webBrowser1->Document->InvokeScript("ShowSV");	
+
+				 cameraMoved = false;
+			 }
 
 	protected:
 		/// <summary>
@@ -525,132 +632,9 @@ namespace googleearth {
 		//timer
 		private: System::Void animTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
 
-			 if(!getFstTag)		return;
-				
-			 else{
+			 boundaryMovedUpdate();
+			 cameraMovedUpdate();
 
-                double tmpcvTrans[4][4];
-				{
-					CAutoLock lck(&g_State);
-					for (int row = 0; row < 4; row++)
-					{
-						for(int col = 0; col < 4; col++)
-						{
-							tmpcvTrans[row][col] = GEData.g_cvTrans[row][col];
-						}
-					}
-				}
-
-				getFstTag = false;
-
-				GEData.computeNeedData(tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
-
-				tlatitude = GEData.getLatitude();
-				tlongitude = GEData.getLongitude();
-				taltitude = GEData.getAltitude();
-				theading = GEData.getHeading();
-				ttilt = GEData.getTilt();
-				troll = GEData.getRoll();
-
-				D3DXVECTOR3 intersect_origin_point = GEData.getIntersect_origin_point();
-				D3DXVECTOR3 intersect_point = GEData.getIntersect_point();
-
-				double vspaceX = (double)intersect_origin_point.x / (double)1.33;
-				double vspaceY = -intersect_origin_point.y;
-				double heading = GEData.getHeading();
-				//double lat = intersect_point.y;
-				//double lng = intersect_point.x;
-
-				String^ _vspaceX = vspaceX.ToString("0.0000");
-				String^ _vspaceY = vspaceY.ToString("0.0000");
-				String^ _heading = heading.ToString("0.0000");
-				
-				//if(GetNetworkStream != nullptr)
-				//	sendData("15,flashGE,"+tabletName+",geDebug," + _vspaceX + "," + _vspaceY + "," + _heading);
-				
-				clatitude = tlatitude;
-				clongitude = tlongitude;
-				caltitude = taltitude;
-				cheading = theading;
-				ctilt = ttilt;
- 				croll = troll;
-				
-				//send data to javascript
-				array<Object^>^ parameter = gcnew array<Object^>(11); 
-				parameter[0] = clatitude;
-				parameter[1] = clongitude;
-				parameter[2] = caltitude;
-				parameter[3] = cheading;
-				parameter[4] = ctilt;
-				parameter[5] = croll;
-				parameter[6] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
-				parameter[7] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-				parameter[8] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
-				parameter[9] = GEData.getSVAngle();
-				parameter[10] = (RightTopLong - LeftTopLong) / BASE_BOUNDARY;
-
-				double para[6] = {clatitude, clongitude, caltitude, cheading, ctilt, croll};
-				for (int i = 0; i < 6; i++)
-				{
-					if (Double::IsNaN(para[i]))
-					{
-						return ;
-					}
-				}
-
-				webBrowser1->Document->InvokeScript("cameraView",parameter);
-
-				int rollDifference1 = abs(croll - 90);
-				int rollDifference2 = abs(croll + 90);
-				if(rollDifference1 <= 20 || rollDifference2 <= 20 || croll >= 90 || croll <= -90)	webBrowser1->Document->InvokeScript("HideSV");	
-				else	webBrowser1->Document->InvokeScript("ShowSV");	
-				
-
-				array<Object^>^ parameterModel = gcnew array<Object^>(2); 
-				parameterModel[0] = GEData.getIntersect_point().y;
-				parameterModel[1] = GEData.getIntersect_point().x;
-				
-				//webBrowser1->Document->InvokeScript("setModelLoc",parameterModel);
-				//webBrowser1->Document->InvokeScript("setIconLoc",parameterModel);
-			 
-			 }
-			 
-			 //draw boundary
-			 if(boundaryDirty){
- 				array<Object^>^ parameterB = gcnew array<Object^>(8); 
-				
-				parameterB[0] = LeftTopLong;
-				parameterB[1] = LeftTopLat;
-				parameterB[2] = LeftDownLong;
-				parameterB[3] = LeftDownLat;
-				parameterB[4] = RightTopLong;
-				parameterB[5] = RightTopLat;
-				parameterB[6] = RightDownLong;
-				parameterB[7] = RightDownLat;
-
- 				array<Object^>^ parameterSB = gcnew array<Object^>(8); 
-				
-				parameterSB[0] = LeftTopLong;
-				parameterSB[1] = LeftTopLat;
-				parameterSB[2] = LeftDownLong;
-				parameterSB[3] = LeftDownLat;
-				parameterSB[4] = RightTopLong;
-				parameterSB[5] = RightTopLat;
-				parameterSB[6] = RightDownLong;
-				parameterSB[7] = RightDownLat;
-
-				array<Object^>^ parameterC = gcnew array<Object^>(3); 
-
-				parameterC[0] = LeftTopLong + (RightTopLong - LeftTopLong) / 2;
-				parameterC[1] = LeftTopLat - (LeftTopLat - LeftDownLat) / 2;
-				parameterC[2] = (RightTopLong - LeftTopLong) * 111000 * RANGE_SCALE;
-
-				webBrowser1->Document->InvokeScript("boundaryLineStyle3",parameterB);	
-				webBrowser1->Document->InvokeScript("small_cameraView",parameterC);
-				webBrowser1->Document->InvokeScript("small_boundaryLine",parameterSB);
-				
-				boundaryDirty = false;
-			 }
 		}
 
 		private: System::Void zoomInBtn_Click(System::Object^  sender, System::EventArgs^  e) {		
