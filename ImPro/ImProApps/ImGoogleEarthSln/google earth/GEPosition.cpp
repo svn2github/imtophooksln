@@ -476,23 +476,36 @@ D3DXVECTOR3 GEPosition::getIntersect_point()
 
 D3DXVECTOR3 GEPosition::getGEGroundPointLT()
 {
-	return google_earth_ground_point_LT;
+	return GEGroundPointLT;
 }
 
 D3DXVECTOR3 GEPosition::getGEGroundPointLD()
 {
-	return google_earth_ground_point_LD;
+	return GEGroundPointLD;
 }
 
 D3DXVECTOR3 GEPosition::getGEGroundPointRT()
 {
-	return google_earth_ground_point_RT;
+	return GEGroundPointRT;
 }
 
 D3DXVECTOR3 GEPosition::getGEGroundPointRD()
 {
-	return google_earth_ground_point_RD;
+	return GEGroundPointRD;
 }
 
-	
+D3DXVECTOR3 GEPosition::getLookat()
+{
+	return lookat;
+}
+
+D3DXVECTOR3 GEPosition::getGEPoint()
+{
+	return google_earth_point;
+}
+
+D3DXVECTOR3 GEPosition::getOriginalPoint()
+{
+	return origin_point;
+}
 	

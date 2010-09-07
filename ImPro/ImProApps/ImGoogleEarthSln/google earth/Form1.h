@@ -13,7 +13,7 @@
 #include <vcclr.h>
 #include "Streams.h"
 #include "GEPosition.h"
-#include "GEUser.h"
+#include "GEPlaneIntersection.h"
 
 #define RANGE_SCALE 1.7
 #define BASE_BOUNDARY 0.01223
@@ -70,36 +70,14 @@ double RightDownLat = 25.025659005961995;
 //double RightDownLong = -118.260622;
 //double RightDownLat = 34.033955;
 
-
-double longitude = 0;
-double latitude = 0;
-double altitude = 0;
-double tilt = 0;
-double heading = 0;
-double roll = 0;
 double altitude_scale = 1.0;
-
-double tlongitude = 0;
-double tlatitude = 0;
-double taltitude = 0;
-double ttilt = 0;
-double theading = 0;
-double troll = 0;
-
-double clongitude = tlongitude;
-double clatitude = tlatitude;
-double caltitude = taltitude;
-double ctilt = ttilt;
-double cheading = theading;
-double croll = troll;
-
 
 // bool
 bool cameraMoved = false;
 bool view_polygon_initialized = false;
+bool view_ground_initialized = false;
 bool boundaryMoved = false;
 bool SVInitialized = false;
-
 
 // test parameter
 int BulidingCount = 0;
@@ -115,6 +93,15 @@ ARTagCameraDS* g_pARCam = NULL;
 //create Google Earth Data class//
 GEPosition GEData;
 //////////////////////////////////
+
+GEPlaneIntersection good;
+
+
+D3DXPLANE test;
+
+D3DXVECTOR3 point1;
+D3DXVECTOR3 point2;
+D3DXVECTOR3 point3;
 
 
 //get the coordinate of the camera relative to the ARTag
@@ -181,7 +168,20 @@ namespace googleearth {
 			//
 			
 			//full screen mode
-			//setFullScreen();		
+			//setFullScreen();	
+
+			// test plane
+			point1.x = 120;
+			point1.y = 24;
+			point1.z = (double)10/(double)111000;
+			point2.x = 120;
+			point2.y = 26;
+			point2.z = (double)10/(double)111000;
+			point3.x = 122;
+			point3.y = 26;
+			point3.z = (double)10/(double)111000;
+			D3DXPlaneFromPoints(&test,&point1,&point2,&point3);
+			//////////////////////////////////////////////////////////////////////////
 
 			image1 = gcnew System::Drawing::Bitmap("C:/3D.jpg");
 			image2 = gcnew System::Drawing::Bitmap("C:/2D.jpg");
@@ -234,8 +234,8 @@ namespace googleearth {
 		private: System::Void setupBrowser(){
 			//String^ URL = "file:///C:/GE.html";  
 		    //String^ URL = "C:/GE_MU.html";
-		    String^ URL = "C:/GE_test.html";
-			//String^ URL = "C:/GE_1366_768.html";
+		    //String^ URL = "C:/GE_test.html";
+			String^ URL = "C:/GE_test_building.html";
 			//String^ URL = Application::StartupPath;
 			//URL += "/web_file/GE.html";
 			//URL += "/web_file/";
@@ -458,7 +458,7 @@ namespace googleearth {
 				 }
 
 				 //(width_ratio, high_ratio, focalLength, cvTrans[4][4], table_boundary......)
-				 GEData.computeNeedData(0.1,0.1,-0.1,tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
+				 GEData.computeNeedData(0.1,0.1,-0.2,tmpcvTrans, LeftDownLong, LeftDownLat, LeftTopLong, LeftTopLat, RightDownLong, RightDownLat);	
 
 				 //update main view
 				 //update camera position of main view
@@ -495,7 +495,7 @@ namespace googleearth {
 
 				 // view polygon initialized
 				 if(!view_polygon_initialized){	
-					 webBrowser1->Document->InvokeScript("create_view_polygon");
+					 webBrowser1->Document->InvokeScript("CreateViewPolygon");
 					 view_polygon_initialized = true;
 				 }
 				 // update the position of the view polygon 
@@ -513,13 +513,50 @@ namespace googleearth {
 					 parameterVP[9] = GEData.getLatitude_RD();
 					 parameterVP[10] = GEData.getLongitude_RD();
 					 parameterVP[11] = GEData.getAltitude_RD();
-					 webBrowser1->Document->InvokeScript("set_view_polygon_position",parameterVP);
+					 webBrowser1->Document->InvokeScript("SetViewPolygonPosition",parameterVP);
 				 }
 
 
 				 // view polygon on the ground //
-				 
+				 if(!view_ground_initialized){
+					 webBrowser1->Document->InvokeScript("CreateViewGroungPolygon");
+					 view_ground_initialized = true;
+				 }	
+				 else{
+					 array<Object^>^ parameterVGP = gcnew array<Object^>(12); 
+					 parameterVGP[0] = GEData.getGEGroundPointLT().y;
+					 parameterVGP[1] = GEData.getGEGroundPointLT().x;
+					 parameterVGP[2] = 0;
+					 parameterVGP[3] = GEData.getGEGroundPointLD().y;
+					 parameterVGP[4] = GEData.getGEGroundPointLD().x;
+					 parameterVGP[5] = 0;
+					 parameterVGP[6] = GEData.getGEGroundPointRT().y;
+					 parameterVGP[7] = GEData.getGEGroundPointRT().x;
+					 parameterVGP[8] = 0;
+					 parameterVGP[9] = GEData.getGEGroundPointRD().y;
+					 parameterVGP[10] = GEData.getGEGroundPointRD().x;
+					 parameterVGP[11] = 0;
+					 webBrowser1->Document->InvokeScript("SetViewGroundPolygonPosition",parameterVGP);
+				 }
 
+				 D3DXVECTOR3 start;
+				 D3DXVECTOR3 temp1 = GEData.getLookat();
+				 D3DXVECTOR3 temp2 = GEData.getOriginalPoint();
+				 D3DXVECTOR3 temp3 = temp1 + temp2;
+				 D3DXVECTOR3 end = GEData.countGELoc(temp3.x,temp3.y,temp3.z);
+				 start.x = GEData.getGEPoint().x;
+				 start.y = GEData.getGEPoint().y;
+				 start.z = GEData.getGEPoint().z;
+				 good.IntersectPoint(test,start,end);
+
+				 if(good.hit(120,122,24,26,(double)10/(double)111000,(double)10/(double)111000)){
+					 array<Object^>^ parameterTTT = gcnew array<Object^>(3); 
+					 parameterTTT[0] = good.getHitPoint().x;
+					 parameterTTT[1] = good.getHitPoint().y;
+					 parameterTTT[2] = good.getHitPoint().z * 111000;
+					 webBrowser1->Document->InvokeScript("testpoint",parameterTTT);
+				 }
+				
 
 				 // control visibility of small view
 				 int rollDifference1 = abs(GEData.getRoll() - 90);

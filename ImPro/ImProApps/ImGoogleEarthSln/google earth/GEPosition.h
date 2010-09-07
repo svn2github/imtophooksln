@@ -22,6 +22,9 @@ public:
 		double LDLon, double LDLat, double LTLon, double LTLat, 
 		double RDLon, double RDLat);
 	
+	D3DXVECTOR3 getOriginalPoint(void);
+	D3DXVECTOR3 getGEPoint(void);
+	D3DXVECTOR3 getLookat(void);
 	double getLongitude(void);
 	double getLatitude(void);
 	double getAltitude(void);
