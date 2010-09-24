@@ -15,6 +15,7 @@
 #include "GEPosition.h"
 #include "GEPlaneIntersection.h"
 
+
 #define RANGE_SCALE 1.7
 #define BASE_BOUNDARY 0.01223
 
@@ -234,8 +235,8 @@ namespace googleearth {
 		private: System::Void setupBrowser(){
 			//String^ URL = "file:///C:/GE.html";  
 		    //String^ URL = "C:/GE_MU.html";
-		    //String^ URL = "C:/GE_test.html";
-			String^ URL = "C:/GE_test_building.html";
+		    String^ URL = "C:/GE_1366_768.html";
+			//String^ URL = "C:/GE_test_building.html";
 			//String^ URL = Application::StartupPath;
 			//URL += "/web_file/GE.html";
 			//URL += "/web_file/";
@@ -493,69 +494,69 @@ namespace googleearth {
 				 webBrowser1->Document->InvokeScript("setSVModel_position",parameterSM);
 
 
-				 // view polygon initialized
-				 if(!view_polygon_initialized){	
-					 webBrowser1->Document->InvokeScript("CreateViewPolygon");
-					 view_polygon_initialized = true;
-				 }
-				 // update the position of the view polygon 
-				 else{	
-					 array<Object^>^ parameterVP = gcnew array<Object^>(12); 
-					 parameterVP[0] = GEData.getLatitude_LT();
-					 parameterVP[1] = GEData.getLongitude_LT();
-					 parameterVP[2] = GEData.getAltitude_LT();
-					 parameterVP[3] = GEData.getLatitude_LD();
-					 parameterVP[4] = GEData.getLongitude_LD();
-					 parameterVP[5] = GEData.getAltitude_LD();
-					 parameterVP[6] = GEData.getLatitude_RT();
-					 parameterVP[7] = GEData.getLongitude_RT();
-					 parameterVP[8] = GEData.getAltitude_RT();
-					 parameterVP[9] = GEData.getLatitude_RD();
-					 parameterVP[10] = GEData.getLongitude_RD();
-					 parameterVP[11] = GEData.getAltitude_RD();
-					 webBrowser1->Document->InvokeScript("SetViewPolygonPosition",parameterVP);
-				 }
+				 //// view polygon initialized
+				 //if(!view_polygon_initialized){	
+					// webBrowser1->Document->InvokeScript("CreateViewPolygon");
+					// view_polygon_initialized = true;
+				 //}
+				 //// update the position of the view polygon 
+				 //else{	
+					// array<Object^>^ parameterVP = gcnew array<Object^>(12); 
+					// parameterVP[0] = GEData.getLatitude_LT();
+					// parameterVP[1] = GEData.getLongitude_LT();
+					// parameterVP[2] = GEData.getAltitude_LT();
+					// parameterVP[3] = GEData.getLatitude_LD();
+					// parameterVP[4] = GEData.getLongitude_LD();
+					// parameterVP[5] = GEData.getAltitude_LD();
+					// parameterVP[6] = GEData.getLatitude_RT();
+					// parameterVP[7] = GEData.getLongitude_RT();
+					// parameterVP[8] = GEData.getAltitude_RT();
+					// parameterVP[9] = GEData.getLatitude_RD();
+					// parameterVP[10] = GEData.getLongitude_RD();
+					// parameterVP[11] = GEData.getAltitude_RD();
+					// webBrowser1->Document->InvokeScript("SetViewPolygonPosition",parameterVP);
+				 ////}
 
 
-				 // view polygon on the ground //
-				 if(!view_ground_initialized){
-					 webBrowser1->Document->InvokeScript("CreateViewGroungPolygon");
-					 view_ground_initialized = true;
-				 }	
-				 else{
-					 array<Object^>^ parameterVGP = gcnew array<Object^>(12); 
-					 parameterVGP[0] = GEData.getGEGroundPointLT().y;
-					 parameterVGP[1] = GEData.getGEGroundPointLT().x;
-					 parameterVGP[2] = 0;
-					 parameterVGP[3] = GEData.getGEGroundPointLD().y;
-					 parameterVGP[4] = GEData.getGEGroundPointLD().x;
-					 parameterVGP[5] = 0;
-					 parameterVGP[6] = GEData.getGEGroundPointRT().y;
-					 parameterVGP[7] = GEData.getGEGroundPointRT().x;
-					 parameterVGP[8] = 0;
-					 parameterVGP[9] = GEData.getGEGroundPointRD().y;
-					 parameterVGP[10] = GEData.getGEGroundPointRD().x;
-					 parameterVGP[11] = 0;
-					 webBrowser1->Document->InvokeScript("SetViewGroundPolygonPosition",parameterVGP);
-				 }
+				 //// view polygon on the ground //
+				 //if(!view_ground_initialized){
+					// webBrowser1->Document->InvokeScript("CreateViewGroungPolygon");
+					// view_ground_initialized = true;
+				 //}	
+				 //else{
+					// array<Object^>^ parameterVGP = gcnew array<Object^>(12); 
+					// parameterVGP[0] = GEData.getGEGroundPointLT().y;
+					// parameterVGP[1] = GEData.getGEGroundPointLT().x;
+					// parameterVGP[2] = 0;
+					// parameterVGP[3] = GEData.getGEGroundPointLD().y;
+					// parameterVGP[4] = GEData.getGEGroundPointLD().x;
+					// parameterVGP[5] = 0;
+					// parameterVGP[6] = GEData.getGEGroundPointRT().y;
+					// parameterVGP[7] = GEData.getGEGroundPointRT().x;
+					// parameterVGP[8] = 0;
+					// parameterVGP[9] = GEData.getGEGroundPointRD().y;
+					// parameterVGP[10] = GEData.getGEGroundPointRD().x;
+					// parameterVGP[11] = 0;
+					// webBrowser1->Document->InvokeScript("SetViewGroundPolygonPosition",parameterVGP);
+				 //}
 
-				 D3DXVECTOR3 start;
-				 D3DXVECTOR3 temp1 = GEData.getLookat();
-				 D3DXVECTOR3 temp2 = GEData.getOriginalPoint();
-				 D3DXVECTOR3 temp3 = temp1 + temp2;
-				 D3DXVECTOR3 end = GEData.countGELoc(temp3.x,temp3.y,temp3.z);
-				 start.x = GEData.getGEPoint().x;
-				 start.y = GEData.getGEPoint().y;
-				 start.z = GEData.getGEPoint().z;
-				 good.IntersectPoint(test,start,end);
+				 //D3DXVECTOR3 start;
+				 //D3DXVECTOR3 temp1 = GEData.getLookat();
+				 //D3DXVECTOR3 temp2 = GEData.getOriginalPoint();
+				 //D3DXVECTOR3 temp3 = temp1 + temp2;
+				 //D3DXVECTOR3 end = GEData.countGELoc(temp3.x,temp3.y,temp3.z);
+				 //start.x = GEData.getGEPoint().x;
+				 //start.y = GEData.getGEPoint().y;
+				 //start.z = GEData.getGEPoint().z;
+				 //good.IntersectPoint(test,start,end);
 
-				 if(good.hit(120,122,24,26,(double)10/(double)111000,(double)10/(double)111000)){
-					 array<Object^>^ parameterTTT = gcnew array<Object^>(3); 
-					 parameterTTT[0] = good.getHitPoint().x;
-					 parameterTTT[1] = good.getHitPoint().y;
-					 parameterTTT[2] = good.getHitPoint().z * 111000;
-					 webBrowser1->Document->InvokeScript("testpoint",parameterTTT);
-				 }
+				 //if(good.hit(120,122,24,26,(double)10/(double)111000,(double)10/(double)111000)){
+					// array<Object^>^ parameterTTT = gcnew array<Object^>(3); 
+					// parameterTTT[0] = good.getHitPoint().x;
+					// parameterTTT[1] = good.getHitPoint().y;
+					// parameterTTT[2] = good.getHitPoint().z * 111000;
+					// webBrowser1->Document->InvokeScript("testpoint",parameterTTT);
+				 //}
 				
 
 				 // control visibility of small view

@@ -205,7 +205,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\countAllData.cpp"
+				RelativePath=".\GEPlaneIntersection.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\GEPosition.cpp"
 				>
 			</File>
 			<File
@@ -239,10 +243,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\countAllData.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Form1.h"
 				FileType="3"
 				>
@@ -251,6 +251,14 @@
 					SubType="Designer"
 					>
 				</File>
+			</File>
+			<File
+				RelativePath=".\GEPlaneIntersection.h"
+				>
+			</File>
+			<File
+				RelativePath=".\GEPosition.h"
+				>
 			</File>
 			<File
 				RelativePath=".\resource.h"
